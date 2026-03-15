@@ -21,6 +21,10 @@ import { InventoryPage } from '@/components/inventory/inventory-page';
 import { ContractsPage } from '@/components/contracts/contracts-page';
 import { SiteDiaryPage } from '@/components/site-diary/site-diary-page';
 import { DocumentsPage } from '@/components/documents/documents-page';
+import { ProposalsPage } from '@/components/proposals/proposals-page';
+import { ProfilePage } from '@/components/profile/profile-page';
+import { AdminPage } from '@/components/admin/admin-page';
+import { ActivitiesPage } from '@/components/activities/activities-page';
 import { Toaster } from '@/components/ui/toaster';
 import { useTranslation } from '@/lib/translations';
 import { Building2 } from 'lucide-react';
@@ -34,25 +38,6 @@ const queryClient = new QueryClient({
     },
   },
 });
-
-// Placeholder pages for sections under development
-function PlaceholderPage({ title }: { title: string }) {
-  const { language } = useApp();
-  
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-      <div className="w-20 h-20 rounded-full bg-slate-800 flex items-center justify-center mb-6">
-        <Building2 className="w-10 h-10 text-slate-400" />
-      </div>
-      <h2 className="text-2xl font-bold text-white mb-2">{title}</h2>
-      <p className="text-slate-400 max-w-md">
-        {language === 'ar' 
-          ? 'هذه الصفحة قيد التطوير وستكون متاحة قريباً'
-          : 'This page is under development and will be available soon'}
-      </p>
-    </div>
-  );
-}
 
 // Main app content
 function AppContent() {
@@ -89,7 +74,7 @@ function AppContent() {
       case 'clients':
         return <ClientsPage />;
       case 'proposals':
-        return <PlaceholderPage title={t.proposals} />;
+        return <ProposalsPage />;
       case 'invoices':
         return <InvoicesPage />;
       case 'tasks':
@@ -110,18 +95,16 @@ function AppContent() {
         return <KnowledgePage />;
       case 'aiChat':
         return <AIChatPage />;
-      case 'modelTest':
-        return <PlaceholderPage title={t.modelTest} />;
       case 'reports':
         return <ReportsPage />;
       case 'settings':
         return <SettingsPage />;
       case 'profile':
-        return <PlaceholderPage title={t.profile} />;
+        return <ProfilePage />;
       case 'admin':
-        return <PlaceholderPage title={t.admin} />;
+        return <AdminPage />;
       case 'activities':
-        return <PlaceholderPage title={t.activities} />;
+        return <ActivitiesPage />;
       default:
         return <DashboardPage />;
     }

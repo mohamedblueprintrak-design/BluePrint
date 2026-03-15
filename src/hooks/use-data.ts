@@ -535,3 +535,164 @@ export function useAIChat() {
       apiRequest<{ response: string; tokens: number }>('POST', 'ai-chat', data, token)
   });
 }
+
+// ============================================
+// Additional Supplier Hooks
+// ============================================
+
+export function useUpdateSupplier() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: { id: string } & Partial<Supplier>) => 
+      apiRequest<Supplier>('PUT', 'supplier', data, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
+    }
+  });
+}
+
+export function useDeleteSupplier() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (id: string) => 
+      apiRequest('DELETE', 'supplier', { id }, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
+    }
+  });
+}
+
+// ============================================
+// Additional Material Hooks
+// ============================================
+
+export function useUpdateMaterial() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: { id: string } & Partial<Material>) => 
+      apiRequest<Material>('PUT', 'material', data, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['materials'] });
+    }
+  });
+}
+
+export function useDeleteMaterial() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (id: string) => 
+      apiRequest('DELETE', 'material', { id }, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['materials'] });
+    }
+  });
+}
+
+// ============================================
+// Additional Contract Hooks
+// ============================================
+
+export function useUpdateContract() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: { id: string } & Partial<Contract>) => 
+      apiRequest<Contract>('PUT', 'contract', data, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+    }
+  });
+}
+
+export function useDeleteContract() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (id: string) => 
+      apiRequest('DELETE', 'contract', { id }, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+    }
+  });
+}
+
+// ============================================
+// Additional Proposal Hooks
+// ============================================
+
+export function useUpdateProposal() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: { id: string } & Partial<Proposal>) => 
+      apiRequest<Proposal>('PUT', 'proposal', data, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['proposals'] });
+    }
+  });
+}
+
+export function useDeleteProposal() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (id: string) => 
+      apiRequest('DELETE', 'proposal', { id }, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['proposals'] });
+    }
+  });
+}
+
+// ============================================
+// Attendance Hooks
+// ============================================
+
+export function useAttendances(userId?: string, startDate?: string, endDate?: string) {
+  const { token } = useAuth();
+  
+  return useQuery({
+    queryKey: ['attendances', userId, startDate, endDate],
+    queryFn: () => apiRequest('GET', 'attendance', { userId, startDate, endDate }, token),
+    enabled: !!token
+  });
+}
+
+// ============================================
+// Expense Hooks
+// ============================================
+
+export function useExpenses(projectId?: string) {
+  const { token } = useAuth();
+  
+  return useQuery({
+    queryKey: ['expenses', projectId],
+    queryFn: () => apiRequest('GET', 'expenses', { projectId }, token),
+    enabled: !!token
+  });
+}
+
+export function useCreateExpense() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: any) => 
+      apiRequest('POST', 'expense', data, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+    }
+  });
+}
