@@ -30,7 +30,8 @@ import {
   Briefcase, Package, FileCheck, BarChart3, Bell, Settings, 
   LogOut, ChevronDown, Menu, Search, Moon, Sun, Globe,
   User, Shield, BookOpen, Bot, TestTube, FileSpreadsheet,
-  PanelLeftClose, PanelLeft, Zap
+  PanelLeftClose, PanelLeft, Zap, Calculator, ShoppingCart,
+  AlertTriangle, Wallet, Receipt
 } from 'lucide-react';
 
 interface SidebarItem {
@@ -55,17 +56,21 @@ export function Sidebar() {
     { id: 'projects', label: t.projects, icon: Building2 },
     { id: 'clients', label: t.clients, icon: Users },
     { id: 'proposals', label: t.proposals, icon: FileText },
+    { id: 'contracts', label: t.contracts, icon: FileCheck },
     { id: 'invoices', label: t.invoices, icon: DollarSign },
+    { id: 'vouchers', label: language === 'ar' ? 'السندات' : 'Vouchers', icon: Receipt },
+    { id: 'budgets', label: language === 'ar' ? 'الميزانيات' : 'Budgets', icon: Calculator },
     { id: 'tasks', label: t.tasks, icon: CheckSquare, badge: 3 },
     { id: 'hr', label: t.hr, icon: Users },
     { id: 'suppliers', label: t.suppliers, icon: Briefcase },
+    { id: 'purchaseOrders', label: language === 'ar' ? 'طلبات الشراء' : 'Purchase Orders', icon: ShoppingCart },
     { id: 'inventory', label: t.inventory, icon: Package },
-    { id: 'contracts', label: t.contracts, icon: FileCheck },
+    { id: 'boq', label: language === 'ar' ? 'جدول الكميات' : 'BOQ', icon: FileSpreadsheet },
     { id: 'siteDiary', label: t.siteDiary, icon: FileSpreadsheet },
+    { id: 'defects', label: language === 'ar' ? 'العيوب والمخالفات' : 'Defects', icon: AlertTriangle },
     { id: 'documents', label: t.documents, icon: FileText },
     { id: 'knowledge', label: t.knowledge, icon: BookOpen },
     { id: 'aiChat', label: t.aiChat, icon: Bot },
-    { id: 'modelTest', label: t.modelTest, icon: TestTube },
     { id: 'reports', label: t.reports, icon: BarChart3 },
     { id: 'settings', label: t.settings, icon: Settings },
   ];

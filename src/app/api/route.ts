@@ -2,8 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import * as jose from 'jose';
+import ZAI from 'z-ai-web-dev-sdk';
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'blueprint-secret-key-2024-secure');
+// Security: JWT secret must come from environment only
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
+if (!process.env.JWT_SECRET) {
+  console.error('CRITICAL: JWT_SECRET environment variable is not set!');
+}
 
 // Helper functions
 function successResponse(data: any, meta?: any) {
@@ -327,6 +332,7 @@ export async function GET(request: NextRequest) {
         return successResponse(notifications);
 
       case 'leave-requests':
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const leaveStatus = searchParams.get('status');
         const leaveRequests = await db.leaveRequest.findMany({
           where: leaveStatus ? { status: leaveStatus } : {},
@@ -828,37 +834,78 @@ export async function POST(request: NextRequest) {
       }
 
       case 'ai-chat': {
-        const { message, model = 'gemini' } = body;
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+        const { message, model = 'gemini', conversationHistory = [] } = body;
         if (!message) return errorResponse('الرسالة مطلوبة');
 
-        // Simulated AI responses based on keywords
-        const responses: Record<string, string> = {
-          'كمرة': 'لتصميم كمرة: العمق التقريبي = البحر × 10 سم. مثلاً كمرة ببحر 6 متر تحتاج عمق ~60 سم وعرض 25-30 سم.',
-          'خرسانة': 'مقاومة الخرسانة الدنيا في الإمارات: fcu = 25 N/mm². نسبة الماء/الأسمنت w/c ≤ 0.45 للعناصر الإنشائية. فترة المعالجة: 7 أيام كحد أدنى.',
-          'حديد': 'التسليح المستخدم: Grade 60 (fy = 420 N/mm²). نسبة التسليح الدنيا للكمرات: 0.25%، للأعمدة: 1%.',
-          'سعر': 'أسعار 2024-2025: الخرسانة C25 = 280-350 درهم/م³، حديد التسليح = 2,500-3,000 درهم/طن، طوب الإسمنت = 0.8-1.2 درهم/حبة.',
-          'أساس': 'قدرة تحمل التربة: رملية كثيفة 300-500 kN/m²، صخرية 500-1000 kN/m²، Sabkha 50-100 kN/m² (تحتاج معالجة).',
-          'زلزال': 'الإمارات في منطقة زلزالية منخفضة-متوسطة (SDC B). تسارع الأرض الاحتمالي: 0.05g إلى 0.15g.',
-          'حمل': 'الأحمال الحية: سكني 2.0 kN/m²، مكاتب 2.5 kN/m²، مستودعات 5.0 kN/m². الحمل الميت للخرسانة المسلحة: 25 kN/m³.',
-          'vat': 'ضريبة القيمة المضافة في الإمارات: 5%. رقم التسجيل الضريبي TRN إلزامي للمعاملات فوق 10,000 درهم.',
-        };
-        
-        let response = 'شكراً على سؤالك! أنا Blu المساعد الذكي. يمكنني مساعدتك في الأسئلة الهندسية وحسابات البناء وأكواد الإمارات.';
-        
-        const messageLower = message.toLowerCase();
-        for (const [key, value] of Object.entries(responses)) {
-          if (messageLower.includes(key)) {
-            response = value;
-            break;
-          }
-        }
+        try {
+          const zai = await ZAI.create();
+          
+          // Map model names to SDK format
+          const modelMap: Record<string, string> = {
+            'gemini': 'gemini-2.0-flash',
+            'gemini-pro': 'gemini-1.5-pro',
+            'gpt-4': 'gpt-4o',
+            'gpt-3.5': 'gpt-3.5-turbo',
+            'deepseek': 'deepseek-chat',
+            'claude': 'claude-3-5-sonnet-20241022',
+            'llama': 'llama-3.3-70b-instruct',
+          };
+          
+          const selectedModel = modelMap[model] || 'gemini-2.0-flash';
+          
+          // Build messages array with conversation history
+          const messages = [
+            {
+              role: 'system',
+              content: 'أنت Blu، المساعد الذكي المتخصص في الهندسة المدنية والبناء في الإمارات. تجيب بأسلوب احترافي وعملي على أسئلة المهندسين والمقاولين. تستخدم الأكواد الإماراتية والمعايير الخليجية في إجاباتك.'
+            },
+            ...conversationHistory.map((msg: any) => ({
+              role: msg.role,
+              content: msg.content
+            })),
+            { role: 'user', content: message }
+          ];
 
-        return successResponse({ 
-          response, 
-          model,
-          tokens: message.split().length + 50,
-          timestamp: new Date().toISOString()
-        });
+          const completion = await zai.chat.completions.create({
+            model: selectedModel,
+            messages: messages,
+            temperature: 0.7,
+            max_tokens: 2000,
+          });
+
+          const responseContent = completion.choices[0]?.message?.content || 'عذراً، لم أتمكن من توليد رد.';
+
+          // Save to chat history
+          await db.chatHistory.create({
+            data: {
+              userId: user.id,
+              role: 'user',
+              message: message,
+              modelUsed: model,
+              tokensUsed: completion.usage?.total_tokens || 0
+            }
+          });
+          await db.chatHistory.create({
+            data: {
+              userId: user.id,
+              role: 'assistant',
+              message: responseContent,
+              modelUsed: model,
+              tokensUsed: completion.usage?.total_tokens || 0
+            }
+          });
+
+          return successResponse({ 
+            response: responseContent, 
+            model,
+            tokens: completion.usage?.total_tokens || 0,
+            timestamp: new Date().toISOString()
+          });
+        } catch (error: any) {
+          console.error('AI Chat Error:', error);
+          return errorResponse('حدث خطأ في الاتصال بالذكاء الاصطناعي', 'AI_ERROR', 500);
+        }
       }
 
       default:

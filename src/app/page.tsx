@@ -25,6 +25,11 @@ import { ProposalsPage } from '@/components/proposals/proposals-page';
 import { ProfilePage } from '@/components/profile/profile-page';
 import { AdminPage } from '@/components/admin/admin-page';
 import { ActivitiesPage } from '@/components/activities/activities-page';
+import { BOQPage } from '@/components/boq/boq-page';
+import { PurchaseOrdersPage } from '@/components/purchase-orders/purchase-orders-page';
+import { DefectsPage } from '@/components/defects/defects-page';
+import { BudgetsPage } from '@/components/budgets/budgets-page';
+import { VouchersPage } from '@/components/vouchers/vouchers-page';
 import { Toaster } from '@/components/ui/toaster';
 import { useTranslation } from '@/lib/translations';
 import { Building2 } from 'lucide-react';
@@ -105,6 +110,16 @@ function AppContent() {
         return <AdminPage />;
       case 'activities':
         return <ActivitiesPage />;
+      case 'boq':
+        return <BOQPage />;
+      case 'purchaseOrders':
+        return <PurchaseOrdersPage />;
+      case 'defects':
+        return <DefectsPage />;
+      case 'budgets':
+        return <BudgetsPage />;
+      case 'vouchers':
+        return <VouchersPage />;
       default:
         return <DashboardPage />;
     }
