@@ -976,3 +976,62 @@ model KnowledgeArticle {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
+
+// ============================================
+// Vouchers - سندات القبض والصرف
+// ============================================
+
+model Voucher {
+  id              String    @id @default(cuid())
+  voucherNumber   String    @unique
+  voucherType     String    // receipt, payment
+  amount          Float
+  currency        String    @default("AED")
+  exchangeRate    Float     @default(1.0)
+  baseAmount      Float     @default(0) // amount in base currency
+  date            DateTime  @default(now())
+  projectId       String?
+  invoiceId       String?
+  clientId        String?
+  supplierId      String?
+  accountId       String?   // cash/bank account
+  paymentMethod   String    @default("cash")
+  referenceNumber String?
+  checkNumber     String?
+  checkDate       DateTime?
+  bankName        String?
+  description     String?
+  notes           String?
+  status          String    @default("pending")
+  approvedById    String?
+  approvedAt      DateTime?
+  createdById     String?
+  organizationId  String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// ============================================
+// Certificates - شهادات الإنجاز
+// ============================================
+
+model Certificate {
+  id                String    @id @default(cuid())
+  certificateNumber String    @unique
+  projectId         String
+  clientId          String?
+  certificateType   String    @default("completion") // completion, partial, interim
+  title             String
+  description       String?
+  percentage        Float     @default(100)
+  amount            Float?
+  issueDate         DateTime  @default(now())
+  validUntil        DateTime?
+  status            String    @default("draft")
+  signedById        String?
+  signedAt          DateTime?
+  notes             String?
+  organizationId    String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}

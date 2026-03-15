@@ -10,6 +10,58 @@ if (!process.env.JWT_SECRET) {
   console.error('CRITICAL: JWT_SECRET environment variable is not set!');
 }
 
+// Rate Limiting: In-memory store for request tracking
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_REQUESTS = 100; // requests per window
+const RATE_LIMIT_WINDOW = 60000; // 1 minute in ms
+
+// Clean up old rate limit entries every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, record] of rateLimitStore.entries()) {
+    if (now > record.resetTime) {
+      rateLimitStore.delete(ip);
+    }
+  }
+}, 300000);
+
+// Get client IP from request
+function getClientIP(request: NextRequest): string {
+  const forwarded = request.headers.get('x-forwarded-for');
+  if (forwarded) return forwarded.split(',')[0].trim();
+  const realIP = request.headers.get('x-real-ip');
+  if (realIP) return realIP;
+  return 'unknown';
+}
+
+// Check rate limit for a request
+function checkRateLimit(request: NextRequest): { allowed: boolean; remaining: number; resetTime: number } {
+  const ip = getClientIP(request);
+  const now = Date.now();
+  const record = rateLimitStore.get(ip);
+  
+  if (!record || now > record.resetTime) {
+    rateLimitStore.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    return { allowed: true, remaining: RATE_LIMIT_REQUESTS - 1, resetTime: now + RATE_LIMIT_WINDOW };
+  }
+  
+  if (record.count >= RATE_LIMIT_REQUESTS) {
+    return { allowed: false, remaining: 0, resetTime: record.resetTime };
+  }
+  
+  record.count++;
+  return { allowed: true, remaining: RATE_LIMIT_REQUESTS - record.count, resetTime: record.resetTime };
+}
+
+// Rate limit error response
+function rateLimitError(resetTime: number) {
+  const retryAfter = Math.ceil((resetTime - Date.now()) / 1000);
+  return NextResponse.json(
+    { success: false, error: { code: 'RATE_LIMIT_EXCEEDED', message: 'تم تجاوز الحد المسموح من الطلبات. يرجى المحاولة لاحقاً.' } },
+    { status: 429, headers: { 'Retry-After': retryAfter.toString(), 'X-RateLimit-Limit': RATE_LIMIT_REQUESTS.toString(), 'X-RateLimit-Remaining': '0', 'X-RateLimit-Reset': resetTime.toString() } }
+  );
+}
+
 // Helper functions
 function successResponse(data: any, meta?: any) {
   const response = { success: true, data };
@@ -50,6 +102,12 @@ async function getUserFromToken(request: NextRequest) {
 
 // GET handler
 export async function GET(request: NextRequest) {
+  // Check rate limit
+  const rateLimitResult = checkRateLimit(request);
+  if (!rateLimitResult.allowed) {
+    return rateLimitError(rateLimitResult.resetTime);
+  }
+
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action');
   const user = await getUserFromToken(request);
@@ -57,7 +115,7 @@ export async function GET(request: NextRequest) {
   try {
     switch (action) {
       case 'health':
-        return successResponse({ status: 'ok', version: '3.0.0', timestamp: new Date().toISOString() });
+        return successResponse({ status: 'ok', version: '3.1.0', timestamp: new Date().toISOString() });
 
       case 'me':
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
@@ -70,7 +128,8 @@ export async function GET(request: NextRequest) {
           avatar: user.avatar,
           language: user.language,
           theme: user.theme,
-          organization: user.organization
+          organization: user.organization,
+          organizationId: user.organizationId
         });
 
       case 'users':
@@ -78,6 +137,7 @@ export async function GET(request: NextRequest) {
           return errorResponse('غير مصرح', 'FORBIDDEN', 403);
         }
         const users = await db.user.findMany({
+          where: { organizationId: user.organizationId },
           select: { id: true, username: true, email: true, fullName: true, role: true, isActive: true, createdAt: true }
         });
         return successResponse(users);
@@ -85,6 +145,7 @@ export async function GET(request: NextRequest) {
       case 'projects':
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const allProjects = await db.project.findMany({ 
+          where: { organizationId: user.organizationId },
           include: { client: true }, 
           orderBy: { createdAt: 'desc' } 
         });
@@ -105,8 +166,8 @@ export async function GET(request: NextRequest) {
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const projectId = searchParams.get('id');
         if (!projectId) return errorResponse('معرف المشروع مطلوب');
-        const project = await db.project.findUnique({
-          where: { id: projectId },
+        const project = await db.project.findFirst({
+          where: { id: projectId, organizationId: user.organizationId },
           include: {
             client: true,
             analyses: { take: 10, orderBy: { createdAt: 'desc' } },
@@ -134,7 +195,7 @@ export async function GET(request: NextRequest) {
       case 'clients':
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const clients = await db.client.findMany({
-          where: { isActive: true },
+          where: { isActive: true, organizationId: user.organizationId },
           orderBy: { createdAt: 'desc' }
         });
         return successResponse(clients.map(c => ({
@@ -154,6 +215,7 @@ export async function GET(request: NextRequest) {
       case 'invoices':
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const invoices = await db.invoice.findMany({
+          where: { organizationId: user.organizationId },
           include: { client: true, project: true },
           orderBy: { createdAt: 'desc' }
         });
@@ -181,7 +243,10 @@ export async function GET(request: NextRequest) {
         if (taskStatus) tasksQuery.status = taskStatus;
         
         const tasks = await db.task.findMany({
-          where: tasksQuery,
+          where: {
+            ...tasksQuery,
+            project: { organizationId: user.organizationId }
+          },
           include: { project: true, assignee: true },
           orderBy: { createdAt: 'desc' }
         });
@@ -203,7 +268,7 @@ export async function GET(request: NextRequest) {
       case 'suppliers':
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const suppliers = await db.supplier.findMany({
-          where: { isActive: true },
+          where: { isActive: true, organizationId: user.organizationId },
           orderBy: { createdAt: 'desc' }
         });
         return successResponse(suppliers.map(s => ({
@@ -221,7 +286,7 @@ export async function GET(request: NextRequest) {
       case 'materials':
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const materials = await db.material.findMany({
-          where: { isActive: true },
+          where: { isActive: true, organizationId: user.organizationId },
           orderBy: { name: 'asc' }
         });
         return successResponse(materials.map(m => ({
@@ -240,6 +305,7 @@ export async function GET(request: NextRequest) {
       case 'contracts':
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const contracts = await db.contract.findMany({
+          where: { organizationId: user.organizationId },
           include: { client: true },
           orderBy: { createdAt: 'desc' }
         });
@@ -259,6 +325,7 @@ export async function GET(request: NextRequest) {
       case 'proposals':
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const proposals = await db.proposal.findMany({
+          where: { organizationId: user.organizationId },
           include: { client: true },
           orderBy: { createdAt: 'desc' }
         });
@@ -278,6 +345,7 @@ export async function GET(request: NextRequest) {
       case 'site-reports':
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const siteReports = await db.siteReport.findMany({
+          where: { project: { organizationId: user.organizationId } },
           include: { project: true },
           orderBy: { reportDate: 'desc' },
           take: 50
@@ -335,7 +403,10 @@ export async function GET(request: NextRequest) {
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const leaveStatus = searchParams.get('status');
         const leaveRequests = await db.leaveRequest.findMany({
-          where: leaveStatus ? { status: leaveStatus } : {},
+          where: { 
+            ...(leaveStatus && { status: leaveStatus }),
+            user: { organizationId: user.organizationId }
+          },
           include: { 
             user: { select: { id: true, fullName: true, username: true } },
             approver: { select: { id: true, fullName: true, username: true } }
@@ -363,7 +434,9 @@ export async function GET(request: NextRequest) {
         const attUserId = searchParams.get('userId');
         const startDate = searchParams.get('startDate');
         const endDate = searchParams.get('endDate');
-        const attendanceWhere: any = {};
+        const attendanceWhere: any = {
+          user: { organizationId: user.organizationId }
+        };
         if (attUserId) attendanceWhere.userId = attUserId;
         if (startDate) attendanceWhere.date = { gte: new Date(startDate) };
         if (endDate) attendanceWhere.date = { ...attendanceWhere.date, lte: new Date(endDate) };
@@ -385,22 +458,291 @@ export async function GET(request: NextRequest) {
           overtimeHours: a.overtimeHours
         })));
 
+      // ============================================
+      // TASK 3: New GET Endpoints
+      // ============================================
+      
+      case 'boq-items': {
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+        const boqProjectId = searchParams.get('projectId');
+        if (!boqProjectId) return errorResponse('معرف المشروع مطلوب');
+        
+        // Verify project belongs to user's organization
+        const boqProject = await db.project.findFirst({
+          where: { id: boqProjectId, organizationId: user.organizationId }
+        });
+        if (!boqProject) return errorResponse('المشروع غير موجود', 'NOT_FOUND', 404);
+        
+        const boqItems = await db.bOQItem.findMany({
+          where: { projectId: boqProjectId },
+          orderBy: { itemNumber: 'asc' }
+        });
+        return successResponse(boqItems.map(item => ({
+          id: item.id,
+          projectId: item.projectId,
+          itemNumber: item.itemNumber,
+          description: item.description,
+          unit: item.unit,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          totalPrice: item.totalPrice,
+          category: item.category,
+          notes: item.notes,
+          createdAt: item.createdAt
+        })));
+      }
+
+      case 'purchase-orders': {
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+        const purchaseOrders = await db.purchaseOrder.findMany({
+          where: { 
+            supplier: { organizationId: user.organizationId } 
+          },
+          include: { 
+            supplier: true
+          },
+          orderBy: { createdAt: 'desc' }
+        });
+        return successResponse(purchaseOrders.map(po => ({
+          id: po.id,
+          poNumber: po.poNumber,
+          supplierId: po.supplierId,
+          supplier: po.supplier?.name,
+          projectId: po.projectId,
+          orderDate: po.orderDate,
+          expectedDate: po.expectedDate,
+          items: po.items ? JSON.parse(po.items) : [],
+          subtotal: po.subtotal,
+          taxAmount: po.taxAmount,
+          total: po.total,
+          status: po.status,
+          notes: po.notes,
+          createdAt: po.createdAt
+        })));
+      }
+
+      case 'budgets': {
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+        const budgetProjectId = searchParams.get('projectId');
+        if (!budgetProjectId) return errorResponse('معرف المشروع مطلوب');
+        
+        // Verify project belongs to user's organization
+        const budgetProject = await db.project.findFirst({
+          where: { id: budgetProjectId, organizationId: user.organizationId }
+        });
+        if (!budgetProject) return errorResponse('المشروع غير موجود', 'NOT_FOUND', 404);
+        
+        const budgets = await db.budget.findMany({
+          where: { projectId: budgetProjectId },
+          orderBy: { category: 'asc' }
+        });
+        return successResponse(budgets.map(b => ({
+          id: b.id,
+          projectId: b.projectId,
+          category: b.category,
+          description: b.description,
+          budgetAmount: b.budgetAmount,
+          actualAmount: b.actualAmount,
+          variance: b.variance,
+          createdAt: b.createdAt
+        })));
+      }
+
+      case 'defects': {
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+        const defectProjectId = searchParams.get('projectId');
+        if (!defectProjectId) return errorResponse('معرف المشروع مطلوب');
+        
+        // Verify project belongs to user's organization
+        const defectProject = await db.project.findFirst({
+          where: { id: defectProjectId, organizationId: user.organizationId }
+        });
+        if (!defectProject) return errorResponse('المشروع غير موجود', 'NOT_FOUND', 404);
+        
+        const defects = await db.defect.findMany({
+          where: { projectId: defectProjectId },
+          orderBy: { createdAt: 'desc' }
+        });
+        return successResponse(defects.map(d => ({
+          id: d.id,
+          projectId: d.projectId,
+          title: d.title,
+          description: d.description,
+          severity: d.severity,
+          status: d.status,
+          location: d.location,
+          imageId: d.imageId,
+          assignedTo: d.assignedTo,
+          resolvedAt: d.resolvedAt,
+          resolutionNotes: d.resolutionNotes,
+          createdAt: d.createdAt
+        })));
+      }
+
+      case 'payments': {
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+        const paymentInvoiceId = searchParams.get('invoiceId');
+        if (!paymentInvoiceId) return errorResponse('معرف الفاتورة مطلوب');
+        
+        // Verify invoice belongs to user's organization
+        const paymentInvoice = await db.invoice.findFirst({
+          where: { id: paymentInvoiceId, organizationId: user.organizationId }
+        });
+        if (!paymentInvoice) return errorResponse('الفاتورة غير موجودة', 'NOT_FOUND', 404);
+        
+        const payments = await db.payment.findMany({
+          where: { invoiceId: paymentInvoiceId },
+          orderBy: { paymentDate: 'desc' }
+        });
+        return successResponse(payments.map(p => ({
+          id: p.id,
+          invoiceId: p.invoiceId,
+          amount: p.amount,
+          paymentDate: p.paymentDate,
+          paymentMethod: p.paymentMethod,
+          referenceNumber: p.referenceNumber,
+          notes: p.notes,
+          createdAt: p.createdAt
+        })));
+      }
+
+      case 'expenses': {
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+        const expenses = await db.expense.findMany({
+          where: {
+            project: { organizationId: user.organizationId }
+          },
+          include: { project: true },
+          orderBy: { createdAt: 'desc' }
+        });
+        return successResponse(expenses.map(e => ({
+          id: e.id,
+          projectId: e.projectId,
+          project: e.project?.name,
+          category: e.category,
+          description: e.description,
+          amount: e.amount,
+          expenseDate: e.expenseDate,
+          paidTo: e.paidTo,
+          receiptNumber: e.receiptNumber,
+          status: e.status,
+          approvedById: e.approvedById,
+          approvedAt: e.approvedAt,
+          createdAt: e.createdAt
+        })));
+      }
+
+      case 'vouchers': {
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+        const voucherType = searchParams.get('voucherType');
+        const vouchers = await db.voucher.findMany({
+          where: { 
+            organizationId: user.organizationId,
+            ...(voucherType && { voucherType })
+          },
+          orderBy: { createdAt: 'desc' }
+        });
+        return successResponse(vouchers.map(v => ({
+          id: v.id,
+          voucherNumber: v.voucherNumber,
+          voucherType: v.voucherType,
+          amount: v.amount,
+          currency: v.currency,
+          date: v.date,
+          projectId: v.projectId,
+          invoiceId: v.invoiceId,
+          clientId: v.clientId,
+          supplierId: v.supplierId,
+          paymentMethod: v.paymentMethod,
+          referenceNumber: v.referenceNumber,
+          description: v.description,
+          status: v.status,
+          createdAt: v.createdAt
+        })));
+      }
+
+      case 'certificates': {
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+        const certProjectId = searchParams.get('projectId');
+        const certificates = await db.certificate.findMany({
+          where: { 
+            organizationId: user.organizationId,
+            ...(certProjectId && { projectId: certProjectId })
+          },
+          orderBy: { createdAt: 'desc' }
+        });
+        return successResponse(certificates.map(c => ({
+          id: c.id,
+          certificateNumber: c.certificateNumber,
+          projectId: c.projectId,
+          clientId: c.clientId,
+          certificateType: c.certificateType,
+          title: c.title,
+          description: c.description,
+          percentage: c.percentage,
+          amount: c.amount,
+          issueDate: c.issueDate,
+          validUntil: c.validUntil,
+          status: c.status,
+          createdAt: c.createdAt
+        })));
+      }
+
       case 'dashboard':
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
-        const totalProjects = await db.project.count();
-        const activeProjects = await db.project.count({ where: { status: 'active' } });
-        const completedProjects = await db.project.count({ where: { status: 'completed' } });
-        const pendingProjects = await db.project.count({ where: { status: 'pending' } });
-        const totalClients = await db.client.count({ where: { isActive: true } });
-        const totalInvoices = await db.invoice.aggregate({ _sum: { total: true } });
-        const totalPaid = await db.invoice.aggregate({ _sum: { paidAmount: true } });
-        const pendingTasks = await db.task.count({ where: { status: { not: 'done' } } });
-        const inProgressTasks = await db.task.count({ where: { status: 'in_progress' } });
-        const completedTasks = await db.task.count({ where: { status: 'done' } });
-        const openDefectsCount = await db.defect.count({ where: { status: 'Open' } });
-        const resolvedDefects = await db.defect.count({ where: { status: 'Closed' } });
-        const criticalDefects = await db.defect.count({ where: { status: 'Open', severity: 'critical' } });
-        const totalEmployees = await db.user.count({ where: { isActive: true } });
+        const totalProjects = await db.project.count({ where: { organizationId: user.organizationId } });
+        const activeProjects = await db.project.count({ where: { status: 'active', organizationId: user.organizationId } });
+        const completedProjects = await db.project.count({ where: { status: 'completed', organizationId: user.organizationId } });
+        const pendingProjects = await db.project.count({ where: { status: 'pending', organizationId: user.organizationId } });
+        const totalClients = await db.client.count({ where: { isActive: true, organizationId: user.organizationId } });
+        const totalInvoices = await db.invoice.aggregate({ 
+          where: { organizationId: user.organizationId },
+          _sum: { total: true } 
+        });
+        const totalPaid = await db.invoice.aggregate({ 
+          where: { organizationId: user.organizationId },
+          _sum: { paidAmount: true } 
+        });
+        const pendingTasks = await db.task.count({ 
+          where: { 
+            status: { not: 'done' },
+            project: { organizationId: user.organizationId }
+          } 
+        });
+        const inProgressTasks = await db.task.count({ 
+          where: { 
+            status: 'in_progress',
+            project: { organizationId: user.organizationId }
+          } 
+        });
+        const completedTasks = await db.task.count({ 
+          where: { 
+            status: 'done',
+            project: { organizationId: user.organizationId }
+          } 
+        });
+        const openDefectsCount = await db.defect.count({ 
+          where: { 
+            status: 'Open',
+            project: { organizationId: user.organizationId }
+          } 
+        });
+        const resolvedDefects = await db.defect.count({ 
+          where: { 
+            status: 'Closed',
+            project: { organizationId: user.organizationId }
+          } 
+        });
+        const criticalDefects = await db.defect.count({ 
+          where: { 
+            status: 'Open', 
+            severity: 'critical',
+            project: { organizationId: user.organizationId }
+          } 
+        });
+        const totalEmployees = await db.user.count({ 
+          where: { isActive: true, organizationId: user.organizationId } 
+        });
         
         return successResponse({
           projects: { 
@@ -414,14 +756,16 @@ export async function GET(request: NextRequest) {
             totalInvoiced: totalInvoices._sum.total || 0,
             totalPaid: totalPaid._sum.paidAmount || 0,
             totalPending: (totalInvoices._sum.total || 0) - (totalPaid._sum.paidAmount || 0),
-            overdueAmount: 0 // TODO: Calculate overdue invoices
+            overdueAmount: 0
           },
           tasks: { 
             total: pendingTasks + completedTasks,
-            pending: await db.task.count({ where: { status: 'todo' } }),
+            pending: await db.task.count({ 
+              where: { status: 'todo', project: { organizationId: user.organizationId } } 
+            }),
             inProgress: inProgressTasks,
             completed: completedTasks,
-            overdue: 0 // TODO: Calculate overdue tasks
+            overdue: 0
           },
           defects: { 
             open: openDefectsCount,
@@ -430,8 +774,8 @@ export async function GET(request: NextRequest) {
           },
           employees: {
             total: totalEmployees,
-            presentToday: 0, // TODO: Calculate today's attendance
-            onLeave: 0 // TODO: Calculate employees on leave
+            presentToday: 0,
+            onLeave: 0
           }
         });
 
@@ -446,6 +790,12 @@ export async function GET(request: NextRequest) {
 
 // POST handler
 export async function POST(request: NextRequest) {
+  // Check rate limit
+  const rateLimitResult = checkRateLimit(request);
+  if (!rateLimitResult.allowed) {
+    return rateLimitError(rateLimitResult.resetTime);
+  }
+
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action');
   const user = await getUserFromToken(request);
@@ -497,7 +847,7 @@ export async function POST(request: NextRequest) {
       }
 
       case 'register': {
-        const { username, email, password, fullName, role = 'viewer' } = body;
+        const { username, email, password, fullName, role = 'viewer', organizationId } = body;
         if (!username || !email || !password) {
           return errorResponse('جميع الحقول مطلوبة');
         }
@@ -521,7 +871,8 @@ export async function POST(request: NextRequest) {
             email,
             password: hashedPassword,
             fullName: fullName || username,
-            role
+            role,
+            organizationId: organizationId || user?.organizationId
           }
         });
 
@@ -533,7 +884,7 @@ export async function POST(request: NextRequest) {
         const { name, location, projectType, clientId, contractValue, description, projectManagerId } = body;
         if (!name) return errorResponse('اسم المشروع مطلوب');
 
-        const count = await db.project.count();
+        const count = await db.project.count({ where: { organizationId: user.organizationId } });
         const projectNumber = `PRJ-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
 
         const project = await db.project.create({
@@ -545,7 +896,8 @@ export async function POST(request: NextRequest) {
             clientId,
             contractValue: contractValue ? parseFloat(contractValue) : 0,
             description,
-            projectManagerId
+            projectManagerId,
+            organizationId: user.organizationId
           }
         });
 
@@ -587,7 +939,8 @@ export async function POST(request: NextRequest) {
             taxNumber,
             clientType: clientType || 'company',
             creditLimit: creditLimit || 0,
-            notes
+            notes,
+            organizationId: user.organizationId
           }
         });
 
@@ -598,7 +951,7 @@ export async function POST(request: NextRequest) {
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const { clientId, projectId, items, subtotal, taxRate = 5, discountAmount = 0, dueDate, notes, terms } = body;
         
-        const count = await db.invoice.count();
+        const count = await db.invoice.count({ where: { organizationId: user.organizationId } });
         const invoiceNumber = `INV-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
         
         const taxAmount = (subtotal || 0) * (taxRate || 5) / 100;
@@ -618,7 +971,8 @@ export async function POST(request: NextRequest) {
             dueDate: dueDate ? new Date(dueDate) : null,
             notes,
             terms,
-            issueDate: new Date()
+            issueDate: new Date(),
+            organizationId: user.organizationId
           }
         });
 
@@ -629,6 +983,14 @@ export async function POST(request: NextRequest) {
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const { title, description, projectId, assignedToId, priority, dueDate, estimatedHours, tags } = body;
         if (!title) return errorResponse('عنوان المهمة مطلوب');
+
+        // Verify project belongs to user's organization
+        if (projectId) {
+          const taskProject = await db.project.findFirst({
+            where: { id: projectId, organizationId: user.organizationId }
+          });
+          if (!taskProject) return errorResponse('المشروع غير موجود', 'NOT_FOUND', 404);
+        }
 
         const task = await db.task.create({
           data: {
@@ -674,7 +1036,8 @@ export async function POST(request: NextRequest) {
             address, 
             contactPerson,
             taxNumber,
-            notes
+            notes,
+            organizationId: user.organizationId
           }
         });
 
@@ -686,7 +1049,7 @@ export async function POST(request: NextRequest) {
         const { name, category, unit, unitPrice, minStock, maxStock, location } = body;
         if (!name || !unit) return errorResponse('اسم المادة والوحدة مطلوبان');
 
-        const count = await db.material.count();
+        const count = await db.material.count({ where: { organizationId: user.organizationId } });
         const materialCode = `MAT-${(count + 1).toString().padStart(4, '0')}`;
 
         const material = await db.material.create({
@@ -698,7 +1061,8 @@ export async function POST(request: NextRequest) {
             unitPrice: unitPrice || 0, 
             minStock: minStock || 0,
             maxStock: maxStock || 0,
-            location
+            location,
+            organizationId: user.organizationId
           }
         });
 
@@ -712,7 +1076,7 @@ export async function POST(request: NextRequest) {
 
         let finalContractNumber = contractNumber;
         if (!finalContractNumber) {
-          const count = await db.contract.count();
+          const count = await db.contract.count({ where: { organizationId: user.organizationId } });
           finalContractNumber = `CNT-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
         }
 
@@ -728,7 +1092,8 @@ export async function POST(request: NextRequest) {
             contractType: contractType || 'lump_sum',
             notes,
             terms,
-            status: 'draft'
+            status: 'draft',
+            organizationId: user.organizationId
           }
         });
 
@@ -741,7 +1106,7 @@ export async function POST(request: NextRequest) {
 
         let finalProposalNumber = proposalNumber;
         if (!finalProposalNumber) {
-          const count = await db.proposal.count();
+          const count = await db.proposal.count({ where: { organizationId: user.organizationId } });
           finalProposalNumber = `PRP-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
         }
 
@@ -757,7 +1122,8 @@ export async function POST(request: NextRequest) {
             items: items ? JSON.stringify(items) : null,
             notes,
             terms,
-            status: 'draft'
+            status: 'draft',
+            organizationId: user.organizationId
           }
         });
 
@@ -768,6 +1134,12 @@ export async function POST(request: NextRequest) {
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const { projectId, weather, temperature, workersCount, summary, issues, workDescription, nextSteps, workArea, safetyIssues, equipmentUsed, materialsReceived } = body;
         if (!projectId) return errorResponse('المشروع مطلوب');
+
+        // Verify project belongs to user's organization
+        const siteProject = await db.project.findFirst({
+          where: { id: projectId, organizationId: user.organizationId }
+        });
+        if (!siteProject) return errorResponse('المشروع غير موجود', 'NOT_FOUND', 404);
 
         const count = await db.siteReport.count({ where: { projectId } });
         const reportNumber = `SR-${new Date().getFullYear()}-${(count + 1).toString().padStart(3, '0')}`;
@@ -815,8 +1187,10 @@ export async function POST(request: NextRequest) {
           }
         });
 
-        // Notify admins
-        const admins = await db.user.findMany({ where: { role: 'admin' } });
+        // Notify admins in the same organization
+        const admins = await db.user.findMany({ 
+          where: { role: 'admin', organizationId: user.organizationId } 
+        });
         for (const admin of admins) {
           await db.notification.create({
             data: {
@@ -831,6 +1205,261 @@ export async function POST(request: NextRequest) {
         }
 
         return successResponse({ id: leaveRequest.id });
+      }
+
+      // ============================================
+      // TASK 4: New POST Endpoints
+      // ============================================
+
+      case 'boq-item': {
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+        const { projectId, itemNumber, description, unit, quantity, unitPrice, totalPrice, category, notes } = body;
+        if (!projectId || !description) {
+          return errorResponse('المشروع والوصف مطلوبان');
+        }
+
+        // Verify project belongs to user's organization
+        const boqProject = await db.project.findFirst({
+          where: { id: projectId, organizationId: user.organizationId }
+        });
+        if (!boqProject) return errorResponse('المشروع غير موجود', 'NOT_FOUND', 404);
+
+        const boqItem = await db.bOQItem.create({
+          data: {
+            projectId,
+            itemNumber,
+            description,
+            unit,
+            quantity: quantity ? parseFloat(quantity) : 0,
+            unitPrice: unitPrice ? parseFloat(unitPrice) : 0,
+            totalPrice: totalPrice ? parseFloat(totalPrice) : 0,
+            category,
+            notes
+          }
+        });
+
+        return successResponse({ id: boqItem.id, itemNumber: boqItem.itemNumber });
+      }
+
+      case 'purchase-order': {
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+        const { supplierId, projectId, orderDate, expectedDate, items, subtotal, taxAmount, total, notes } = body;
+        
+        // Verify supplier belongs to user's organization
+        if (supplierId) {
+          const poSupplier = await db.supplier.findFirst({
+            where: { id: supplierId, organizationId: user.organizationId }
+          });
+          if (!poSupplier) return errorResponse('المورد غير موجود', 'NOT_FOUND', 404);
+        }
+
+        // Generate PO number
+        const count = await db.purchaseOrder.count();
+        const poNumber = `PO-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
+
+        const purchaseOrder = await db.purchaseOrder.create({
+          data: {
+            poNumber,
+            supplierId,
+            projectId,
+            orderDate: orderDate ? new Date(orderDate) : new Date(),
+            expectedDate: expectedDate ? new Date(expectedDate) : null,
+            items: items ? JSON.stringify(items) : null,
+            subtotal: subtotal || 0,
+            taxAmount: taxAmount || 0,
+            total: total || 0,
+            notes,
+            createdById: user.id
+          }
+        });
+
+        return successResponse({ id: purchaseOrder.id, poNumber });
+      }
+
+      case 'budget': {
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+        const { projectId, category, description, budgetAmount, actualAmount } = body;
+        if (!projectId || !category) {
+          return errorResponse('المشروع والفئة مطلوبان');
+        }
+
+        // Verify project belongs to user's organization
+        const budgetProject = await db.project.findFirst({
+          where: { id: projectId, organizationId: user.organizationId }
+        });
+        if (!budgetProject) return errorResponse('المشروع غير موجود', 'NOT_FOUND', 404);
+
+        const budget = await db.budget.create({
+          data: {
+            projectId,
+            category,
+            description,
+            budgetAmount: budgetAmount ? parseFloat(budgetAmount) : 0,
+            actualAmount: actualAmount ? parseFloat(actualAmount) : 0,
+            variance: (budgetAmount || 0) - (actualAmount || 0)
+          }
+        });
+
+        return successResponse({ id: budget.id, category: budget.category });
+      }
+
+      case 'defect': {
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+        const { projectId, title, description, severity, status, location, assignedTo } = body;
+        if (!projectId || !title) {
+          return errorResponse('المشروع والعنوان مطلوبان');
+        }
+
+        // Verify project belongs to user's organization
+        const defectProject = await db.project.findFirst({
+          where: { id: projectId, organizationId: user.organizationId }
+        });
+        if (!defectProject) return errorResponse('المشروع غير موجود', 'NOT_FOUND', 404);
+
+        const defect = await db.defect.create({
+          data: {
+            projectId,
+            title,
+            description,
+            severity: severity || 'medium',
+            status: status || 'Open',
+            location,
+            assignedTo
+          }
+        });
+
+        // Notify assigned user if any
+        if (assignedTo) {
+          await db.notification.create({
+            data: {
+              userId: assignedTo,
+              title: 'عيب جديد تم تعيينه',
+              message: `تم تعيين عيب: ${title}`,
+              notificationType: 'defect',
+              referenceType: 'defect',
+              referenceId: defect.id
+            }
+          });
+        }
+
+        return successResponse({ id: defect.id, title: defect.title });
+      }
+
+      case 'payment': {
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+        const { invoiceId, amount, paymentDate, paymentMethod, referenceNumber, notes } = body;
+        if (!invoiceId || !amount) {
+          return errorResponse('الفاتورة والمبلغ مطلوبان');
+        }
+
+        // Verify invoice belongs to user's organization
+        const paymentInvoice = await db.invoice.findFirst({
+          where: { id: invoiceId, organizationId: user.organizationId }
+        });
+        if (!paymentInvoice) return errorResponse('الفاتورة غير موجودة', 'NOT_FOUND', 404);
+
+        const payment = await db.payment.create({
+          data: {
+            invoiceId,
+            amount: parseFloat(amount),
+            paymentDate: paymentDate ? new Date(paymentDate) : new Date(),
+            paymentMethod: paymentMethod || 'bank_transfer',
+            referenceNumber,
+            notes
+          }
+        });
+
+        // Update invoice paidAmount
+        const newPaidAmount = (paymentInvoice.paidAmount || 0) + parseFloat(amount);
+        const newStatus = newPaidAmount >= paymentInvoice.total ? 'paid' : 
+                          newPaidAmount > 0 ? 'partial' : paymentInvoice.status;
+        
+        await db.invoice.update({
+          where: { id: invoiceId },
+          data: { 
+            paidAmount: newPaidAmount,
+            status: newStatus
+          }
+        });
+
+        return successResponse({ id: payment.id, amount: payment.amount });
+      }
+
+      case 'voucher': {
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+        const { voucherType, amount, currency, exchangeRate, date, projectId, invoiceId, clientId, supplierId, paymentMethod, referenceNumber, checkNumber, checkDate, bankName, description, notes } = body;
+        if (!voucherType || !amount) {
+          return errorResponse('نوع السند والمبلغ مطلوبان');
+        }
+
+        // Generate voucher number
+        const count = await db.voucher.count();
+        const prefix = voucherType === 'receipt' ? 'REC' : 'PAY';
+        const voucherNumber = `${prefix}-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
+
+        const voucher = await db.voucher.create({
+          data: {
+            voucherNumber,
+            voucherType,
+            amount: parseFloat(amount),
+            currency: currency || 'AED',
+            exchangeRate: exchangeRate || 1.0,
+            baseAmount: parseFloat(amount) * (exchangeRate || 1.0),
+            date: date ? new Date(date) : new Date(),
+            projectId,
+            invoiceId,
+            clientId,
+            supplierId,
+            paymentMethod: paymentMethod || 'cash',
+            referenceNumber,
+            checkNumber,
+            checkDate: checkDate ? new Date(checkDate) : null,
+            bankName,
+            description,
+            notes,
+            createdById: user.id,
+            organizationId: user.organizationId
+          }
+        });
+
+        return successResponse({ id: voucher.id, voucherNumber });
+      }
+
+      case 'certificate': {
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+        const { projectId, clientId, certificateType, title, description, percentage, amount, issueDate, validUntil, notes } = body;
+        if (!projectId || !title) {
+          return errorResponse('المشروع والعنوان مطلوبان');
+        }
+
+        // Verify project belongs to user's organization
+        const certProject = await db.project.findFirst({
+          where: { id: projectId, organizationId: user.organizationId }
+        });
+        if (!certProject) return errorResponse('المشروع غير موجود', 'NOT_FOUND', 404);
+
+        // Generate certificate number
+        const count = await db.certificate.count();
+        const certificateNumber = `CERT-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
+
+        const certificate = await db.certificate.create({
+          data: {
+            certificateNumber,
+            projectId,
+            clientId,
+            certificateType: certificateType || 'completion',
+            title,
+            description,
+            percentage: percentage || 100,
+            amount: amount ? parseFloat(amount) : null,
+            issueDate: issueDate ? new Date(issueDate) : new Date(),
+            validUntil: validUntil ? new Date(validUntil) : null,
+            notes,
+            organizationId: user.organizationId
+          }
+        });
+
+        return successResponse({ id: certificate.id, certificateNumber });
       }
 
       case 'ai-chat': {
@@ -919,6 +1548,12 @@ export async function POST(request: NextRequest) {
 
 // PUT handler
 export async function PUT(request: NextRequest) {
+  // Check rate limit
+  const rateLimitResult = checkRateLimit(request);
+  if (!rateLimitResult.allowed) {
+    return rateLimitError(rateLimitResult.resetTime);
+  }
+
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action');
   const user = await getUserFromToken(request);
@@ -932,6 +1567,12 @@ export async function PUT(request: NextRequest) {
       case 'task': {
         const { id, status, progress } = body;
         if (!id) return errorResponse('معرف المهمة مطلوب');
+
+        // Verify task belongs to user's organization
+        const task = await db.task.findFirst({
+          where: { id, project: { organizationId: user.organizationId } }
+        });
+        if (!task) return errorResponse('المهمة غير موجودة', 'NOT_FOUND', 404);
 
         const updateData: any = {};
         if (status) {
@@ -948,6 +1589,12 @@ export async function PUT(request: NextRequest) {
         const { id, status } = body;
         if (!id || !status) return errorResponse('المعرف والحالة مطلوبان');
 
+        // Verify invoice belongs to user's organization
+        const invoice = await db.invoice.findFirst({
+          where: { id, organizationId: user.organizationId }
+        });
+        if (!invoice) return errorResponse('الفاتورة غير موجودة', 'NOT_FOUND', 404);
+
         await db.invoice.update({ where: { id }, data: { status } });
         return successResponse(true);
       }
@@ -958,6 +1605,12 @@ export async function PUT(request: NextRequest) {
         }
         const { id, approve, rejectionReason } = body;
         if (!id) return errorResponse('معرف الطلب مطلوب');
+
+        // Verify leave request belongs to user's organization
+        const leaveRequest = await db.leaveRequest.findFirst({
+          where: { id, user: { organizationId: user.organizationId } }
+        });
+        if (!leaveRequest) return errorResponse('طلب الإجازة غير موجود', 'NOT_FOUND', 404);
 
         await db.leaveRequest.update({
           where: { id },
@@ -994,6 +1647,12 @@ export async function PUT(request: NextRequest) {
         const { id, ...data } = body;
         if (!id) return errorResponse('معرف المشروع مطلوب');
 
+        // Verify project belongs to user's organization
+        const project = await db.project.findFirst({
+          where: { id, organizationId: user.organizationId }
+        });
+        if (!project) return errorResponse('المشروع غير موجود', 'NOT_FOUND', 404);
+
         await db.project.update({ where: { id }, data });
         return successResponse(true);
       }
@@ -1001,6 +1660,12 @@ export async function PUT(request: NextRequest) {
       case 'client': {
         const { id, ...data } = body;
         if (!id) return errorResponse('معرف العميل مطلوب');
+
+        // Verify client belongs to user's organization
+        const client = await db.client.findFirst({
+          where: { id, organizationId: user.organizationId }
+        });
+        if (!client) return errorResponse('العميل غير موجود', 'NOT_FOUND', 404);
 
         await db.client.update({ where: { id }, data });
         return successResponse(true);
@@ -1012,6 +1677,12 @@ export async function PUT(request: NextRequest) {
         }
         const { id, ...data } = body;
         if (!id) return errorResponse('معرف المستخدم مطلوب');
+
+        // Verify user belongs to same organization
+        const targetUser = await db.user.findFirst({
+          where: { id, organizationId: user.organizationId }
+        });
+        if (!targetUser) return errorResponse('المستخدم غير موجود', 'NOT_FOUND', 404);
 
         if (data.password) {
           data.password = await bcrypt.hash(data.password, 10);
@@ -1025,6 +1696,12 @@ export async function PUT(request: NextRequest) {
         const { id, ...data } = body;
         if (!id) return errorResponse('معرف المورد مطلوب');
 
+        // Verify supplier belongs to user's organization
+        const supplier = await db.supplier.findFirst({
+          where: { id, organizationId: user.organizationId }
+        });
+        if (!supplier) return errorResponse('المورد غير موجود', 'NOT_FOUND', 404);
+
         await db.supplier.update({ where: { id }, data });
         return successResponse(true);
       }
@@ -1032,6 +1709,12 @@ export async function PUT(request: NextRequest) {
       case 'material': {
         const { id, ...data } = body;
         if (!id) return errorResponse('معرف المادة مطلوب');
+
+        // Verify material belongs to user's organization
+        const material = await db.material.findFirst({
+          where: { id, organizationId: user.organizationId }
+        });
+        if (!material) return errorResponse('المادة غير موجودة', 'NOT_FOUND', 404);
 
         await db.material.update({ where: { id }, data });
         return successResponse(true);
@@ -1041,6 +1724,12 @@ export async function PUT(request: NextRequest) {
         const { id, ...data } = body;
         if (!id) return errorResponse('معرف العقد مطلوب');
 
+        // Verify contract belongs to user's organization
+        const contract = await db.contract.findFirst({
+          where: { id, organizationId: user.organizationId }
+        });
+        if (!contract) return errorResponse('العقد غير موجود', 'NOT_FOUND', 404);
+
         await db.contract.update({ where: { id }, data });
         return successResponse(true);
       }
@@ -1048,6 +1737,12 @@ export async function PUT(request: NextRequest) {
       case 'proposal': {
         const { id, ...data } = body;
         if (!id) return errorResponse('معرف العرض مطلوب');
+
+        // Verify proposal belongs to user's organization
+        const proposal = await db.proposal.findFirst({
+          where: { id, organizationId: user.organizationId }
+        });
+        if (!proposal) return errorResponse('العرض غير موجود', 'NOT_FOUND', 404);
 
         if (data.items) {
           data.items = JSON.stringify(data.items);
@@ -1061,6 +1756,12 @@ export async function PUT(request: NextRequest) {
         const { id, status } = body;
         if (!id || !status) return errorResponse('المعرف والحالة مطلوبان');
 
+        // Verify proposal belongs to user's organization
+        const proposal = await db.proposal.findFirst({
+          where: { id, organizationId: user.organizationId }
+        });
+        if (!proposal) return errorResponse('العرض غير موجود', 'NOT_FOUND', 404);
+
         await db.proposal.update({ where: { id }, data: { status } });
         return successResponse(true);
       }
@@ -1068,6 +1769,12 @@ export async function PUT(request: NextRequest) {
       case 'expense': {
         const { id, ...data } = body;
         if (!id) return errorResponse('معرف المصروف مطلوب');
+
+        // Verify expense belongs to user's organization
+        const expense = await db.expense.findFirst({
+          where: { id, project: { organizationId: user.organizationId } }
+        });
+        if (!expense) return errorResponse('المصروف غير موجود', 'NOT_FOUND', 404);
 
         await db.expense.update({ where: { id }, data });
         return successResponse(true);
@@ -1080,6 +1787,12 @@ export async function PUT(request: NextRequest) {
         const { id, approve, rejectionReason } = body;
         if (!id) return errorResponse('معرف المصروف مطلوب');
 
+        // Verify expense belongs to user's organization
+        const expense = await db.expense.findFirst({
+          where: { id, project: { organizationId: user.organizationId } }
+        });
+        if (!expense) return errorResponse('المصروف غير موجود', 'NOT_FOUND', 404);
+
         await db.expense.update({
           where: { id },
           data: {
@@ -1087,6 +1800,117 @@ export async function PUT(request: NextRequest) {
             approvedById: approve ? user.id : null,
             approvedAt: approve ? new Date() : null,
             notes: approve ? null : rejectionReason
+          }
+        });
+        return successResponse(true);
+      }
+
+      // ============================================
+      // TASK 5: New PUT Endpoints
+      // ============================================
+
+      case 'boq-item': {
+        const { id, ...data } = body;
+        if (!id) return errorResponse('معرف بند جدول الكميات مطلوب');
+
+        // Verify BOQItem belongs to user's organization through project
+        const boqItem = await db.bOQItem.findFirst({
+          where: { id, project: { organizationId: user.organizationId } }
+        });
+        if (!boqItem) return errorResponse('البند غير موجود', 'NOT_FOUND', 404);
+
+        // Calculate total price if quantity and unit price are provided
+        if (data.quantity !== undefined && data.unitPrice !== undefined) {
+          data.totalPrice = parseFloat(data.quantity) * parseFloat(data.unitPrice);
+        }
+
+        await db.bOQItem.update({ where: { id }, data });
+        return successResponse(true);
+      }
+
+      case 'purchase-order': {
+        const { id, ...data } = body;
+        if (!id) return errorResponse('معرف أمر الشراء مطلوب');
+
+        // Verify PurchaseOrder belongs to user's organization through supplier
+        const purchaseOrder = await db.purchaseOrder.findFirst({
+          where: { id, supplier: { organizationId: user.organizationId } }
+        });
+        if (!purchaseOrder) return errorResponse('أمر الشراء غير موجود', 'NOT_FOUND', 404);
+
+        if (data.items) {
+          data.items = JSON.stringify(data.items);
+        }
+
+        await db.purchaseOrder.update({ where: { id }, data });
+        return successResponse(true);
+      }
+
+      case 'purchase-order-status': {
+        const { id, status } = body;
+        if (!id || !status) return errorResponse('المعرف والحالة مطلوبان');
+
+        // Verify PurchaseOrder belongs to user's organization
+        const purchaseOrder = await db.purchaseOrder.findFirst({
+          where: { id, supplier: { organizationId: user.organizationId } }
+        });
+        if (!purchaseOrder) return errorResponse('أمر الشراء غير موجود', 'NOT_FOUND', 404);
+
+        await db.purchaseOrder.update({ where: { id }, data: { status } });
+        return successResponse(true);
+      }
+
+      case 'budget': {
+        const { id, ...data } = body;
+        if (!id) return errorResponse('معرف الميزانية مطلوب');
+
+        // Verify budget belongs to user's organization through project
+        const budget = await db.budget.findFirst({
+          where: { id, project: { organizationId: user.organizationId } }
+        });
+        if (!budget) return errorResponse('الميزانية غير موجودة', 'NOT_FOUND', 404);
+
+        // Calculate variance if amounts are provided
+        if (data.budgetAmount !== undefined || data.actualAmount !== undefined) {
+          const budgetAmount = data.budgetAmount !== undefined ? parseFloat(data.budgetAmount) : budget.budgetAmount;
+          const actualAmount = data.actualAmount !== undefined ? parseFloat(data.actualAmount) : budget.actualAmount;
+          data.variance = budgetAmount - actualAmount;
+        }
+
+        await db.budget.update({ where: { id }, data });
+        return successResponse(true);
+      }
+
+      case 'defect': {
+        const { id, ...data } = body;
+        if (!id) return errorResponse('معرف العيب مطلوب');
+
+        // Verify defect belongs to user's organization through project
+        const defect = await db.defect.findFirst({
+          where: { id, project: { organizationId: user.organizationId } }
+        });
+        if (!defect) return errorResponse('العيب غير موجود', 'NOT_FOUND', 404);
+
+        await db.defect.update({ where: { id }, data });
+        return successResponse(true);
+      }
+
+      case 'defect-resolve': {
+        const { id, resolutionNotes } = body;
+        if (!id) return errorResponse('معرف العيب مطلوب');
+
+        // Verify defect belongs to user's organization
+        const defect = await db.defect.findFirst({
+          where: { id, project: { organizationId: user.organizationId } }
+        });
+        if (!defect) return errorResponse('العيب غير موجود', 'NOT_FOUND', 404);
+
+        await db.defect.update({
+          where: { id },
+          data: {
+            status: 'Closed',
+            resolvedAt: new Date(),
+            resolutionNotes
           }
         });
         return successResponse(true);
@@ -1103,6 +1927,12 @@ export async function PUT(request: NextRequest) {
 
 // DELETE handler
 export async function DELETE(request: NextRequest) {
+  // Check rate limit
+  const rateLimitResult = checkRateLimit(request);
+  if (!rateLimitResult.allowed) {
+    return rateLimitError(rateLimitResult.resetTime);
+  }
+
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action');
   const id = searchParams.get('id');
@@ -1114,54 +1944,117 @@ export async function DELETE(request: NextRequest) {
     switch (action) {
       case 'project': {
         if (!id) return errorResponse('معرف المشروع مطلوب');
+        
+        // Verify project belongs to user's organization
+        const project = await db.project.findFirst({
+          where: { id, organizationId: user.organizationId }
+        });
+        if (!project) return errorResponse('المشروع غير موجود', 'NOT_FOUND', 404);
+        
         await db.project.delete({ where: { id } });
         return successResponse(true);
       }
 
       case 'client': {
         if (!id) return errorResponse('معرف العميل مطلوب');
+        
+        // Verify client belongs to user's organization
+        const client = await db.client.findFirst({
+          where: { id, organizationId: user.organizationId }
+        });
+        if (!client) return errorResponse('العميل غير موجود', 'NOT_FOUND', 404);
+        
         await db.client.update({ where: { id }, data: { isActive: false } });
         return successResponse(true);
       }
 
       case 'task': {
         if (!id) return errorResponse('معرف المهمة مطلوب');
+        
+        // Verify task belongs to user's organization
+        const task = await db.task.findFirst({
+          where: { id, project: { organizationId: user.organizationId } }
+        });
+        if (!task) return errorResponse('المهمة غير موجودة', 'NOT_FOUND', 404);
+        
         await db.task.delete({ where: { id } });
         return successResponse(true);
       }
 
       case 'invoice': {
         if (!id) return errorResponse('معرف الفاتورة مطلوب');
+        
+        // Verify invoice belongs to user's organization
+        const invoice = await db.invoice.findFirst({
+          where: { id, organizationId: user.organizationId }
+        });
+        if (!invoice) return errorResponse('الفاتورة غير موجودة', 'NOT_FOUND', 404);
+        
         await db.invoice.delete({ where: { id } });
         return successResponse(true);
       }
 
       case 'supplier': {
         if (!id) return errorResponse('معرف المورد مطلوب');
+        
+        // Verify supplier belongs to user's organization
+        const supplier = await db.supplier.findFirst({
+          where: { id, organizationId: user.organizationId }
+        });
+        if (!supplier) return errorResponse('المورد غير موجود', 'NOT_FOUND', 404);
+        
         await db.supplier.update({ where: { id }, data: { isActive: false } });
         return successResponse(true);
       }
 
       case 'material': {
         if (!id) return errorResponse('معرف المادة مطلوب');
+        
+        // Verify material belongs to user's organization
+        const material = await db.material.findFirst({
+          where: { id, organizationId: user.organizationId }
+        });
+        if (!material) return errorResponse('المادة غير موجودة', 'NOT_FOUND', 404);
+        
         await db.material.update({ where: { id }, data: { isActive: false } });
         return successResponse(true);
       }
 
       case 'contract': {
         if (!id) return errorResponse('معرف العقد مطلوب');
+        
+        // Verify contract belongs to user's organization
+        const contract = await db.contract.findFirst({
+          where: { id, organizationId: user.organizationId }
+        });
+        if (!contract) return errorResponse('العقد غير موجود', 'NOT_FOUND', 404);
+        
         await db.contract.delete({ where: { id } });
         return successResponse(true);
       }
 
       case 'proposal': {
         if (!id) return errorResponse('معرف العرض مطلوب');
+        
+        // Verify proposal belongs to user's organization
+        const proposal = await db.proposal.findFirst({
+          where: { id, organizationId: user.organizationId }
+        });
+        if (!proposal) return errorResponse('العرض غير موجود', 'NOT_FOUND', 404);
+        
         await db.proposal.delete({ where: { id } });
         return successResponse(true);
       }
 
       case 'expense': {
         if (!id) return errorResponse('معرف المصروف مطلوب');
+        
+        // Verify expense belongs to user's organization
+        const expense = await db.expense.findFirst({
+          where: { id, project: { organizationId: user.organizationId } }
+        });
+        if (!expense) return errorResponse('المصروف غير موجود', 'NOT_FOUND', 404);
+        
         await db.expense.delete({ where: { id } });
         return successResponse(true);
       }
@@ -1174,7 +2067,94 @@ export async function DELETE(request: NextRequest) {
 
       case 'site-report': {
         if (!id) return errorResponse('معرف تقرير الموقع مطلوب');
+        
+        // Verify site report belongs to user's organization
+        const siteReport = await db.siteReport.findFirst({
+          where: { id, project: { organizationId: user.organizationId } }
+        });
+        if (!siteReport) return errorResponse('تقرير الموقع غير موجود', 'NOT_FOUND', 404);
+        
         await db.siteReport.delete({ where: { id } });
+        return successResponse(true);
+      }
+
+      // ============================================
+      // TASK 6: New DELETE Endpoints
+      // ============================================
+
+      case 'boq-item': {
+        if (!id) return errorResponse('معرف بند جدول الكميات مطلوب');
+        
+        // Verify BOQItem belongs to user's organization
+        const boqItem = await db.bOQItem.findFirst({
+          where: { id, project: { organizationId: user.organizationId } }
+        });
+        if (!boqItem) return errorResponse('البند غير موجود', 'NOT_FOUND', 404);
+        
+        await db.bOQItem.delete({ where: { id } });
+        return successResponse(true);
+      }
+
+      case 'purchase-order': {
+        if (!id) return errorResponse('معرف أمر الشراء مطلوب');
+        
+        // Verify PurchaseOrder belongs to user's organization
+        const purchaseOrder = await db.purchaseOrder.findFirst({
+          where: { id, supplier: { organizationId: user.organizationId } }
+        });
+        if (!purchaseOrder) return errorResponse('أمر الشراء غير موجود', 'NOT_FOUND', 404);
+        
+        await db.purchaseOrder.delete({ where: { id } });
+        return successResponse(true);
+      }
+
+      case 'budget': {
+        if (!id) return errorResponse('معرف الميزانية مطلوب');
+        
+        // Verify budget belongs to user's organization
+        const budget = await db.budget.findFirst({
+          where: { id, project: { organizationId: user.organizationId } }
+        });
+        if (!budget) return errorResponse('الميزانية غير موجودة', 'NOT_FOUND', 404);
+        
+        await db.budget.delete({ where: { id } });
+        return successResponse(true);
+      }
+
+      case 'defect': {
+        if (!id) return errorResponse('معرف العيب مطلوب');
+        
+        // Verify defect belongs to user's organization
+        const defect = await db.defect.findFirst({
+          where: { id, project: { organizationId: user.organizationId } }
+        });
+        if (!defect) return errorResponse('العيب غير موجود', 'NOT_FOUND', 404);
+        
+        await db.defect.delete({ where: { id } });
+        return successResponse(true);
+      }
+
+      case 'voucher': {
+        if (!id) return errorResponse('معرف السند مطلوب');
+        
+        const voucher = await db.voucher.findFirst({
+          where: { id, organizationId: user.organizationId }
+        });
+        if (!voucher) return errorResponse('السند غير موجود', 'NOT_FOUND', 404);
+        
+        await db.voucher.delete({ where: { id } });
+        return successResponse(true);
+      }
+
+      case 'certificate': {
+        if (!id) return errorResponse('معرف الشهادة مطلوب');
+        
+        const certificate = await db.certificate.findFirst({
+          where: { id, organizationId: user.organizationId }
+        });
+        if (!certificate) return errorResponse('الشهادة غير موجودة', 'NOT_FOUND', 404);
+        
+        await db.certificate.delete({ where: { id } });
         return successResponse(true);
       }
 
