@@ -78,6 +78,7 @@ export async function GET(request: NextRequest) {
         return successResponse(users);
 
       case 'projects':
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const allProjects = await db.project.findMany({ 
           include: { client: true }, 
           orderBy: { createdAt: 'desc' } 
@@ -96,6 +97,7 @@ export async function GET(request: NextRequest) {
         })));
 
       case 'project':
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const projectId = searchParams.get('id');
         if (!projectId) return errorResponse('معرف المشروع مطلوب');
         const project = await db.project.findUnique({
@@ -125,6 +127,7 @@ export async function GET(request: NextRequest) {
         });
 
       case 'clients':
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const clients = await db.client.findMany({
           where: { isActive: true },
           orderBy: { createdAt: 'desc' }
@@ -144,6 +147,7 @@ export async function GET(request: NextRequest) {
         })));
 
       case 'invoices':
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const invoices = await db.invoice.findMany({
           include: { client: true, project: true },
           orderBy: { createdAt: 'desc' }
@@ -164,6 +168,7 @@ export async function GET(request: NextRequest) {
         })));
 
       case 'tasks':
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const taskProjectId = searchParams.get('projectId');
         const taskStatus = searchParams.get('status');
         const tasksQuery: any = {};
@@ -191,6 +196,7 @@ export async function GET(request: NextRequest) {
         })));
 
       case 'suppliers':
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const suppliers = await db.supplier.findMany({
           where: { isActive: true },
           orderBy: { createdAt: 'desc' }
@@ -208,6 +214,7 @@ export async function GET(request: NextRequest) {
         })));
 
       case 'materials':
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const materials = await db.material.findMany({
           where: { isActive: true },
           orderBy: { name: 'asc' }
@@ -226,6 +233,7 @@ export async function GET(request: NextRequest) {
         })));
 
       case 'contracts':
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const contracts = await db.contract.findMany({
           include: { client: true },
           orderBy: { createdAt: 'desc' }
@@ -244,6 +252,7 @@ export async function GET(request: NextRequest) {
         })));
 
       case 'proposals':
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const proposals = await db.proposal.findMany({
           include: { client: true },
           orderBy: { createdAt: 'desc' }
@@ -262,6 +271,7 @@ export async function GET(request: NextRequest) {
         })));
 
       case 'site-reports':
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const siteReports = await db.siteReport.findMany({
           include: { project: true },
           orderBy: { reportDate: 'desc' },
@@ -286,6 +296,7 @@ export async function GET(request: NextRequest) {
         })));
 
       case 'documents':
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const documents = await db.document.findMany({
           include: { uploader: true },
           orderBy: { createdAt: 'desc' }
@@ -342,6 +353,7 @@ export async function GET(request: NextRequest) {
         })));
 
       case 'attendance':
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const attUserId = searchParams.get('userId');
         const startDate = searchParams.get('startDate');
         const endDate = searchParams.get('endDate');
@@ -368,6 +380,7 @@ export async function GET(request: NextRequest) {
         })));
 
       case 'dashboard':
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const totalProjects = await db.project.count();
         const activeProjects = await db.project.count({ where: { status: 'active' } });
         const completedProjects = await db.project.count({ where: { status: 'completed' } });
@@ -961,6 +974,77 @@ export async function PUT(request: NextRequest) {
         return successResponse(true);
       }
 
+      case 'supplier': {
+        const { id, ...data } = body;
+        if (!id) return errorResponse('معرف المورد مطلوب');
+
+        await db.supplier.update({ where: { id }, data });
+        return successResponse(true);
+      }
+
+      case 'material': {
+        const { id, ...data } = body;
+        if (!id) return errorResponse('معرف المادة مطلوب');
+
+        await db.material.update({ where: { id }, data });
+        return successResponse(true);
+      }
+
+      case 'contract': {
+        const { id, ...data } = body;
+        if (!id) return errorResponse('معرف العقد مطلوب');
+
+        await db.contract.update({ where: { id }, data });
+        return successResponse(true);
+      }
+
+      case 'proposal': {
+        const { id, ...data } = body;
+        if (!id) return errorResponse('معرف العرض مطلوب');
+
+        if (data.items) {
+          data.items = JSON.stringify(data.items);
+        }
+
+        await db.proposal.update({ where: { id }, data });
+        return successResponse(true);
+      }
+
+      case 'proposal-status': {
+        const { id, status } = body;
+        if (!id || !status) return errorResponse('المعرف والحالة مطلوبان');
+
+        await db.proposal.update({ where: { id }, data: { status } });
+        return successResponse(true);
+      }
+
+      case 'expense': {
+        const { id, ...data } = body;
+        if (!id) return errorResponse('معرف المصروف مطلوب');
+
+        await db.expense.update({ where: { id }, data });
+        return successResponse(true);
+      }
+
+      case 'expense-approve': {
+        if (user.role !== 'admin' && user.role !== 'accountant') {
+          return errorResponse('غير مصرح', 'FORBIDDEN', 403);
+        }
+        const { id, approve, rejectionReason } = body;
+        if (!id) return errorResponse('معرف المصروف مطلوب');
+
+        await db.expense.update({
+          where: { id },
+          data: {
+            status: approve ? 'approved' : 'rejected',
+            approvedById: approve ? user.id : null,
+            approvedAt: approve ? new Date() : null,
+            notes: approve ? null : rejectionReason
+          }
+        });
+        return successResponse(true);
+      }
+
       default:
         return errorResponse('إجراء غير معروف');
     }
@@ -1020,6 +1104,30 @@ export async function DELETE(request: NextRequest) {
       case 'contract': {
         if (!id) return errorResponse('معرف العقد مطلوب');
         await db.contract.delete({ where: { id } });
+        return successResponse(true);
+      }
+
+      case 'proposal': {
+        if (!id) return errorResponse('معرف العرض مطلوب');
+        await db.proposal.delete({ where: { id } });
+        return successResponse(true);
+      }
+
+      case 'expense': {
+        if (!id) return errorResponse('معرف المصروف مطلوب');
+        await db.expense.delete({ where: { id } });
+        return successResponse(true);
+      }
+
+      case 'document': {
+        if (!id) return errorResponse('معرف المستند مطلوب');
+        await db.document.delete({ where: { id } });
+        return successResponse(true);
+      }
+
+      case 'site-report': {
+        if (!id) return errorResponse('معرف تقرير الموقع مطلوب');
+        await db.siteReport.delete({ where: { id } });
         return successResponse(true);
       }
 
