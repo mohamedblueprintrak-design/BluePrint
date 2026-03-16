@@ -202,10 +202,52 @@ blueprint/
 
 - ✅ تشفير كلمات المرور بـ bcryptjs
 - ✅ JWT tokens للمصادقة
+- ✅ GitHub OAuth للمصادقة الاجتماعية
 - ✅ Rate limiting (100 طلب/دقيقة)
 - ✅ Organization isolation
 - ✅ CORS protection
 - ✅ Security headers
+- ✅ CSRF protection للـ OAuth
+
+## 📱 التصميم المتجاوب
+
+- ✅ تصميم متجاوب لجميع الشاشات
+- ✅ قائمة جانبية (Sidebar) تتحول لـ Drawer في الجوال
+- ✅ رأس ثابتة للجوال مع الشعار
+- ✅ زر قائمة للجوال
+- ✅ تباعد و padding مناسب للشاشات الصغيرة
+
+## 🔗 GitHub OAuth
+
+تطبيقك يدعم تسجيل الدخول عبر GitHub! للإعداد:
+
+1. اذهب إلى [GitHub Developer Settings](https://github.com/settings/developers)
+2. أنشئ OAuth App جديد
+3. اضبط:
+   - Homepage URL: `http://localhost:3000`
+   - Callback URL: `http://localhost:3000/api/auth/github/callback`
+4. انسخ Client ID و Client Secret إلى `.env.local`
+
+```bash
+GITHUB_CLIENT_ID="your-client-id"
+GITHUB_CLIENT_SECRET="your-client-secret"
+```
+
+## 🚀 GitHub Actions CI/CD
+
+المشروع يحتوي على GitHub Actions للتجميع المستمر:
+
+### Workflows المتاحة:
+- `ci.yml` - بناء واختبار المشروع
+- `verify.yml` - التحقق من جودة الكود
+- `schema-check.yml` - التحقق من صحة قاعدة البيانات
+
+### الأسرار المطلوبة:
+- `DATABASE_URL` - رابط قاعدة البيانات
+- `JWT_SECRET` - مفتاح JWT
+- `GITHUB_CLIENT_ID` - معرف GitHub OAuth
+- `GITHUB_CLIENT_SECRET` - سر GitHub OAuth
+- `VERCEL_TOKEN` - رمز Vercel للنشر
 
 ## 🚢 النشر
 
