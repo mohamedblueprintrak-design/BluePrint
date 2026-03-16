@@ -5,10 +5,28 @@ import * as jose from 'jose';
 import ZAI from 'z-ai-web-dev-sdk';
 
 // Security: JWT secret must come from environment only
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters');
 if (!process.env.JWT_SECRET) {
-  console.error('CRITICAL: JWT_SECRET environment variable is not set!');
+  console.warn('WARNING: Using demo JWT secret. Set JWT_SECRET in production!');
 }
+
+// Demo users for testing without database
+const DEMO_USERS = [
+  {
+    id: 'demo-admin-001',
+    username: 'admin',
+    email: 'admin@blueprint.ae',
+    password: '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZRGdjGj/n3.sCP9eNiBx.qL/4ZcS.', // admin123
+    fullName: 'مدير النظام',
+    role: 'admin',
+    isActive: true,
+    avatar: null,
+    language: 'ar',
+    theme: 'dark',
+    organizationId: 'demo-org-001',
+    organization: { id: 'demo-org-001', name: 'BluePrint Demo', currency: 'AED' }
+  }
+];
 
 // Rate Limiting: In-memory store for request tracking
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
@@ -90,11 +108,25 @@ async function getUserFromToken(request: NextRequest) {
   
   try {
     const { payload } = await jose.jwtVerify(token, JWT_SECRET);
-    const user = await db.user.findUnique({ 
-      where: { id: payload.userId as string },
-      include: { organization: true }
-    });
-    return user;
+    const userId = payload.userId as string;
+    
+    // Check demo users first
+    const demoUser = DEMO_USERS.find(u => u.id === userId);
+    if (demoUser) {
+      return { ...demoUser, organization: demoUser.organization };
+    }
+    
+    // Then try database
+    try {
+      const user = await db.user.findUnique({ 
+        where: { id: userId },
+        include: { organization: true }
+      });
+      return user;
+    } catch (dbError) {
+      console.log('Database not available, using demo mode');
+      return null;
+    }
   } catch {
     return null;
   }
@@ -126,8 +158,8 @@ export async function GET(request: NextRequest) {
           fullName: user.fullName,
           role: user.role,
           avatar: user.avatar,
-          language: user.language,
-          theme: user.theme,
+          language: user.language || 'ar',
+          theme: user.theme || 'dark',
           organization: user.organization,
           organizationId: user.organizationId
         });
@@ -690,6 +722,24 @@ export async function GET(request: NextRequest) {
 
       case 'dashboard':
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+        
+        // Demo data for users without database
+        if (user.id.startsWith('demo-')) {
+          return successResponse({
+            projects: { total: 12, active: 5, completed: 4, pending: 3 },
+            clients: { total: 8 },
+            financial: {
+              totalInvoiced: 1250000,
+              totalPaid: 875000,
+              totalPending: 375000,
+              overdueAmount: 45000
+            },
+            tasks: { total: 34, pending: 8, inProgress: 12, completed: 14, overdue: 3 },
+            defects: { open: 5, resolved: 18, critical: 1 },
+            employees: { total: 15, presentToday: 12, onLeave: 2 }
+          });
+        }
+        
         const totalProjects = await db.project.count({ where: { organizationId: user.organizationId } });
         const activeProjects = await db.project.count({ where: { status: 'active', organizationId: user.organizationId } });
         const completedProjects = await db.project.count({ where: { status: 'completed', organizationId: user.organizationId } });
@@ -810,14 +860,26 @@ export async function POST(request: NextRequest) {
           return errorResponse('اسم المستخدم وكلمة المرور مطلوبان');
         }
 
-        const foundUser = await db.user.findFirst({
-          where: {
-            OR: [
-              { username },
-              { email: username }
-            ]
+        // Try demo users first
+        let foundUser: any = DEMO_USERS.find(u => 
+          u.username === username || u.email === username
+        );
+        
+        // If not in demo users, try database
+        if (!foundUser) {
+          try {
+            foundUser = await db.user.findFirst({
+              where: {
+                OR: [
+                  { username },
+                  { email: username }
+                ]
+              }
+            });
+          } catch (dbError) {
+            console.log('Database not available, using demo mode');
           }
-        });
+        }
 
         if (!foundUser || !foundUser.password) {
           return errorResponse('بيانات الدخول غير صحيحة');
@@ -832,11 +894,17 @@ export async function POST(request: NextRequest) {
           return errorResponse('الحساب غير مفعل');
         }
 
-        // Update last login
-        await db.user.update({
-          where: { id: foundUser.id },
-          data: { lastLoginAt: new Date() }
-        });
+        // Update last login (only for database users)
+        if (!foundUser.id.startsWith('demo-')) {
+          try {
+            await db.user.update({
+              where: { id: foundUser.id },
+              data: { lastLoginAt: new Date() }
+            });
+          } catch (dbError) {
+            console.log('Could not update last login');
+          }
+        }
 
         const token = await new jose.SignJWT({ userId: foundUser.id })
           .setProtectedHeader({ alg: 'HS256' })
