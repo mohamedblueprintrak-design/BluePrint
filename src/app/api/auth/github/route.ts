@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
  * GitHub OAuth Initiation Endpoint
  * This route redirects the user to GitHub's authorization page
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   const clientId = process.env.GITHUB_CLIENT_ID;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
   

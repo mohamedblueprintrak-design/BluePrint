@@ -320,3 +320,117 @@ Route (app)                    Size      First Load JS
 
 **تاريخ الإنجاز:** 2025-01-XX
 **الحالة:** ✅ تم إنهاء الجولة الثانية بنجاح
+
+---
+Task ID: Round-3-Implementation
+Agent: Super Z (Main) + General Purpose Subagents
+Task: تنفيذ الجولة الثالثة - إصلاحات Sentry وتنظيف ESLint
+
+---
+
+## ملخص الجولة الثالثة - إصلاحات نهائية
+
+### ✅ الخطوة 1: إصلاح تحذير Sentry
+
+**المشكلة:**
+```
+[@sentry/nextjs] It appears you've configured a `sentry.server.config.ts` file.
+Please ensure to put this file's content into the `register()` function of a Next.js instrumentation hook.
+```
+
+**الحل:**
+
+| الإجراء | التفاصيل |
+|---------|----------|
+| إنشاء `/src/instrumentation.ts` | ملف جديد لتهيئة Sentry على الخادم |
+| تحديث `sentry.client.config.ts` | تحسين الإعدادات للـ production |
+| حذف `sentry.server.config.ts` | لم يعد مطلوباً |
+| تحديث `next.config.ts` | إزالة `instrumentationHook` (مستقر في Next.js 15.5+) |
+
+**instrumentation.ts:**
+```typescript
+export async function register() {
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
+    const Sentry = await import('@sentry/nextjs');
+    Sentry.init({
+      dsn: process.env.SENTRY_DSN,
+      tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1,
+      debug: process.env.NODE_ENV === 'development',
+      environment: process.env.NODE_ENV || 'development',
+    });
+  }
+}
+```
+
+### ✅ الخطوة 2: تنظيف ESLint Warnings
+
+**المتغيرات غير المستخدمة (تم إصلاحها):**
+
+| الملف | التغييرات |
+|-------|-----------|
+| `ai-chat/route.ts` | إزالة interfaces غير مستخدمة |
+| `attendance/route.ts` | `dbError` → `_dbError` (3 مرات) |
+| `auth/github/route.ts` | `request` → `_request` |
+| `auth/route.ts` | `dbError` → `_dbError` (3 مرات) |
+| `clients/route.ts` | `dbError` → `_dbError` (4 مرات) |
+| `expenses/route.ts` | `dbError` → `_dbError` (2 مرات) |
+| `handlers/auth.handler.ts` | `dbError` → `_dbError` (2 مرات) |
+| `vouchers-page.tsx` | `err` → `_err` (2 مرات) |
+| `auth-context.tsx` | `e` → `_e` |
+| `use-data.ts` | إزالة imports غير مستخدمة |
+| `excel-generator.ts` | `styleHeaderCell` → `_styleHeaderCell` |
+
+**إزالة eslint-disable directives غير المستخدمة:**
+
+| الملف | العدد المحذوف |
+|-------|---------------|
+| `auth.handler.ts` | 1 |
+| `clients.handler.ts` | 3 |
+| `contracts.handler.ts` | 3 |
+| `documents.handler.ts` | 2 |
+| `hr.handler.ts` | 4 |
+| `inventory.handler.ts` | 9 |
+| `invoices.handler.ts` | 6 |
+| `materials.handler.ts` | 3 |
+| `projects.handler.ts` | 4 + إزالة import غير مستخدم |
+
+**إجمالي:** 32 directive + 1 import تم إزالتها
+
+---
+
+## نتائج البناء النهائي
+
+```
+Route (app)                                 Size  First Load JS
+┌ ○ /                                    70.4 kB         295 kB
+├ ○ /_not-found                          1.15 kB         210 kB
+├ ƒ /api                                   384 B         209 kB
+├ ƒ /api/ai-chat                           384 B         209 kB
+... (29 API routes)
++ First Load JS shared by all             209 kB
+```
+
+**Build Status:** ✅ SUCCESS
+
+**التحذيرات المتبقية:**
+- تحذيرات ESLint للمتغيرات غير المستخدمة في components (لا تؤثر على الوظائف)
+- يمكن معالجتها لاحقاً دون تأثير على الإنتاج
+
+---
+
+## ملخص الملفات المُنشأة/المعدلة (الجولة الثالثة)
+
+| الملف | النوع | الوصف |
+|-------|-------|-------|
+| `/src/instrumentation.ts` | جديد | Sentry initialization للخادم |
+| `sentry.client.config.ts` | معدل | تحسين الإعدادات |
+| `sentry.server.config.ts` | محذوف | لم يعد مطلوباً |
+| `next.config.ts` | معدل | إزالة instrumentationHook |
+| `ai-chat/route.ts` | معدل | تنظيف interfaces |
+| ملفات API متعددة | معدلة | إصلاح unused variables |
+| ملفات handlers | معدلة | إزالة eslint-disable directives |
+
+---
+
+**تاريخ الإنجاز:** 2025-01-XX
+**الحالة:** ✅ تم إنهاء الجولة الثالثة بنجاح

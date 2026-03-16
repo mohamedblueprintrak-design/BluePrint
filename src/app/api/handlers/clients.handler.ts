@@ -53,7 +53,6 @@ export const getHandlers = {
     const clientLimit = getEffectiveLimit(usePagination, pagination.limit);
     const clientSkip = usePagination ? calculateSkip(pagination.page, pagination.limit) : 0;
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const clients: any[] = await database.client.findMany({
       where: clientWhere,
       orderBy: { createdAt: 'desc' },
@@ -61,7 +60,6 @@ export const getHandlers = {
       take: clientLimit
     });
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mappedClients = clients.map((c: any) => ({
       id: c.id,
       name: c.name,
@@ -99,7 +97,6 @@ export const postHandlers = {
     const database = await getDb();
     if (!database) return errorResponse('قاعدة البيانات غير متاحة');
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const client: any = await database.client.create({
       data: { 
         name: name as string, 

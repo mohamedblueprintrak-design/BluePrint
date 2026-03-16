@@ -25,7 +25,6 @@ export const getHandlers = {
     });
     if (!boqProject) return notFoundResponse('المشروع غير موجود');
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const boqItems: any[] = await database.bOQItem.findMany({
       where: { projectId },
       orderBy: { itemNumber: 'asc' }
@@ -55,7 +54,6 @@ export const getHandlers = {
     const database = await getDb();
     if (!database) return successResponse([]);
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const purchaseOrders: any[] = await database.purchaseOrder.findMany({
       where: { 
         supplier: { organizationId: context.user.organizationId } 
@@ -100,7 +98,6 @@ export const getHandlers = {
     });
     if (!budgetProject) return notFoundResponse('المشروع غير موجود');
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const budgets: any[] = await database.budget.findMany({
       where: { projectId },
       orderBy: { category: 'asc' }
@@ -136,7 +133,6 @@ export const getHandlers = {
     });
     if (!defectProject) return notFoundResponse('المشروع غير موجود');
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const defects: any[] = await database.defect.findMany({
       where: { projectId },
       orderBy: { createdAt: 'desc' }
@@ -183,7 +179,6 @@ export const postHandlers = {
     });
     if (!boqProject) return notFoundResponse('المشروع غير موجود');
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const boqItem: any = await database.bOQItem.create({
       data: {
         projectId: projectId as string,
@@ -224,7 +219,6 @@ export const postHandlers = {
     const count = await database.purchaseOrder.count();
     const poNumber = `PO-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const purchaseOrder: any = await database.purchaseOrder.create({
       data: {
         poNumber,
@@ -264,7 +258,6 @@ export const postHandlers = {
     });
     if (!budgetProject) return notFoundResponse('المشروع غير موجود');
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const budget: any = await database.budget.create({
       data: {
         projectId: projectId as string,
@@ -299,7 +292,6 @@ export const postHandlers = {
     });
     if (!defectProject) return notFoundResponse('المشروع غير موجود');
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const defect: any = await database.defect.create({
       data: {
         projectId: projectId as string,
@@ -425,7 +417,6 @@ export const putHandlers = {
     if (!database) return errorResponse('قاعدة البيانات غير متاحة');
 
     // Verify budget belongs to user's organization through project
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const budget: any = await database.budget.findFirst({
       where: { id: id as string, project: { organizationId: context.user.organizationId } }
     });

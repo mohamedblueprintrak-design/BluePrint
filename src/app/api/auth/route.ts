@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
           },
           include: { organization: true }
         });
-      } catch (dbError) {
+      } catch (_dbError) {
         console.log('Database not available, using demo mode');
       }
 
@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
         });
 
         return successResponse({ id: newUser.id, username: newUser.username });
-      } catch (dbError) {
+      } catch (_dbError) {
         // Demo mode - just return success
         return successResponse({ 
           id: `demo-${Date.now()}`, 
@@ -248,7 +248,7 @@ export async function GET(request: NextRequest) {
             }
           };
         }
-      } catch (dbError) {
+      } catch (_dbError) {
         console.log('Database not available');
       }
     }

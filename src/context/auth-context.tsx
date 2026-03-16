@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setToken(storedToken);
       try {
         setUser(JSON.parse(storedUser));
-      } catch (e) {
+      } catch (_e) {
         // Invalid JSON, clear storage
         localStorage.removeItem(AUTH_TOKEN_KEY);
         localStorage.removeItem(AUTH_USER_KEY);

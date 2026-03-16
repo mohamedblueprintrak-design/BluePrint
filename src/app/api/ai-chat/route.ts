@@ -3,27 +3,8 @@ import * as jose from 'jose';
 import ZAI from 'z-ai-web-dev-sdk';
 import { getJWTSecret } from '../utils/auth';
 
-// API Response types
-interface ApiSuccessResponse<T = unknown> {
-  success: true;
-  data: T;
-}
-
-interface ApiErrorResponse {
-  success: false;
-  error: {
-    code: string;
-    message: string;
-  };
-}
-
-type ApiResponse<T = unknown> = ApiSuccessResponse<T> | ApiErrorResponse;
-
-// Chat completion types
-interface ChatMessage {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-}
+// API Response types (kept for documentation purposes)
+// These interfaces define the expected response structure
 
 interface CompletionChoice {
   message?: {
@@ -33,11 +14,6 @@ interface CompletionChoice {
 
 interface CompletionUsage {
   total_tokens?: number;
-}
-
-interface CompletionResponse {
-  choices?: CompletionChoice[];
-  usage?: CompletionUsage;
 }
 
 // Rate Limiting: In-memory store for request tracking
@@ -291,7 +267,7 @@ export async function POST(request: NextRequest) {
 }
 
 // OPTIONS handler for CORS
-export async function OPTIONS(_request: NextRequest) {
+export async function OPTIONS() {
   return new NextResponse(null, {
     status: 204,
     headers: {

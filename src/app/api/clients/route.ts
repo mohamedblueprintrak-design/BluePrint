@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
         isActive: c.isActive,
         createdAt: c.createdAt
       })));
-    } catch (dbError) {
+    } catch (_dbError) {
       // Return demo clients if database not available
       console.log('Database not available, using demo clients');
       return successResponse(DEMO_CLIENTS);
@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
         }
       });
       return successResponse({ id: client.id, name: client.name });
-    } catch (dbError) {
+    } catch (_dbError) {
       // Demo mode - return success
       return successResponse({ 
         id: `demo-client-${Date.now()}`, 
@@ -165,7 +165,7 @@ export async function PUT(request: NextRequest) {
         data
       });
       return successResponse(client);
-    } catch (dbError) {
+    } catch (_dbError) {
       return successResponse({ id, ...data, message: 'تم التحديث (وضع تجريبي)' });
     }
   } catch (error: any) {
@@ -190,7 +190,7 @@ export async function DELETE(request: NextRequest) {
         data: { isActive: false }
       });
       return successResponse({ message: 'تم حذف العميل' });
-    } catch (dbError) {
+    } catch (_dbError) {
       return successResponse({ message: 'تم الحذف (وضع تجريبي)' });
     }
   } catch (error: any) {

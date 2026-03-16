@@ -53,7 +53,6 @@ export const getHandlers = {
     const documentLimit = getEffectiveLimit(usePagination, pagination.limit);
     const documentSkip = usePagination ? calculateSkip(pagination.page, pagination.limit) : 0;
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const documents: any[] = await database.document.findMany({
       where: documentWhere,
       include: { uploader: true },
@@ -62,7 +61,6 @@ export const getHandlers = {
       take: documentLimit
     });
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mappedDocuments = documents.map((d: any) => ({
       id: d.id,
       filename: d.filename,

@@ -18,7 +18,6 @@ export const getHandlers = {
     const database = await getDb();
     if (!database) return successResponse([]);
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const leaveRequests: any[] = await database.leaveRequest.findMany({
       where: { 
         ...(leaveStatus && { status: leaveStatus }),
@@ -73,7 +72,6 @@ export const getHandlers = {
     const database = await getDb();
     if (!database) return successResponse([]);
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const attendance: any[] = await database.attendance.findMany({
       where: attendanceWhere,
       include: { user: true },
@@ -114,7 +112,6 @@ export const postHandlers = {
 
     const daysCount = Math.ceil((new Date(endDate as string).getTime() - new Date(startDate as string).getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const leaveRequest: any = await database.leaveRequest.create({
       data: {
         userId: context.user.id,
@@ -127,7 +124,6 @@ export const postHandlers = {
     });
 
     // Notify admins in the same organization
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const admins: any[] = await database.user.findMany({ 
       where: { role: 'admin', organizationId: context.user.organizationId } 
     });

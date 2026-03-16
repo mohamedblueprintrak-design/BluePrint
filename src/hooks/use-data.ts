@@ -5,7 +5,7 @@ import { useAuth } from '@/context/auth-context';
 import { 
   ApiResponse, Project, Client, Invoice, Task, Supplier, Material, 
   Contract, Proposal, SiteReport, Document, LeaveRequest, Notification,
-  DashboardStats, FilterOptions, PaginationOptions, Voucher, BOQItem, User
+  DashboardStats, FilterOptions, Voucher, BOQItem, User
 } from '@/types';
 
 // API helper function
@@ -790,7 +790,7 @@ export function useUpdateBudget() {
   return useMutation({
     mutationFn: (data: { id: string } & Partial<Budget>) => 
       apiRequest<Budget>('PUT', 'budget', data, token),
-    onSuccess: (_, variables) => {
+    onSuccess: (_, _variables) => {
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
     }
   });
@@ -1334,7 +1334,7 @@ export function useDeleteBOQItem() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ id, projectId }: { id: string; projectId?: string }) => 
+    mutationFn: ({ id, projectId: _projectId }: { id: string; projectId?: string }) => 
       apiRequest('DELETE', 'boq-item', { id }, token),
     onSuccess: (_, variables) => {
       if (variables.projectId) {

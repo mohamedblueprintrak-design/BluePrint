@@ -7,8 +7,7 @@ import {
   isPaginationRequested, 
   buildPaginationMeta, 
   calculateSkip, 
-  getEffectiveLimit,
-  BACKWARD_COMPAT_LIMIT 
+  getEffectiveLimit
 } from '../utils/pagination';
 
 /**
@@ -53,7 +52,6 @@ export const getHandlers = {
     const projectLimit = getEffectiveLimit(usePagination, pagination.limit);
     const projectSkip = usePagination ? calculateSkip(pagination.page, pagination.limit) : 0;
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const allProjects: any[] = await database.project.findMany({ 
       where: projectWhere,
       include: { client: true }, 
@@ -62,7 +60,6 @@ export const getHandlers = {
       take: projectLimit
     });
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mappedProjects = allProjects.map((p: any) => ({
       id: p.id,
       name: p.name,
@@ -94,7 +91,6 @@ export const getHandlers = {
     const database = await getDb();
     if (!database) return notFoundResponse('المشروع غير موجود');
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const project: any = await database.project.findFirst({
       where: { id: projectId, organizationId: context.user.organizationId },
       include: {
@@ -143,7 +139,6 @@ export const postHandlers = {
     const count = await database.project.count({ where: { organizationId: context.user.organizationId } });
     const projectNumber = `PRJ-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const project: any = await database.project.create({
       data: {
         name: name as string,

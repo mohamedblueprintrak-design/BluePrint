@@ -221,8 +221,8 @@ function getLabels(language: 'ar' | 'en') {
 }
 
 // Style for header cells
-function styleHeaderCell(ws: XLSX.WorkSheet, rowIndex: number, colCount: number) {
-  const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+function _styleHeaderCell(ws: XLSX.WorkSheet, rowIndex: number, colCount: number) {
+  const _range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
   for (let col = 0; col < colCount; col++) {
     const cellAddress = XLSX.utils.encode_cell({ r: rowIndex, c: col });
     if (!ws[cellAddress]) continue;

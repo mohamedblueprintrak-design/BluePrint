@@ -56,7 +56,7 @@ export async function PUT(request: NextRequest) {
     if (data.expenseDate) data.expenseDate = new Date(data.expenseDate);
     try {
       await db.expense.update({ where: { id }, data });
-    } catch (dbError) {
+    } catch (_dbError) {
       console.log('Database unavailable for expense update');
     }
     return success({ id, ...data });
@@ -70,7 +70,7 @@ export async function DELETE(request: NextRequest) {
     const id = new URL(request.url).searchParams.get('id');
     try {
       await db.expense.delete({ where: { id } });
-    } catch (dbError) {
+    } catch (_dbError) {
       console.log('Database unavailable for expense deletion');
     }
     return success({ message: 'تم الحذف' });

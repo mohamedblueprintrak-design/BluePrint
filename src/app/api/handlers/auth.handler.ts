@@ -71,7 +71,6 @@ export const postHandlers = {
     }
 
     // Try demo users first
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let foundUser: any = DEMO_USERS.find(u => 
       u.username === username || u.email === username
     ) || null;
@@ -90,7 +89,7 @@ export const postHandlers = {
             }
           });
         }
-      } catch (dbError) {
+      } catch (_dbError) {
         console.log('Database not available, using demo mode');
       }
     }
@@ -118,7 +117,7 @@ export const postHandlers = {
             data: { lastLoginAt: new Date() }
           });
         }
-      } catch (dbError) {
+      } catch (_dbError) {
         console.log('Could not update last login');
       }
     }

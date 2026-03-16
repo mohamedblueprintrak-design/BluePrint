@@ -52,7 +52,6 @@ export const getHandlers = {
     const contractLimit = getEffectiveLimit(usePagination, pagination.limit);
     const contractSkip = usePagination ? calculateSkip(pagination.page, pagination.limit) : 0;
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const contracts: any[] = await database.contract.findMany({
       where: contractWhere,
       include: { client: true },
@@ -61,7 +60,6 @@ export const getHandlers = {
       take: contractLimit
     });
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mappedContracts = contracts.map((c: any) => ({
       id: c.id,
       contractNumber: c.contractNumber,
@@ -104,7 +102,6 @@ export const postHandlers = {
       finalContractNumber = `CNT-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const contract: any = await database.contract.create({
       data: {
         contractNumber: finalContractNumber,

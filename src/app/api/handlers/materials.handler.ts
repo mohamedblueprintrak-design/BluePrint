@@ -53,7 +53,6 @@ export const getHandlers = {
     const materialLimit = getEffectiveLimit(usePagination, pagination.limit);
     const materialSkip = usePagination ? calculateSkip(pagination.page, pagination.limit) : 0;
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const materials: any[] = await database.material.findMany({
       where: materialWhere,
       orderBy: { name: 'asc' },
@@ -61,7 +60,6 @@ export const getHandlers = {
       take: materialLimit
     });
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mappedMaterials = materials.map((m: any) => ({
       id: m.id,
       materialCode: m.materialCode,
@@ -101,7 +99,6 @@ export const postHandlers = {
     const count = await database.material.count({ where: { organizationId: context.user.organizationId } });
     const materialCode = `MAT-${(count + 1).toString().padStart(4, '0')}`;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const material: any = await database.material.create({
       data: { 
         materialCode, 

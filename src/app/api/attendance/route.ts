@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
       if (endDate) where.date = { ...where.date, lte: new Date(endDate) };
       const attendance = await db.attendance.findMany({ where, include: { user: true }, orderBy: { date: 'desc' } });
       return success(attendance.map(a => ({ ...a, user: { id: a.user.id, fullName: a.user.fullName || a.user.username } })));
-    } catch (dbError) {
+    } catch (_dbError) {
       console.log('Database unavailable, using demo mode for attendance');
       return success(DEMO_ATTENDANCE);
     }
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     try {
       const att = await db.attendance.create({ data: { ...body, userId: body.userId || user.id } });
       return success({ id: att.id, date: att.date });
-    } catch (dbError) {
+    } catch (_dbError) {
       console.log('Database unavailable, using demo mode for attendance creation');
       return success({ id: `demo-att-${Date.now()}` });
     }
@@ -65,7 +65,7 @@ export async function PUT(request: NextRequest) {
     const { id, ...data } = await request.json();
     try {
       await db.attendance.update({ where: { id }, data });
-    } catch (dbError) {
+    } catch (_dbError) {
       console.log('Database unavailable for attendance update');
     }
     return success({ id, ...data });

@@ -52,7 +52,6 @@ export const getHandlers = {
     const invoiceLimit = getEffectiveLimit(usePagination, pagination.limit);
     const invoiceSkip = usePagination ? calculateSkip(pagination.page, pagination.limit) : 0;
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const invoices: any[] = await database.invoice.findMany({
       where: invoiceWhere,
       include: { client: true, project: true },
@@ -61,7 +60,6 @@ export const getHandlers = {
       take: invoiceLimit
     });
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mappedInvoices = invoices.map((i: any) => ({
       id: i.id,
       invoiceNumber: i.invoiceNumber,
@@ -101,7 +99,6 @@ export const getHandlers = {
     });
     if (!invoice) return notFoundResponse('الفاتورة غير موجودة');
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const payments: any[] = await database.payment.findMany({
       where: { invoiceId },
       orderBy: { paymentDate: 'desc' }
@@ -141,7 +138,6 @@ export const postHandlers = {
     const taxAmount = ((subtotal as number) || 0) * ((taxRate as number) || 5) / 100;
     const total = ((subtotal as number) || 0) + taxAmount - ((discountAmount as number) || 0);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const invoice: any = await database.invoice.create({
       data: {
         invoiceNumber,
@@ -179,13 +175,11 @@ export const postHandlers = {
     if (!database) return errorResponse('قاعدة البيانات غير متاحة');
 
     // Verify invoice belongs to user's organization
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const paymentInvoice: any = await database.invoice.findFirst({
       where: { id: invoiceId as string, organizationId: context.user.organizationId }
     });
     if (!paymentInvoice) return notFoundResponse('الفاتورة غير موجودة');
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const payment: any = await database.payment.create({
       data: {
         invoiceId: invoiceId as string,
