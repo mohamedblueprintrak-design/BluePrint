@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { Sonner } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,25 +14,52 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Enhanced Metadata with Arabic support
 export const metadata: Metadata = {
-  title: "Z.ai Code Scaffold - AI-Powered Development",
-  description: "Modern Next.js scaffold optimized for AI-powered development with Z.ai. Built with TypeScript, Tailwind CSS, and shadcn/ui.",
-  keywords: ["Z.ai", "Next.js", "TypeScript", "Tailwind CSS", "shadcn/ui", "AI development", "React"],
-  authors: [{ name: "Z.ai Team" }],
-  icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+  title: {
+    default: "BluePrint | نظام إدارة الاستشارات الهندسية",
+    template: "%s | BluePrint"
   },
+  description: "منصة متكاملة لإدارة مكاتب الاستشارات الهندسية - المشاريع، العقود، الفواتير، الموارد البشرية والمزيد",
+  keywords: [
+    "الاستشارات الهندسية",
+    "إدارة المشاريع",
+    "الفواتير",
+    "العقود",
+    "إدارة الموارد",
+    "Engineering Consultancy",
+    "Project Management",
+    "ERP",
+    "SaaS"
+  ],
+  authors: [{ name: "BluePrint Team" }],
+  creator: "BluePrint",
+  publisher: "BluePrint",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   openGraph: {
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
-    url: "https://chat.z.ai",
-    siteName: "Z.ai",
+    title: "BluePrint | نظام إدارة الاستشارات الهندسية",
+    description: "منصة متكاملة لإدارة مكاتب الاستشارات الهندسية",
+    url: "https://blueprint.app",
+    siteName: "BluePrint",
+    locale: "ar_SA",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
+    title: "BluePrint | نظام إدارة الاستشارات الهندسية",
+    description: "منصة متكاملة لإدارة مكاتب الاستشارات الهندسية",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  icons: {
+    icon: "/logo.svg",
   },
 };
 
@@ -41,12 +69,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="ar" dir="rtl" suppressHydrationWarning>
+      <head>
+        {/* Preconnect for performance */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-950 text-white`}
       >
         {children}
+        {/* Toast notifications */}
         <Toaster />
+        <Sonner position="top-center" richColors closeButton />
       </body>
     </html>
   );

@@ -30,38 +30,46 @@ import { PurchaseOrdersPage } from '@/components/purchase-orders/purchase-orders
 import { DefectsPage } from '@/components/defects/defects-page';
 import { BudgetsPage } from '@/components/budgets/budgets-page';
 import { VouchersPage } from '@/components/vouchers/vouchers-page';
-import { Toaster } from '@/components/ui/toaster';
 import { useTranslation } from '@/lib/translations';
-import { Building2 } from 'lucide-react';
+import { Building2, Loader2 } from 'lucide-react';
 
-// Create a client
+// Create a single QueryClient instance outside the component
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000,
       retry: 1,
+      refetchOnWindowFocus: false,
     },
   },
 });
 
+// Loading Skeleton Component
+function LoadingSkeleton() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-950">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center animate-pulse">
+          <Building2 className="w-8 h-8 text-white" />
+        </div>
+        <div className="flex items-center gap-2">
+          <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+          <p className="text-slate-400">جاري التحميل...</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Main app content
 function AppContent() {
-  const { isAuthenticated, isLoading } = useApp();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { language, isRTL, currentPage, sidebarCollapsed } = useApp();
   const { t } = useTranslation(language);
 
   // Loading state
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center animate-pulse">
-            <Building2 className="w-8 h-8 text-white" />
-          </div>
-          <p className="text-slate-400">{t.loading}</p>
-        </div>
-      </div>
-    );
+  if (authLoading) {
+    return <LoadingSkeleton />;
   }
 
   // Not authenticated - show login
@@ -142,19 +150,21 @@ function AppContent() {
             ? (isRTL ? 'mr-20' : 'ml-20') 
             : (isRTL ? 'mr-64' : 'ml-64')
           }
+          md:${sidebarCollapsed 
+            ? (isRTL ? 'mr-20' : 'ml-20') 
+            : (isRTL ? 'mr-64' : 'ml-64')
+          }
+          mr-0 ml-0 md:mr-0 md:ml-0
         `}
       >
         {/* Header */}
         <Header />
 
         {/* Page Content */}
-        <div className="p-6">
+        <div className="p-4 md:p-6">
           {renderPageContent()}
         </div>
       </main>
-
-      {/* Toaster for notifications */}
-      <Toaster />
     </div>
   );
 }

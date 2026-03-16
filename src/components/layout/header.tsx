@@ -22,8 +22,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  Bell, Moon, Sun, RefreshCw, Plus, Download, ChevronDown,
-  Calendar, Clock, AlertTriangle, CheckCircle, Info
+  Bell, Moon, Sun, Plus, Download, ChevronDown,
+  Calendar, Clock, AlertTriangle, CheckCircle, Info, Search
 } from 'lucide-react';
 
 const CURRENCIES = ['AED', 'SAR', 'USD', 'EUR', 'EGP'] as const;
@@ -38,7 +38,7 @@ export function Header({ title, actions }: HeaderProps) {
   const { 
     theme, setTheme, language, isDark, isRTL,
     currency, setCurrency, currentPage, 
-    setNotificationsPanelOpen
+    setNotificationsPanelOpen, setCommandPaletteOpen
   } = useApp();
   const { t, formatDate } = useTranslation(language);
   const { data: notificationsData } = useNotifications(true);
@@ -51,11 +51,13 @@ export function Header({ title, actions }: HeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-slate-950/80 backdrop-blur-sm border-b border-slate-800 px-6 py-4">
-      <div className="flex items-center justify-between">
+    <header className="sticky top-0 z-30 bg-slate-950/80 backdrop-blur-sm border-b border-slate-800 px-4 md:px-6 py-3 md:py-4 mt-14 md:mt-0">
+      <div className="flex items-center justify-between gap-2">
         {/* Title */}
-        <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold text-white">{getPageTitle()}</h1>
+        <div className="flex items-center gap-2 md:gap-4">
+          <h1 className="text-xl md:text-2xl font-bold text-white truncate">
+            {getPageTitle()}
+          </h1>
           <div className="hidden md:flex items-center gap-2 text-sm text-slate-400">
             <Calendar className="w-4 h-4" />
             <span>{formatDate(new Date())}</span>
@@ -63,18 +65,30 @@ export function Header({ title, actions }: HeaderProps) {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-3">
-          {/* Quick Add */}
+        <div className="flex items-center gap-1 md:gap-3">
+          {/* Search Button - Mobile */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setCommandPaletteOpen(true)}
+            className="md:hidden text-slate-400 hover:text-white hover:bg-slate-800"
+          >
+            <Search className="w-5 h-5" />
+          </Button>
+
+          {/* Quick Add - Desktop */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Button className="hidden md:flex bg-blue-600 hover:bg-blue-700 text-white">
                 <Plus className="w-4 h-4 me-2" />
                 {t.add}
                 <ChevronDown className="w-4 h-4 ms-2" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align={isRTL ? 'start' : 'end'} className="bg-slate-900 border-slate-800">
-              <DropdownMenuLabel className="text-slate-300">{t.add} جديد</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-slate-300">
+                {language === 'ar' ? 'إضافة جديد' : 'Add New'}
+              </DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-slate-800" />
               <DropdownMenuItem className="text-slate-300 focus:bg-slate-800">
                 {t.newProject}
@@ -91,9 +105,18 @@ export function Header({ title, actions }: HeaderProps) {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Currency Selector */}
+          {/* Quick Add - Mobile (just icon) */}
+          <Button
+            variant="default"
+            size="icon"
+            className="md:hidden bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Plus className="w-5 h-5" />
+          </Button>
+
+          {/* Currency Selector - Desktop */}
           <Select value={currency} onValueChange={setCurrency}>
-            <SelectTrigger className="w-20 bg-slate-800 border-slate-700 text-white">
+            <SelectTrigger className="hidden md:flex w-20 bg-slate-800 border-slate-700 text-white">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-slate-900 border-slate-800">
@@ -105,12 +128,12 @@ export function Header({ title, actions }: HeaderProps) {
             </SelectContent>
           </Select>
 
-          {/* Theme Toggle */}
+          {/* Theme Toggle - Desktop */}
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setTheme(isDark ? 'light' : 'dark')}
-            className="text-slate-400 hover:text-white hover:bg-slate-800"
+            className="hidden md:flex text-slate-400 hover:text-white hover:bg-slate-800"
           >
             {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </Button>

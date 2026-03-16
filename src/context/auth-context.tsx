@@ -20,15 +20,50 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const AUTH_TOKEN_KEY = 'bp_token';
 const AUTH_USER_KEY = 'bp_user';
 
+// Helper to get cookie value
+function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+  return null;
+}
+
+// Helper to delete cookie
+function deleteCookie(name: string) {
+  if (typeof document === 'undefined') return;
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load auth state from localStorage
+  // Load auth state from localStorage or cookies (for GitHub OAuth)
   useEffect(() => {
-    const storedToken = localStorage.getItem(AUTH_TOKEN_KEY);
-    const storedUser = localStorage.getItem(AUTH_USER_KEY);
+    // First check localStorage
+    let storedToken = localStorage.getItem(AUTH_TOKEN_KEY);
+    let storedUser = localStorage.getItem(AUTH_USER_KEY);
+    
+    // If not in localStorage, check cookies (set by GitHub OAuth)
+    if (!storedToken || !storedUser) {
+      const cookieToken = getCookie(AUTH_TOKEN_KEY);
+      const cookieUser = getCookie(AUTH_USER_KEY);
+      
+      if (cookieToken && cookieUser) {
+        storedToken = cookieToken;
+        storedUser = cookieUser;
+        
+        // Copy to localStorage for persistence
+        localStorage.setItem(AUTH_TOKEN_KEY, cookieToken);
+        localStorage.setItem(AUTH_USER_KEY, cookieUser);
+        
+        // Clear the cookies (we'll use localStorage from now on)
+        deleteCookie(AUTH_TOKEN_KEY);
+        deleteCookie(AUTH_USER_KEY);
+      }
+    }
 
     if (storedToken && storedUser) {
       setToken(storedToken);
