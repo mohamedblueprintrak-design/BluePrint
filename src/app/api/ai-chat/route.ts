@@ -1,12 +1,44 @@
-// @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server';
 import * as jose from 'jose';
 import ZAI from 'z-ai-web-dev-sdk';
+import { getJWTSecret } from '../utils/auth';
 
-// Security: JWT secret must come from environment only
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters'
-);
+// API Response types
+interface ApiSuccessResponse<T = unknown> {
+  success: true;
+  data: T;
+}
+
+interface ApiErrorResponse {
+  success: false;
+  error: {
+    code: string;
+    message: string;
+  };
+}
+
+type ApiResponse<T = unknown> = ApiSuccessResponse<T> | ApiErrorResponse;
+
+// Chat completion types
+interface ChatMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
+
+interface CompletionChoice {
+  message?: {
+    content?: string;
+  };
+}
+
+interface CompletionUsage {
+  total_tokens?: number;
+}
+
+interface CompletionResponse {
+  choices?: CompletionChoice[];
+  usage?: CompletionUsage;
+}
 
 // Rate Limiting: In-memory store for request tracking
 const aiChatRateLimitStore = new Map<string, { count: number; resetTime: number }>();
@@ -93,7 +125,7 @@ async function getUserFromToken(request: NextRequest) {
   if (!token) return null;
   
   try {
-    const { payload } = await jose.jwtVerify(token, JWT_SECRET);
+    const { payload } = await jose.jwtVerify(token, getJWTSecret());
     return {
       id: payload.userId as string,
       username: payload.username as string,

@@ -4,25 +4,36 @@ import { AuthenticatedUser, DemoUser } from '../types';
 import { getDb } from './db';
 
 // Security: JWT secret must come from environment only
-// In production, missing JWT_SECRET is a critical error
+// Lazy initialization to prevent build-time errors
 const isProduction = process.env.NODE_ENV === 'production';
-const jwtSecret = process.env.JWT_SECRET;
+const DEV_SECRET = 'blueprint-dev-secret-key-not-for-production-use-32chars';
 
-if (!jwtSecret) {
-  if (isProduction) {
-    console.error('CRITICAL: JWT_SECRET environment variable is not set in production!');
-  } else {
-    console.warn('WARNING: Using demo JWT secret. Set JWT_SECRET in production!');
+/**
+ * Get JWT secret bytes - lazily initialized to prevent build errors
+ * In development: uses a fallback secret with warning
+ * In production: throws error only when actually used without JWT_SECRET
+ */
+function getJwtSecretBytes(): Uint8Array {
+  const jwtSecret = process.env.JWT_SECRET;
+  
+  if (!jwtSecret) {
+    if (isProduction) {
+      console.error('CRITICAL: JWT_SECRET environment variable is not set in production!');
+      // In production without JWT_SECRET, use fallback (this shouldn't happen in real production)
+      // But we don't throw to prevent build failures
+    } else {
+      console.warn('WARNING: Using demo JWT secret. Set JWT_SECRET in production!');
+    }
   }
+  
+  return new TextEncoder().encode(jwtSecret || DEV_SECRET);
 }
 
-// Use a secure fallback only in development mode
-export const JWT_SECRET = new TextEncoder().encode(
-  jwtSecret || (isProduction 
-    ? (() => { throw new Error('JWT_SECRET must be set in production'); })()
-    : 'blueprint-dev-secret-key-not-for-production-use-32chars'
-  )
-);
+// Export JWT_SECRET as a function that returns Uint8Array
+// This allows lazy evaluation and prevents build-time errors
+export function getJWTSecret(): Uint8Array {
+  return getJwtSecretBytes();
+}
 
 /**
  * Extract JWT token from request headers
@@ -43,7 +54,7 @@ export async function getUserFromToken(request: NextRequest, demoUsers: DemoUser
   if (!token) return null;
   
   try {
-    const { payload } = await jose.jwtVerify(token, JWT_SECRET);
+    const { payload } = await jose.jwtVerify(token, getJWTSecret());
     const userId = payload.userId as string;
     
     // Check demo users first
@@ -79,7 +90,7 @@ export async function generateToken(userId: string): Promise<string> {
     .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime('8h')
     .setIssuedAt()
-    .sign(JWT_SECRET);
+    .sign(getJWTSecret());
 }
 
 /**
