@@ -45,9 +45,9 @@ const BUDGET_CATEGORIES = [
 interface Budget {
   id: string;
   projectId: string;
-  projectName: string;
+  projectName?: string;
   category: string;
-  description: string;
+  description?: string;
   budgetAmount: number;
   actualAmount: number;
   variance: number;
@@ -82,7 +82,7 @@ export function BudgetsPage() {
     actualAmount: 0,
   });
 
-  const filteredBudgets = budgets.filter((budget: Budget) => {
+  const filteredBudgets = budgets.filter((budget: any) => {
     const matchesSearch = budget.description?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesProject = projectFilter === 'all' || budget.projectId === projectFilter;
     const matchesCategory = categoryFilter === 'all' || budget.category === categoryFilter;
@@ -90,10 +90,10 @@ export function BudgetsPage() {
   });
 
   const stats = {
-    totalBudget: budgets.reduce((sum: number, b: Budget) => sum + b.budgetAmount, 0),
-    totalActual: budgets.reduce((sum: number, b: Budget) => sum + b.actualAmount, 0),
-    totalVariance: budgets.reduce((sum: number, b: Budget) => sum + b.variance, 0),
-    overBudget: budgets.filter((b: Budget) => b.variance < 0).length,
+    totalBudget: budgets.reduce((sum: number, b: any) => sum + (b.budgetAmount || 0), 0),
+    totalActual: budgets.reduce((sum: number, b: any) => sum + (b.actualAmount || 0), 0),
+    totalVariance: budgets.reduce((sum: number, b: any) => sum + (b.variance || 0), 0),
+    overBudget: budgets.filter((b: any) => b.variance < 0).length,
   };
 
   const getCategoryLabel = (category: string) => {
@@ -428,7 +428,7 @@ export function BudgetsPage() {
 
       {/* Budget Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filteredBudgets.map((budget: Budget) => {
+        {filteredBudgets.map((budget: any) => {
           const usagePercentage = budget.budgetAmount > 0 ? (budget.actualAmount / budget.budgetAmount) * 100 : 0;
           
           return (

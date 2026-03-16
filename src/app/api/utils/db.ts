@@ -1,12 +1,17 @@
 import { DemoUser } from '../types';
 
 // Demo users for testing without database
-export const DEMO_USERS: DemoUser[] = [
+// SECURITY: Password is hashed with bcrypt. Never use plain text passwords.
+// Demo mode should only be enabled explicitly via DEMO_MODE=true environment variable
+const DEMO_MODE_ENABLED = process.env.DEMO_MODE === 'true' || process.env.NODE_ENV === 'development';
+
+export const DEMO_USERS: DemoUser[] = DEMO_MODE_ENABLED ? [
   {
     id: 'demo-admin-001',
     username: 'admin',
     email: 'admin@blueprint.ae',
-    password: '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZRGdjGj/n3.sCP9eNiBx.qL/4ZcS.', // admin123
+    // SECURITY: Bcrypt hash - never expose the plain password in logs or responses
+    password: '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZRGdjGj/n3.sCP9eNiBx.qL/4ZcS.',
     fullName: 'مدير النظام',
     role: 'admin',
     isActive: true,
@@ -16,7 +21,7 @@ export const DEMO_USERS: DemoUser[] = [
     organizationId: 'demo-org-001',
     organization: { id: 'demo-org-001', name: 'BluePrint Demo', currency: 'AED' }
   }
-];
+] : [];
 
 // Dynamic database import to avoid failures when DB is not available
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -275,6 +275,18 @@ export async function PUT(request: NextRequest) {
     }
 
     try {
+      // SECURITY: Verify task belongs to user's organization before updating
+      const existingTask = await db.task.findFirst({
+        where: { 
+          id,
+          project: { organizationId: user.organizationId }
+        }
+      });
+      
+      if (!existingTask) {
+        return errorResponse('المهمة غير موجودة أو ليس لديك صلاحية لتعديلها', 'NOT_FOUND', 404);
+      }
+      
       const task = await db.task.update({
         where: { id },
         data
@@ -300,6 +312,18 @@ export async function DELETE(request: NextRequest) {
     if (!id) return errorResponse('معرف المهمة مطلوب');
 
     try {
+      // SECURITY: Verify task belongs to user's organization before deleting
+      const existingTask = await db.task.findFirst({
+        where: { 
+          id,
+          project: { organizationId: user.organizationId }
+        }
+      });
+      
+      if (!existingTask) {
+        return errorResponse('المهمة غير موجودة أو ليس لديك صلاحية لحذفها', 'NOT_FOUND', 404);
+      }
+      
       await db.task.delete({ where: { id } });
       return successResponse({ message: 'تم حذف المهمة' });
     } catch (dbError) {

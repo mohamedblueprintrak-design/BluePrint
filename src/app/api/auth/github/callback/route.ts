@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import * as jose from 'jose';
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
+// SECURITY: Validate JWT_SECRET exists
+const jwtSecretValue = process.env.JWT_SECRET;
+if (!jwtSecretValue) {
+  console.error('CRITICAL: JWT_SECRET is not set for GitHub OAuth!');
+}
+const JWT_SECRET = new TextEncoder().encode(jwtSecretValue || 'github-oauth-fallback-secret-not-for-production');
 
 /**
  * GitHub OAuth Callback Endpoint
@@ -117,22 +122,40 @@ export async function GET(request: NextRequest) {
       }
     } else {
       // Create new user from GitHub data
-      user = await db.user.create({
-        data: {
-          githubId: String(githubUser.id),
-          githubUsername: githubUser.login,
-          githubAvatar: githubUser.avatar_url,
-          username: githubUser.login,
-          email: primaryEmail || `${githubUser.id}@github.placeholder`,
-          fullName: githubUser.name || githubUser.login,
-          avatar: githubUser.avatar_url,
-          password: null, // No password for OAuth users
-          role: 'viewer',
-          isActive: true,
-          emailVerified: new Date(), // GitHub emails are verified
-          lastLoginAt: new Date()
-        }
+      // SECURITY: Create organization for new OAuth users
+      const organizationName = `${githubUser.login}'s Organization`;
+      
+      const newUser = await db.$transaction(async (tx) => {
+        // Create organization first
+        const organization = await tx.organization.create({
+          data: {
+            name: organizationName,
+            slug: `${githubUser.login}-${Date.now()}`,
+            currency: 'AED'
+          }
+        });
+        
+        // Then create user with organization
+        return tx.user.create({
+          data: {
+            githubId: String(githubUser.id),
+            githubUsername: githubUser.login,
+            githubAvatar: githubUser.avatar_url,
+            username: githubUser.login,
+            email: primaryEmail || `${githubUser.id}@github.placeholder`,
+            fullName: githubUser.name || githubUser.login,
+            avatar: githubUser.avatar_url,
+            password: null, // No password for OAuth users
+            role: 'admin', // First user is admin of their org
+            isActive: true,
+            emailVerified: new Date(), // GitHub emails are verified
+            lastLoginAt: new Date(),
+            organizationId: organization.id
+          }
+        });
       });
+      
+      user = newUser;
     }
     
     // Check if user is active

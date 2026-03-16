@@ -98,6 +98,18 @@ export const deleteHandlers = {
     const database = await getDb();
     if (!database) return errorResponse('قاعدة البيانات غير متاحة');
     
+    // SECURITY: Verify document belongs to user's organization before deletion
+    const document = await database.document.findFirst({
+      where: { 
+        id,
+        organizationId: context.user.organizationId 
+      }
+    });
+    
+    if (!document) {
+      return errorResponse('المستند غير موجود أو ليس لديك صلاحية لحذفه', 'NOT_FOUND', 404);
+    }
+    
     await database.document.delete({ where: { id } });
     return successResponse(true);
   }

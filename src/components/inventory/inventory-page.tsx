@@ -537,12 +537,12 @@ export function InventoryPage() {
           {/* Filters */}
           <div className="flex flex-col md:flex-row gap-4 mb-4">
             <div className="relative flex-1 min-w-[200px]">
-              <Search className={`absolute ${language === 'ar' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400`} />
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder={t.search}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={`${language === 'ar' ? 'pr-9' : 'pl-9'} bg-slate-800/50 border-slate-700 text-white`}
+                className="ps-9 bg-slate-800/50 border-slate-700 text-white"
               />
             </div>
 
@@ -764,7 +764,7 @@ export function InventoryPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {lowStockMaterials.map((material: any) => (
-                <Card key={material.id} className="bg-slate-900/50 border-slate-800 border-l-4 border-l-red-500">
+                <Card key={material.id} className="bg-slate-900/50 border-slate-800 border-s-4 border-s-red-500">
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">

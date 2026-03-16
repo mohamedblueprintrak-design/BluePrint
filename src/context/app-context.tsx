@@ -5,6 +5,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 type Theme = 'dark' | 'light' | 'system';
 type Language = 'ar' | 'en';
 type Currency = 'AED' | 'SAR' | 'USD' | 'EUR' | 'EGP';
+type QuickAddDialog = 'project' | 'client' | 'invoice' | 'task' | null;
 
 interface AppContextType {
   // Theme
@@ -38,6 +39,12 @@ interface AppContextType {
   // Notifications Panel
   notificationsPanelOpen: boolean;
   setNotificationsPanelOpen: (open: boolean) => void;
+  
+  // Quick Add Dialog
+  quickAddDialog: QuickAddDialog;
+  setQuickAddDialog: (dialog: QuickAddDialog) => void;
+  openQuickAddDialog: (dialog: Exclude<QuickAddDialog, null>) => void;
+  closeQuickAddDialog: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -81,6 +88,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   
   // Notifications Panel state
   const [notificationsPanelOpen, setNotificationsPanelOpen] = useState(false);
+  
+  // Quick Add Dialog state
+  const [quickAddDialog, setQuickAddDialog] = useState<QuickAddDialog>(null);
+  const openQuickAddDialog = (dialog: Exclude<QuickAddDialog, null>) => setQuickAddDialog(dialog);
+  const closeQuickAddDialog = () => setQuickAddDialog(null);
 
   // Theme effects
   useEffect(() => {
@@ -160,7 +172,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         commandPaletteOpen,
         setCommandPaletteOpen,
         notificationsPanelOpen,
-        setNotificationsPanelOpen
+        setNotificationsPanelOpen,
+        quickAddDialog,
+        setQuickAddDialog,
+        openQuickAddDialog,
+        closeQuickAddDialog
       }}
     >
       {children}

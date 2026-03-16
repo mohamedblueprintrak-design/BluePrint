@@ -4,11 +4,25 @@ import { AuthenticatedUser, DemoUser } from '../types';
 import { getDb } from './db';
 
 // Security: JWT secret must come from environment only
-export const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters');
+// In production, missing JWT_SECRET is a critical error
+const isProduction = process.env.NODE_ENV === 'production';
+const jwtSecret = process.env.JWT_SECRET;
 
-if (!process.env.JWT_SECRET) {
-  console.warn('WARNING: Using demo JWT secret. Set JWT_SECRET in production!');
+if (!jwtSecret) {
+  if (isProduction) {
+    console.error('CRITICAL: JWT_SECRET environment variable is not set in production!');
+  } else {
+    console.warn('WARNING: Using demo JWT secret. Set JWT_SECRET in production!');
+  }
 }
+
+// Use a secure fallback only in development mode
+export const JWT_SECRET = new TextEncoder().encode(
+  jwtSecret || (isProduction 
+    ? (() => { throw new Error('JWT_SECRET must be set in production'); })()
+    : 'blueprint-dev-secret-key-not-for-production-use-32chars'
+  )
+);
 
 /**
  * Extract JWT token from request headers

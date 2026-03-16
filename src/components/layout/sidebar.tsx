@@ -160,7 +160,7 @@ function SidebarContent({
                     <item.icon className="w-5 h-5 shrink-0" />
                     {(!isMobile && sidebarCollapsed ? false : true) && (
                       <>
-                        <span className="flex-1 text-right">{item.label}</span>
+                        <span className="flex-1 text-end">{item.label}</span>
                         {item.badge && (
                           <Badge className="bg-red-500 text-white text-xs px-1.5 py-0.5">
                             {item.badge}
@@ -199,7 +199,7 @@ function SidebarContent({
                       >
                         <item.icon className="w-5 h-5 shrink-0" />
                         {(!isMobile && sidebarCollapsed ? false : true) && (
-                          <span className="flex-1 text-right">{item.label}</span>
+                          <span className="flex-1 text-end">{item.label}</span>
                         )}
                       </button>
                     </TooltipTrigger>
@@ -229,7 +229,7 @@ function SidebarContent({
                   </AvatarFallback>
                 </Avatar>
                 {(!isMobile && sidebarCollapsed ? false : true) && (
-                  <div className="flex-1 text-right">
+                  <div className="flex-1 text-end">
                     <p className="text-sm font-medium text-white truncate">
                       {user?.fullName || user?.username}
                     </p>

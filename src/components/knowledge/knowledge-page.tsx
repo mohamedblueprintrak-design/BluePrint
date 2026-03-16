@@ -722,12 +722,12 @@ export function KnowledgePage() {
       {/* Search and Filter */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 ${isRTL ? 'right-3' : 'left-3'}`} />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input
             placeholder={language === 'ar' ? 'ابحث في قاعدة المعرفة...' : 'Search knowledge base...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className={`${isRTL ? 'pr-9' : 'pl-9'} bg-slate-800/50 border-slate-700 text-white`}
+            className="ps-9 bg-slate-800/50 border-slate-700 text-white"
           />
         </div>
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>

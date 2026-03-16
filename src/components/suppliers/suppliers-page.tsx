@@ -296,12 +296,12 @@ export function SuppliersPage() {
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div className="flex flex-1 gap-3 w-full md:w-auto flex-wrap">
           <div className="relative flex-1 min-w-[200px]">
-            <Search className={`absolute ${language === 'ar' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400`} />
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
               placeholder={t.search}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`${language === 'ar' ? 'pr-9' : 'pl-9'} bg-slate-800/50 border-slate-700 text-white`}
+              className="ps-9 bg-slate-800/50 border-slate-700 text-white"
             />
           </div>
           
@@ -340,7 +340,7 @@ export function SuppliersPage() {
         }}>
           <DialogTrigger asChild>
             <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-              <Plus className={`w-4 h-4 ${language === 'ar' ? 'ml-2' : 'mr-2'}`} />
+              <Plus className="w-4 h-4 me-2" />
               {t.newSupplier}
             </Button>
           </DialogTrigger>
@@ -501,7 +501,7 @@ export function SuppliersPage() {
           <Truck className="w-16 h-16 mb-4 opacity-50" />
           <p className="text-lg">{t.noData}</p>
           <Button variant="outline" className="mt-4" onClick={() => setShowAddDialog(true)}>
-            <Plus className={`w-4 h-4 ${language === 'ar' ? 'ml-2' : 'mr-2'}`} />
+            <Plus className="w-4 h-4 me-2" />
             {t.newSupplier}
           </Button>
         </div>

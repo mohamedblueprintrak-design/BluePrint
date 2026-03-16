@@ -363,7 +363,7 @@ export function TasksPage() {
             <div className={`flex items-center gap-1 text-xs ${overdue ? 'text-red-400' : 'text-slate-400'}`}>
               <Calendar className="w-3 h-3" />
               <span>{formatDate(task.dueDate)}</span>
-              {overdue && <AlertCircle className="w-3 h-3 ml-1" />}
+              {overdue && <AlertCircle className="w-3 h-3 ms-1" />}
             </div>
           )}
           
@@ -909,7 +909,7 @@ export function TasksPage() {
                           {formatDate(selectedTask.dueDate)}
                         </span>
                         {isTaskOverdue(selectedTask) && (
-                          <Badge variant="destructive" className="text-xs ml-2">
+                          <Badge variant="destructive" className="text-xs ms-2">
                             {t.overdue}
                           </Badge>
                         )}

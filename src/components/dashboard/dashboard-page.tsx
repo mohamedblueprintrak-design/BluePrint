@@ -494,13 +494,7 @@ export function DashboardPage() {
             ) : (
               <ScrollArea className="h-64">
                 <div className="space-y-3">
-                  {recentTasks.length > 0 ? recentTasks.map((task: {
-                    id: string;
-                    title: string;
-                    project?: string;
-                    priority?: string;
-                    dueDate?: string;
-                  }) => (
+                  {recentTasks.length > 0 ? recentTasks.map((task: any) => (
                     <div key={task.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800/50 transition-colors">
                       <div className={`w-2 h-2 rounded-full ${
                         task.priority === 'urgent' ? 'bg-red-500' :
@@ -509,7 +503,7 @@ export function DashboardPage() {
                       }`} />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-white truncate">{task.title}</p>
-                        <p className="text-xs text-slate-400">{task.project || t.noData}</p>
+                        <p className="text-xs text-slate-400">{task.project?.name || task.project || t.noData}</p>
                       </div>
                       {task.dueDate && (
                         <div className="flex items-center gap-1 text-xs text-slate-400">
@@ -557,20 +551,14 @@ export function DashboardPage() {
             ) : (
               <ScrollArea className="h-64">
                 <div className="space-y-3">
-                  {pendingInvoices.length > 0 ? pendingInvoices.map((invoice: {
-                    id: string;
-                    invoiceNumber: string;
-                    client?: string;
-                    total: number;
-                    dueDate?: string;
-                  }) => (
+                  {pendingInvoices.length > 0 ? pendingInvoices.map((invoice: any) => (
                     <div key={invoice.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800/50 transition-colors">
                       <div className="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center">
                         <FileText className="w-5 h-5 text-cyan-400" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-white truncate">{invoice.invoiceNumber}</p>
-                        <p className="text-xs text-slate-400">{invoice.client || t.noData}</p>
+                        <p className="text-xs text-slate-400">{invoice.client?.name || invoice.client || t.noData}</p>
                       </div>
                       <div className="text-end">
                         <p className="text-sm font-medium text-white">{formatCurrency(invoice.total)}</p>

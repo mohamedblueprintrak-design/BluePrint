@@ -38,7 +38,8 @@ export function Header({ title, actions }: HeaderProps) {
   const { 
     theme, setTheme, language, isDark, isRTL,
     currency, setCurrency, currentPage, 
-    setNotificationsPanelOpen, setCommandPaletteOpen
+    setNotificationsPanelOpen, setCommandPaletteOpen,
+    openQuickAddDialog
   } = useApp();
   const { t, formatDate } = useTranslation(language);
   const { data: notificationsData } = useNotifications(true);
@@ -48,6 +49,11 @@ export function Header({ title, actions }: HeaderProps) {
   const getPageTitle = () => {
     if (title) return title;
     return t[currentPage as keyof typeof t] || currentPage;
+  };
+
+  // Quick add handlers
+  const handleQuickAdd = (type: 'project' | 'client' | 'invoice' | 'task') => {
+    openQuickAddDialog(type);
   };
 
   return (
@@ -90,16 +96,28 @@ export function Header({ title, actions }: HeaderProps) {
                 {language === 'ar' ? 'إضافة جديد' : 'Add New'}
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-slate-800" />
-              <DropdownMenuItem className="text-slate-300 focus:bg-slate-800">
+              <DropdownMenuItem 
+                className="text-slate-300 focus:bg-slate-800 cursor-pointer"
+                onClick={() => handleQuickAdd('project')}
+              >
                 {t.newProject}
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-slate-300 focus:bg-slate-800">
+              <DropdownMenuItem 
+                className="text-slate-300 focus:bg-slate-800 cursor-pointer"
+                onClick={() => handleQuickAdd('client')}
+              >
                 {t.newClient}
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-slate-300 focus:bg-slate-800">
+              <DropdownMenuItem 
+                className="text-slate-300 focus:bg-slate-800 cursor-pointer"
+                onClick={() => handleQuickAdd('invoice')}
+              >
                 {t.newInvoice}
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-slate-300 focus:bg-slate-800">
+              <DropdownMenuItem 
+                className="text-slate-300 focus:bg-slate-800 cursor-pointer"
+                onClick={() => handleQuickAdd('task')}
+              >
                 {t.newTask}
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -110,6 +128,7 @@ export function Header({ title, actions }: HeaderProps) {
             variant="default"
             size="icon"
             className="md:hidden bg-blue-600 hover:bg-blue-700 text-white"
+            onClick={() => openQuickAddDialog('project')}
           >
             <Plus className="w-5 h-5" />
           </Button>

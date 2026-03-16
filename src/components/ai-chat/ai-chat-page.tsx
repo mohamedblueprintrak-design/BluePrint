@@ -165,8 +165,23 @@ function CodeBlock({ code, language }: { code: string; language?: string }) {
   );
 }
 
-// Markdown-like Content Renderer
+// Markdown-like Content Renderer with XSS Protection
 function MessageContent({ content }: { content: string }) {
+  // SECURITY: Sanitize HTML to prevent XSS attacks
+  const sanitizeHtml = (html: string): string => {
+    return html
+      // Remove script tags
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      // Remove event handlers
+      .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
+      // Remove javascript: URLs
+      .replace(/javascript:/gi, '')
+      // Remove data: URLs (can contain malicious content)
+      .replace(/data:/gi, '')
+      // Escape any remaining HTML tags except allowed ones
+      .replace(/<(?!\/?(strong|em|code|br|span)\b)[^>]*>/gi, '');
+  };
+
   const renderContent = (text: string) => {
     const parts: React.ReactNode[] = [];
     const remaining = text;
@@ -217,7 +232,10 @@ function MessageContent({ content }: { content: string }) {
     // Line breaks
     text = text.replace(/\n/g, '<br/>');
     
-    return <span dangerouslySetInnerHTML={{ __html: text }} />;
+    // SECURITY: Sanitize before rendering
+    const sanitizedText = sanitizeHtml(text);
+    
+    return <span dangerouslySetInnerHTML={{ __html: sanitizedText }} />;
   };
   
   return <div className="whitespace-pre-wrap">{renderContent(content)}</div>;
@@ -422,7 +440,7 @@ export function AIChatPage() {
               className="w-full mt-2 bg-slate-800/50 border-slate-700 hover:bg-slate-800 hover:border-blue-500"
               onClick={handleNewChat}
             >
-              <Plus className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
+              <Plus className="w-4 h-4 me-2" />
               {language === 'ar' ? 'محادثة جديدة' : 'New Chat'}
             </Button>
           </CardHeader>
@@ -430,18 +448,12 @@ export function AIChatPage() {
             {/* Search */}
             <div className="px-4 pb-3">
               <div className="relative">
-                <Search className={cn(
-                  "absolute top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400",
-                  isRTL ? "right-3" : "left-3"
-                )} />
+                <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <Input
                   placeholder={t.search}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className={cn(
-                    "bg-slate-800/50 border-slate-700",
-                    isRTL ? "pr-9 pl-3" : "pl-9 pr-3"
-                  )}
+                  className="ps-9 pe-3 bg-slate-800/50 border-slate-700"
                 />
               </div>
             </div>
@@ -581,16 +593,16 @@ export function AIChatPage() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align={isRTL ? "start" : "end"} className="bg-slate-900 border-slate-700">
                   <DropdownMenuItem className="text-slate-300 focus:bg-slate-800">
-                    <RefreshCw className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
+                    <RefreshCw className="w-4 h-4 me-2" />
                     {language === 'ar' ? 'إعادة تحميل' : 'Refresh'}
                   </DropdownMenuItem>
                   <DropdownMenuItem className="text-slate-300 focus:bg-slate-800">
-                    <FileText className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
+                    <FileText className="w-4 h-4 me-2" />
                     {language === 'ar' ? 'تصدير المحادثة' : 'Export Chat'}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-slate-700" />
                   <DropdownMenuItem className="text-slate-300 focus:bg-slate-800">
-                    <Settings className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
+                    <Settings className="w-4 h-4 me-2" />
                     {language === 'ar' ? 'الإعدادات' : 'Settings'}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -639,7 +651,7 @@ export function AIChatPage() {
                       className="h-auto py-3 px-4 bg-slate-800/50 border-slate-700 hover:bg-slate-800 hover:border-slate-600 justify-start"
                       onClick={() => handleQuickPrompt(prompt.id)}
                     >
-                      <prompt.icon className={cn("w-4 h-4 shrink-0", prompt.color, isRTL ? "ml-2" : "mr-2")} />
+                      <prompt.icon className={cn("w-4 h-4 shrink-0 me-2", prompt.color)} />
                       <span className="text-sm text-slate-300">
                         {language === 'ar' ? prompt.labelAr : prompt.labelEn}
                       </span>
@@ -754,7 +766,7 @@ export function AIChatPage() {
                   className="shrink-0 bg-slate-800/50 border-slate-700 hover:bg-slate-800 hover:border-slate-600"
                   onClick={() => handleQuickPrompt(prompt.id)}
                 >
-                  <prompt.icon className={cn("w-3 h-3", prompt.color, isRTL ? "ml-1.5" : "mr-1.5")} />
+                  <prompt.icon className={cn("w-3 h-3 me-1.5", prompt.color)} />
                   <span className="text-xs">
                     {language === 'ar' ? prompt.labelAr : prompt.labelEn}
                   </span>
@@ -772,19 +784,13 @@ export function AIChatPage() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyPress}
                 placeholder={t.askBlu}
-                className={cn(
-                  "min-h-[44px] max-h-32 resize-none bg-slate-800/50 border-slate-700 focus:border-blue-500 pr-12",
-                  isRTL && "text-right"
-                )}
+                className="min-h-[44px] max-h-32 resize-none bg-slate-800/50 border-slate-700 focus:border-blue-500 pe-12"
                 rows={1}
                 disabled={isTyping}
               />
               <Button
                 size="sm"
-                className={cn(
-                  "absolute bottom-1.5 bg-blue-500 hover:bg-blue-600",
-                  isRTL ? "left-1.5" : "right-1.5"
-                )}
+                className="absolute bottom-1.5 end-1.5 bg-blue-500 hover:bg-blue-600"
                 onClick={handleSend}
                 disabled={!input.trim() || isTyping}
               >

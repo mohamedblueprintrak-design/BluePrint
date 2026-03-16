@@ -5,7 +5,7 @@ import { useAuth } from '@/context/auth-context';
 import { 
   ApiResponse, Project, Client, Invoice, Task, Supplier, Material, 
   Contract, Proposal, SiteReport, Document, LeaveRequest, Notification,
-  DashboardStats, FilterOptions, PaginationOptions, Voucher, BOQItem
+  DashboardStats, FilterOptions, PaginationOptions, Voucher, BOQItem, User
 } from '@/types';
 
 // API helper function

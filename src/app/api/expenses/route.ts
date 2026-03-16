@@ -54,7 +54,11 @@ export async function PUT(request: NextRequest) {
   try {
     const { id, ...data } = await request.json();
     if (data.expenseDate) data.expenseDate = new Date(data.expenseDate);
-    try { await db.expense.update({ where: { id }, data }); } catch {}
+    try {
+      await db.expense.update({ where: { id }, data });
+    } catch (dbError) {
+      console.log('Database unavailable for expense update');
+    }
     return success({ id, ...data });
   } catch (e: any) { return error(e.message, "SERVER_ERROR", 500); }
 }
@@ -64,7 +68,11 @@ export async function DELETE(request: NextRequest) {
   if (!user) return error('غير مصرح', 'UNAUTHORIZED', 401);
   try {
     const id = new URL(request.url).searchParams.get('id');
-    try { await db.expense.delete({ where: { id } }); } catch {}
+    try {
+      await db.expense.delete({ where: { id } });
+    } catch (dbError) {
+      console.log('Database unavailable for expense deletion');
+    }
     return success({ message: 'تم الحذف' });
   } catch (e: any) { return error(e.message, "SERVER_ERROR", 500); }
 }

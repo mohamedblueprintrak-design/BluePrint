@@ -36,7 +36,10 @@ export async function GET(request: NextRequest) {
       if (endDate) where.date = { ...where.date, lte: new Date(endDate) };
       const attendance = await db.attendance.findMany({ where, include: { user: true }, orderBy: { date: 'desc' } });
       return success(attendance.map(a => ({ ...a, user: { id: a.user.id, fullName: a.user.fullName || a.user.username } })));
-    } catch { return success(DEMO_ATTENDANCE); }
+    } catch (dbError) {
+      console.log('Database unavailable, using demo mode for attendance');
+      return success(DEMO_ATTENDANCE);
+    }
   } catch (e: any) { return error(e.message, "SERVER_ERROR", 500); }
 }
 
@@ -48,7 +51,10 @@ export async function POST(request: NextRequest) {
     try {
       const att = await db.attendance.create({ data: { ...body, userId: body.userId || user.id } });
       return success({ id: att.id, date: att.date });
-    } catch { return success({ id: `demo-att-${Date.now()}` }); }
+    } catch (dbError) {
+      console.log('Database unavailable, using demo mode for attendance creation');
+      return success({ id: `demo-att-${Date.now()}` });
+    }
   } catch (e: any) { return error(e.message, "SERVER_ERROR", 500); }
 }
 
@@ -57,7 +63,11 @@ export async function PUT(request: NextRequest) {
   if (!user) return error('غير مصرح', 'UNAUTHORIZED', 401);
   try {
     const { id, ...data } = await request.json();
-    try { await db.attendance.update({ where: { id }, data }); } catch {}
+    try {
+      await db.attendance.update({ where: { id }, data });
+    } catch (dbError) {
+      console.log('Database unavailable for attendance update');
+    }
     return success({ id, ...data });
   } catch (e: any) { return error(e.message, "SERVER_ERROR", 500); }
 }
