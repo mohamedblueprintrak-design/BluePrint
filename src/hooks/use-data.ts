@@ -5,7 +5,7 @@ import { useAuth } from '@/context/auth-context';
 import { 
   ApiResponse, Project, Client, Invoice, Task, Supplier, Material, 
   Contract, Proposal, SiteReport, Document, LeaveRequest, Notification,
-  DashboardStats, FilterOptions, PaginationOptions
+  DashboardStats, FilterOptions, PaginationOptions, Voucher, BOQItem
 } from '@/types';
 
 // API helper function
@@ -443,6 +443,44 @@ export function useDocuments(filters?: FilterOptions) {
   });
 }
 
+export interface CreateDocumentData {
+  filename: string;
+  originalName: string;
+  filePath: string;
+  fileType: string;
+  mimeType: string;
+  fileSize: number;
+  category: string;
+  description?: string;
+  tags?: string[];
+}
+
+export function useCreateDocument() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: CreateDocumentData) => 
+      apiRequest<Document>('POST', 'document', data, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+    }
+  });
+}
+
+export function useDeleteDocument() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (id: string) => 
+      apiRequest('DELETE', 'document', { id }, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+    }
+  });
+}
+
 // ============================================
 // Leave Requests Hooks
 // ============================================
@@ -707,6 +745,140 @@ export function useCreateExpense() {
 }
 
 // ============================================
+// Budget Hooks
+// ============================================
+
+export interface Budget {
+  id: string;
+  projectId: string;
+  projectName?: string;
+  category: string;
+  description?: string;
+  budgetAmount: number;
+  actualAmount: number;
+  variance: number;
+  createdAt: Date | string;
+}
+
+export function useBudgets(projectId?: string) {
+  const { token } = useAuth();
+  
+  return useQuery({
+    queryKey: ['budgets', projectId],
+    queryFn: () => apiRequest<Budget[]>('GET', 'budgets', projectId ? { projectId } : {}, token),
+    enabled: !!token
+  });
+}
+
+export function useCreateBudget() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: Partial<Budget>) => 
+      apiRequest<Budget>('POST', 'budget', data, token),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['budgets', variables.projectId] });
+    }
+  });
+}
+
+export function useUpdateBudget() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: { id: string } & Partial<Budget>) => 
+      apiRequest<Budget>('PUT', 'budget', data, token),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['budgets'] });
+    }
+  });
+}
+
+export function useDeleteBudget() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (id: string) => 
+      apiRequest('DELETE', 'budget', { id }, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['budgets'] });
+    }
+  });
+}
+
+// ============================================
+// Defect Hooks
+// ============================================
+
+export interface Defect {
+  id: string;
+  projectId: string;
+  projectName?: string;
+  title: string;
+  description?: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  status: 'Open' | 'In_Progress' | 'Resolved' | 'Closed';
+  location?: string;
+  imageId?: string;
+  assignedTo?: string;
+  resolvedAt?: Date | string;
+  resolutionNotes?: string;
+  createdAt: Date | string;
+}
+
+export function useDefects(projectId?: string) {
+  const { token } = useAuth();
+  
+  return useQuery({
+    queryKey: ['defects', projectId],
+    queryFn: () => apiRequest<Defect[]>('GET', 'defects', projectId ? { projectId } : {}, token),
+    enabled: !!token
+  });
+}
+
+export function useCreateDefect() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: Partial<Defect>) => 
+      apiRequest<Defect>('POST', 'defect', data, token),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['defects', variables.projectId] });
+    }
+  });
+}
+
+export function useUpdateDefect() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: { id: string } & Partial<Defect>) => 
+      apiRequest<Defect>('PUT', 'defect', data, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['defects'] });
+    }
+  });
+}
+
+export function useDeleteDefect() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (id: string) => 
+      apiRequest('DELETE', 'defect', { id }, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['defects'] });
+    }
+  });
+}
+
+// ============================================
 // Profile Hooks
 // ============================================
 
@@ -906,6 +1078,81 @@ export function useUploadMultipleFiles() {
 }
 
 // ============================================
+// Vouchers Hooks
+// ============================================
+
+export interface VoucherFilters {
+  voucherType?: 'receipt' | 'payment';
+  status?: string;
+}
+
+export function useVouchers(filters?: VoucherFilters) {
+  const { token } = useAuth();
+  
+  return useQuery({
+    queryKey: ['vouchers', filters],
+    queryFn: () => apiRequest<Voucher[]>('GET', 'vouchers', filters, token),
+    enabled: !!token
+  });
+}
+
+export function useVoucher(id: string | null) {
+  const { token } = useAuth();
+  
+  return useQuery({
+    queryKey: ['voucher', id],
+    queryFn: () => apiRequest<Voucher>('GET', 'voucher', { id }, token),
+    enabled: !!token && !!id
+  });
+}
+
+export interface CreateVoucherData {
+  voucherType: 'receipt' | 'payment';
+  amount: number;
+  currency?: string;
+  exchangeRate?: number;
+  date?: string;
+  projectId?: string;
+  invoiceId?: string;
+  clientId?: string;
+  supplierId?: string;
+  paymentMethod: string;
+  referenceNumber?: string;
+  checkNumber?: string;
+  checkDate?: string;
+  bankName?: string;
+  description?: string;
+  notes?: string;
+}
+
+export function useCreateVoucher() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: CreateVoucherData) => 
+      apiRequest<{ id: string; voucherNumber: string }>('POST', 'voucher', data, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vouchers'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    }
+  });
+}
+
+export function useDeleteVoucher() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (id: string) => 
+      apiRequest('DELETE', 'voucher', { id }, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vouchers'] });
+    }
+  });
+}
+
+// ============================================
 // Report Export Hook
 // ============================================
 
@@ -954,6 +1201,146 @@ export function useExportReport() {
       window.URL.revokeObjectURL(url);
       
       return true;
+    }
+  });
+}
+
+// ============================================
+// Users Hooks (Admin)
+// ============================================
+
+export interface AdminUser {
+  id: string;
+  username: string;
+  email: string;
+  fullName: string | null;
+  role: string;
+  isActive: boolean;
+  createdAt: string;
+  lastLoginAt?: string;
+}
+
+export function useUsers() {
+  const { token } = useAuth();
+  
+  return useQuery({
+    queryKey: ['users'],
+    queryFn: () => apiRequest<AdminUser[]>('GET', 'users', {}, token),
+    enabled: !!token
+  });
+}
+
+export interface CreateUserData {
+  username: string;
+  email: string;
+  password: string;
+  fullName?: string;
+  role: string;
+}
+
+export function useCreateUser() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: CreateUserData) => 
+      apiRequest<AdminUser>('POST', 'user', data, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    }
+  });
+}
+
+export interface UpdateUserData {
+  id: string;
+  fullName?: string;
+  email?: string;
+  role?: string;
+  isActive?: boolean;
+}
+
+export function useUpdateUser() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: UpdateUserData) => 
+      apiRequest<AdminUser>('PUT', 'user', data, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    }
+  });
+}
+
+export function useDeleteUser() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (id: string) => 
+      apiRequest('DELETE', 'user', { id }, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    }
+  });
+}
+
+// ============================================
+// BOQ (Bill of Quantities) Hooks
+// ============================================
+
+export function useBOQItems(projectId?: string) {
+  const { token } = useAuth();
+  
+  return useQuery({
+    queryKey: ['boq-items', projectId],
+    queryFn: () => apiRequest<BOQItem[]>('GET', 'boq-items', { projectId }, token),
+    enabled: !!token && !!projectId
+  });
+}
+
+export function useCreateBOQItem() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: Partial<BOQItem>) => 
+      apiRequest<BOQItem>('POST', 'boq-item', data, token),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['boq-items', variables.projectId] });
+      queryClient.invalidateQueries({ queryKey: ['project', variables.projectId] });
+    }
+  });
+}
+
+export function useUpdateBOQItem() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: { id: string; projectId?: string } & Partial<BOQItem>) => 
+      apiRequest<BOQItem>('PUT', 'boq-item', data, token),
+    onSuccess: (_, variables) => {
+      if (variables.projectId) {
+        queryClient.invalidateQueries({ queryKey: ['boq-items', variables.projectId] });
+        queryClient.invalidateQueries({ queryKey: ['project', variables.projectId] });
+      }
+    }
+  });
+}
+
+export function useDeleteBOQItem() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ id, projectId }: { id: string; projectId?: string }) => 
+      apiRequest('DELETE', 'boq-item', { id }, token),
+    onSuccess: (_, variables) => {
+      if (variables.projectId) {
+        queryClient.invalidateQueries({ queryKey: ['boq-items', variables.projectId] });
+        queryClient.invalidateQueries({ queryKey: ['project', variables.projectId] });
+      }
     }
   });
 }

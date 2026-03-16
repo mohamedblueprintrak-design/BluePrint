@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
 import { useProjects } from '@/hooks/use-data';
+import { useDefects, useCreateDefect, useUpdateDefect, useDeleteDefect, useUploadFile } from '@/hooks/use-data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,8 +29,8 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import {
-  AlertTriangle, Plus, Search, Eye, Edit, CheckCircle, Clock,
-  Building2, MapPin, Calendar, User, AlertCircle
+  AlertTriangle, Plus, Search, Eye, Edit, CheckCircle, Clock, Trash2,
+  Building2, MapPin, Calendar, User, AlertCircle, Loader2, Upload, X
 } from 'lucide-react';
 
 const SEVERITY_LEVELS = [
@@ -56,17 +57,11 @@ interface Defect {
   projectId: string;
   projectName: string;
   assignedTo: string;
-  createdAt: string;
+  imageId?: string;
   resolvedAt?: string;
   resolutionNotes?: string;
+  createdAt: string;
 }
-
-const mockDefects: Defect[] = [
-  { id: '1', title: 'تشقق في الجدار الخرساني', description: 'تشقق طولي في الجدار الخرساني للطابق الأرضي', severity: 'high', status: 'Open', location: 'الطابق الأرضي - القطاع أ', projectId: 'p1', projectName: 'برج دبي', assignedTo: 'أحمد محمد', createdAt: new Date().toISOString() },
-  { id: '2', title: 'تسرب مياه من السقف', description: 'تسرب مياه من سقف الحمام في الطابق الثاني', severity: 'critical', status: 'In_Progress', location: 'الطابق الثاني - شقة 201', projectId: 'p1', projectName: 'برج دبي', assignedTo: 'سارة أحمد', createdAt: new Date(Date.now() - 86400000).toISOString() },
-  { id: '3', title: 'عدم مطابقة دهان الجدران', description: 'الدهان لا يطابق المواصفات المطلوبة', severity: 'medium', status: 'Resolved', location: 'جميع الطوابق', projectId: 'p2', projectName: 'فيلا المرفأ', assignedTo: 'محمد علي', createdAt: new Date(Date.now() - 172800000).toISOString(), resolvedAt: new Date().toISOString(), resolutionNotes: 'تم إعادة الدهان حسب المواصفات' },
-  { id: '4', title: 'تأخر في تركيب الأبواب', description: 'تأخر 5 أيام عن الجدول الزمني', severity: 'low', status: 'Closed', location: 'الطابق الثالث', projectId: 'p1', projectName: 'برج دبي', assignedTo: 'خالد سعيد', createdAt: new Date(Date.now() - 259200000).toISOString(), resolvedAt: new Date(Date.now() - 86400000).toISOString() },
-];
 
 export function DefectsPage() {
   const { language } = useApp();
@@ -77,24 +72,36 @@ export function DefectsPage() {
   const [severityFilter, setSeverityFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [editingDefect, setEditingDefect] = useState<Defect | null>(null);
+  const [viewingDefect, setViewingDefect] = useState<Defect | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   
   const { data: projectsData } = useProjects();
   const projects = projectsData?.data || [];
   
-  const [defects] = useState<Defect[]>(mockDefects);
+  const { data: defectsData, isLoading: defectsLoading, error: defectsError } = useDefects();
+  const defects = defectsData?.data || [];
+  
+  const createDefect = useCreateDefect();
+  const updateDefect = useUpdateDefect();
+  const deleteDefect = useDeleteDefect();
+  const uploadFile = useUploadFile();
   
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    severity: 'medium',
+    severity: 'medium' as 'low' | 'medium' | 'high' | 'critical',
     location: '',
     projectId: '',
     assignedTo: '',
+    status: 'Open' as 'Open' | 'In_Progress' | 'Resolved' | 'Closed',
+    resolutionNotes: '',
   });
 
-  const filteredDefects = defects.filter((defect) => {
-    const matchesSearch = defect.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          defect.description.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredDefects = defects.filter((defect: Defect) => {
+    const matchesSearch = defect.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          defect.description?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesSeverity = severityFilter === 'all' || defect.severity === severityFilter;
     const matchesStatus = statusFilter === 'all' || defect.status === statusFilter;
     return matchesSearch && matchesSeverity && matchesStatus;
@@ -102,10 +109,10 @@ export function DefectsPage() {
 
   const stats = {
     total: defects.length,
-    open: defects.filter(d => d.status === 'Open').length,
-    inProgress: defects.filter(d => d.status === 'In_Progress').length,
-    critical: defects.filter(d => d.severity === 'critical' && d.status !== 'Closed').length,
-    resolved: defects.filter(d => d.status === 'Resolved' || d.status === 'Closed').length,
+    open: defects.filter((d: Defect) => d.status === 'Open').length,
+    inProgress: defects.filter((d: Defect) => d.status === 'In_Progress').length,
+    critical: defects.filter((d: Defect) => d.severity === 'critical' && d.status !== 'Closed').length,
+    resolved: defects.filter((d: Defect) => d.status === 'Resolved' || d.status === 'Closed').length,
   };
 
   const getSeverityBadge = (severity: string) => {
@@ -126,6 +133,20 @@ export function DefectsPage() {
     );
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    }
+  };
+
+  const clearFile = () => {
+    setSelectedFile(null);
+    setPreviewUrl(null);
+  };
+
   const handleAddDefect = async () => {
     if (!formData.title || !formData.projectId) {
       toast({
@@ -136,13 +157,132 @@ export function DefectsPage() {
       return;
     }
     
-    toast({
-      title: t.successSave,
-      description: language === 'ar' ? 'تم إضافة العيب بنجاح' : 'Defect added successfully'
-    });
-    setShowAddDialog(false);
-    setFormData({ title: '', description: '', severity: 'medium', location: '', projectId: '', assignedTo: '' });
+    try {
+      let imageId = '';
+      
+      // Upload file if selected
+      if (selectedFile) {
+        const uploadResult = await uploadFile.mutateAsync(selectedFile);
+        if (uploadResult.success && uploadResult.data) {
+          imageId = uploadResult.data.url;
+        }
+      }
+      
+      await createDefect.mutateAsync({
+        projectId: formData.projectId,
+        title: formData.title,
+        description: formData.description,
+        severity: formData.severity,
+        status: formData.status,
+        location: formData.location,
+        assignedTo: formData.assignedTo,
+        imageId,
+      });
+      
+      toast({
+        title: t.successSave,
+        description: language === 'ar' ? 'تم إضافة العيب بنجاح' : 'Defect added successfully'
+      });
+      setShowAddDialog(false);
+      setFormData({ title: '', description: '', severity: 'medium', location: '', projectId: '', assignedTo: '', status: 'Open', resolutionNotes: '' });
+      clearFile();
+    } catch (error) {
+      toast({
+        title: t.error,
+        description: language === 'ar' ? 'فشل في إضافة العيب' : 'Failed to add defect',
+        variant: 'destructive'
+      });
+    }
   };
+
+  const handleUpdateDefect = async () => {
+    if (!editingDefect) return;
+    
+    try {
+      await updateDefect.mutateAsync({
+        id: editingDefect.id,
+        projectId: formData.projectId,
+        title: formData.title,
+        description: formData.description,
+        severity: formData.severity,
+        status: formData.status,
+        location: formData.location,
+        assignedTo: formData.assignedTo,
+        resolutionNotes: formData.resolutionNotes,
+      });
+      
+      toast({
+        title: t.successSave,
+        description: language === 'ar' ? 'تم تحديث العيب بنجاح' : 'Defect updated successfully'
+      });
+      setEditingDefect(null);
+      setFormData({ title: '', description: '', severity: 'medium', location: '', projectId: '', assignedTo: '', status: 'Open', resolutionNotes: '' });
+    } catch (error) {
+      toast({
+        title: t.error,
+        description: language === 'ar' ? 'فشل في تحديث العيب' : 'Failed to update defect',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleDeleteDefect = async (id: string) => {
+    if (!confirm(language === 'ar' ? 'هل أنت متأكد من حذف هذا العيب؟' : 'Are you sure you want to delete this defect?')) {
+      return;
+    }
+    
+    try {
+      await deleteDefect.mutateAsync(id);
+      toast({
+        title: t.successSave,
+        description: language === 'ar' ? 'تم حذف العيب بنجاح' : 'Defect deleted successfully'
+      });
+    } catch (error) {
+      toast({
+        title: t.error,
+        description: language === 'ar' ? 'فشل في حذف العيب' : 'Failed to delete defect',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const openEditDialog = (defect: Defect) => {
+    setEditingDefect(defect);
+    setFormData({
+      title: defect.title,
+      description: defect.description || '',
+      severity: defect.severity,
+      location: defect.location || '',
+      projectId: defect.projectId,
+      assignedTo: defect.assignedTo || '',
+      status: defect.status,
+      resolutionNotes: defect.resolutionNotes || '',
+    });
+  };
+
+  const closeDialog = () => {
+    setShowAddDialog(false);
+    setEditingDefect(null);
+    setViewingDefect(null);
+    setFormData({ title: '', description: '', severity: 'medium', location: '', projectId: '', assignedTo: '', status: 'Open', resolutionNotes: '' });
+    clearFile();
+  };
+
+  if (defectsLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+      </div>
+    );
+  }
+
+  if (defectsError) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-red-400">{language === 'ar' ? 'فشل في تحميل البيانات' : 'Failed to load data'}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -276,7 +416,7 @@ export function DefectsPage() {
               </DialogDescription>
             </DialogHeader>
             
-            <div className="space-y-4 py-4">
+            <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
               <div className="space-y-2">
                 <Label className="text-slate-300">{language === 'ar' ? 'العنوان' : 'Title'} *</Label>
                 <Input
@@ -302,7 +442,7 @@ export function DefectsPage() {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-slate-300">{language === 'ar' ? 'مستوى الخطورة' : 'Severity'}</Label>
-                  <Select value={formData.severity} onValueChange={(v) => setFormData({ ...formData, severity: v })}>
+                  <Select value={formData.severity} onValueChange={(v: any) => setFormData({ ...formData, severity: v })}>
                     <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
                       <SelectValue />
                     </SelectTrigger>
@@ -337,6 +477,22 @@ export function DefectsPage() {
               </div>
               
               <div className="space-y-2">
+                <Label className="text-slate-300">{language === 'ar' ? 'الحالة' : 'Status'}</Label>
+                <Select value={formData.status} onValueChange={(v: any) => setFormData({ ...formData, status: v })}>
+                  <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-900 border-slate-800">
+                    {STATUS_OPTIONS.map((status) => (
+                      <SelectItem key={status.value} value={status.value}>
+                        {language === 'ar' ? status.label : status.labelEn}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
                 <Label className="text-slate-300">{language === 'ar' ? 'الوصف' : 'Description'}</Label>
                 <Textarea
                   value={formData.description}
@@ -345,13 +501,36 @@ export function DefectsPage() {
                   rows={3}
                 />
               </div>
+              
+              <div className="space-y-2">
+                <Label className="text-slate-300">{language === 'ar' ? 'صورة' : 'Photo'}</Label>
+                <div className="flex gap-2">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="bg-slate-800/50 border-slate-700 text-white"
+                  />
+                  {selectedFile && (
+                    <Button variant="ghost" size="icon" onClick={clearFile}>
+                      <X className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+                {previewUrl && (
+                  <div className="mt-2">
+                    <img src={previewUrl} alt="Preview" className="max-h-32 rounded" />
+                  </div>
+                )}
+              </div>
             </div>
             
             <DialogFooter>
-              <Button variant="ghost" onClick={() => setShowAddDialog(false)} className="text-slate-400">
+              <Button variant="ghost" onClick={closeDialog} className="text-slate-400">
                 {t.cancel}
               </Button>
-              <Button onClick={handleAddDefect} className="bg-red-600 hover:bg-red-700">
+              <Button onClick={handleAddDefect} className="bg-red-600 hover:bg-red-700" disabled={createDefect.isPending || uploadFile.isPending}>
+                {(createDefect.isPending || uploadFile.isPending) && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
                 {t.save}
               </Button>
             </DialogFooter>
@@ -361,7 +540,7 @@ export function DefectsPage() {
 
       {/* Defects Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filteredDefects.map((defect) => (
+        {filteredDefects.map((defect: Defect) => (
           <Card key={defect.id} className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-colors">
             <CardContent className="p-4">
               <div className="flex items-start justify-between mb-3">
@@ -370,11 +549,30 @@ export function DefectsPage() {
                   {getStatusBadge(defect.status)}
                 </div>
                 <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-slate-400 hover:text-white"
+                    onClick={() => setViewingDefect(defect)}
+                  >
                     <Eye className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-slate-400 hover:text-white"
+                    onClick={() => openEditDialog(defect)}
+                  >
                     <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-slate-400 hover:text-red-400"
+                    onClick={() => handleDeleteDefect(defect.id)}
+                    disabled={deleteDefect.isPending}
+                  >
+                    <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
@@ -385,21 +583,31 @@ export function DefectsPage() {
               <div className="flex flex-wrap gap-3 text-xs text-slate-500">
                 <div className="flex items-center gap-1">
                   <Building2 className="w-3 h-3" />
-                  <span>{defect.projectName}</span>
+                  <span>{defect.projectName || language === 'ar' ? 'غير محدد' : 'Not specified'}</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <MapPin className="w-3 h-3" />
-                  <span>{defect.location}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <User className="w-3 h-3" />
-                  <span>{defect.assignedTo}</span>
-                </div>
+                {defect.location && (
+                  <div className="flex items-center gap-1">
+                    <MapPin className="w-3 h-3" />
+                    <span>{defect.location}</span>
+                  </div>
+                )}
+                {defect.assignedTo && (
+                  <div className="flex items-center gap-1">
+                    <User className="w-3 h-3" />
+                    <span>{defect.assignedTo}</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
                   <span>{formatDate(defect.createdAt)}</span>
                 </div>
               </div>
+              
+              {defect.imageId && (
+                <div className="mt-3">
+                  <img src={defect.imageId} alt="Defect" className="max-h-24 rounded" />
+                </div>
+              )}
               
               {defect.resolutionNotes && (
                 <div className="mt-3 p-2 bg-green-500/10 rounded text-xs text-green-400">
@@ -410,6 +618,196 @@ export function DefectsPage() {
           </Card>
         ))}
       </div>
+
+      {filteredDefects.length === 0 && (
+        <div className="text-center py-12">
+          <AlertTriangle className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+          <p className="text-slate-400">{language === 'ar' ? 'لا توجد عيوب' : 'No defects found'}</p>
+        </div>
+      )}
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editingDefect} onOpenChange={() => setEditingDefect(null)}>
+        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{language === 'ar' ? 'تعديل العيب' : 'Edit Defect'}</DialogTitle>
+            <DialogDescription className="text-slate-400">
+              {language === 'ar' ? 'تعديل تفاصيل العيب' : 'Edit defect details'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
+            <div className="space-y-2">
+              <Label className="text-slate-300">{language === 'ar' ? 'العنوان' : 'Title'} *</Label>
+              <Input
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                className="bg-slate-800/50 border-slate-700 text-white"
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-slate-300">{language === 'ar' ? 'المشروع' : 'Project'}</Label>
+                <Select value={formData.projectId} onValueChange={(v) => setFormData({ ...formData, projectId: v })}>
+                  <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                    <SelectValue placeholder={language === 'ar' ? 'اختر المشروع' : 'Select project'} />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-900 border-slate-800">
+                    {projects.map((project: any) => (
+                      <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-slate-300">{language === 'ar' ? 'مستوى الخطورة' : 'Severity'}</Label>
+                <Select value={formData.severity} onValueChange={(v: any) => setFormData({ ...formData, severity: v })}>
+                  <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-900 border-slate-800">
+                    {SEVERITY_LEVELS.map((level) => (
+                      <SelectItem key={level.value} value={level.value}>
+                        {language === 'ar' ? level.label : level.labelEn}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-slate-300">{language === 'ar' ? 'الموقع' : 'Location'}</Label>
+                <Input
+                  value={formData.location}
+                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  className="bg-slate-800/50 border-slate-700 text-white"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-slate-300">{language === 'ar' ? 'المسؤول' : 'Assigned To'}</Label>
+                <Input
+                  value={formData.assignedTo}
+                  onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
+                  className="bg-slate-800/50 border-slate-700 text-white"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="text-slate-300">{language === 'ar' ? 'الحالة' : 'Status'}</Label>
+              <Select value={formData.status} onValueChange={(v: any) => setFormData({ ...formData, status: v })}>
+                <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-900 border-slate-800">
+                  {STATUS_OPTIONS.map((status) => (
+                    <SelectItem key={status.value} value={status.value}>
+                      {language === 'ar' ? status.label : status.labelEn}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="text-slate-300">{language === 'ar' ? 'الوصف' : 'Description'}</Label>
+              <Textarea
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                className="bg-slate-800/50 border-slate-700 text-white"
+                rows={3}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="text-slate-300">{language === 'ar' ? 'ملاحظات الحل' : 'Resolution Notes'}</Label>
+              <Textarea
+                value={formData.resolutionNotes}
+                onChange={(e) => setFormData({ ...formData, resolutionNotes: e.target.value })}
+                className="bg-slate-800/50 border-slate-700 text-white"
+                rows={2}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="ghost" onClick={closeDialog} className="text-slate-400">
+              {t.cancel}
+            </Button>
+            <Button onClick={handleUpdateDefect} className="bg-red-600 hover:bg-red-700" disabled={updateDefect.isPending}>
+              {updateDefect.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
+              {t.save}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Dialog */}
+      <Dialog open={!!viewingDefect} onOpenChange={() => setViewingDefect(null)}>
+        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{viewingDefect?.title}</DialogTitle>
+            <div className="flex items-center gap-2 mt-2">
+              {viewingDefect && getSeverityBadge(viewingDefect.severity)}
+              {viewingDefect && getStatusBadge(viewingDefect.status)}
+            </div>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            {viewingDefect?.imageId && (
+              <img src={viewingDefect.imageId} alt="Defect" className="w-full rounded max-h-48 object-cover" />
+            )}
+            
+            <div className="flex flex-wrap gap-3 text-sm text-slate-400">
+              <div className="flex items-center gap-1">
+                <Building2 className="w-4 h-4" />
+                <span>{viewingDefect?.projectName}</span>
+              </div>
+              {viewingDefect?.location && (
+                <div className="flex items-center gap-1">
+                  <MapPin className="w-4 h-4" />
+                  <span>{viewingDefect.location}</span>
+                </div>
+              )}
+              {viewingDefect?.assignedTo && (
+                <div className="flex items-center gap-1">
+                  <User className="w-4 h-4" />
+                  <span>{viewingDefect.assignedTo}</span>
+                </div>
+              )}
+              {viewingDefect?.createdAt && (
+                <div className="flex items-center gap-1">
+                  <Calendar className="w-4 h-4" />
+                  <span>{formatDate(viewingDefect.createdAt)}</span>
+                </div>
+              )}
+            </div>
+            
+            {viewingDefect?.description && (
+              <div>
+                <Label className="text-slate-300">{language === 'ar' ? 'الوصف' : 'Description'}</Label>
+                <p className="text-slate-400 mt-1">{viewingDefect.description}</p>
+              </div>
+            )}
+            
+            {viewingDefect?.resolutionNotes && (
+              <div className="p-3 bg-green-500/10 rounded">
+                <Label className="text-green-400">{language === 'ar' ? 'ملاحظات الحل' : 'Resolution Notes'}</Label>
+                <p className="text-green-300 mt-1">{viewingDefect.resolutionNotes}</p>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setViewingDefect(null)} className="text-slate-400">
+              {language === 'ar' ? 'إغلاق' : 'Close'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

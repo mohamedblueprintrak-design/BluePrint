@@ -231,7 +231,6 @@ function getDemoInvoiceData(language: 'ar' | 'en', currency: string): InvoiceRep
       paid: invoices.filter(i => i.status === 'paid').length,
       pending: invoices.filter(i => i.status === 'pending').length,
       overdue: invoices.filter(i => i.status === 'overdue').length,
-      totalAmount: invoices.reduce((sum, i) => sum + i.total, 0),
     },
     invoices,
     currency,
@@ -383,7 +382,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Return file response
-    return new NextResponse(buffer, {
+    return new NextResponse(new Uint8Array(buffer), {
       status: 200,
       headers: {
         'Content-Type': contentType,

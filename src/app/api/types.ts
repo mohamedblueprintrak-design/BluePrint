@@ -249,6 +249,9 @@ export interface DbClient {
   chatHistory: {
     create: (args: { data: Record<string, unknown> }) => Promise<unknown>;
   };
+  notificationSettings: {
+    findUnique: (args: { where: { userId: string } }) => Promise<{ userId: string; emailLeaves: boolean } | null>;
+  };
 }
 
 /** Handler context passed to each handler */

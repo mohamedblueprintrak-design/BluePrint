@@ -1201,21 +1201,27 @@ export async function GET(request: NextRequest) {
       case 'budgets': {
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const budgetProjectId = searchParams.get('projectId');
-        if (!budgetProjectId) return errorResponse('معرف المشروع مطلوب');
         
-        // Verify project belongs to user's organization
-        const budgetProject = await (await getDb())?.project.findFirst({
-          where: { id: budgetProjectId, organizationId: user.organizationId }
-        });
-        if (!budgetProject) return errorResponse('المشروع غير موجود', 'NOT_FOUND', 404);
+        // If projectId is provided, verify it belongs to user's organization
+        if (budgetProjectId) {
+          const budgetProject = await (await getDb())?.project.findFirst({
+            where: { id: budgetProjectId, organizationId: user.organizationId }
+          });
+          if (!budgetProject) return errorResponse('المشروع غير موجود', 'NOT_FOUND', 404);
+        }
         
         const budgets = await (await getDb())?.budget.findMany({
-          where: { projectId: budgetProjectId },
-          orderBy: { category: 'asc' }
+          where: { 
+            ...(budgetProjectId && { projectId: budgetProjectId }),
+            project: { organizationId: user.organizationId }
+          },
+          include: { project: true },
+          orderBy: { createdAt: 'desc' }
         });
-        return successResponse(budgets.map(b => ({
+        return successResponse(budgets.map((b: any) => ({
           id: b.id,
           projectId: b.projectId,
+          projectName: b.project?.name,
           category: b.category,
           description: b.description,
           budgetAmount: b.budgetAmount,
@@ -1228,21 +1234,27 @@ export async function GET(request: NextRequest) {
       case 'defects': {
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const defectProjectId = searchParams.get('projectId');
-        if (!defectProjectId) return errorResponse('معرف المشروع مطلوب');
         
-        // Verify project belongs to user's organization
-        const defectProject = await (await getDb())?.project.findFirst({
-          where: { id: defectProjectId, organizationId: user.organizationId }
-        });
-        if (!defectProject) return errorResponse('المشروع غير موجود', 'NOT_FOUND', 404);
+        // If projectId is provided, verify it belongs to user's organization
+        if (defectProjectId) {
+          const defectProject = await (await getDb())?.project.findFirst({
+            where: { id: defectProjectId, organizationId: user.organizationId }
+          });
+          if (!defectProject) return errorResponse('المشروع غير موجود', 'NOT_FOUND', 404);
+        }
         
         const defects = await (await getDb())?.defect.findMany({
-          where: { projectId: defectProjectId },
+          where: { 
+            ...(defectProjectId && { projectId: defectProjectId }),
+            project: { organizationId: user.organizationId }
+          },
+          include: { project: true },
           orderBy: { createdAt: 'desc' }
         });
-        return successResponse(defects.map(d => ({
+        return successResponse(defects.map((d: any) => ({
           id: d.id,
           projectId: d.projectId,
+          projectName: d.project?.name,
           title: d.title,
           description: d.description,
           severity: d.severity,
@@ -1312,28 +1324,71 @@ export async function GET(request: NextRequest) {
       case 'vouchers': {
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const voucherType = searchParams.get('voucherType');
-        const vouchers = await (await getDb())?.voucher.findMany({
+        const status = searchParams.get('status');
+        const db = await getDb();
+        if (!db) {
+          return successResponse([]);
+        }
+        
+        const vouchers = await db.voucher.findMany({
           where: { 
             organizationId: user.organizationId,
-            ...(voucherType && { voucherType })
+            ...(voucherType && { voucherType }),
+            ...(status && { status })
           },
           orderBy: { createdAt: 'desc' }
         });
-        return successResponse(vouchers.map(v => ({
+        
+        // Get related names
+        const projectIds = [...new Set(vouchers.map((v: any) => v.projectId).filter(Boolean))];
+        const clientIds = [...new Set(vouchers.map((v: any) => v.clientId).filter(Boolean))];
+        const supplierIds = [...new Set(vouchers.map((v: any) => v.supplierId).filter(Boolean))];
+        
+        const projects = projectIds.length > 0 ? await db.project.findMany({
+          where: { id: { in: projectIds } },
+          select: { id: true, name: true }
+        }) : [];
+        
+        const clients = clientIds.length > 0 ? await db.client.findMany({
+          where: { id: { in: clientIds } },
+          select: { id: true, name: true }
+        }) : [];
+        
+        const suppliers = supplierIds.length > 0 ? await db.supplier.findMany({
+          where: { id: { in: supplierIds } },
+          select: { id: true, name: true }
+        }) : [];
+        
+        const projectMap = new Map(projects.map((p: any) => [p.id, p.name]));
+        const clientMap = new Map(clients.map((c: any) => [c.id, c.name]));
+        const supplierMap = new Map(suppliers.map((s: any) => [s.id, s.name]));
+        
+        return successResponse(vouchers.map((v: any) => ({
           id: v.id,
           voucherNumber: v.voucherNumber,
           voucherType: v.voucherType,
           amount: v.amount,
           currency: v.currency,
+          exchangeRate: v.exchangeRate,
+          baseAmount: v.baseAmount,
           date: v.date,
           projectId: v.projectId,
+          projectName: v.projectId ? projectMap.get(v.projectId) : null,
           invoiceId: v.invoiceId,
           clientId: v.clientId,
+          clientName: v.clientId ? clientMap.get(v.clientId) : null,
           supplierId: v.supplierId,
+          supplierName: v.supplierId ? supplierMap.get(v.supplierId) : null,
           paymentMethod: v.paymentMethod,
           referenceNumber: v.referenceNumber,
+          checkNumber: v.checkNumber,
+          checkDate: v.checkDate,
+          bankName: v.bankName,
           description: v.description,
+          notes: v.notes,
           status: v.status,
+          approvedById: v.approvedById,
+          approvedAt: v.approvedAt,
           createdAt: v.createdAt
         })));
       }
@@ -1597,6 +1652,51 @@ export async function POST(request: NextRequest) {
         });
 
         return successResponse({ id: newUser.id, username: newUser.username });
+      }
+
+      case 'user': {
+        // Admin-only endpoint to create users
+        if (!user || user.role !== 'admin') {
+          return errorResponse('غير مصرح', 'FORBIDDEN', 403);
+        }
+        const { username, email, password, fullName, role = 'viewer' } = body;
+        if (!username || !email || !password) {
+          return errorResponse('جميع الحقول مطلوبة');
+        }
+
+        if (password.length < 6) {
+          return errorResponse('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+        }
+
+        const existing = await (await getDb())?.user.findFirst({
+          where: { OR: [{ username }, { email }] }
+        });
+
+        if (existing) {
+          return errorResponse('المستخدم موجود بالفعل');
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = await (await getDb())?.user.create({
+          data: {
+            username,
+            email,
+            password: hashedPassword,
+            fullName: fullName || username,
+            role,
+            organizationId: user.organizationId
+          }
+        });
+
+        return successResponse({ 
+          id: newUser.id, 
+          username: newUser.username,
+          email: newUser.email,
+          fullName: newUser.fullName,
+          role: newUser.role,
+          isActive: newUser.isActive,
+          createdAt: newUser.createdAt
+        });
       }
 
       case 'project': {
@@ -2180,6 +2280,36 @@ export async function POST(request: NextRequest) {
         });
 
         return successResponse({ id: certificate.id, certificateNumber });
+      }
+
+      case 'document': {
+        if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+        const { filename, originalName, filePath, fileType, mimeType, fileSize, category, description, tags } = body;
+        if (!filename || !filePath || !category) {
+          return errorResponse('اسم الملف والمسار والفئة مطلوبة');
+        }
+
+        const document = await (await getDb())?.document.create({
+          data: {
+            filename,
+            originalName,
+            filePath,
+            fileType: fileType || 'other',
+            mimeType: mimeType || 'application/octet-stream',
+            fileSize: fileSize || 0,
+            category,
+            description,
+            tags: tags ? JSON.stringify(tags) : null,
+            version: 1,
+            uploadedById: user.id
+          }
+        });
+
+        return successResponse({ 
+          id: document.id, 
+          filename: document.filename, 
+          originalName: document.originalName 
+        });
       }
 
       case 'seed': {
@@ -2943,6 +3073,27 @@ export async function DELETE(request: NextRequest) {
         if (!certificate) return errorResponse('الشهادة غير موجودة', 'NOT_FOUND', 404);
         
         await (await getDb())?.certificate.delete({ where: { id } });
+        return successResponse(true);
+      }
+
+      case 'user': {
+        if (user.role !== 'admin') {
+          return errorResponse('غير مصرح', 'FORBIDDEN', 403);
+        }
+        if (!id) return errorResponse('معرف المستخدم مطلوب');
+        
+        // Verify user belongs to same organization
+        const targetUser = await (await getDb())?.user.findFirst({
+          where: { id, organizationId: user.organizationId }
+        });
+        if (!targetUser) return errorResponse('المستخدم غير موجود', 'NOT_FOUND', 404);
+        
+        // Don't allow deleting yourself
+        if (id === user.id) {
+          return errorResponse('لا يمكنك حذف حسابك الخاص', 'FORBIDDEN', 403);
+        }
+        
+        await (await getDb())?.user.update({ where: { id }, data: { isActive: false } });
         return successResponse(true);
       }
 

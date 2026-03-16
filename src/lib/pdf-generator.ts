@@ -57,6 +57,7 @@ export interface TaskReportData {
     status: string;
     priority: string;
     dueDate: string;
+    assignee?: string;
   }>;
   language: 'ar' | 'en';
 }
@@ -73,6 +74,7 @@ export interface ClientReportData {
     name: string;
     email: string;
     phone: string;
+    contactPerson?: string;
     totalInvoiced: number;
     totalPaid: number;
   }>;
@@ -92,8 +94,11 @@ export interface InvoiceReportData {
   invoices: Array<{
     invoiceNumber: string;
     client: string;
+    project?: string;
     total: number;
+    paidAmount?: number;
     status: string;
+    issueDate?: string;
     dueDate: string;
   }>;
   currency: string;

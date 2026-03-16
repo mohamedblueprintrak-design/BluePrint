@@ -182,7 +182,8 @@ export async function POST(request: NextRequest) {
         if (sendNotification !== false && task.assignee?.email) {
           try {
             // Check if assignee has email notifications enabled for tasks
-            const notificationSettings = await db.notificationSettings.findUnique({
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const notificationSettings = await (db as any).notificationSettings?.findUnique({
               where: { userId: assignedToId }
             });
 

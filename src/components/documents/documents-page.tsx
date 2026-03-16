@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
-import { useDocuments } from '@/hooks/use-data';
+import { useDocuments, useUploadFile, useCreateDocument, useDeleteDocument, CreateDocumentData } from '@/hooks/use-data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,7 +41,7 @@ import { useToast } from '@/hooks/use-toast';
 import {
   FileText, Plus, Search, Grid, List, Download, Eye, Trash2,
   Upload, File, FileImage, FileSpreadsheet, FileCode, FileArchive,
-  Calendar, HardDrive, FolderOpen, X, Tag, CloudUpload, CheckCircle2
+  Calendar, HardDrive, FolderOpen, X, Tag, CloudUpload, CheckCircle2, AlertCircle
 } from 'lucide-react';
 import type { Document } from '@/types';
 
@@ -65,94 +65,6 @@ const CATEGORIES = [
   { value: 'invoices', label: 'فواتير', labelEn: 'Invoices', color: 'bg-amber-500' },
   { value: 'correspondence', label: 'مراسلات', labelEn: 'Correspondence', color: 'bg-cyan-500' },
   { value: 'other', label: 'أخرى', labelEn: 'Other', color: 'bg-gray-500' },
-];
-
-// Mock documents data for demonstration
-const MOCK_DOCUMENTS: Document[] = [
-  {
-    id: '1',
-    filename: 'contract_001.pdf',
-    originalName: 'عقد إنشاء مبنى تجاري.pdf',
-    filePath: '/uploads/contracts/contract_001.pdf',
-    fileType: 'pdf',
-    mimeType: 'application/pdf',
-    fileSize: 2500000,
-    category: 'contracts',
-    description: 'عقد إنشاء المبنى التجاري - المرحلة الأولى',
-    tags: ['عقد', 'تجاري', 'مرحلة أولى'],
-    version: 1,
-    createdAt: new Date('2024-01-15'),
-  },
-  {
-    id: '2',
-    filename: 'drawing_arch_001.dwg',
-    originalName: 'مخطط معماري - الطابق الأرضي.dwg',
-    filePath: '/uploads/drawings/drawing_arch_001.dwg',
-    fileType: 'cad',
-    mimeType: 'application/acad',
-    fileSize: 5800000,
-    category: 'drawings',
-    description: 'المخطط المعماري للطابق الأرضي',
-    tags: ['مخطط', 'معماري', 'طابق أرضي'],
-    version: 2,
-    createdAt: new Date('2024-01-20'),
-  },
-  {
-    id: '3',
-    filename: 'report_monthly_01.xlsx',
-    originalName: 'تقرير شهري - يناير 2024.xlsx',
-    filePath: '/uploads/reports/report_monthly_01.xlsx',
-    fileType: 'excel',
-    mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    fileSize: 1200000,
-    category: 'reports',
-    description: 'التقرير الشهري لتقدم العمل - يناير 2024',
-    tags: ['تقرير', 'شهري', 'يناير'],
-    version: 1,
-    createdAt: new Date('2024-02-01'),
-  },
-  {
-    id: '4',
-    filename: 'invoice_2024_001.pdf',
-    originalName: 'فاتورة رقم 2024-001.pdf',
-    filePath: '/uploads/invoices/invoice_2024_001.pdf',
-    fileType: 'pdf',
-    mimeType: 'application/pdf',
-    fileSize: 450000,
-    category: 'invoices',
-    description: 'فاتورة دفعة أولى - المرحلة الأولى',
-    tags: ['فاتورة', 'دفعة أولى'],
-    version: 1,
-    createdAt: new Date('2024-02-10'),
-  },
-  {
-    id: '5',
-    filename: 'site_photo_001.jpg',
-    originalName: 'صورة الموقع - التاريخ 2024-02-15.jpg',
-    filePath: '/uploads/images/site_photo_001.jpg',
-    fileType: 'image',
-    mimeType: 'image/jpeg',
-    fileSize: 3200000,
-    category: 'reports',
-    description: 'صورة توثيقية للموقع',
-    tags: ['صورة', 'موقع', 'توثيق'],
-    version: 1,
-    createdAt: new Date('2024-02-15'),
-  },
-  {
-    id: '6',
-    filename: 'letter_client_001.docx',
-    originalName: 'خطاب للعميل - موافقة على التعديلات.docx',
-    filePath: '/uploads/correspondence/letter_client_001.docx',
-    fileType: 'word',
-    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    fileSize: 85000,
-    category: 'correspondence',
-    description: 'خطاب موافقة على التعديلات المقترحة',
-    tags: ['خطاب', 'عميل', 'موافقة'],
-    version: 1,
-    createdAt: new Date('2024-02-18'),
-  },
 ];
 
 // Format file size
@@ -215,9 +127,14 @@ export function DocumentsPage() {
     tags: '',
   });
 
-  // Data hooks - using mock data since backend may not be fully configured
-  const { data: documentsData, isLoading, refetch } = useDocuments();
-  const documents = documentsData?.data || MOCK_DOCUMENTS;
+  // Data hooks
+  const { data: documentsData, isLoading, isError, error, refetch } = useDocuments();
+  const uploadFileMutation = useUploadFile();
+  const createDocumentMutation = useCreateDocument();
+  const deleteDocumentMutation = useDeleteDocument();
+
+  // Extract documents from API response
+  const documents = documentsData?.data || [];
 
   // Calculate stats
   const totalDocuments = documents.length;
@@ -320,23 +237,41 @@ export function DocumentsPage() {
     setIsUploading(true);
     setUploadProgress(0);
 
-    // Simulate upload progress
-    const interval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 100);
-
-    // Simulate upload completion
-    setTimeout(() => {
-      clearInterval(interval);
-      setUploadProgress(100);
-      setIsUploading(false);
+    try {
+      // Step 1: Upload file to storage
+      setUploadProgress(30);
+      const uploadResult = await uploadFileMutation.mutateAsync(uploadForm.file);
       
+      if (!uploadResult.success) {
+        throw new Error(uploadResult.error?.message || 'Upload failed');
+      }
+
+      setUploadProgress(60);
+
+      // Step 2: Create document record in database
+      const fileData = uploadResult.data;
+      const tags = uploadForm.tags ? uploadForm.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
+      
+      const documentData: CreateDocumentData = {
+        filename: fileData.filename,
+        originalName: fileData.name,
+        filePath: fileData.url,
+        fileType: fileData.category,
+        mimeType: fileData.type,
+        fileSize: fileData.size,
+        category: uploadForm.category,
+        description: uploadForm.description || '',
+        tags: tags
+      };
+
+      const createResult = await createDocumentMutation.mutateAsync(documentData);
+      
+      setUploadProgress(100);
+
+      if (!createResult.success) {
+        throw new Error(createResult.error?.message || 'Failed to create document record');
+      }
+
       toast({
         title: t.successSave,
         description: language === 'ar' ? 'تم رفع الملف بنجاح' : 'File uploaded successfully'
@@ -345,7 +280,17 @@ export function DocumentsPage() {
       setShowUploadDialog(false);
       resetUploadForm();
       refetch();
-    }, 1500);
+    } catch (err) {
+      console.error('Upload error:', err);
+      toast({
+        title: language === 'ar' ? 'خطأ' : 'Error',
+        description: err instanceof Error ? err.message : (language === 'ar' ? 'فشل في رفع الملف' : 'Failed to upload file'),
+        variant: 'destructive'
+      });
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
+    }
   };
 
   // Reset upload form
@@ -365,11 +310,27 @@ export function DocumentsPage() {
 
   // Handle download
   const handleDownload = (doc: Document) => {
-    toast({
-      title: language === 'ar' ? 'جاري التحميل' : 'Downloading',
-      description: doc.originalName || doc.filename
-    });
-    // In a real app, this would trigger a file download
+    try {
+      // Create a download link
+      const link = document.createElement('a');
+      link.href = doc.filePath;
+      link.download = doc.originalName || doc.filename;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: language === 'ar' ? 'جاري التحميل' : 'Downloading',
+        description: doc.originalName || doc.filename
+      });
+    } catch (err) {
+      toast({
+        title: language === 'ar' ? 'خطأ' : 'Error',
+        description: language === 'ar' ? 'فشل في تحميل الملف' : 'Failed to download file',
+        variant: 'destructive'
+      });
+    }
   };
 
   // Handle preview
@@ -379,14 +340,28 @@ export function DocumentsPage() {
   };
 
   // Handle delete
-  const handleDelete = (doc: Document) => {
+  const handleDelete = async (doc: Document) => {
     if (!confirm(t.confirmDelete)) return;
     
-    toast({
-      title: t.successDelete,
-      description: language === 'ar' ? 'تم حذف المستند' : 'Document deleted'
-    });
-    refetch();
+    try {
+      const result = await deleteDocumentMutation.mutateAsync(doc.id);
+      
+      if (result.success) {
+        toast({
+          title: t.successDelete,
+          description: language === 'ar' ? 'تم حذف المستند' : 'Document deleted'
+        });
+        refetch();
+      } else {
+        throw new Error(result.error?.message || 'Delete failed');
+      }
+    } catch (err) {
+      toast({
+        title: language === 'ar' ? 'خطأ' : 'Error',
+        description: err instanceof Error ? err.message : (language === 'ar' ? 'فشل في حذف المستند' : 'Failed to delete document'),
+        variant: 'destructive'
+      });
+    }
   };
 
   // Render document card (Grid view)
@@ -880,8 +855,22 @@ export function DocumentsPage() {
 
       {/* Documents Display */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4"></div>
           <div className="text-slate-400">{t.loading}</div>
+        </div>
+      ) : isError ? (
+        <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+          <AlertCircle className="w-16 h-16 mb-4 text-red-400" />
+          <p className="text-lg text-red-400">
+            {language === 'ar' ? 'خطأ في تحميل البيانات' : 'Error loading data'}
+          </p>
+          <p className="text-sm text-slate-500 mt-2">
+            {error?.message || (language === 'ar' ? 'يرجى المحاولة مرة أخرى' : 'Please try again')}
+          </p>
+          <Button variant="outline" className="mt-4" onClick={() => refetch()}>
+            {language === 'ar' ? 'إعادة المحاولة' : 'Retry'}
+          </Button>
         </div>
       ) : filteredDocuments.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-slate-400">

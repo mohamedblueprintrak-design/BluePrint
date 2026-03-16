@@ -543,6 +543,25 @@ export interface Defect {
 }
 
 // ============================================
+// BOQ (Bill of Quantities) Types
+// ============================================
+
+export interface BOQItem {
+  id: string;
+  projectId: string;
+  project?: Project;
+  itemNumber?: string;
+  description: string;
+  unit?: string;
+  quantity?: number;
+  unitPrice?: number;
+  totalPrice?: number;
+  category?: string;
+  notes?: string;
+  createdAt: Date | string;
+}
+
+// ============================================
 // Notification Types
 // ============================================
 
@@ -629,6 +648,43 @@ export interface ProposalItem {
   unitPrice: number;
   unit?: string;
   total?: number;
+}
+
+// ============================================
+// Voucher Types
+// ============================================
+
+export interface Voucher {
+  id: string;
+  voucherNumber: string;
+  voucherType: 'receipt' | 'payment';
+  amount: number;
+  currency: string;
+  exchangeRate: number;
+  baseAmount: number;
+  date: Date | string;
+  projectId?: string;
+  projectName?: string;
+  invoiceId?: string;
+  clientId?: string;
+  clientName?: string;
+  supplierId?: string;
+  supplierName?: string;
+  accountId?: string;
+  paymentMethod: string;
+  referenceNumber?: string;
+  checkNumber?: string;
+  checkDate?: Date | string;
+  bankName?: string;
+  description?: string;
+  notes?: string;
+  status: 'pending' | 'completed' | 'cancelled';
+  approvedById?: string;
+  approvedAt?: Date | string;
+  createdById?: string;
+  organizationId?: string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
 }
 
 // ============================================

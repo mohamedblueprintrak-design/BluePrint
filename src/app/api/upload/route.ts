@@ -5,7 +5,7 @@ import path from 'path';
 import { randomUUID } from 'crypto';
 import { successResponse, errorResponse, unauthorizedResponse } from '../utils/response';
 import { getUserFromToken } from '../utils/auth';
-import { DEMO_USERS } from '../handlers/auth.handler';
+import { DEMO_USERS } from '../utils/db';
 
 // Accepted file types
 const ALLOWED_TYPES = [

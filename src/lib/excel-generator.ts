@@ -52,7 +52,7 @@ export interface TaskExcelData {
     status: string;
     priority: string;
     dueDate: string;
-    assignee: string;
+    assignee?: string;
   }>;
   language: 'ar' | 'en';
 }
@@ -67,7 +67,7 @@ export interface ClientExcelData {
     name: string;
     email: string;
     phone: string;
-    contactPerson: string;
+    contactPerson?: string;
     totalInvoiced: number;
     totalPaid: number;
   }>;
@@ -81,16 +81,16 @@ export interface InvoiceExcelData {
     paid: number;
     pending: number;
     overdue: number;
-    totalAmount: number;
+    totalAmount?: number;
   };
   invoices: Array<{
     invoiceNumber: string;
     client: string;
-    project: string;
+    project?: string;
     total: number;
-    paidAmount: number;
+    paidAmount?: number;
     status: string;
-    issueDate: string;
+    issueDate?: string;
     dueDate: string;
   }>;
   currency: string;

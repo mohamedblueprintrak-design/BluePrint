@@ -168,7 +168,8 @@ export async function POST(request: NextRequest) {
       if (sendNotification !== false && invoice.client?.email) {
         try {
           // Check if user has email notifications enabled for invoices
-          const notificationSettings = await db.notificationSettings.findUnique({
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const notificationSettings = await (db as any).notificationSettings?.findUnique({
             where: { userId: user.id }
           });
 

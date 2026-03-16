@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
-import { useProjects, useClients } from '@/hooks/use-data';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useProjects, useClients, useSuppliers, useVouchers, useCreateVoucher, useDeleteVoucher } from '@/hooks/use-data';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,9 +29,11 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import {
-  Receipt, Plus, Search, Eye, Edit, Printer, ArrowDownToLine,
-  ArrowUpFromLine, DollarSign, Calendar, Building2, User, FileText
+  Receipt, Plus, Search, Eye, Printer, ArrowDownToLine,
+  ArrowUpFromLine, DollarSign, Calendar, Building2, User, FileText,
+  Loader2, AlertCircle, Trash2
 } from 'lucide-react';
+import { Voucher } from '@/types';
 
 const VOUCHER_TYPES = [
   { value: 'receipt', label: 'سند قبض', labelEn: 'Receipt Voucher', icon: ArrowDownToLine, color: 'text-green-400' },
@@ -45,32 +47,6 @@ const PAYMENT_METHODS = [
   { value: 'credit_card', label: 'بطاقة ائتمان', labelEn: 'Credit Card' },
 ];
 
-interface Voucher {
-  id: string;
-  voucherNumber: string;
-  voucherType: 'receipt' | 'payment';
-  amount: number;
-  clientId?: string;
-  clientName?: string;
-  supplierId?: string;
-  supplierName?: string;
-  projectId?: string;
-  projectName?: string;
-  date: string;
-  paymentMethod: string;
-  referenceNumber?: string;
-  description: string;
-  status: string;
-  createdAt: string;
-}
-
-const mockVouchers: Voucher[] = [
-  { id: '1', voucherNumber: 'RV-2024-0001', voucherType: 'receipt', amount: 150000, clientId: 'c1', clientName: 'شركة الإنشاءات المتحدة', projectId: 'p1', projectName: 'برج دبي', date: new Date().toISOString(), paymentMethod: 'bank_transfer', referenceNumber: 'TRN-12345', description: 'دفعة أولى حسب العقد', status: 'completed', createdAt: new Date().toISOString() },
-  { id: '2', voucherNumber: 'PV-2024-0001', voucherType: 'payment', amount: 75000, supplierId: 's1', supplierName: 'شركة الخرسانة المتحدة', projectId: 'p1', projectName: 'برج دبي', date: new Date().toISOString(), paymentMethod: 'cheque', referenceNumber: 'CHQ-001', description: 'دفع مستحقات الخرسانة', status: 'completed', createdAt: new Date().toISOString() },
-  { id: '3', voucherNumber: 'RV-2024-0002', voucherType: 'receipt', amount: 50000, clientId: 'c2', clientName: 'مؤسسة الفجيرة للمقاولات', projectId: 'p2', projectName: 'فيلا المرفأ', date: new Date(Date.now() - 86400000).toISOString(), paymentMethod: 'cash', description: 'دفعة مقدمة', status: 'completed', createdAt: new Date(Date.now() - 86400000).toISOString() },
-  { id: '4', voucherNumber: 'PV-2024-0002', voucherType: 'payment', amount: 28000, supplierId: 's2', supplierName: 'مؤسسة الحديد والتسليح', projectId: 'p1', projectName: 'برج دبي', date: new Date(Date.now() - 172800000).toISOString(), paymentMethod: 'bank_transfer', referenceNumber: 'TRN-12346', description: 'مستحقات حديد التسليح', status: 'pending', createdAt: new Date(Date.now() - 172800000).toISOString() },
-];
-
 export function VouchersPage() {
   const { language } = useApp();
   const { t, formatCurrency, formatDate } = useTranslation(language);
@@ -80,38 +56,49 @@ export function VouchersPage() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [voucherType, setVoucherType] = useState<'receipt' | 'payment'>('receipt');
+  const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null);
+  const [showViewDialog, setShowViewDialog] = useState(false);
   
+  // Fetch data
   const { data: projectsData } = useProjects();
   const { data: clientsData } = useClients();
+  const { data: suppliersData } = useSuppliers();
+  const { data: vouchersData, isLoading, error } = useVouchers();
+  
+  const createVoucher = useCreateVoucher();
+  const deleteVoucher = useDeleteVoucher();
+  
   const projects = projectsData?.data || [];
   const clients = clientsData?.data || [];
-  
-  const [vouchers] = useState<Voucher[]>(mockVouchers);
+  const suppliers = suppliersData?.data || [];
+  const vouchers = vouchersData?.data || [];
   
   const [formData, setFormData] = useState({
     amount: 0,
     projectId: '',
     clientId: '',
-    supplierName: '',
+    supplierId: '',
     paymentMethod: 'bank_transfer',
     referenceNumber: '',
     description: '',
     date: new Date().toISOString().split('T')[0],
   });
 
-  const filteredVouchers = vouchers.filter((voucher) => {
+  // Filter vouchers based on search and type
+  const filteredVouchers = vouchers.filter((voucher: Voucher) => {
     const matchesSearch = voucher.voucherNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          voucher.description.toLowerCase().includes(searchQuery.toLowerCase());
+                          (voucher.description && voucher.description.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesType = typeFilter === 'all' || voucher.voucherType === typeFilter;
     return matchesSearch && matchesType;
   });
 
+  // Calculate stats
   const stats = {
-    totalReceipts: vouchers.filter(v => v.voucherType === 'receipt').reduce((sum, v) => sum + v.amount, 0),
-    totalPayments: vouchers.filter(v => v.voucherType === 'payment').reduce((sum, v) => sum + v.amount, 0),
-    pendingPayments: vouchers.filter(v => v.voucherType === 'payment' && v.status === 'pending').reduce((sum, v) => sum + v.amount, 0),
-    netCash: vouchers.filter(v => v.voucherType === 'receipt').reduce((sum, v) => sum + v.amount, 0) -
-             vouchers.filter(v => v.voucherType === 'payment').reduce((sum, v) => sum + v.amount, 0),
+    totalReceipts: vouchers.filter((v: Voucher) => v.voucherType === 'receipt').reduce((sum: number, v: Voucher) => sum + v.amount, 0),
+    totalPayments: vouchers.filter((v: Voucher) => v.voucherType === 'payment').reduce((sum: number, v: Voucher) => sum + v.amount, 0),
+    pendingPayments: vouchers.filter((v: Voucher) => v.voucherType === 'payment' && v.status === 'pending').reduce((sum: number, v: Voucher) => sum + v.amount, 0),
+    netCash: vouchers.filter((v: Voucher) => v.voucherType === 'receipt').reduce((sum: number, v: Voucher) => sum + v.amount, 0) -
+             vouchers.filter((v: Voucher) => v.voucherType === 'payment').reduce((sum: number, v: Voucher) => sum + v.amount, 0),
   };
 
   const getPaymentMethodLabel = (method: string) => {
@@ -129,17 +116,112 @@ export function VouchersPage() {
       return;
     }
     
-    const prefix = voucherType === 'receipt' ? 'RV' : 'PV';
-    toast({
-      title: t.successSave,
-      description: language === 'ar' ? `تم إنشاء السند بنجاح` : 'Voucher created successfully'
-    });
-    setShowAddDialog(false);
-    setFormData({ amount: 0, projectId: '', clientId: '', supplierName: '', paymentMethod: 'bank_transfer', referenceNumber: '', description: '', date: new Date().toISOString().split('T')[0] });
+    try {
+      const result = await createVoucher.mutateAsync({
+        voucherType,
+        amount: formData.amount,
+        date: formData.date,
+        projectId: formData.projectId || undefined,
+        clientId: voucherType === 'receipt' ? formData.clientId : undefined,
+        supplierId: voucherType === 'payment' ? formData.supplierId : undefined,
+        paymentMethod: formData.paymentMethod,
+        referenceNumber: formData.referenceNumber || undefined,
+        description: formData.description,
+      });
+      
+      if (result.success) {
+        toast({
+          title: t.successSave,
+          description: language === 'ar' 
+            ? `تم إنشاء السند ${result.data?.voucherNumber} بنجاح` 
+            : `Voucher ${result.data?.voucherNumber} created successfully`
+        });
+        setShowAddDialog(false);
+        setFormData({ 
+          amount: 0, 
+          projectId: '', 
+          clientId: '', 
+          supplierId: '', 
+          paymentMethod: 'bank_transfer', 
+          referenceNumber: '', 
+          description: '', 
+          date: new Date().toISOString().split('T')[0] 
+        });
+      } else {
+        toast({
+          title: t.error,
+          description: result.error?.message || (language === 'ar' ? 'فشل في إنشاء السند' : 'Failed to create voucher'),
+          variant: 'destructive'
+        });
+      }
+    } catch (err) {
+      toast({
+        title: t.error,
+        description: language === 'ar' ? 'حدث خطأ أثناء إنشاء السند' : 'An error occurred while creating the voucher',
+        variant: 'destructive'
+      });
+    }
   };
 
-  const ReceiptVoucherIcon = ArrowDownToLine;
-  const PaymentVoucherIcon = ArrowUpFromLine;
+  const handleDeleteVoucher = async (id: string) => {
+    if (!confirm(language === 'ar' ? 'هل أنت متأكد من حذف هذا السند؟' : 'Are you sure you want to delete this voucher?')) {
+      return;
+    }
+    
+    try {
+      const result = await deleteVoucher.mutateAsync(id);
+      if (result.success) {
+        toast({
+          title: t.successSave,
+          description: language === 'ar' ? 'تم حذف السند بنجاح' : 'Voucher deleted successfully'
+        });
+      } else {
+        toast({
+          title: t.error,
+          description: result.error?.message || (language === 'ar' ? 'فشل في حذف السند' : 'Failed to delete voucher'),
+          variant: 'destructive'
+        });
+      }
+    } catch (err) {
+      toast({
+        title: t.error,
+        description: language === 'ar' ? 'حدث خطأ أثناء حذف السند' : 'An error occurred while deleting the voucher',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleViewVoucher = (voucher: Voucher) => {
+    setSelectedVoucher(voucher);
+    setShowViewDialog(true);
+  };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+          <p className="text-slate-400">{language === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <AlertCircle className="w-12 h-12 text-red-400" />
+          <div>
+            <h3 className="text-lg font-medium text-white">{language === 'ar' ? 'خطأ في التحميل' : 'Error Loading'}</h3>
+            <p className="text-slate-400">{language === 'ar' ? 'فشل في تحميل السندات' : 'Failed to load vouchers'}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -205,7 +287,7 @@ export function VouchersPage() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="all" className="space-y-4">
+      <Tabs defaultValue="all" className="space-y-4" value={typeFilter} onValueChange={setTypeFilter}>
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
           <TabsList className="bg-slate-900/50 border border-slate-800 p-1">
             <TabsTrigger value="all" className="data-[state=active]:bg-slate-800">
@@ -317,12 +399,16 @@ export function VouchersPage() {
                           </SelectContent>
                         </Select>
                       ) : (
-                        <Input
-                          value={formData.supplierName}
-                          onChange={(e) => setFormData({ ...formData, supplierName: e.target.value })}
-                          placeholder={language === 'ar' ? 'اسم المورد' : 'Supplier name'}
-                          className="bg-slate-800/50 border-slate-700 text-white"
-                        />
+                        <Select value={formData.supplierId} onValueChange={(v) => setFormData({ ...formData, supplierId: v })}>
+                          <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                            <SelectValue placeholder={language === 'ar' ? 'اختر المورد' : 'Select supplier'} />
+                          </SelectTrigger>
+                          <SelectContent className="bg-slate-900 border-slate-800">
+                            {suppliers.map((supplier: any) => (
+                              <SelectItem key={supplier.id} value={supplier.id}>{supplier.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       )}
                     </div>
                   </div>
@@ -368,7 +454,12 @@ export function VouchersPage() {
                   <Button variant="ghost" onClick={() => setShowAddDialog(false)} className="text-slate-400">
                     {t.cancel}
                   </Button>
-                  <Button onClick={handleAddVoucher} className="bg-blue-600 hover:bg-blue-700">
+                  <Button 
+                    onClick={handleAddVoucher} 
+                    className="bg-blue-600 hover:bg-blue-700"
+                    disabled={createVoucher.isPending}
+                  >
+                    {createVoucher.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
                     {language === 'ar' ? 'إنشاء السند' : 'Create Voucher'}
                   </Button>
                 </DialogFooter>
@@ -377,9 +468,31 @@ export function VouchersPage() {
           </div>
         </div>
 
+        {/* Empty state */}
+        {filteredVouchers.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <Receipt className="w-16 h-16 text-slate-600 mb-4" />
+            <h3 className="text-lg font-medium text-white mb-2">
+              {language === 'ar' ? 'لا توجد سندات' : 'No Vouchers'}
+            </h3>
+            <p className="text-slate-400 mb-4">
+              {searchQuery 
+                ? (language === 'ar' ? 'لم يتم العثور على نتائج مطابقة' : 'No matching results found')
+                : (language === 'ar' ? 'ابدأ بإنشاء سند جديد' : 'Start by creating a new voucher')
+              }
+            </p>
+            {!searchQuery && (
+              <Button onClick={() => setShowAddDialog(true)} className="bg-blue-600 hover:bg-blue-700">
+                <Plus className="w-4 h-4 me-2" />
+                {language === 'ar' ? 'سند جديد' : 'New Voucher'}
+              </Button>
+            )}
+          </div>
+        )}
+
         {/* Voucher Lists */}
         <TabsContent value="all" className="space-y-4">
-          {filteredVouchers.map((voucher) => (
+          {filteredVouchers.map((voucher: Voucher) => (
             <Card key={voucher.id} className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-colors">
               <CardContent className="p-4">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -409,10 +522,12 @@ export function VouchersPage() {
                             <span>{voucher.projectName}</span>
                           </div>
                         )}
-                        <div className="flex items-center gap-1">
-                          <User className="w-3 h-3" />
-                          <span>{voucher.clientName || voucher.supplierName}</span>
-                        </div>
+                        {(voucher.clientName || voucher.supplierName) && (
+                          <div className="flex items-center gap-1">
+                            <User className="w-3 h-3" />
+                            <span>{voucher.clientName || voucher.supplierName}</span>
+                          </div>
+                        )}
                         <div className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
                           <span>{formatDate(voucher.date)}</span>
@@ -430,14 +545,30 @@ export function VouchersPage() {
                       {voucher.voucherType === 'receipt' ? '+' : '-'}{formatCurrency(voucher.amount)}
                     </p>
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-slate-400 hover:text-white"
+                        onClick={() => handleViewVoucher(voucher)}
+                      >
                         <Eye className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white">
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-slate-400 hover:text-white"
+                        onClick={() => window.print()}
+                      >
                         <Printer className="w-4 h-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-slate-400 hover:text-red-400"
+                        onClick={() => handleDeleteVoucher(voucher.id)}
+                        disabled={deleteVoucher.isPending}
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
                   </div>
@@ -448,7 +579,7 @@ export function VouchersPage() {
         </TabsContent>
 
         <TabsContent value="receipt" className="space-y-4">
-          {filteredVouchers.filter(v => v.voucherType === 'receipt').map((voucher) => (
+          {filteredVouchers.filter((v: Voucher) => v.voucherType === 'receipt').map((voucher: Voucher) => (
             <Card key={voucher.id} className="bg-slate-900/50 border-slate-800">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -469,7 +600,7 @@ export function VouchersPage() {
         </TabsContent>
 
         <TabsContent value="payment" className="space-y-4">
-          {filteredVouchers.filter(v => v.voucherType === 'payment').map((voucher) => (
+          {filteredVouchers.filter((v: Voucher) => v.voucherType === 'payment').map((voucher: Voucher) => (
             <Card key={voucher.id} className="bg-slate-900/50 border-slate-800">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -489,6 +620,98 @@ export function VouchersPage() {
           ))}
         </TabsContent>
       </Tabs>
+
+      {/* View Voucher Dialog */}
+      <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
+        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {language === 'ar' ? 'تفاصيل السند' : 'Voucher Details'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedVoucher && (
+            <div className="space-y-4 py-4">
+              <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg">
+                <div>
+                  <h3 className="text-xl font-bold text-white">{selectedVoucher.voucherNumber}</h3>
+                  <Badge variant="outline" className={selectedVoucher.voucherType === 'receipt' ? 'border-green-500 text-green-400 mt-2' : 'border-red-500 text-red-400 mt-2'}>
+                    {selectedVoucher.voucherType === 'receipt' 
+                      ? (language === 'ar' ? 'سند قبض' : 'Receipt Voucher') 
+                      : (language === 'ar' ? 'سند صرف' : 'Payment Voucher')
+                    }
+                  </Badge>
+                </div>
+                <p className={`text-2xl font-bold ${selectedVoucher.voucherType === 'receipt' ? 'text-green-400' : 'text-red-400'}`}>
+                  {selectedVoucher.voucherType === 'receipt' ? '+' : '-'}{formatCurrency(selectedVoucher.amount)}
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-slate-400">{language === 'ar' ? 'التاريخ' : 'Date'}</p>
+                  <p className="text-white">{formatDate(selectedVoucher.date)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-400">{language === 'ar' ? 'طريقة الدفع' : 'Payment Method'}</p>
+                  <p className="text-white">{getPaymentMethodLabel(selectedVoucher.paymentMethod)}</p>
+                </div>
+                {selectedVoucher.projectName && (
+                  <div>
+                    <p className="text-sm text-slate-400">{language === 'ar' ? 'المشروع' : 'Project'}</p>
+                    <p className="text-white">{selectedVoucher.projectName}</p>
+                  </div>
+                )}
+                {(selectedVoucher.clientName || selectedVoucher.supplierName) && (
+                  <div>
+                    <p className="text-sm text-slate-400">
+                      {selectedVoucher.voucherType === 'receipt' 
+                        ? (language === 'ar' ? 'العميل' : 'Client') 
+                        : (language === 'ar' ? 'المورد' : 'Supplier')
+                      }
+                    </p>
+                    <p className="text-white">{selectedVoucher.clientName || selectedVoucher.supplierName}</p>
+                  </div>
+                )}
+                {selectedVoucher.referenceNumber && (
+                  <div>
+                    <p className="text-sm text-slate-400">{language === 'ar' ? 'رقم المرجع' : 'Reference No.'}</p>
+                    <p className="text-white">{selectedVoucher.referenceNumber}</p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-sm text-slate-400">{language === 'ar' ? 'الحالة' : 'Status'}</p>
+                  <Badge className={selectedVoucher.status === 'completed' ? 'bg-green-500' : selectedVoucher.status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'}>
+                    {selectedVoucher.status === 'completed' 
+                      ? (language === 'ar' ? 'مكتمل' : 'Completed')
+                      : selectedVoucher.status === 'pending'
+                        ? (language === 'ar' ? 'معلق' : 'Pending')
+                        : (language === 'ar' ? 'ملغي' : 'Cancelled')
+                    }
+                  </Badge>
+                </div>
+              </div>
+              
+              {selectedVoucher.description && (
+                <div>
+                  <p className="text-sm text-slate-400 mb-1">{language === 'ar' ? 'الوصف' : 'Description'}</p>
+                  <p className="text-white bg-slate-800/50 p-3 rounded-lg">{selectedVoucher.description}</p>
+                </div>
+              )}
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowViewDialog(false)} className="text-slate-400">
+              {language === 'ar' ? 'إغلاق' : 'Close'}
+            </Button>
+            <Button onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-700">
+              <Printer className="w-4 h-4 me-2" />
+              {language === 'ar' ? 'طباعة' : 'Print'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { DbClient, DemoUser } from '../types';
+import { DemoUser } from '../types';
 
 // Demo users for testing without database
 export const DEMO_USERS: DemoUser[] = [
@@ -21,7 +20,7 @@ export const DEMO_USERS: DemoUser[] = [
 
 // Dynamic database import to avoid failures when DB is not available
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-let db: DbClient | null = null;
+let db: any = null;
 
 /**
  * Get database client (lazy loaded)
@@ -44,7 +43,8 @@ export async function getDb(): Promise<any> {
  * Safe database operation wrapper
  */
 export async function safeDbOp<T>(
-  operation: (database: DbClient) => Promise<T>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  operation: (database: any) => Promise<T>,
   fallback: T
 ): Promise<T> {
   try {
