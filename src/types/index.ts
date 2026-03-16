@@ -18,15 +18,16 @@ export interface User {
   phone?: string;
   jobTitle?: string;
   department?: string;
-  hireDate?: Date;
+  hireDate?: Date | string;
   salary?: number;
   leaveBalance: number;
   nationality?: string;
   timezone: string;
-  lastLoginAt?: Date;
+  lastLoginAt?: Date | string;
   twoFactorEnabled: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  organization?: Organization;
 }
 
 export type UserRole = 'admin' | 'engineer' | 'accountant' | 'hr' | 'project_manager' | 'viewer';
@@ -220,8 +221,8 @@ export interface Invoice {
   project?: Project;
   clientId?: string;
   client?: Client;
-  issueDate?: Date;
-  dueDate?: Date;
+  issueDate?: Date | string;
+  dueDate?: Date | string;
   items: InvoiceItem[];
   subtotal: number;
   taxRate: number;
@@ -232,16 +233,16 @@ export interface Invoice {
   status: InvoiceStatus;
   notes?: string;
   terms?: string;
-  sentAt?: Date;
-  createdAt: Date;
-  updatedAt: Date;
+  sentAt?: Date | string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
   payments?: Payment[];
 }
 
 export type InvoiceStatus = 'draft' | 'sent' | 'partial' | 'paid' | 'overdue' | 'cancelled';
 
 export interface InvoiceItem {
-  id: string;
+  id?: string;
   description: string;
   quantity: number;
   unitPrice: number;
@@ -605,8 +606,8 @@ export interface Proposal {
   clientId?: string;
   client?: Client;
   title?: string;
-  issueDate?: Date;
-  validUntil?: Date;
+  issueDate?: Date | string;
+  validUntil?: Date | string;
   items: ProposalItem[];
   subtotal: number;
   taxRate: number;
@@ -616,18 +617,18 @@ export interface Proposal {
   status: ProposalStatus;
   notes?: string;
   terms?: string;
-  createdAt: Date;
+  createdAt: Date | string;
 }
 
 export type ProposalStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
 
 export interface ProposalItem {
-  id: string;
+  id?: string;
   description: string;
   quantity: number;
   unitPrice: number;
   unit?: string;
-  total: number;
+  total?: number;
 }
 
 // ============================================

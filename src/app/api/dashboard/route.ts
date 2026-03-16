@@ -23,9 +23,11 @@ async function getUserFromToken(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   const user = await getUserFromToken(request);
-  if (!user) {
+  if (!user || !user.organizationId) {
     return NextResponse.json({ success: false, error: { code: 'UNAUTHORIZED', message: 'غير مصرح' } }, { status: 401 });
   }
+
+  const orgId = user.organizationId;
 
   try {
     // Parallel queries for better performance
@@ -34,20 +36,20 @@ export async function GET(request: NextRequest) {
       totalClients, totalInvoices, totalPaid, pendingTasks, inProgressTasks,
       completedTasks, openDefectsCount, resolvedDefects, criticalDefects, totalEmployees
     ] = await Promise.all([
-      db.project.count({ where: { organizationId: user.organizationId } }),
-      db.project.count({ where: { status: 'active', organizationId: user.organizationId } }),
-      db.project.count({ where: { status: 'completed', organizationId: user.organizationId } }),
-      db.project.count({ where: { status: 'pending', organizationId: user.organizationId } }),
-      db.client.count({ where: { isActive: true, organizationId: user.organizationId } }),
-      db.invoice.aggregate({ where: { organizationId: user.organizationId }, _sum: { total: true } }),
-      db.invoice.aggregate({ where: { organizationId: user.organizationId }, _sum: { paidAmount: true } }),
-      db.task.count({ where: { status: { not: 'done' }, project: { organizationId: user.organizationId } } }),
-      db.task.count({ where: { status: 'in_progress', project: { organizationId: user.organizationId } } }),
-      db.task.count({ where: { status: 'done', project: { organizationId: user.organizationId } } }),
-      db.defect.count({ where: { status: 'Open', project: { organizationId: user.organizationId } } }),
-      db.defect.count({ where: { status: 'Closed', project: { organizationId: user.organizationId } } }),
-      db.defect.count({ where: { status: 'Open', severity: 'critical', project: { organizationId: user.organizationId } } }),
-      db.user.count({ where: { isActive: true, organizationId: user.organizationId } })
+      db.project.count({ where: { organizationId: orgId } }),
+      db.project.count({ where: { status: 'active', organizationId: orgId } }),
+      db.project.count({ where: { status: 'completed', organizationId: orgId } }),
+      db.project.count({ where: { status: 'pending', organizationId: orgId } }),
+      db.client.count({ where: { isActive: true, organizationId: orgId } }),
+      db.invoice.aggregate({ where: { organizationId: orgId }, _sum: { total: true } }),
+      db.invoice.aggregate({ where: { organizationId: orgId }, _sum: { paidAmount: true } }),
+      db.task.count({ where: { status: { not: 'done' }, project: { organizationId: orgId } } }),
+      db.task.count({ where: { status: 'in_progress', project: { organizationId: orgId } } }),
+      db.task.count({ where: { status: 'done', project: { organizationId: orgId } } }),
+      db.defect.count({ where: { status: 'Open', project: { organizationId: orgId } } }),
+      db.defect.count({ where: { status: 'Closed', project: { organizationId: orgId } } }),
+      db.defect.count({ where: { status: 'Open', severity: 'critical', project: { organizationId: orgId } } }),
+      db.user.count({ where: { isActive: true, organizationId: orgId } })
     ]);
 
     return NextResponse.json({

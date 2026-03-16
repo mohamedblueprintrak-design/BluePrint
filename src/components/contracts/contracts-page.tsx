@@ -40,10 +40,10 @@ const CONTRACT_TYPES = [
 ];
 
 const CONTRACT_STATUSES = [
-  { value: 'draft', label: 'مسودة', color: 'bg-slate-500' },
-  { value: 'active', label: 'نشط', color: 'bg-green-500' },
-  { value: 'completed', label: 'مكتمل', color: 'bg-blue-500' },
-  { value: 'terminated', label: 'منتهي', color: 'bg-red-500' },
+  { value: 'draft', label: 'مسودة', labelEn: 'Draft', color: 'bg-slate-500' },
+  { value: 'active', label: 'نشط', labelEn: 'Active', color: 'bg-green-500' },
+  { value: 'completed', label: 'مكتمل', labelEn: 'Completed', color: 'bg-blue-500' },
+  { value: 'terminated', label: 'منتهي', labelEn: 'Terminated', color: 'bg-red-500' },
 ];
 
 export function ContractsPage() {

@@ -163,9 +163,9 @@ export function DashboardPage() {
                     <div className="text-end">
                       <Badge variant={
                         project.status === 'active' ? 'default' :
-                        project.status === 'completed' ? 'success' :
+                        project.status === 'completed' ? 'outline' :
                         project.status === 'pending' ? 'secondary' : 'destructive'
-                      }>
+                      } className={project.status === 'completed' ? 'border-green-500 text-green-400' : ''}>
                         {project.status}
                       </Badge>
                       <p className="text-sm text-slate-400 mt-1">

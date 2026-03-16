@@ -33,7 +33,9 @@ function errorResponse(message: string, code = 'ERROR', status = 400) {
 // GET - List projects
 export async function GET(request: NextRequest) {
   const user = await getUserFromToken(request);
-  if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+  if (!user || !user.organizationId) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+
+  const orgId = user.organizationId;
 
   const { searchParams } = new URL(request.url);
   const page = parseInt(searchParams.get('page') || '1');
@@ -41,7 +43,7 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get('status');
   const search = searchParams.get('search');
 
-  const where: any = { organizationId: user.organizationId };
+  const where: any = { organizationId: orgId };
   if (status) where.status = status;
   if (search) {
     where.OR = [
@@ -86,7 +88,9 @@ export async function GET(request: NextRequest) {
 // POST - Create project
 export async function POST(request: NextRequest) {
   const user = await getUserFromToken(request);
-  if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+  if (!user || !user.organizationId) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+
+  const orgId = user.organizationId;
 
   try {
     const body = await request.json();
@@ -94,7 +98,7 @@ export async function POST(request: NextRequest) {
 
     if (!name) return errorResponse('اسم المشروع مطلوب');
 
-    const count = await db.project.count({ where: { organizationId: user.organizationId } });
+    const count = await db.project.count({ where: { organizationId: orgId } });
     const projectNumber = `PRJ-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
 
     const project = await db.project.create({
@@ -107,7 +111,7 @@ export async function POST(request: NextRequest) {
         contractValue: contractValue ? parseFloat(contractValue) : 0,
         description,
         projectManagerId,
-        organizationId: user.organizationId!
+        organizationId: orgId
       }
     });
 

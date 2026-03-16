@@ -16,7 +16,27 @@ function errorResponse(message: string, code = 'ERROR', status = 400) {
 }
 
 // Demo users for testing without database
-const DEMO_USERS = [
+const DEMO_USERS: Array<{
+  id: string;
+  username: string;
+  email: string;
+  password: string;
+  fullName: string;
+  role: string;
+  isActive: boolean;
+  avatar: string | null;
+  language: string;
+  theme: string;
+  organizationId: string;
+  organization: {
+    id: string;
+    name: string;
+    slug: string;
+    currency: string;
+    timezone: string;
+    locale: string;
+  };
+}> = [
   {
     id: 'demo-admin-001',
     username: 'admin',
@@ -210,14 +230,22 @@ export async function GET(request: NextRequest) {
             id: dbUser.id,
             username: dbUser.username,
             email: dbUser.email,
-            fullName: dbUser.fullName,
+            password: dbUser.password || '',
+            fullName: dbUser.fullName || dbUser.username,
             role: dbUser.role,
             isActive: dbUser.isActive,
             avatar: dbUser.avatar,
-            language: dbUser.language,
-            theme: dbUser.theme,
-            organizationId: dbUser.organizationId,
-            organization: dbUser.organization
+            language: dbUser.language || 'ar',
+            theme: dbUser.theme || 'dark',
+            organizationId: dbUser.organizationId || '',
+            organization: dbUser.organization || {
+              id: '',
+              name: '',
+              slug: '',
+              currency: 'AED',
+              timezone: 'Asia/Dubai',
+              locale: 'ar'
+            }
           };
         }
       } catch (dbError) {

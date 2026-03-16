@@ -776,7 +776,7 @@ export function ReportsPage() {
                     <XAxis dataKey="month" stroke="#94a3b8" fontSize={12} />
                     <YAxis stroke="#94a3b8" fontSize={12} />
                     <ChartTooltip content={<ChartTooltipContent />} />
-                    <ChartLegend content={<ChartLegendContent />} />
+                    <Legend />
                     <Line type="monotone" dataKey="completed" stroke={CHART_COLORS.success} strokeWidth={2} dot={{ r: 3 }} />
                     <Line type="monotone" dataKey="pending" stroke={CHART_COLORS.warning} strokeWidth={2} dot={{ r: 3 }} />
                     <Line type="monotone" dataKey="inProgress" stroke={CHART_COLORS.primary} strokeWidth={2} dot={{ r: 3 }} />
@@ -820,7 +820,7 @@ export function ReportsPage() {
                   <XAxis dataKey="month" stroke="#94a3b8" fontSize={12} />
                   <YAxis stroke="#94a3b8" fontSize={12} tickFormatter={(value) => `${value / 1000}K`} />
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <ChartLegend content={<ChartLegendContent />} />
+                  <Legend />
                   <Bar dataKey="revenue" fill={CHART_COLORS.primary} radius={[4, 4, 0, 0]} />
                   <Bar dataKey="expenses" fill={CHART_COLORS.danger} radius={[4, 4, 0, 0]} />
                   <Bar dataKey="profit" fill={CHART_COLORS.success} radius={[4, 4, 0, 0]} />
@@ -857,7 +857,7 @@ export function ReportsPage() {
                   <XAxis dataKey="month" stroke="#94a3b8" fontSize={12} />
                   <YAxis stroke="#94a3b8" fontSize={12} tickFormatter={(value) => `${value / 1000}K`} />
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <ChartLegend content={<ChartLegendContent />} />
+                  <Legend />
                   <Bar dataKey="revenue" fill={CHART_COLORS.primary} radius={[4, 4, 0, 0]} />
                   <Bar dataKey="expenses" fill={CHART_COLORS.danger} radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -1099,7 +1099,7 @@ export function ReportsPage() {
                   <XAxis dataKey="category" stroke="#94a3b8" fontSize={12} />
                   <YAxis stroke="#94a3b8" fontSize={12} tickFormatter={(value) => `${value / 1000}K`} />
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <ChartLegend content={<ChartLegendContent />} />
+                  <Legend />
                   <Bar dataKey="budget" fill={CHART_COLORS.primary} radius={[4, 4, 0, 0]} />
                   <Bar dataKey="actual" fill={CHART_COLORS.secondary} radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -1164,7 +1164,7 @@ export function ReportsPage() {
                   <XAxis dataKey="month" stroke="#94a3b8" fontSize={12} />
                   <YAxis stroke="#94a3b8" fontSize={12} />
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <ChartLegend content={<ChartLegendContent />} />
+                  <Legend />
                   <Bar dataKey="present" fill={CHART_COLORS.success} radius={[4, 4, 0, 0]} />
                   <Bar dataKey="absent" fill={CHART_COLORS.danger} radius={[4, 4, 0, 0]} />
                   <Bar dataKey="late" fill={CHART_COLORS.warning} radius={[4, 4, 0, 0]} />

@@ -70,7 +70,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsedState] = useState(() => 
-    getInitialValue(STORAGE_KEYS.sidebarCollapsed, 'false') === 'true'
+    getInitialValue<string>(STORAGE_KEYS.sidebarCollapsed, 'false') === 'true'
   );
   
   // Current Page state

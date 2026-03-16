@@ -169,7 +169,7 @@ function CodeBlock({ code, language }: { code: string; language?: string }) {
 function MessageContent({ content }: { content: string }) {
   const renderContent = (text: string) => {
     const parts: React.ReactNode[] = [];
-    let remaining = text;
+    const remaining = text;
     let keyIndex = 0;
     
     // Process code blocks
@@ -306,7 +306,7 @@ export function AIChatPage() {
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 2).toString(),
         role: 'assistant',
-        content: result.data?.response || result.data?.message || language === 'ar' 
+        content: result.data?.response || language === 'ar' 
           ? 'عذراً، لم أتمكن من معالجة طلبك.' 
           : 'Sorry, I could not process your request.',
         timestamp: new Date(),

@@ -44,11 +44,11 @@ const PROJECT_TYPES = [
 ];
 
 const PROJECT_STATUSES = [
-  { value: 'pending', label: 'قيد الانتظار', color: 'bg-yellow-500' },
-  { value: 'active', label: 'نشط', color: 'bg-green-500' },
-  { value: 'on_hold', label: 'موقوف', color: 'bg-red-500' },
-  { value: 'completed', label: 'مكتمل', color: 'bg-blue-500' },
-  { value: 'cancelled', label: 'ملغي', color: 'bg-gray-500' },
+  { value: 'pending', label: 'قيد الانتظار', labelEn: 'Pending', color: 'bg-yellow-500' },
+  { value: 'active', label: 'نشط', labelEn: 'Active', color: 'bg-green-500' },
+  { value: 'on_hold', label: 'موقوف', labelEn: 'On Hold', color: 'bg-red-500' },
+  { value: 'completed', label: 'مكتمل', labelEn: 'Completed', color: 'bg-blue-500' },
+  { value: 'cancelled', label: 'ملغي', labelEn: 'Cancelled', color: 'bg-gray-500' },
 ];
 
 export function ProjectsPage() {

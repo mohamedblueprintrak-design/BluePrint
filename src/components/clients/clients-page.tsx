@@ -106,10 +106,9 @@ export function ClientsPage() {
         address: formData.address,
         contactPerson: formData.contactPerson,
         taxNumber: formData.taxNumber,
-        clientType: formData.clientType,
+        clientType: formData.clientType as 'company' | 'individual' | 'government',
         creditLimit: formData.creditLimit ? parseFloat(formData.creditLimit) : 0,
-        notes: formData.notes,
-        status: 'active'
+        notes: formData.notes
       });
       
       toast({

@@ -76,6 +76,20 @@ export const translations = {
     noData: 'لا توجد بيانات',
     all: 'الكل',
     actions: 'الإجراءات',
+    type: 'النوع',
+    status: 'الحالة',
+    date: 'التاريخ',
+    today: 'اليوم',
+    thisWeek: 'هذا الأسبوع',
+    thisMonth: 'هذا الشهر',
+    active: 'نشط',
+    pending: 'قيد الانتظار',
+    completed: 'مكتمل',
+    total: 'الإجمالي',
+    error: 'خطأ',
+    successSave: 'تم الحفظ بنجاح',
+    successDelete: 'تم الحذف بنجاح',
+    confirmDelete: 'هل أنت متأكد من الحذف؟',
     
     // Dashboard
     overview: 'نظرة عامة',
@@ -138,7 +152,6 @@ export const translations = {
     assignedTo: 'مسند إلى',
     dueDateTask: 'الموعد النهائي',
     progress: 'نسبة الإنجاز',
-    completed: 'مكتمل',
     overdue: 'متأخر',
     
     // HR
@@ -220,12 +233,8 @@ export const translations = {
     emailNotifications: 'إشعارات البريد الإلكتروني',
     pushNotifications: 'الإشعارات الفورية',
     
-    // Status
-    status: 'الحالة',
-    pending: 'قيد الانتظار',
-    active: 'نشط',
+    // Additional Status
     inactive: 'غير نشط',
-    completed: 'مكتمل',
     cancelled: 'ملغي',
     draft: 'مسودة',
     sent: 'مُرسلة',
@@ -244,27 +253,18 @@ export const translations = {
     critical: 'حرج',
     
     // Roles
-    admin: 'مدير',
     engineer: 'مهندس',
     accountant: 'محاسب',
-    projectManager: 'مدير مشروع',
     viewer: 'مشاهد',
     
     // Messages
-    successSave: 'تم الحفظ بنجاح',
-    successDelete: 'تم الحذف بنجاح',
     successUpdate: 'تم التحديث بنجاح',
-    confirmDelete: 'هل أنت متأكد من الحذف؟',
     yes: 'نعم',
     no: 'لا',
-    error: 'حدث خطأ',
     success: 'تمت العملية بنجاح',
     
     // Time
-    today: 'اليوم',
     yesterday: 'أمس',
-    thisWeek: 'هذا الأسبوع',
-    thisMonth: 'هذا الشهر',
     thisYear: 'هذه السنة',
     lastWeek: 'الأسبوع الماضي',
     lastMonth: 'الشهر الماضي',
@@ -294,9 +294,7 @@ export const translations = {
     
     // Misc
     name: 'الاسم',
-    date: 'التاريخ',
     amount: 'المبلغ',
-    total: 'الإجمالي',
     phone: 'الهاتف',
     address: 'العنوان',
     taxNumber: 'الرقم الضريبي',
@@ -379,6 +377,20 @@ export const translations = {
     noData: 'No data available',
     all: 'All',
     actions: 'Actions',
+    type: 'Type',
+    status: 'Status',
+    date: 'Date',
+    today: 'Today',
+    thisWeek: 'This Week',
+    thisMonth: 'This Month',
+    active: 'Active',
+    pending: 'Pending',
+    completed: 'Completed',
+    total: 'Total',
+    error: 'Error',
+    successSave: 'Saved successfully',
+    successDelete: 'Deleted successfully',
+    confirmDelete: 'Are you sure you want to delete?',
     
     // Dashboard
     overview: 'Overview',
@@ -441,7 +453,6 @@ export const translations = {
     assignedTo: 'Assigned To',
     dueDateTask: 'Due Date',
     progress: 'Progress',
-    completed: 'Completed',
     overdue: 'Overdue',
     
     // HR
@@ -523,12 +534,8 @@ export const translations = {
     emailNotifications: 'Email Notifications',
     pushNotifications: 'Push Notifications',
     
-    // Status
-    status: 'Status',
-    pending: 'Pending',
-    active: 'Active',
+    // Additional Status
     inactive: 'Inactive',
-    completed: 'Completed',
     cancelled: 'Cancelled',
     draft: 'Draft',
     sent: 'Sent',
@@ -547,27 +554,18 @@ export const translations = {
     critical: 'Critical',
     
     // Roles
-    admin: 'Admin',
     engineer: 'Engineer',
     accountant: 'Accountant',
-    projectManager: 'Project Manager',
     viewer: 'Viewer',
     
     // Messages
-    successSave: 'Saved successfully',
-    successDelete: 'Deleted successfully',
     successUpdate: 'Updated successfully',
-    confirmDelete: 'Are you sure you want to delete?',
     yes: 'Yes',
     no: 'No',
-    error: 'An error occurred',
     success: 'Operation successful',
     
     // Time
-    today: 'Today',
     yesterday: 'Yesterday',
-    thisWeek: 'This Week',
-    thisMonth: 'This Month',
     thisYear: 'This Year',
     lastWeek: 'Last Week',
     lastMonth: 'Last Month',
@@ -597,9 +595,7 @@ export const translations = {
     
     // Misc
     name: 'Name',
-    date: 'Date',
     amount: 'Amount',
-    total: 'Total',
     phone: 'Phone',
     address: 'Address',
     taxNumber: 'Tax Number',
