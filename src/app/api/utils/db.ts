@@ -24,19 +24,17 @@ export const DEMO_USERS: DemoUser[] = DEMO_MODE_ENABLED ? [
 ] : [];
 
 // Dynamic database import to avoid failures when DB is not available
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let db: any = null;
 
 /**
  * Get database client (lazy loaded)
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getDb(): Promise<any> {
   if (!db) {
     try {
       const dbModule = await import('@/lib/db');
       db = dbModule.db;
-    } catch (e) {
+    } catch (_e) {
       console.log('Database not available, using demo mode');
       db = null;
     }
@@ -48,7 +46,6 @@ export async function getDb(): Promise<any> {
  * Safe database operation wrapper
  */
 export async function safeDbOp<T>(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   operation: (database: any) => Promise<T>,
   fallback: T
 ): Promise<T> {
@@ -56,7 +53,7 @@ export async function safeDbOp<T>(
     const database = await getDb();
     if (!database) return fallback;
     return await operation(database);
-  } catch (e) {
+  } catch (_e) {
     console.log('Database operation failed, using fallback');
     return fallback;
   }

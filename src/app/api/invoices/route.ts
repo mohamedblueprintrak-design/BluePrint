@@ -115,7 +115,7 @@ export async function GET(request: NextRequest) {
         dueDate: i.dueDate,
         createdAt: i.createdAt
       })));
-    } catch (dbError) {
+    } catch (_dbError) {
       // Demo mode
       let invoices = DEMO_INVOICES;
       if (status) {
@@ -168,7 +168,6 @@ export async function POST(request: NextRequest) {
       if (sendNotification !== false && invoice.client?.email) {
         try {
           // Check if user has email notifications enabled for invoices
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const notificationSettings = await (db as any).notificationSettings?.findUnique({
             where: { userId: user.id }
           });
@@ -199,7 +198,7 @@ export async function POST(request: NextRequest) {
       }
 
       return successResponse({ id: invoice.id, invoiceNumber, total });
-    } catch (dbError) {
+    } catch (_dbError) {
       // Demo mode
       const invoiceNumber = `INV-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`;
       const taxAmount = (subtotal || 0) * (taxRate || 5) / 100;
@@ -266,7 +265,7 @@ export async function PUT(request: NextRequest) {
         data: updateData
       });
       return successResponse(invoice);
-    } catch (dbError) {
+    } catch (_dbError) {
       return successResponse({ id, status, message: 'تم التحديث (وضع تجريبي)' });
     }
   } catch (error: any) {
@@ -290,7 +289,7 @@ export async function DELETE(request: NextRequest) {
         where: { id, organizationId: user.organizationId }
       });
       return successResponse({ message: 'تم حذف الفاتورة' });
-    } catch (dbError) {
+    } catch (_dbError) {
       return successResponse({ message: 'تم الحذف (وضع تجريبي)' });
     }
   } catch (error: any) {

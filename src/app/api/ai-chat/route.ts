@@ -4,15 +4,17 @@ import ZAI from 'z-ai-web-dev-sdk';
 import { getJWTSecret } from '../utils/auth';
 
 // API Response types (kept for documentation purposes)
-// These interfaces define the expected response structure
+// These interfaces define the expected response structure from the LLM API
 
-interface CompletionChoice {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+interface _CompletionChoice {
   message?: {
     content?: string;
   };
 }
 
-interface CompletionUsage {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+interface _CompletionUsage {
   total_tokens?: number;
 }
 

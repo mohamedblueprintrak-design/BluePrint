@@ -29,7 +29,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import {
   FileText, Plus, Search, Eye, Edit, Trash2, Send,
-  Calendar, DollarSign, Users, Building2, Clock, CheckCircle, XCircle
+  DollarSign, Users, Clock, CheckCircle
 } from 'lucide-react';
 
 const PROPOSAL_STATUSES = [

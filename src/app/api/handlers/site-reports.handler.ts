@@ -16,7 +16,6 @@ export const getHandlers = {
     const database = await getDb();
     if (!database) return successResponse([]);
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const siteReports: any[] = await database.siteReport.findMany({
       where: { project: { organizationId: context.user.organizationId } },
       include: { project: true },
@@ -69,7 +68,6 @@ export const postHandlers = {
     const count = await database.siteReport.count({ where: { projectId: projectId as string } });
     const reportNumber = `SR-${new Date().getFullYear()}-${(count + 1).toString().padStart(3, '0')}`;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const report: any = await database.siteReport.create({
       data: {
         projectId: projectId as string,

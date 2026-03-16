@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -38,10 +37,10 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import {
-  Users, Calendar, Clock, UserCheck, UserX, AlertCircle,
+  Users, Calendar, Clock, UserCheck, UserX,
   CheckCircle, XCircle, FileText, DollarSign, TrendingUp,
-  Mail, Phone, Building2, Briefcase, Search, Plus,
-  ChevronLeft, ChevronRight, Sun, CloudRain, PartyPopper
+  Mail, Phone, Building2, Briefcase, Search,
+  ChevronLeft, ChevronRight, PartyPopper
 } from 'lucide-react';
 
 // Leave Types Configuration
@@ -246,7 +245,7 @@ export function HRPage() {
         description: isRTL ? 'تم الموافقة على طلب الإجازة' : 'Leave request has been approved',
       });
       refetchLeaves();
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: t.error,
         description: isRTL ? 'حدث خطأ أثناء الموافقة' : 'Failed to approve request',
@@ -273,7 +272,7 @@ export function HRPage() {
       setSelectedRequest(null);
       setRejectionReason('');
       refetchLeaves();
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: t.error,
         description: isRTL ? 'حدث خطأ أثناء الرفض' : 'Failed to reject request',

@@ -12,7 +12,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
 import {
   Select,
   SelectContent,
@@ -55,7 +54,6 @@ import {
   Clock,
   Zap,
   MessageSquare,
-  ChevronDown,
   RefreshCw,
   Settings,
   PanelLeft,
@@ -257,7 +255,7 @@ function TypingIndicator() {
 // Main AI Chat Page Component
 export function AIChatPage() {
   const { language, isRTL } = useApp();
-  const { user } = useAuth();
+  const { } = useAuth(); // Auth context available for future use
   const { t, formatDateTime } = useTranslation(language);
   const aiChatMutation = useAIChat();
   
@@ -333,7 +331,7 @@ export function AIChatPage() {
       };
       
       setMessages(prev => [...prev, assistantMessage]);
-    } catch (error) {
+    } catch (_error) {
       // Remove loading and add error message
       setMessages(prev => prev.filter(m => m.id !== loadingId));
       

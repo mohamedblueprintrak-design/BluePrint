@@ -11,9 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -61,25 +59,15 @@ import {
   Smartphone,
   Mail,
   Globe,
-  Clock,
-  Calendar,
-  ChevronRight,
-  ExternalLink,
   Copy,
   Trash2,
   Plus,
-  RefreshCw,
   Download,
-  AlertTriangle,
   CheckCircle,
-  XCircle,
   Zap,
   Users,
   HardDrive,
-  DollarSign,
   FileText,
-  Globe2,
-  Lock,
   Fingerprint,
   History,
   Link2,
@@ -510,7 +498,7 @@ export function SettingsPage() {
     }));
   };
 
-  const handleToggleIntegration = (integrationId: string) => {
+  const handleToggleIntegration = (_integrationId: string) => {
     toast({
       title: t.successSave,
       description: language === 'ar' ? 'تم تحديث التكامل' : 'Integration updated',

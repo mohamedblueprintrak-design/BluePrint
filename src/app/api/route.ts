@@ -70,7 +70,7 @@ interface RateLimitRecord {
 // type RequestBody = Record<string, unknown>;
 
 /** Minimal database client interface for type safety */
-interface DbClient {
+interface _DbClient {
   user: {
     findUnique: (args: { where: { id: string }; include?: Record<string, boolean> }) => Promise<AuthenticatedUser | null>;
     findFirst: (args: { where: Record<string, unknown> }) => Promise<AuthenticatedUser | null>;
@@ -240,15 +240,13 @@ interface DbClient {
 }
 
 // Dynamic database import to avoid failures when DB is not available
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let db: any = null;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getDb(): Promise<any> {
   if (!db) {
     try {
       const dbModule = await import('@/lib/db');
       db = dbModule.db;
-    } catch (e) {
+    } catch (_e) {
       console.log('Database not available, using demo mode');
       db = null;
     }
@@ -257,12 +255,12 @@ async function getDb(): Promise<any> {
 }
 
 // Safe database operation wrapper
-async function safeDbOp<T>(operation: (database: any) => Promise<T>, fallback: T): Promise<T> {
+async function _safeDbOp<T>(operation: (database: any) => Promise<T>, fallback: T): Promise<T> {
   try {
     const database = await getDb();
     if (!database) return fallback;
     return await operation(database);
-  } catch (e) {
+  } catch (_e) {
     console.log('Database operation failed, using fallback');
     return fallback;
   }
@@ -452,7 +450,7 @@ async function getUserFromToken(request: NextRequest): Promise<AuthenticatedUser
         include: { organization: true }
       });
       return user;
-    } catch (dbError) {
+    } catch (_dbError) {
       console.log('Database not available, using demo mode');
       return null;
     }
@@ -538,7 +536,6 @@ export async function GET(request: NextRequest) {
           take: projectLimit
         });
         
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const mappedProjects = allProjects.map((p: any) => ({
           id: p.id,
           name: p.name,
@@ -712,7 +709,6 @@ export async function GET(request: NextRequest) {
         const taskStatus = searchParams.get('status');
         
         // Build where clause with search
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const tasksQuery: Record<string, any> = {
           project: { organizationId: user.organizationId }
         };
@@ -1532,7 +1528,6 @@ export async function GET(request: NextRequest) {
       default:
         return errorResponse('إجراء غير معروف');
     }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error('API Error:', error);
     return errorResponse(error.message || 'خطأ في الخادم', 'SERVER_ERROR', 500);
@@ -1580,7 +1575,7 @@ export async function POST(request: NextRequest) {
                 }
               });
             }
-          } catch (dbError) {
+          } catch (_dbError) {
             console.log('Database not available, using demo mode');
           }
         }
@@ -1608,7 +1603,7 @@ export async function POST(request: NextRequest) {
                 data: { lastLoginAt: new Date() }
               });
             }
-          } catch (dbError) {
+          } catch (_dbError) {
             console.log('Could not update last login');
           }
         }
@@ -2402,7 +2397,6 @@ export async function POST(request: NextRequest) {
               role: 'system',
               content: 'أنت Blu، المساعد الذكي المتخصص في الهندسة المدنية والبناء في الإمارات. تجيب بأسلوب احترافي وعملي على أسئلة المهندسين والمقاولين. تستخدم الأكواد الإماراتية والمعايير الخليجية في إجاباتك.'
             },
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ...conversationHistory.map((msg: any) => ({
               role: msg.role,
               content: msg.content
@@ -2445,7 +2439,6 @@ export async function POST(request: NextRequest) {
             tokens: completion.usage?.total_tokens || 0,
             timestamp: new Date().toISOString()
           });
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
           console.error('AI Chat Error:', error);
           return errorResponse('حدث خطأ في الاتصال بالذكاء الاصطناعي', 'AI_ERROR', 500);
@@ -2455,7 +2448,6 @@ export async function POST(request: NextRequest) {
       default:
         return errorResponse('إجراء غير معروف');
     }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error('API Error:', error);
     return errorResponse(error.message || 'خطأ في الخادم', 'SERVER_ERROR', 500);
@@ -2490,7 +2482,6 @@ export async function PUT(request: NextRequest) {
         });
         if (!task) return errorResponse('المهمة غير موجودة', 'NOT_FOUND', 404);
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const updateData: Record<string, any> = {};
         if (status) {
           updateData.status = status;
@@ -2836,7 +2827,6 @@ export async function PUT(request: NextRequest) {
       default:
         return errorResponse('إجراء غير معروف');
     }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error('API Error:', error);
     return errorResponse(error.message || 'خطأ في الخادم', 'SERVER_ERROR', 500);
@@ -3100,7 +3090,6 @@ export async function DELETE(request: NextRequest) {
       default:
         return errorResponse('إجراء غير معروف');
     }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error('API Error:', error);
     return errorResponse(error.message || 'خطأ في الخادم', 'SERVER_ERROR', 500);

@@ -4,13 +4,12 @@ import { useState } from 'react';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
 import { useProjects, useCreateProject, useDeleteProject, useClients } from '@/hooks/use-data';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import {
   Select,
@@ -31,8 +30,8 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import {
-  Building2, Plus, Search, Filter, MoreVertical, Edit, Trash2, 
-  Eye, MapPin, Calendar, DollarSign, Users, ChevronRight
+  Building2, Plus, Search, Edit, Trash2, 
+  Eye, MapPin, DollarSign, Users
 } from 'lucide-react';
 
 const PROJECT_TYPES = [
@@ -52,7 +51,7 @@ const PROJECT_STATUSES = [
 ];
 
 export function ProjectsPage() {
-  const { language, setCurrentPage } = useApp();
+  const { language, setCurrentPage: _setCurrentPage } = useApp();
   const { t, formatCurrency, formatDate } = useTranslation(language);
   const { toast } = useToast();
   
@@ -126,7 +125,7 @@ export function ProjectsPage() {
       setShowAddDialog(false);
       setFormData({ name: '', location: '', projectType: '', clientId: '', contractValue: '', description: '' });
       refetch();
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ أثناء إنشاء المشروع' : 'Failed to create project',
@@ -145,7 +144,7 @@ export function ProjectsPage() {
         description: language === 'ar' ? 'تم حذف المشروع بنجاح' : 'Project deleted successfully'
       });
       refetch();
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ أثناء حذف المشروع' : 'Failed to delete project',

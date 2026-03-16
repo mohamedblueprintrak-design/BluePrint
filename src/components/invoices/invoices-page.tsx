@@ -232,7 +232,7 @@ export function InvoicesPage() {
       setShowAddDialog(false);
       resetForm();
       refetch();
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ أثناء إنشاء الفاتورة' : 'Failed to create invoice',
@@ -277,7 +277,7 @@ export function InvoicesPage() {
   };
 
   // Handle delete invoice
-  const handleDeleteInvoice = async (id: string) => {
+  const handleDeleteInvoice = async (_id: string) => {
     if (!confirm(t.confirmDelete)) return;
     
     toast({
@@ -512,7 +512,7 @@ export function InvoicesPage() {
 
                   <ScrollArea className="max-h-[300px]">
                     <div className="space-y-3 pe-2">
-                      {invoiceItems.map((item, index) => (
+                      {invoiceItems.map((item, _index) => (
                         <div key={item.id} className="grid grid-cols-12 gap-2 items-start p-3 bg-slate-800/30 rounded-lg">
                           <div className="col-span-4">
                             <Label className="text-xs text-slate-400 mb-1 block">

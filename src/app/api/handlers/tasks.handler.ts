@@ -38,7 +38,6 @@ export const getHandlers = {
     const taskStatus = context.searchParams.get('status');
     
     // Build where clause with search
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const tasksQuery: Record<string, any> = {
       project: { organizationId: context.user.organizationId }
     };
@@ -60,7 +59,6 @@ export const getHandlers = {
     const taskLimit = getEffectiveLimit(usePagination, pagination.limit);
     const taskSkip = usePagination ? calculateSkip(pagination.page, pagination.limit) : 0;
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const tasks: any[] = await database.task.findMany({
       where: tasksQuery,
       include: { project: true, assignee: true },
@@ -69,7 +67,6 @@ export const getHandlers = {
       take: taskLimit
     });
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mappedTasks = tasks.map((t: any) => ({
       id: t.id,
       title: t.title,
@@ -116,7 +113,6 @@ export const postHandlers = {
       if (!taskProject) return notFoundResponse('المشروع غير موجود');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const task: any = await database.task.create({
       data: {
         title: title as string,
@@ -171,7 +167,6 @@ export const putHandlers = {
     });
     if (!task) return notFoundResponse('المهمة غير موجودة');
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: Record<string, any> = {};
     if (status) {
       updateData.status = status;

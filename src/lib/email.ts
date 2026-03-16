@@ -138,8 +138,10 @@ export async function testEmailConnection(): Promise<{
   }
 }
 
-export default {
+const emailService = {
   sendEmail,
   sendBatchEmails,
   testEmailConnection,
 };
+
+export default emailService;

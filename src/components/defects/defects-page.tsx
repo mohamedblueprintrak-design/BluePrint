@@ -5,7 +5,7 @@ import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
 import { useProjects } from '@/hooks/use-data';
 import { useDefects, useCreateDefect, useUpdateDefect, useDeleteDefect, useUploadFile } from '@/hooks/use-data';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,7 +30,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertTriangle, Plus, Search, Eye, Edit, CheckCircle, Clock, Trash2,
-  Building2, MapPin, Calendar, User, AlertCircle, Loader2, Upload, X
+  Building2, MapPin, Calendar, User, AlertCircle, Loader2, X
 } from 'lucide-react';
 
 const SEVERITY_LEVELS = [
@@ -186,7 +186,7 @@ export function DefectsPage() {
       setShowAddDialog(false);
       setFormData({ title: '', description: '', severity: 'medium', location: '', projectId: '', assignedTo: '', status: 'Open', resolutionNotes: '' });
       clearFile();
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: t.error,
         description: language === 'ar' ? 'فشل في إضافة العيب' : 'Failed to add defect',
@@ -217,7 +217,7 @@ export function DefectsPage() {
       });
       setEditingDefect(null);
       setFormData({ title: '', description: '', severity: 'medium', location: '', projectId: '', assignedTo: '', status: 'Open', resolutionNotes: '' });
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: t.error,
         description: language === 'ar' ? 'فشل في تحديث العيب' : 'Failed to update defect',
@@ -237,7 +237,7 @@ export function DefectsPage() {
         title: t.successSave,
         description: language === 'ar' ? 'تم حذف العيب بنجاح' : 'Defect deleted successfully'
       });
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: t.error,
         description: language === 'ar' ? 'فشل في حذف العيب' : 'Failed to delete defect',

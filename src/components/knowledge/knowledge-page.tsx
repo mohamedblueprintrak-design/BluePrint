@@ -474,7 +474,7 @@ const CATEGORY_CONFIG = {
 };
 
 export function KnowledgePage() {
-  const { language, isRTL } = useApp();
+  const { language, isRTL: _isRTL } = useApp();
   const { t } = useTranslation(language);
   const { toast } = useToast();
   
@@ -535,7 +535,7 @@ export function KnowledgePage() {
         description: language === 'ar' ? 'تم نسخ المعلومات إلى الحافظة' : 'Information copied to clipboard'
       });
       setTimeout(() => setCopiedId(null), 2000);
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: t.error,
         description: language === 'ar' ? 'فشل في نسخ المحتوى' : 'Failed to copy content',

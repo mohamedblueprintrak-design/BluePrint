@@ -122,7 +122,7 @@ export async function GET(request: NextRequest) {
         actualHours: t.actualHours,
         createdAt: t.createdAt
       })));
-    } catch (dbError) {
+    } catch (_dbError) {
       // Demo mode
       let tasks = DEMO_TASKS;
       if (status) tasks = tasks.filter(t => t.status === status);
@@ -182,7 +182,6 @@ export async function POST(request: NextRequest) {
         if (sendNotification !== false && task.assignee?.email) {
           try {
             // Check if assignee has email notifications enabled for tasks
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const notificationSettings = await (db as any).notificationSettings?.findUnique({
               where: { userId: assignedToId }
             });
@@ -216,7 +215,7 @@ export async function POST(request: NextRequest) {
       }
 
       return successResponse({ id: task.id, title: task.title });
-    } catch (dbError) {
+    } catch (_dbError) {
       // Demo mode
       // Simulate email sending in demo mode
       if (sendNotification !== false && assignedToId) {
@@ -292,7 +291,7 @@ export async function PUT(request: NextRequest) {
         data
       });
       return successResponse(task);
-    } catch (dbError) {
+    } catch (_dbError) {
       return successResponse({ id, ...data, message: 'تم التحديث (وضع تجريبي)' });
     }
   } catch (error: any) {
@@ -326,7 +325,7 @@ export async function DELETE(request: NextRequest) {
       
       await db.task.delete({ where: { id } });
       return successResponse({ message: 'تم حذف المهمة' });
-    } catch (dbError) {
+    } catch (_dbError) {
       return successResponse({ message: 'تم الحذف (وضع تجريبي)' });
     }
   } catch (error: any) {

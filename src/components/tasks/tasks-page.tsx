@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask, useProjects } from '@/hooks/use-data';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,7 +13,6 @@ import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -33,9 +32,9 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import {
-  CheckSquare, Plus, Search, Filter, MoreVertical, Edit, Trash2,
+  CheckSquare, Plus, Search, Trash2,
   Eye, Calendar, Clock, User, Tag, GripVertical, AlertCircle,
-  CheckCircle2, Circle, Loader2, Eye as ReviewIcon, X
+  CheckCircle2, Circle, Loader2, Eye as ReviewIcon
 } from 'lucide-react';
 import type { Task } from '@/types';
 
@@ -231,7 +230,7 @@ export function TasksPage() {
       setShowAddDialog(false);
       setFormData(initialFormData);
       refetch();
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ أثناء إنشاء المهمة' : 'Failed to create task',
@@ -256,7 +255,7 @@ export function TasksPage() {
       });
       
       refetch();
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ أثناء تحديث المهمة' : 'Failed to update task',
@@ -278,7 +277,7 @@ export function TasksPage() {
       setShowTaskDetail(false);
       setSelectedTask(null);
       refetch();
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ أثناء حذف المهمة' : 'Failed to delete task',
@@ -293,7 +292,7 @@ export function TasksPage() {
   };
   
   // Get status config
-  const getStatusConfig = (status: string) => {
+  const _getStatusConfig = (status: string) => {
     return TASK_STATUSES.find(s => s.value === status) || TASK_STATUSES[0];
   };
   

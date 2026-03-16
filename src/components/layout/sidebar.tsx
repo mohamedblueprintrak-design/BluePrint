@@ -1,13 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useAuth } from '@/context/auth-context';
 import { useApp } from '@/context/app-context';
-import { useTranslation, Language } from '@/lib/translations';
+import { useTranslation } from '@/lib/translations';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -28,11 +26,11 @@ import {
 } from '@/components/ui/tooltip';
 import {
   Home, Users, Building2, FileText, DollarSign, CheckSquare, 
-  Briefcase, Package, FileCheck, BarChart3, Bell, Settings, 
-  LogOut, ChevronDown, Menu, Search, Moon, Sun, Globe,
-  User, Shield, BookOpen, Bot, TestTube, FileSpreadsheet,
+  Briefcase, Package, FileCheck, BarChart3, Settings, 
+  LogOut, Menu, Search, Moon, Sun, Globe,
+  User, Shield, BookOpen, Bot, FileSpreadsheet,
   PanelLeftClose, PanelLeft, Zap, Calculator, ShoppingCart,
-  AlertTriangle, Wallet, Receipt, X
+  AlertTriangle, Receipt, X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -55,8 +53,8 @@ function SidebarContent({
   const { user, logout } = useAuth();
   const { 
     theme, setTheme, language, setLanguage, isDark, isRTL,
-    sidebarCollapsed, setSidebarCollapsed, currentPage, setCurrentPage,
-    setCommandPaletteOpen, setNotificationsPanelOpen
+    sidebarCollapsed, setSidebarCollapsed: _setSidebarCollapsed, currentPage, setCurrentPage,
+    setCommandPaletteOpen, setNotificationsPanelOpen: _setNotificationsPanelOpen
   } = useApp();
   const { t } = useTranslation(language);
 

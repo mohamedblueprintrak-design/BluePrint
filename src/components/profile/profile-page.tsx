@@ -108,7 +108,7 @@ export function ProfilePage() {
           variant: 'destructive'
         });
       }
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ' : 'An error occurred',
@@ -153,7 +153,7 @@ export function ProfilePage() {
           variant: 'destructive'
         });
       }
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ' : 'An error occurred',
@@ -209,7 +209,7 @@ export function ProfilePage() {
           variant: 'destructive'
         });
       }
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ' : 'An error occurred',
@@ -240,7 +240,7 @@ export function ProfilePage() {
           variant: 'destructive'
         });
       }
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ' : 'An error occurred',
@@ -255,7 +255,7 @@ export function ProfilePage() {
     // Save preference to backend
     try {
       await updateProfile.mutateAsync({ language: newLanguage });
-    } catch (error) {
+    } catch (_error) {
       // Silently fail - UI already updated
     }
   };
@@ -266,7 +266,7 @@ export function ProfilePage() {
     // Save preference to backend
     try {
       await updateProfile.mutateAsync({ theme: newTheme });
-    } catch (error) {
+    } catch (_error) {
       // Silently fail - UI already updated
     }
   };

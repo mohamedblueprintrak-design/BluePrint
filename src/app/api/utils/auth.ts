@@ -73,7 +73,7 @@ export async function getUserFromToken(request: NextRequest, demoUsers: DemoUser
         include: { organization: true }
       });
       return user;
-    } catch (dbError) {
+    } catch (_dbError) {
       console.log('Database not available, using demo mode');
       return null;
     }

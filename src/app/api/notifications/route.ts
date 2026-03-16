@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
         })),
         { unreadCount }
       );
-    } catch (dbError) {
+    } catch (_dbError) {
       // Demo mode
       let notifications = DEMO_NOTIFICATIONS;
       if (unreadOnly) {
@@ -159,7 +159,7 @@ export async function PUT(request: NextRequest) {
       });
 
       return successResponse({ message: 'تم تحديد الإشعار كمقروء' });
-    } catch (dbError) {
+    } catch (_dbError) {
       // Demo mode
       return successResponse({ message: 'تم التحديث (وضع تجريبي)' });
     }
@@ -195,7 +195,7 @@ export async function DELETE(request: NextRequest) {
       });
 
       return successResponse({ message: 'تم حذف الإشعار' });
-    } catch (dbError) {
+    } catch (_dbError) {
       // Demo mode
       return successResponse({ message: 'تم الحذف (وضع تجريبي)' });
     }
@@ -236,7 +236,7 @@ export async function POST(request: NextRequest) {
         title: notification.title,
         message: 'تم إنشاء الإشعار'
       });
-    } catch (dbError) {
+    } catch (_dbError) {
       // Demo mode
       return successResponse({
         id: `demo-notif-${Date.now()}`,

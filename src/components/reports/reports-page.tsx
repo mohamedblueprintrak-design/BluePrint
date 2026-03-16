@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -28,8 +27,6 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
   type ChartConfig,
 } from '@/components/ui/chart';
 import {
@@ -43,8 +40,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  AreaChart,
-  Area,
   ResponsiveContainer,
   Legend,
   Tooltip,
@@ -75,7 +70,6 @@ import {
   Printer,
   FileBarChart,
   Settings,
-  ChevronDown,
   CalendarDays,
 } from 'lucide-react';
 
@@ -320,8 +314,8 @@ function CustomPieChart({ data, height = 300 }: { data: { name: string; value: n
 }
 
 export function ReportsPage() {
-  const { language, isRTL, currency } = useApp();
-  const { t, formatCurrency, formatDate, formatNumber, formatPercentage } = useTranslation(language);
+  const { language, isRTL: _isRTL, currency: _currency } = useApp();
+  const { t, formatCurrency, formatDate } = useTranslation(language);
   
   const [dateRange, setDateRange] = useState('thisYear');
   const [isExporting, setIsExporting] = useState(false);
@@ -338,10 +332,10 @@ export function ReportsPage() {
   const exportReport = useExportReport();
   
   const stats = dashboardData?.data;
-  const projects = projectsData?.data || [];
-  const tasks = tasksData?.data || [];
-  const invoices = invoicesData?.data || [];
-  const clients = clientsData?.data || [];
+  const _projects = projectsData?.data || [];
+  const _tasks = tasksData?.data || [];
+  const _invoices = invoicesData?.data || [];
+  const _clients = clientsData?.data || [];
 
   // Memoized chart data
   const monthlyData = useMemo(() => generateMonthlyData(), []);

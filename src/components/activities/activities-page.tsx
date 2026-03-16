@@ -4,10 +4,9 @@ import { useState } from 'react';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
@@ -18,8 +17,8 @@ import {
 } from '@/components/ui/select';
 import {
   Activity, Search, Filter, Calendar, User, Building2, FileText,
-  DollarSign, CheckSquare, Package, Settings, Bell, Plus, Edit,
-  Trash2, Eye, ArrowUpRight, ArrowDownRight, Clock, Users
+  DollarSign, CheckSquare, Package, Settings, Plus, Edit,
+  Trash2, ArrowUpRight, Clock, Users
 } from 'lucide-react';
 
 // Mock activity data
@@ -62,7 +61,7 @@ const ACTION_TYPES = [
 
 export function ActivitiesPage() {
   const { language } = useApp();
-  const { t, formatDate, formatDateTime } = useTranslation(language);
+  const { t, formatDate } = useTranslation(language);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');

@@ -30,7 +30,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import {
   Users, Plus, Search, Building2, User, Landmark, Mail, Phone, 
-  MapPin, Eye, Edit, Trash2, DollarSign, CreditCard, FileText
+  MapPin, Eye, Edit, Trash2, CreditCard, FileText
 } from 'lucide-react';
 
 const CLIENT_TYPES = [
@@ -129,7 +129,7 @@ export function ClientsPage() {
         notes: '' 
       });
       refetch();
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ أثناء إنشاء العميل' : 'Failed to create client',
@@ -148,7 +148,7 @@ export function ClientsPage() {
         description: language === 'ar' ? 'تم حذف العميل بنجاح' : 'Client deleted successfully'
       });
       refetch();
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ أثناء حذف العميل' : 'Failed to delete client',

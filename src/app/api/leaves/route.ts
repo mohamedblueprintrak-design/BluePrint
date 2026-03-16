@@ -100,7 +100,6 @@ export async function PUT(request: NextRequest) {
       if (sendNotification !== false && leaveRequest.user?.email) {
         try {
           // Check if user has email notifications enabled for leaves
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const notificationSettings = await (db as any).notificationSettings?.findUnique({
             where: { userId: leaveRequest.userId }
           });
@@ -140,7 +139,7 @@ export async function PUT(request: NextRequest) {
           // Don't fail the request if email fails
         }
       }
-    } catch (dbError) {
+    } catch (_dbError) {
       // Demo mode - simulate email sending
       if (sendNotification !== false) {
         console.log('📧 Leave notification (demo mode):', { id, status, rejectionReason });

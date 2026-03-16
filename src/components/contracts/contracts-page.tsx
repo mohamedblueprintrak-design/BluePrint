@@ -28,8 +28,8 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import {
-  FileCheck, Plus, Search, Eye, Edit, Trash2, Download,
-  Calendar, DollarSign, Users, Building2
+  FileCheck, Plus, Search, Eye, Edit, Download,
+  Calendar, DollarSign, Users
 } from 'lucide-react';
 
 const CONTRACT_TYPES = [
@@ -53,7 +53,7 @@ export function ContractsPage() {
   
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [typeFilter, setTypeFilter] = useState('all');
+  const [typeFilter, _setTypeFilter] = useState('all');
   const [showAddDialog, setShowAddDialog] = useState(false);
   
   const { data: contractsData, isLoading } = useContracts();

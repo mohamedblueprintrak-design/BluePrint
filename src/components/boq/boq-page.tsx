@@ -36,7 +36,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import {
   FileSpreadsheet, Plus, Search, Edit, Trash2, Calculator,
-  Building2, DollarSign, Package, Save, X, Loader2, AlertCircle
+  Building2, DollarSign, Package, Save, Loader2, AlertCircle
 } from 'lucide-react';
 import type { BOQItem } from '@/types';
 
@@ -251,9 +251,18 @@ export function BOQPage() {
   // Reset form when opening add dialog
   useEffect(() => {
     if (showAddDialog) {
-      resetFormData();
+      setFormData({
+        itemNumber: '',
+        description: '',
+        unit: '',
+        quantity: 0,
+        unitPrice: 0,
+        category: '',
+        notes: '',
+        projectId: projectFilter !== 'all' ? projectFilter : '',
+      });
     }
-  }, [showAddDialog]);
+  }, [showAddDialog, projectFilter]);
 
   // Loading state
   if (isLoading) {

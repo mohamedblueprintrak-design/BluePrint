@@ -52,7 +52,6 @@ export const getHandlers = {
     const proposalLimit = getEffectiveLimit(usePagination, pagination.limit);
     const proposalSkip = usePagination ? calculateSkip(pagination.page, pagination.limit) : 0;
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const proposals: any[] = await database.proposal.findMany({
       where: proposalWhere,
       include: { client: true },
@@ -61,7 +60,6 @@ export const getHandlers = {
       take: proposalLimit
     });
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mappedProposals = proposals.map((p: any) => ({
       id: p.id,
       proposalNumber: p.proposalNumber,
@@ -103,7 +101,6 @@ export const postHandlers = {
       finalProposalNumber = `PRP-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const proposal: any = await database.proposal.create({
       data: {
         proposalNumber: finalProposalNumber,

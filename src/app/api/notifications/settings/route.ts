@@ -52,7 +52,6 @@ export async function GET(request: NextRequest) {
 
   try {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const settings = await (db as any).notificationSettings?.findUnique({
         where: { userId: user.id }
       });
@@ -80,7 +79,7 @@ export async function GET(request: NextRequest) {
         pushProjects: settings.pushProjects,
         digestEmail: settings.digestEmail,
       });
-    } catch (dbError) {
+    } catch (_dbError) {
       // Demo mode - return default settings
       return successResponse({
         ...DEFAULT_SETTINGS,
@@ -116,7 +115,6 @@ export async function PUT(request: NextRequest) {
 
     try {
       // Upsert settings
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const settings = await (db as any).notificationSettings?.upsert({
         where: { userId: user.id },
         update: {
@@ -161,7 +159,7 @@ export async function PUT(request: NextRequest) {
         digestEmail: settings.digestEmail,
         message: 'تم تحديث إعدادات الإشعارات'
       });
-    } catch (dbError) {
+    } catch (_dbError) {
       // Demo mode
       return successResponse({
         userId: user.id,
@@ -190,7 +188,6 @@ export async function POST(request: NextRequest) {
 
   try {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const settings = await (db as any).notificationSettings?.upsert({
         where: { userId: user.id },
         update: DEFAULT_SETTINGS,
@@ -204,7 +201,7 @@ export async function POST(request: NextRequest) {
         ...settings,
         message: 'تم إعادة تعيين إعدادات الإشعارات إلى الوضع الافتراضي'
       });
-    } catch (dbError) {
+    } catch (_dbError) {
       // Demo mode
       return successResponse({
         userId: user.id,

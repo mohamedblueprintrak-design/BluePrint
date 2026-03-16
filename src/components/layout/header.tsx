@@ -22,8 +22,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  Bell, Moon, Sun, Plus, Download, ChevronDown,
-  Calendar, Clock, AlertTriangle, CheckCircle, Info, Search
+  Bell, Moon, Sun, Plus, ChevronDown,
+  Calendar, Search
 } from 'lucide-react';
 
 const CURRENCIES = ['AED', 'SAR', 'USD', 'EUR', 'EGP'] as const;
@@ -34,9 +34,9 @@ interface HeaderProps {
 }
 
 export function Header({ title, actions }: HeaderProps) {
-  const { user } = useAuth();
+  const { user: _user } = useAuth();
   const { 
-    theme, setTheme, language, isDark, isRTL,
+    theme: _theme, setTheme, language, isDark, isRTL,
     currency, setCurrency, currentPage, 
     setNotificationsPanelOpen, setCommandPaletteOpen,
     openQuickAddDialog

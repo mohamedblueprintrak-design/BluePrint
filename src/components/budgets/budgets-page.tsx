@@ -5,7 +5,7 @@ import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
 import { useProjects } from '@/hooks/use-data';
 import { useBudgets, useCreateBudget, useUpdateBudget, useDeleteBudget } from '@/hooks/use-data';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,7 +30,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import {
   Wallet, Plus, Search, Edit, TrendingUp, TrendingDown, Trash2,
-  DollarSign, PieChart, BarChart3, Building2, AlertTriangle, Loader2
+  DollarSign, PieChart, Building2, AlertTriangle, Loader2
 } from 'lucide-react';
 
 const BUDGET_CATEGORIES = [
@@ -136,7 +136,7 @@ export function BudgetsPage() {
       });
       setShowAddDialog(false);
       setFormData({ projectId: '', category: '', description: '', budgetAmount: 0, actualAmount: 0 });
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: t.error,
         description: language === 'ar' ? 'فشل في إضافة الميزانية' : 'Failed to add budget',
@@ -164,7 +164,7 @@ export function BudgetsPage() {
       });
       setEditingBudget(null);
       setFormData({ projectId: '', category: '', description: '', budgetAmount: 0, actualAmount: 0 });
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: t.error,
         description: language === 'ar' ? 'فشل في تحديث الميزانية' : 'Failed to update budget',
@@ -184,7 +184,7 @@ export function BudgetsPage() {
         title: t.successSave,
         description: language === 'ar' ? 'تم حذف الميزانية بنجاح' : 'Budget deleted successfully'
       });
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: t.error,
         description: language === 'ar' ? 'فشل في حذف الميزانية' : 'Failed to delete budget',

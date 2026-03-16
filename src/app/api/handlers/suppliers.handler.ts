@@ -53,7 +53,6 @@ export const getHandlers = {
     const supplierLimit = getEffectiveLimit(usePagination, pagination.limit);
     const supplierSkip = usePagination ? calculateSkip(pagination.page, pagination.limit) : 0;
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const suppliers: any[] = await database.supplier.findMany({
       where: supplierWhere,
       orderBy: { createdAt: 'desc' },
@@ -61,7 +60,6 @@ export const getHandlers = {
       take: supplierLimit
     });
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mappedSuppliers = suppliers.map((s: any) => ({
       id: s.id,
       name: s.name,
@@ -97,7 +95,6 @@ export const postHandlers = {
     const database = await getDb();
     if (!database) return errorResponse('قاعدة البيانات غير متاحة');
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const supplier: any = await database.supplier.create({
       data: { 
         name: name as string, 

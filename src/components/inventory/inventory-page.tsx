@@ -40,10 +40,10 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import {
-  Package, Plus, Search, Filter, MoreVertical, Edit, Trash2,
+  Package, Plus, Search, MoreVertical, Edit, Trash2,
   Eye, ArrowDownToLine, ArrowUpFromLine, AlertTriangle,
-  Warehouse, DollarSign, TrendingDown, ShoppingCart,
-  History, FileText, MapPin, Hash
+  Warehouse, DollarSign, ShoppingCart,
+  History, MapPin, Hash
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -201,7 +201,7 @@ export function InventoryPage() {
         supplier: '',
       });
       refetch();
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ أثناء إنشاء المادة' : 'Failed to create material',

@@ -8,7 +8,7 @@ async function getDb() {
     try {
       const dbModule = await import('@/lib/db');
       db = dbModule.db;
-    } catch (e) {
+    } catch (_e) {
       console.log('Database not available, using demo mode');
       db = null;
     }
@@ -67,7 +67,7 @@ async function getUserFromToken(request: NextRequest) {
         include: { organization: true }
       });
       return user;
-    } catch (dbError) {
+    } catch (_dbError) {
       console.log('Database not available, using demo mode');
       return {
         id: 'demo-admin-001',
@@ -314,7 +314,7 @@ export async function GET(request: NextRequest) {
         const pendingData: number[] = [];
         const overdueData: number[] = [];
 
-        labels.forEach((label, index) => {
+        labels.forEach((label, _index) => {
           const [monthName, year] = label.split(' ');
           const monthIndex = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(monthName);
           

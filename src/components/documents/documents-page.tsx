@@ -4,12 +4,11 @@ import { useState, useCallback, useRef } from 'react';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
 import { useDocuments, useUploadFile, useCreateDocument, useDeleteDocument, CreateDocumentData } from '@/hooks/use-data';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -39,7 +38,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import {
-  FileText, Plus, Search, Grid, List, Download, Eye, Trash2,
+  FileText, Search, Grid, List, Download, Eye, Trash2,
   Upload, File, FileImage, FileSpreadsheet, FileCode, FileArchive,
   Calendar, HardDrive, FolderOpen, X, Tag, CloudUpload, CheckCircle2, AlertCircle
 } from 'lucide-react';
@@ -280,11 +279,11 @@ export function DocumentsPage() {
       setShowUploadDialog(false);
       resetUploadForm();
       refetch();
-    } catch (err) {
-      console.error('Upload error:', err);
+    } catch (_err) {
+      console.error('Upload error:', _err);
       toast({
         title: language === 'ar' ? 'خطأ' : 'Error',
-        description: err instanceof Error ? err.message : (language === 'ar' ? 'فشل في رفع الملف' : 'Failed to upload file'),
+        description: _err instanceof Error ? _err.message : (language === 'ar' ? 'فشل في رفع الملف' : 'Failed to upload file'),
         variant: 'destructive'
       });
     } finally {
@@ -324,7 +323,7 @@ export function DocumentsPage() {
         title: language === 'ar' ? 'جاري التحميل' : 'Downloading',
         description: doc.originalName || doc.filename
       });
-    } catch (err) {
+    } catch (_err) {
       toast({
         title: language === 'ar' ? 'خطأ' : 'Error',
         description: language === 'ar' ? 'فشل في تحميل الملف' : 'Failed to download file',
@@ -355,10 +354,10 @@ export function DocumentsPage() {
       } else {
         throw new Error(result.error?.message || 'Delete failed');
       }
-    } catch (err) {
+    } catch (_err) {
       toast({
         title: language === 'ar' ? 'خطأ' : 'Error',
-        description: err instanceof Error ? err.message : (language === 'ar' ? 'فشل في حذف المستند' : 'Failed to delete document'),
+        description: _err instanceof Error ? _err.message : (language === 'ar' ? 'فشل في حذف المستند' : 'Failed to delete document'),
         variant: 'destructive'
       });
     }
