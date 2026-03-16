@@ -1,0 +1,269 @@
+import { NextResponse } from 'next/server';
+import { HandlerContext, ApiSuccessResponse, ApiErrorResponse } from '../types';
+import { successResponse, errorResponse, unauthorizedResponse, notFoundResponse } from '../utils/response';
+import { getDb } from '../utils/db';
+import { 
+  parsePaginationParams, 
+  isPaginationRequested, 
+  buildPaginationMeta, 
+  calculateSkip, 
+  getEffectiveLimit 
+} from '../utils/pagination';
+
+/**
+ * GET handlers for invoices actions
+ */
+export const getHandlers = {
+  /**
+   * Get all invoices with pagination
+   */
+  invoices: async (context: HandlerContext): Promise<NextResponse<ApiSuccessResponse<unknown> | ApiErrorResponse>> => {
+    if (!context.user) return unauthorizedResponse();
+    
+    const database = await getDb();
+    if (!database) {
+      return successResponse([], { 
+        page: 1, 
+        limit: 20, 
+        total: 0, 
+        totalPages: 0, 
+        hasNextPage: false, 
+        hasPrevPage: false 
+      });
+    }
+    
+    const pagination = parsePaginationParams(context.searchParams);
+    const usePagination = isPaginationRequested(context.searchParams);
+    
+    // Build where clause with search
+    const invoiceWhere: Record<string, unknown> = { organizationId: context.user.organizationId };
+    if (pagination.search) {
+      invoiceWhere.OR = [
+        { invoiceNumber: { contains: pagination.search, mode: 'insensitive' } },
+        { client: { name: { contains: pagination.search, mode: 'insensitive' } } },
+        { project: { name: { contains: pagination.search, mode: 'insensitive' } } }
+      ];
+    }
+    
+    // Get total count
+    const totalInvoices = await database.invoice.count({ where: invoiceWhere });
+    
+    // Determine limit based on pagination request
+    const invoiceLimit = getEffectiveLimit(usePagination, pagination.limit);
+    const invoiceSkip = usePagination ? calculateSkip(pagination.page, pagination.limit) : 0;
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const invoices: any[] = await database.invoice.findMany({
+      where: invoiceWhere,
+      include: { client: true, project: true },
+      orderBy: { createdAt: 'desc' },
+      skip: invoiceSkip,
+      take: invoiceLimit
+    });
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mappedInvoices = invoices.map((i: any) => ({
+      id: i.id,
+      invoiceNumber: i.invoiceNumber,
+      client: i.client?.name,
+      clientId: i.clientId,
+      project: i.project?.name,
+      projectId: i.projectId,
+      total: i.total,
+      paidAmount: i.paidAmount,
+      status: i.status,
+      issueDate: i.issueDate,
+      dueDate: i.dueDate,
+      createdAt: i.createdAt
+    }));
+    
+    if (usePagination) {
+      return successResponse(mappedInvoices, buildPaginationMeta(pagination.page, pagination.limit, totalInvoices));
+    }
+    return successResponse(mappedInvoices);
+  },
+
+  /**
+   * Get payments for an invoice
+   */
+  payments: async (context: HandlerContext): Promise<NextResponse<ApiSuccessResponse<unknown> | ApiErrorResponse>> => {
+    if (!context.user) return unauthorizedResponse();
+    
+    const invoiceId = context.searchParams.get('invoiceId');
+    if (!invoiceId) return errorResponse('معرف الفاتورة مطلوب');
+    
+    const database = await getDb();
+    if (!database) return errorResponse('قاعدة البيانات غير متاحة');
+    
+    // Verify invoice belongs to user's organization
+    const invoice = await database.invoice.findFirst({
+      where: { id: invoiceId, organizationId: context.user.organizationId }
+    });
+    if (!invoice) return notFoundResponse('الفاتورة غير موجودة');
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const payments: any[] = await database.payment.findMany({
+      where: { invoiceId },
+      orderBy: { paymentDate: 'desc' }
+    });
+    
+    return successResponse(payments.map((p: any) => ({
+      id: p.id,
+      invoiceId: p.invoiceId,
+      amount: p.amount,
+      paymentDate: p.paymentDate,
+      paymentMethod: p.paymentMethod,
+      referenceNumber: p.referenceNumber,
+      notes: p.notes,
+      createdAt: p.createdAt
+    })));
+  }
+};
+
+/**
+ * POST handlers for invoices actions
+ */
+export const postHandlers = {
+  /**
+   * Create new invoice
+   */
+  invoice: async (context: HandlerContext): Promise<NextResponse<ApiSuccessResponse<unknown> | ApiErrorResponse>> => {
+    if (!context.user) return unauthorizedResponse();
+    
+    const { clientId, projectId, items, subtotal, taxRate = 5, discountAmount = 0, dueDate, notes, terms } = (context.body || {}) as Record<string, unknown>;
+
+    const database = await getDb();
+    if (!database) return errorResponse('قاعدة البيانات غير متاحة');
+    
+    const count = await database.invoice.count({ where: { organizationId: context.user.organizationId } });
+    const invoiceNumber = `INV-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
+    
+    const taxAmount = ((subtotal as number) || 0) * ((taxRate as number) || 5) / 100;
+    const total = ((subtotal as number) || 0) + taxAmount - ((discountAmount as number) || 0);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const invoice: any = await database.invoice.create({
+      data: {
+        invoiceNumber,
+        clientId,
+        projectId,
+        items: JSON.stringify(items || []),
+        subtotal: (subtotal as number) || 0,
+        taxRate: (taxRate as number) || 5,
+        taxAmount,
+        discountAmount: (discountAmount as number) || 0,
+        total,
+        dueDate: dueDate ? new Date(dueDate as string) : null,
+        notes: notes as string,
+        terms: terms as string,
+        issueDate: new Date(),
+        organizationId: context.user.organizationId
+      }
+    });
+
+    return successResponse({ id: invoice.id, invoiceNumber, total });
+  },
+
+  /**
+   * Create payment for invoice
+   */
+  payment: async (context: HandlerContext): Promise<NextResponse<ApiSuccessResponse<unknown> | ApiErrorResponse>> => {
+    if (!context.user) return unauthorizedResponse();
+    
+    const { invoiceId, amount, paymentDate, paymentMethod, referenceNumber, notes } = (context.body || {}) as Record<string, unknown>;
+    if (!invoiceId || !amount) {
+      return errorResponse('الفاتورة والمبلغ مطلوبان');
+    }
+
+    const database = await getDb();
+    if (!database) return errorResponse('قاعدة البيانات غير متاحة');
+
+    // Verify invoice belongs to user's organization
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const paymentInvoice: any = await database.invoice.findFirst({
+      where: { id: invoiceId as string, organizationId: context.user.organizationId }
+    });
+    if (!paymentInvoice) return notFoundResponse('الفاتورة غير موجودة');
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const payment: any = await database.payment.create({
+      data: {
+        invoiceId: invoiceId as string,
+        amount: parseFloat(amount as string),
+        paymentDate: paymentDate ? new Date(paymentDate as string) : new Date(),
+        paymentMethod: (paymentMethod as string) || 'bank_transfer',
+        referenceNumber: referenceNumber as string,
+        notes: notes as string
+      }
+    });
+
+    // Update invoice paidAmount
+    const newPaidAmount = (paymentInvoice.paidAmount || 0) + parseFloat(amount as string);
+    const newStatus = newPaidAmount >= paymentInvoice.total ? 'paid' : 
+                      newPaidAmount > 0 ? 'partial' : paymentInvoice.status;
+    
+    await database.invoice.update({
+      where: { id: invoiceId as string },
+      data: { 
+        paidAmount: newPaidAmount,
+        status: newStatus
+      }
+    });
+
+    return successResponse({ id: payment.id, amount: payment.amount });
+  }
+};
+
+/**
+ * PUT handlers for invoices actions
+ */
+export const putHandlers = {
+  /**
+   * Update invoice status
+   */
+  'invoice-status': async (context: HandlerContext): Promise<NextResponse<ApiSuccessResponse<unknown> | ApiErrorResponse>> => {
+    if (!context.user) return unauthorizedResponse();
+    
+    const { id, status } = (context.body || {}) as Record<string, unknown>;
+    if (!id || !status) return errorResponse('المعرف والحالة مطلوبان');
+
+    const database = await getDb();
+    if (!database) return errorResponse('قاعدة البيانات غير متاحة');
+
+    // Verify invoice belongs to user's organization
+    const invoice = await database.invoice.findFirst({
+      where: { id: id as string, organizationId: context.user.organizationId }
+    });
+    if (!invoice) return notFoundResponse('الفاتورة غير موجودة');
+
+    await database.invoice.update({ where: { id: id as string }, data: { status: status as string } });
+    return successResponse(true);
+  }
+};
+
+/**
+ * DELETE handlers for invoices actions
+ */
+export const deleteHandlers = {
+  /**
+   * Delete invoice
+   */
+  invoice: async (context: HandlerContext): Promise<NextResponse<ApiSuccessResponse<unknown> | ApiErrorResponse>> => {
+    if (!context.user) return unauthorizedResponse();
+    
+    const id = context.searchParams.get('id');
+    if (!id) return errorResponse('معرف الفاتورة مطلوب');
+
+    const database = await getDb();
+    if (!database) return errorResponse('قاعدة البيانات غير متاحة');
+    
+    // Verify invoice belongs to user's organization
+    const invoice = await database.invoice.findFirst({
+      where: { id, organizationId: context.user.organizationId }
+    });
+    if (!invoice) return notFoundResponse('الفاتورة غير موجودة');
+    
+    await database.invoice.delete({ where: { id } });
+    return successResponse(true);
+  }
+};

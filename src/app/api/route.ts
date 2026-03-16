@@ -1,11 +1,249 @@
-// @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import * as jose from 'jose';
+import ZAI from 'z-ai-web-dev-sdk';
+
+// ============================================
+// TypeScript Interfaces and Types
+// ============================================
+
+/** Demo user for testing without database */
+interface DemoUser {
+  id: string;
+  username: string;
+  email: string;
+  password: string;
+  fullName: string;
+  role: 'admin' | 'manager' | 'engineer' | 'viewer';
+  isActive: boolean;
+  avatar: string | null;
+  language: string;
+  theme: string;
+  organizationId: string;
+  organization: { id: string; name: string; currency: string };
+}
+
+/** Authenticated user type (from demo or database) */
+interface AuthenticatedUser {
+  id: string;
+  username: string;
+  email: string;
+  fullName: string | null;
+  role: string;
+  avatar: string | null;
+  language: string;
+  theme: string;
+  organizationId: string | null;
+  organization: { id: string; name: string; currency: string } | null;
+  isActive?: boolean;
+  password?: string;
+}
+
+/** API success response type */
+interface ApiSuccessResponse<T = unknown> {
+  success: true;
+  data: T;
+  meta?: Record<string, unknown>;
+}
+
+/** API error response type */
+interface ApiErrorResponse {
+  success: false;
+  error: {
+    code: string;
+    message: string;
+  };
+}
+
+/** Combined API response type */
+// Unused but kept for future use
+// type ApiResponse<T = unknown> = ApiSuccessResponse<T> | ApiErrorResponse;
+
+/** Rate limit store record */
+interface RateLimitRecord {
+  count: number;
+  resetTime: number;
+}
+
+/** Request body type for POST/PUT requests */
+// Unused but kept for future use
+// type RequestBody = Record<string, unknown>;
+
+/** Minimal database client interface for type safety */
+interface DbClient {
+  user: {
+    findUnique: (args: { where: { id: string }; include?: Record<string, boolean> }) => Promise<AuthenticatedUser | null>;
+    findFirst: (args: { where: Record<string, unknown> }) => Promise<AuthenticatedUser | null>;
+    findMany: (args: { where?: Record<string, unknown>; select?: Record<string, boolean>; orderBy?: Record<string, string> }) => Promise<AuthenticatedUser[]>;
+    create: (args: { data: Record<string, unknown> }) => Promise<{ id: string; username: string }>;
+    update: (args: { where: Record<string, unknown>; data: Record<string, unknown> }) => Promise<AuthenticatedUser>;
+    count: (args?: { where?: Record<string, unknown> }) => Promise<number>;
+  };
+  project: {
+    findMany: (args: { where: Record<string, unknown>; include?: Record<string, boolean>; orderBy?: Record<string, string> }) => Promise<unknown[]>;
+    findFirst: (args: { where: Record<string, unknown>; include?: Record<string, unknown> }) => Promise<Record<string, unknown> | null>;
+    create: (args: { data: Record<string, unknown> }) => Promise<{ id: string; projectNumber?: string; name?: string }>;
+    update: (args: { where: Record<string, unknown>; data: Record<string, unknown> }) => Promise<unknown>;
+    delete: (args: { where: Record<string, unknown> }) => Promise<unknown>;
+    count: (args?: { where?: Record<string, unknown> }) => Promise<number>;
+  };
+  client: {
+    findMany: (args: { where: Record<string, unknown>; orderBy?: Record<string, string> }) => Promise<unknown[]>;
+    create: (args: { data: Record<string, unknown> }) => Promise<{ id: string; name: string }>;
+    update: (args: { where: Record<string, unknown>; data: Record<string, unknown> }) => Promise<unknown>;
+    findFirst: (args: { where: Record<string, unknown> }) => Promise<unknown>;
+    count: (args?: { where?: Record<string, unknown> }) => Promise<number>;
+  };
+  invoice: {
+    findMany: (args: { where: Record<string, unknown>; include?: Record<string, boolean>; orderBy?: Record<string, string> }) => Promise<unknown[]>;
+    create: (args: { data: Record<string, unknown> }) => Promise<{ id: string; invoiceNumber: string; total?: number }>;
+    update: (args: { where: Record<string, unknown>; data: Record<string, unknown> }) => Promise<unknown>;
+    delete: (args: { where: Record<string, unknown> }) => Promise<unknown>;
+    findFirst: (args: { where: Record<string, unknown> }) => Promise<Record<string, unknown> | null>;
+    count: (args?: { where?: Record<string, unknown> }) => Promise<number>;
+    aggregate: (args: { where: Record<string, unknown>; _sum: Record<string, boolean> }) => Promise<{ _sum: Record<string, number | null> }>;
+  };
+  task: {
+    findMany: (args: { where: Record<string, unknown>; include?: Record<string, boolean>; orderBy?: Record<string, string> }) => Promise<unknown[]>;
+    create: (args: { data: Record<string, unknown> }) => Promise<{ id: string }>;
+    update: (args: { where: Record<string, unknown>; data: Record<string, unknown> }) => Promise<unknown>;
+    delete: (args: { where: Record<string, unknown> }) => Promise<unknown>;
+    findFirst: (args: { where: Record<string, unknown> }) => Promise<unknown>;
+    count: (args?: { where?: Record<string, unknown> }) => Promise<number>;
+  };
+  supplier: {
+    findMany: (args: { where: Record<string, unknown>; orderBy?: Record<string, string> }) => Promise<unknown[]>;
+    create: (args: { data: Record<string, unknown> }) => Promise<{ id: string; name: string }>;
+    update: (args: { where: Record<string, unknown>; data: Record<string, unknown> }) => Promise<unknown>;
+    findFirst: (args: { where: Record<string, unknown> }) => Promise<unknown>;
+  };
+  material: {
+    findMany: (args: { where: Record<string, unknown>; orderBy?: Record<string, string> }) => Promise<unknown[]>;
+    create: (args: { data: Record<string, unknown> }) => Promise<{ id: string; materialCode?: string }>;
+    update: (args: { where: Record<string, unknown>; data: Record<string, unknown> }) => Promise<unknown>;
+    findFirst: (args: { where: Record<string, unknown> }) => Promise<unknown>;
+    count: (args?: { where?: Record<string, unknown> }) => Promise<number>;
+  };
+  contract: {
+    findMany: (args: { where: Record<string, unknown>; include?: Record<string, boolean>; orderBy?: Record<string, string> }) => Promise<unknown[]>;
+    create: (args: { data: Record<string, unknown> }) => Promise<{ id: string; contractNumber?: string }>;
+    update: (args: { where: Record<string, unknown>; data: Record<string, unknown> }) => Promise<unknown>;
+    delete: (args: { where: Record<string, unknown> }) => Promise<unknown>;
+    findFirst: (args: { where: Record<string, unknown> }) => Promise<unknown>;
+    count: (args?: { where?: Record<string, unknown> }) => Promise<number>;
+  };
+  proposal: {
+    findMany: (args: { where: Record<string, unknown>; include?: Record<string, boolean>; orderBy?: Record<string, string> }) => Promise<unknown[]>;
+    create: (args: { data: Record<string, unknown> }) => Promise<{ id: string; proposalNumber?: string }>;
+    update: (args: { where: Record<string, unknown>; data: Record<string, unknown> }) => Promise<unknown>;
+    delete: (args: { where: Record<string, unknown> }) => Promise<unknown>;
+    findFirst: (args: { where: Record<string, unknown> }) => Promise<unknown>;
+    count: (args?: { where?: Record<string, unknown> }) => Promise<number>;
+  };
+  siteReport: {
+    findMany: (args: { where: Record<string, unknown>; include?: Record<string, boolean>; orderBy?: Record<string, string>; take?: number }) => Promise<unknown[]>;
+    create: (args: { data: Record<string, unknown> }) => Promise<{ id: string; reportNumber?: string }>;
+    delete: (args: { where: Record<string, unknown> }) => Promise<unknown>;
+    findFirst: (args: { where: Record<string, unknown> }) => Promise<unknown>;
+    count: (args?: { where?: Record<string, unknown> }) => Promise<number>;
+  };
+  document: {
+    findMany: (args: { include?: Record<string, boolean>; orderBy?: Record<string, string> }) => Promise<unknown[]>;
+    delete: (args: { where: Record<string, unknown> }) => Promise<unknown>;
+  };
+  notification: {
+    findMany: (args: { where: Record<string, unknown>; orderBy?: Record<string, string>; take?: number }) => Promise<unknown[]>;
+    create: (args: { data: Record<string, unknown> }) => Promise<unknown>;
+    update: (args: { where: Record<string, unknown>; data: Record<string, unknown> }) => Promise<unknown>;
+    updateMany: (args: { where: Record<string, unknown>; data: Record<string, unknown> }) => Promise<unknown>;
+  };
+  leaveRequest: {
+    findMany: (args: { where: Record<string, unknown>; include?: Record<string, unknown>; orderBy?: Record<string, string> }) => Promise<unknown[]>;
+    create: (args: { data: Record<string, unknown> }) => Promise<{ id: string }>;
+    update: (args: { where: Record<string, unknown>; data: Record<string, unknown> }) => Promise<unknown>;
+    findFirst: (args: { where: Record<string, unknown> }) => Promise<unknown>;
+  };
+  attendance: {
+    findMany: (args: { where: Record<string, unknown>; include?: Record<string, boolean>; orderBy?: Record<string, string> }) => Promise<unknown[]>;
+  };
+  projectUser: {
+    create: (args: { data: Record<string, unknown> }) => Promise<unknown>;
+  };
+  auditLog: {
+    create: (args: { data: Record<string, unknown> }) => Promise<unknown>;
+  };
+  organization: {
+    findFirst: (args?: Record<string, unknown>) => Promise<unknown>;
+    create: (args: { data: Record<string, unknown> }) => Promise<{ id: string }>;
+  };
+  plan: {
+    create: (args: { data: Record<string, unknown> }) => Promise<{ id: string }>;
+  };
+  bOQItem: {
+    findMany: (args: { where: Record<string, unknown>; orderBy?: Record<string, string> }) => Promise<unknown[]>;
+    create: (args: { data: Record<string, unknown> }) => Promise<{ id: string; itemNumber?: string }>;
+    update: (args: { where: Record<string, unknown>; data: Record<string, unknown> }) => Promise<unknown>;
+    delete: (args: { where: Record<string, unknown> }) => Promise<unknown>;
+    findFirst: (args: { where: Record<string, unknown> }) => Promise<unknown>;
+  };
+  purchaseOrder: {
+    findMany: (args: { where: Record<string, unknown>; include?: Record<string, boolean>; orderBy?: Record<string, string> }) => Promise<unknown[]>;
+    create: (args: { data: Record<string, unknown> }) => Promise<{ id: string; poNumber?: string }>;
+    update: (args: { where: Record<string, unknown>; data: Record<string, unknown> }) => Promise<unknown>;
+    delete: (args: { where: Record<string, unknown> }) => Promise<unknown>;
+    findFirst: (args: { where: Record<string, unknown> }) => Promise<unknown>;
+    count: (args?: Record<string, unknown>) => Promise<number>;
+  };
+  budget: {
+    findMany: (args: { where: Record<string, unknown>; orderBy?: Record<string, string> }) => Promise<unknown[]>;
+    create: (args: { data: Record<string, unknown> }) => Promise<{ id: string; category?: string }>;
+    update: (args: { where: Record<string, unknown>; data: Record<string, unknown> }) => Promise<unknown>;
+    delete: (args: { where: Record<string, unknown> }) => Promise<unknown>;
+    findFirst: (args: { where: Record<string, unknown> }) => Promise<Record<string, unknown> | null>;
+  };
+  defect: {
+    findMany: (args: { where: Record<string, unknown>; orderBy?: Record<string, string> }) => Promise<unknown[]>;
+    create: (args: { data: Record<string, unknown> }) => Promise<{ id: string; title?: string }>;
+    update: (args: { where: Record<string, unknown>; data: Record<string, unknown> }) => Promise<unknown>;
+    delete: (args: { where: Record<string, unknown> }) => Promise<unknown>;
+    findFirst: (args: { where: Record<string, unknown> }) => Promise<unknown>;
+    count: (args?: { where?: Record<string, unknown> }) => Promise<number>;
+  };
+  payment: {
+    findMany: (args: { where: Record<string, unknown>; orderBy?: Record<string, string> }) => Promise<unknown[]>;
+    create: (args: { data: Record<string, unknown> }) => Promise<{ id: string; amount?: number }>;
+  };
+  expense: {
+    findMany: (args: { where: Record<string, unknown>; include?: Record<string, boolean>; orderBy?: Record<string, string> }) => Promise<unknown[]>;
+    create: (args: { data: Record<string, unknown> }) => Promise<unknown>;
+    update: (args: { where: Record<string, unknown>; data: Record<string, unknown> }) => Promise<unknown>;
+    delete: (args: { where: Record<string, unknown> }) => Promise<unknown>;
+    findFirst: (args: { where: Record<string, unknown> }) => Promise<unknown>;
+  };
+  voucher: {
+    findMany: (args: { where: Record<string, unknown>; orderBy?: Record<string, string> }) => Promise<unknown[]>;
+    create: (args: { data: Record<string, unknown> }) => Promise<{ id: string; voucherNumber?: string }>;
+    delete: (args: { where: Record<string, unknown> }) => Promise<unknown>;
+    findFirst: (args: { where: Record<string, unknown> }) => Promise<unknown>;
+    count: (args?: Record<string, unknown>) => Promise<number>;
+  };
+  certificate: {
+    findMany: (args: { where: Record<string, unknown>; orderBy?: Record<string, string> }) => Promise<unknown[]>;
+    create: (args: { data: Record<string, unknown> }) => Promise<{ id: string; certificateNumber?: string }>;
+    delete: (args: { where: Record<string, unknown> }) => Promise<unknown>;
+    findFirst: (args: { where: Record<string, unknown> }) => Promise<unknown>;
+    count: (args?: Record<string, unknown>) => Promise<number>;
+  };
+  chatHistory: {
+    create: (args: { data: Record<string, unknown> }) => Promise<unknown>;
+  };
+}
 
 // Dynamic database import to avoid failures when DB is not available
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let db: any = null;
-async function getDb() {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function getDb(): Promise<any> {
   if (!db) {
     try {
       const dbModule = await import('@/lib/db');
@@ -37,7 +275,7 @@ if (!process.env.JWT_SECRET) {
 }
 
 // Demo users for testing without database
-const DEMO_USERS = [
+const DEMO_USERS: DemoUser[] = [
   {
     id: 'demo-admin-001',
     username: 'admin',
@@ -55,7 +293,7 @@ const DEMO_USERS = [
 ];
 
 // Rate Limiting: In-memory store for request tracking
-const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+const rateLimitStore = new Map<string, RateLimitRecord>();
 const RATE_LIMIT_REQUESTS = 100; // requests per window
 const RATE_LIMIT_WINDOW = 60000; // 1 minute in ms
 
@@ -106,14 +344,76 @@ function rateLimitError(resetTime: number) {
   );
 }
 
+// Pagination types and helpers
+interface PaginationParams {
+  page: number;
+  limit: number;
+  search?: string;
+}
+
+interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+  [key: string]: unknown; // Index signature for Record<string, unknown> compatibility
+}
+
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 20;
+const MAX_LIMIT = 100;
+const BACKWARD_COMPAT_LIMIT = 100;
+
+// Parse pagination params from query string
+function parsePaginationParams(searchParams: URLSearchParams): PaginationParams {
+  const pageParam = searchParams.get('page');
+  const limitParam = searchParams.get('limit');
+  const searchParam = searchParams.get('search');
+  
+  const page = pageParam ? Math.max(1, parseInt(pageParam, 10) || DEFAULT_PAGE) : DEFAULT_PAGE;
+  const limit = limitParam 
+    ? Math.min(MAX_LIMIT, Math.max(1, parseInt(limitParam, 10) || DEFAULT_LIMIT))
+    : DEFAULT_LIMIT;
+  
+  return {
+    page,
+    limit,
+    search: searchParam || undefined
+  };
+}
+
+// Check if pagination is requested
+function isPaginationRequested(searchParams: URLSearchParams): boolean {
+  return searchParams.has('page') || searchParams.has('limit');
+}
+
+// Build pagination meta response
+function buildPaginationMeta(
+  page: number,
+  limit: number,
+  total: number
+): PaginationMeta {
+  const totalPages = Math.ceil(total / limit);
+  return {
+    page,
+    limit,
+    total,
+    totalPages,
+    hasNextPage: page < totalPages,
+    hasPrevPage: page > 1
+  };
+}
+
 // Helper functions
-function successResponse(data: any, meta?: any) {
-  const response = { success: true, data };
+function successResponse<T>(data: T, meta?: Record<string, unknown>): NextResponse<ApiSuccessResponse<T>> {
+  const response: ApiSuccessResponse<T> = { success: true, data };
   if (meta) Object.assign(response, { meta });
   return NextResponse.json(response);
 }
 
-function errorResponse(message: string, code = 'ERROR', status = 400) {
+function errorResponse(message: string, code = 'ERROR', status = 400): NextResponse<ApiErrorResponse> {
   return NextResponse.json(
     { success: false, error: { code, message } },
     { status }
@@ -128,7 +428,7 @@ function getTokenFromRequest(request: NextRequest): string | null {
   return null;
 }
 
-async function getUserFromToken(request: NextRequest) {
+async function getUserFromToken(request: NextRequest): Promise<AuthenticatedUser | null> {
   const token = getTokenFromRequest(request);
   if (!token) return null;
   
@@ -203,18 +503,43 @@ export async function GET(request: NextRequest) {
         });
         return successResponse(users);
 
-      case 'projects':
+      case 'projects': {
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const database = await getDb();
         if (!database) {
-          return successResponse([]);
+          return successResponse([], { page: 1, limit: 20, total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false });
         }
+        
+        const pagination = parsePaginationParams(searchParams);
+        const usePagination = isPaginationRequested(searchParams);
+        
+        // Build where clause with search
+        const projectWhere: Record<string, unknown> = { organizationId: user.organizationId };
+        if (pagination.search) {
+          projectWhere.OR = [
+            { name: { contains: pagination.search, mode: 'insensitive' } },
+            { projectNumber: { contains: pagination.search, mode: 'insensitive' } },
+            { location: { contains: pagination.search, mode: 'insensitive' } }
+          ];
+        }
+        
+        // Get total count
+        const totalProjects = await database.project.count({ where: projectWhere });
+        
+        // Determine limit based on pagination request
+        const projectLimit = usePagination ? pagination.limit : BACKWARD_COMPAT_LIMIT;
+        const projectSkip = usePagination ? (pagination.page - 1) * pagination.limit : 0;
+        
         const allProjects = await database.project.findMany({ 
-          where: { organizationId: user.organizationId },
+          where: projectWhere,
           include: { client: true }, 
-          orderBy: { createdAt: 'desc' } 
+          orderBy: { createdAt: 'desc' },
+          skip: projectSkip,
+          take: projectLimit
         });
-        return successResponse(allProjects.map((p: any) => ({
+        
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const mappedProjects = allProjects.map((p: any) => ({
           id: p.id,
           name: p.name,
           projectNumber: p.projectNumber,
@@ -225,7 +550,13 @@ export async function GET(request: NextRequest) {
           client: p.client?.name,
           progressPercentage: p.progressPercentage,
           createdAt: p.createdAt
-        })));
+        }));
+        
+        if (usePagination) {
+          return successResponse(mappedProjects, buildPaginationMeta(pagination.page, pagination.limit, totalProjects));
+        }
+        return successResponse(mappedProjects);
+      }
 
       case 'project':
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
@@ -257,13 +588,42 @@ export async function GET(request: NextRequest) {
           filesCount: project.files.length
         });
 
-      case 'clients':
+      case 'clients': {
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
-        const clients = await (await getDb())?.client.findMany({
-          where: { isActive: true, organizationId: user.organizationId },
-          orderBy: { createdAt: 'desc' }
+        const db = await getDb();
+        if (!db) {
+          return successResponse([], { page: 1, limit: 20, total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false });
+        }
+        
+        const pagination = parsePaginationParams(searchParams);
+        const usePagination = isPaginationRequested(searchParams);
+        
+        // Build where clause with search
+        const clientWhere: Record<string, unknown> = { isActive: true, organizationId: user.organizationId };
+        if (pagination.search) {
+          clientWhere.OR = [
+            { name: { contains: pagination.search, mode: 'insensitive' } },
+            { email: { contains: pagination.search, mode: 'insensitive' } },
+            { phone: { contains: pagination.search, mode: 'insensitive' } },
+            { contactPerson: { contains: pagination.search, mode: 'insensitive' } }
+          ];
+        }
+        
+        // Get total count
+        const totalClients = await db.client.count({ where: clientWhere });
+        
+        // Determine limit based on pagination request
+        const clientLimit = usePagination ? pagination.limit : BACKWARD_COMPAT_LIMIT;
+        const clientSkip = usePagination ? (pagination.page - 1) * pagination.limit : 0;
+        
+        const clients = await db.client.findMany({
+          where: clientWhere,
+          orderBy: { createdAt: 'desc' },
+          skip: clientSkip,
+          take: clientLimit
         });
-        return successResponse(clients.map(c => ({
+        
+        const mappedClients = clients.map(c => ({
           id: c.id,
           name: c.name,
           email: c.email,
@@ -275,16 +635,50 @@ export async function GET(request: NextRequest) {
           creditLimit: c.creditLimit,
           totalInvoiced: c.totalInvoiced,
           totalPaid: c.totalPaid
-        })));
+        }));
+        
+        if (usePagination) {
+          return successResponse(mappedClients, buildPaginationMeta(pagination.page, pagination.limit, totalClients));
+        }
+        return successResponse(mappedClients);
+      }
 
-      case 'invoices':
+      case 'invoices': {
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
-        const invoices = await (await getDb())?.invoice.findMany({
-          where: { organizationId: user.organizationId },
+        const db = await getDb();
+        if (!db) {
+          return successResponse([], { page: 1, limit: 20, total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false });
+        }
+        
+        const pagination = parsePaginationParams(searchParams);
+        const usePagination = isPaginationRequested(searchParams);
+        
+        // Build where clause with search
+        const invoiceWhere: Record<string, unknown> = { organizationId: user.organizationId };
+        if (pagination.search) {
+          invoiceWhere.OR = [
+            { invoiceNumber: { contains: pagination.search, mode: 'insensitive' } },
+            { client: { name: { contains: pagination.search, mode: 'insensitive' } } },
+            { project: { name: { contains: pagination.search, mode: 'insensitive' } } }
+          ];
+        }
+        
+        // Get total count
+        const totalInvoices = await db.invoice.count({ where: invoiceWhere });
+        
+        // Determine limit based on pagination request
+        const invoiceLimit = usePagination ? pagination.limit : BACKWARD_COMPAT_LIMIT;
+        const invoiceSkip = usePagination ? (pagination.page - 1) * pagination.limit : 0;
+        
+        const invoices = await db.invoice.findMany({
+          where: invoiceWhere,
           include: { client: true, project: true },
-          orderBy: { createdAt: 'desc' }
+          orderBy: { createdAt: 'desc' },
+          skip: invoiceSkip,
+          take: invoiceLimit
         });
-        return successResponse(invoices.map(i => ({
+        
+        const mappedInvoices = invoices.map(i => ({
           id: i.id,
           invoiceNumber: i.invoiceNumber,
           client: i.client?.name,
@@ -297,25 +691,58 @@ export async function GET(request: NextRequest) {
           issueDate: i.issueDate,
           dueDate: i.dueDate,
           createdAt: i.createdAt
-        })));
+        }));
+        
+        if (usePagination) {
+          return successResponse(mappedInvoices, buildPaginationMeta(pagination.page, pagination.limit, totalInvoices));
+        }
+        return successResponse(mappedInvoices);
+      }
 
-      case 'tasks':
+      case 'tasks': {
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+        const db = await getDb();
+        if (!db) {
+          return successResponse([], { page: 1, limit: 20, total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false });
+        }
+        
+        const pagination = parsePaginationParams(searchParams);
+        const usePagination = isPaginationRequested(searchParams);
         const taskProjectId = searchParams.get('projectId');
         const taskStatus = searchParams.get('status');
-        const tasksQuery: any = {};
+        
+        // Build where clause with search
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const tasksQuery: Record<string, any> = {
+          project: { organizationId: user.organizationId }
+        };
         if (taskProjectId) tasksQuery.projectId = taskProjectId;
         if (taskStatus) tasksQuery.status = taskStatus;
         
-        const tasks = await (await getDb())?.task.findMany({
-          where: {
-            ...tasksQuery,
-            project: { organizationId: user.organizationId }
-          },
+        // Add search conditions
+        if (pagination.search) {
+          tasksQuery.OR = [
+            { title: { contains: pagination.search, mode: 'insensitive' } },
+            { description: { contains: pagination.search, mode: 'insensitive' } }
+          ];
+        }
+        
+        // Get total count
+        const totalTasks = await db.task.count({ where: tasksQuery });
+        
+        // Determine limit based on pagination request
+        const taskLimit = usePagination ? pagination.limit : BACKWARD_COMPAT_LIMIT;
+        const taskSkip = usePagination ? (pagination.page - 1) * pagination.limit : 0;
+        
+        const tasks = await db.task.findMany({
+          where: tasksQuery,
           include: { project: true, assignee: true },
-          orderBy: { createdAt: 'desc' }
+          orderBy: { createdAt: 'desc' },
+          skip: taskSkip,
+          take: taskLimit
         });
-        return successResponse(tasks.map(t => ({
+        
+        const mappedTasks = tasks.map(t => ({
           id: t.id,
           title: t.title,
           description: t.description,
@@ -328,15 +755,50 @@ export async function GET(request: NextRequest) {
           assignee: t.assignee?.fullName || t.assignee?.username,
           assigneeId: t.assignedToId,
           createdAt: t.createdAt
-        })));
+        }));
+        
+        if (usePagination) {
+          return successResponse(mappedTasks, buildPaginationMeta(pagination.page, pagination.limit, totalTasks));
+        }
+        return successResponse(mappedTasks);
+      }
 
-      case 'suppliers':
+      case 'suppliers': {
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
-        const suppliers = await (await getDb())?.supplier.findMany({
-          where: { isActive: true, organizationId: user.organizationId },
-          orderBy: { createdAt: 'desc' }
+        const db = await getDb();
+        if (!db) {
+          return successResponse([], { page: 1, limit: 20, total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false });
+        }
+        
+        const pagination = parsePaginationParams(searchParams);
+        const usePagination = isPaginationRequested(searchParams);
+        
+        // Build where clause with search
+        const supplierWhere: Record<string, unknown> = { isActive: true, organizationId: user.organizationId };
+        if (pagination.search) {
+          supplierWhere.OR = [
+            { name: { contains: pagination.search, mode: 'insensitive' } },
+            { email: { contains: pagination.search, mode: 'insensitive' } },
+            { phone: { contains: pagination.search, mode: 'insensitive' } },
+            { contactPerson: { contains: pagination.search, mode: 'insensitive' } }
+          ];
+        }
+        
+        // Get total count
+        const totalSuppliers = await db.supplier.count({ where: supplierWhere });
+        
+        // Determine limit based on pagination request
+        const supplierLimit = usePagination ? pagination.limit : BACKWARD_COMPAT_LIMIT;
+        const supplierSkip = usePagination ? (pagination.page - 1) * pagination.limit : 0;
+        
+        const suppliers = await db.supplier.findMany({
+          where: supplierWhere,
+          orderBy: { createdAt: 'desc' },
+          skip: supplierSkip,
+          take: supplierLimit
         });
-        return successResponse(suppliers.map(s => ({
+        
+        const mappedSuppliers = suppliers.map(s => ({
           id: s.id,
           name: s.name,
           supplierType: s.supplierType,
@@ -346,15 +808,50 @@ export async function GET(request: NextRequest) {
           contactPerson: s.contactPerson,
           rating: s.rating,
           isApproved: s.isApproved
-        })));
+        }));
+        
+        if (usePagination) {
+          return successResponse(mappedSuppliers, buildPaginationMeta(pagination.page, pagination.limit, totalSuppliers));
+        }
+        return successResponse(mappedSuppliers);
+      }
 
-      case 'materials':
+      case 'materials': {
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
-        const materials = await (await getDb())?.material.findMany({
-          where: { isActive: true, organizationId: user.organizationId },
-          orderBy: { name: 'asc' }
+        const db = await getDb();
+        if (!db) {
+          return successResponse([], { page: 1, limit: 20, total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false });
+        }
+        
+        const pagination = parsePaginationParams(searchParams);
+        const usePagination = isPaginationRequested(searchParams);
+        
+        // Build where clause with search
+        const materialWhere: Record<string, unknown> = { isActive: true, organizationId: user.organizationId };
+        if (pagination.search) {
+          materialWhere.OR = [
+            { name: { contains: pagination.search, mode: 'insensitive' } },
+            { materialCode: { contains: pagination.search, mode: 'insensitive' } },
+            { category: { contains: pagination.search, mode: 'insensitive' } },
+            { location: { contains: pagination.search, mode: 'insensitive' } }
+          ];
+        }
+        
+        // Get total count
+        const totalMaterials = await db.material.count({ where: materialWhere });
+        
+        // Determine limit based on pagination request
+        const materialLimit = usePagination ? pagination.limit : BACKWARD_COMPAT_LIMIT;
+        const materialSkip = usePagination ? (pagination.page - 1) * pagination.limit : 0;
+        
+        const materials = await db.material.findMany({
+          where: materialWhere,
+          orderBy: { name: 'asc' },
+          skip: materialSkip,
+          take: materialLimit
         });
-        return successResponse(materials.map(m => ({
+        
+        const mappedMaterials = materials.map(m => ({
           id: m.id,
           materialCode: m.materialCode,
           name: m.name,
@@ -365,16 +862,50 @@ export async function GET(request: NextRequest) {
           minStock: m.minStock,
           maxStock: m.maxStock,
           location: m.location
-        })));
+        }));
+        
+        if (usePagination) {
+          return successResponse(mappedMaterials, buildPaginationMeta(pagination.page, pagination.limit, totalMaterials));
+        }
+        return successResponse(mappedMaterials);
+      }
 
-      case 'contracts':
+      case 'contracts': {
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
-        const contracts = await (await getDb())?.contract.findMany({
-          where: { organizationId: user.organizationId },
+        const db = await getDb();
+        if (!db) {
+          return successResponse([], { page: 1, limit: 20, total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false });
+        }
+        
+        const pagination = parsePaginationParams(searchParams);
+        const usePagination = isPaginationRequested(searchParams);
+        
+        // Build where clause with search
+        const contractWhere: Record<string, unknown> = { organizationId: user.organizationId };
+        if (pagination.search) {
+          contractWhere.OR = [
+            { title: { contains: pagination.search, mode: 'insensitive' } },
+            { contractNumber: { contains: pagination.search, mode: 'insensitive' } },
+            { client: { name: { contains: pagination.search, mode: 'insensitive' } } }
+          ];
+        }
+        
+        // Get total count
+        const totalContracts = await db.contract.count({ where: contractWhere });
+        
+        // Determine limit based on pagination request
+        const contractLimit = usePagination ? pagination.limit : BACKWARD_COMPAT_LIMIT;
+        const contractSkip = usePagination ? (pagination.page - 1) * pagination.limit : 0;
+        
+        const contracts = await db.contract.findMany({
+          where: contractWhere,
           include: { client: true },
-          orderBy: { createdAt: 'desc' }
+          orderBy: { createdAt: 'desc' },
+          skip: contractSkip,
+          take: contractLimit
         });
-        return successResponse(contracts.map(c => ({
+        
+        const mappedContracts = contracts.map(c => ({
           id: c.id,
           contractNumber: c.contractNumber,
           title: c.title,
@@ -385,16 +916,50 @@ export async function GET(request: NextRequest) {
           status: c.status,
           client: c.client?.name,
           clientId: c.clientId
-        })));
+        }));
+        
+        if (usePagination) {
+          return successResponse(mappedContracts, buildPaginationMeta(pagination.page, pagination.limit, totalContracts));
+        }
+        return successResponse(mappedContracts);
+      }
 
-      case 'proposals':
+      case 'proposals': {
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
-        const proposals = await (await getDb())?.proposal.findMany({
-          where: { organizationId: user.organizationId },
+        const db = await getDb();
+        if (!db) {
+          return successResponse([], { page: 1, limit: 20, total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false });
+        }
+        
+        const pagination = parsePaginationParams(searchParams);
+        const usePagination = isPaginationRequested(searchParams);
+        
+        // Build where clause with search
+        const proposalWhere: Record<string, unknown> = { organizationId: user.organizationId };
+        if (pagination.search) {
+          proposalWhere.OR = [
+            { title: { contains: pagination.search, mode: 'insensitive' } },
+            { proposalNumber: { contains: pagination.search, mode: 'insensitive' } },
+            { client: { name: { contains: pagination.search, mode: 'insensitive' } } }
+          ];
+        }
+        
+        // Get total count
+        const totalProposals = await db.proposal.count({ where: proposalWhere });
+        
+        // Determine limit based on pagination request
+        const proposalLimit = usePagination ? pagination.limit : BACKWARD_COMPAT_LIMIT;
+        const proposalSkip = usePagination ? (pagination.page - 1) * pagination.limit : 0;
+        
+        const proposals = await db.proposal.findMany({
+          where: proposalWhere,
           include: { client: true },
-          orderBy: { createdAt: 'desc' }
+          orderBy: { createdAt: 'desc' },
+          skip: proposalSkip,
+          take: proposalLimit
         });
-        return successResponse(proposals.map(p => ({
+        
+        const mappedProposals = proposals.map(p => ({
           id: p.id,
           proposalNumber: p.proposalNumber,
           client: p.client?.name,
@@ -405,7 +970,13 @@ export async function GET(request: NextRequest) {
           issueDate: p.issueDate,
           validUntil: p.validUntil,
           createdAt: p.createdAt
-        })));
+        }));
+        
+        if (usePagination) {
+          return successResponse(mappedProposals, buildPaginationMeta(pagination.page, pagination.limit, totalProposals));
+        }
+        return successResponse(mappedProposals);
+      }
 
       case 'site-reports':
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
@@ -433,13 +1004,43 @@ export async function GET(request: NextRequest) {
           status: r.status
         })));
 
-      case 'documents':
+      case 'documents': {
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
-        const documents = await (await getDb())?.document.findMany({
+        const db = await getDb();
+        if (!db) {
+          return successResponse([], { page: 1, limit: 20, total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false });
+        }
+        
+        const pagination = parsePaginationParams(searchParams);
+        const usePagination = isPaginationRequested(searchParams);
+        
+        // Build where clause with search
+        const documentWhere: Record<string, unknown> = {};
+        if (pagination.search) {
+          documentWhere.OR = [
+            { filename: { contains: pagination.search, mode: 'insensitive' } },
+            { originalName: { contains: pagination.search, mode: 'insensitive' } },
+            { category: { contains: pagination.search, mode: 'insensitive' } },
+            { description: { contains: pagination.search, mode: 'insensitive' } }
+          ];
+        }
+        
+        // Get total count
+        const totalDocuments = await db.document.count({ where: documentWhere });
+        
+        // Determine limit based on pagination request
+        const documentLimit = usePagination ? pagination.limit : BACKWARD_COMPAT_LIMIT;
+        const documentSkip = usePagination ? (pagination.page - 1) * pagination.limit : 0;
+        
+        const documents = await db.document.findMany({
+          where: documentWhere,
           include: { uploader: true },
-          orderBy: { createdAt: 'desc' }
+          orderBy: { createdAt: 'desc' },
+          skip: documentSkip,
+          take: documentLimit
         });
-        return successResponse(documents.map(d => ({
+        
+        const mappedDocuments = documents.map(d => ({
           id: d.id,
           filename: d.filename,
           originalName: d.originalName,
@@ -449,7 +1050,13 @@ export async function GET(request: NextRequest) {
           description: d.description,
           uploadedBy: d.uploader?.fullName || d.uploader?.username,
           createdAt: d.createdAt
-        })));
+        }));
+        
+        if (usePagination) {
+          return successResponse(mappedDocuments, buildPaginationMeta(pagination.page, pagination.limit, totalDocuments));
+        }
+        return successResponse(mappedDocuments);
+      }
 
       case 'notifications':
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
@@ -499,12 +1106,17 @@ export async function GET(request: NextRequest) {
         const attUserId = searchParams.get('userId');
         const startDate = searchParams.get('startDate');
         const endDate = searchParams.get('endDate');
-        const attendanceWhere: any = {
+        const attendanceWhere: Record<string, unknown> = {
           user: { organizationId: user.organizationId }
         };
         if (attUserId) attendanceWhere.userId = attUserId;
-        if (startDate) attendanceWhere.date = { gte: new Date(startDate) };
-        if (endDate) attendanceWhere.date = { ...attendanceWhere.date, lte: new Date(endDate) };
+        if (startDate && endDate) {
+          attendanceWhere.date = { gte: new Date(startDate), lte: new Date(endDate) };
+        } else if (startDate) {
+          attendanceWhere.date = { gte: new Date(startDate) };
+        } else if (endDate) {
+          attendanceWhere.date = { lte: new Date(endDate) };
+        }
         
         const attendance = await (await getDb())?.attendance.findMany({
           where: attendanceWhere,
@@ -865,6 +1477,7 @@ export async function GET(request: NextRequest) {
       default:
         return errorResponse('إجراء غير معروف');
     }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error('API Error:', error);
     return errorResponse(error.message || 'خطأ في الخادم', 'SERVER_ERROR', 500);
@@ -894,9 +1507,9 @@ export async function POST(request: NextRequest) {
         }
 
         // Try demo users first
-        let foundUser: any = DEMO_USERS.find(u => 
+        let foundUser: DemoUser | AuthenticatedUser | null = DEMO_USERS.find(u => 
           u.username === username || u.email === username
-        );
+        ) || null;
         
         // If not in demo users, try database
         if (!foundUser) {
@@ -1659,6 +2272,7 @@ export async function POST(request: NextRequest) {
               role: 'system',
               content: 'أنت Blu، المساعد الذكي المتخصص في الهندسة المدنية والبناء في الإمارات. تجيب بأسلوب احترافي وعملي على أسئلة المهندسين والمقاولين. تستخدم الأكواد الإماراتية والمعايير الخليجية في إجاباتك.'
             },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ...conversationHistory.map((msg: any) => ({
               role: msg.role,
               content: msg.content
@@ -1701,6 +2315,7 @@ export async function POST(request: NextRequest) {
             tokens: completion.usage?.total_tokens || 0,
             timestamp: new Date().toISOString()
           });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
           console.error('AI Chat Error:', error);
           return errorResponse('حدث خطأ في الاتصال بالذكاء الاصطناعي', 'AI_ERROR', 500);
@@ -1710,6 +2325,7 @@ export async function POST(request: NextRequest) {
       default:
         return errorResponse('إجراء غير معروف');
     }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error('API Error:', error);
     return errorResponse(error.message || 'خطأ في الخادم', 'SERVER_ERROR', 500);
@@ -1744,7 +2360,8 @@ export async function PUT(request: NextRequest) {
         });
         if (!task) return errorResponse('المهمة غير موجودة', 'NOT_FOUND', 404);
 
-        const updateData: any = {};
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const updateData: Record<string, any> = {};
         if (status) {
           updateData.status = status;
           if (status === 'done') updateData.completedAt = new Date();
@@ -2089,6 +2706,7 @@ export async function PUT(request: NextRequest) {
       default:
         return errorResponse('إجراء غير معروف');
     }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error('API Error:', error);
     return errorResponse(error.message || 'خطأ في الخادم', 'SERVER_ERROR', 500);
@@ -2331,6 +2949,7 @@ export async function DELETE(request: NextRequest) {
       default:
         return errorResponse('إجراء غير معروف');
     }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error('API Error:', error);
     return errorResponse(error.message || 'خطأ في الخادم', 'SERVER_ERROR', 500);

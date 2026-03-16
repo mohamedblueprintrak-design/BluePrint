@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/context/auth-context';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
@@ -10,12 +10,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+import { 
+  useProfile, useUpdateProfile, useChangePassword, useUploadAvatar, useDeleteAvatar,
+  ProfileUpdate
+} from '@/hooks/use-data';
 import {
-  User, Mail, Phone, Building2, Calendar, Shield, Key,
-  Globe, Moon, Sun, Camera, Save, Eye, EyeOff
+  User, Building2, Calendar, Shield, Key,
+  Globe, Moon, Sun, Camera, Save, Eye, EyeOff, Loader2, Trash2
 } from 'lucide-react';
 
 export function ProfilePage() {
@@ -24,17 +28,28 @@ export function ProfilePage() {
   const { t, formatDate } = useTranslation(language);
   const { toast } = useToast();
   
+  // Profile API hooks
+  const { data: profileData } = useProfile();
+  const updateProfile = useUpdateProfile();
+  const changePassword = useChangePassword();
+  const uploadAvatar = useUploadAvatar();
+  const deleteAvatar = useDeleteAvatar();
+  
   const [isEditing, setIsEditing] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Use profile data from API or fallback to auth context user
+  const profileUser = profileData?.data || user;
   
   const [profileForm, setProfileForm] = useState({
-    fullName: user?.fullName || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
-    jobTitle: user?.jobTitle || '',
-    department: user?.department || '',
-    nationality: user?.nationality || '',
+    fullName: profileUser?.fullName || '',
+    email: profileUser?.email || '',
+    phone: profileUser?.phone || '',
+    jobTitle: profileUser?.jobTitle || '',
+    department: profileUser?.department || '',
+    nationality: profileUser?.nationality || '',
   });
   
   const [passwordForm, setPasswordForm] = useState({
@@ -43,24 +58,67 @@ export function ProfilePage() {
     confirmPassword: '',
   });
 
-  const handleSaveProfile = () => {
-    updateUser({
-      fullName: profileForm.fullName,
-      email: profileForm.email,
-      phone: profileForm.phone,
-      jobTitle: profileForm.jobTitle,
-      department: profileForm.department,
-      nationality: profileForm.nationality,
-    });
-    
-    toast({
-      title: t.successSave,
-      description: language === 'ar' ? 'تم تحديث الملف الشخصي' : 'Profile updated successfully'
-    });
-    setIsEditing(false);
+  // Update form when profile data loads
+  useEffect(() => {
+    if (profileUser) {
+      setProfileForm({
+        fullName: profileUser.fullName || '',
+        email: profileUser.email || '',
+        phone: profileUser.phone || '',
+        jobTitle: profileUser.jobTitle || '',
+        department: profileUser.department || '',
+        nationality: profileUser.nationality || '',
+      });
+    }
+  }, [profileUser]);
+
+  const handleSaveProfile = async () => {
+    try {
+      const updateData: ProfileUpdate = {
+        fullName: profileForm.fullName,
+        email: profileForm.email,
+        phone: profileForm.phone,
+        jobTitle: profileForm.jobTitle,
+        department: profileForm.department,
+        nationality: profileForm.nationality,
+      };
+      
+      const result = await updateProfile.mutateAsync(updateData);
+      
+      if (result.success && result.data) {
+        // Update auth context
+        updateUser({
+          fullName: result.data.fullName,
+          email: result.data.email,
+          phone: result.data.phone,
+          jobTitle: result.data.jobTitle,
+          department: result.data.department,
+          nationality: result.data.nationality,
+        });
+        
+        toast({
+          title: t.successSave,
+          description: language === 'ar' ? 'تم تحديث الملف الشخصي' : 'Profile updated successfully'
+        });
+        setIsEditing(false);
+      } else {
+        toast({
+          title: t.error,
+          description: result.error?.message || (language === 'ar' ? 'فشل في الحفظ' : 'Failed to save'),
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      toast({
+        title: t.error,
+        description: language === 'ar' ? 'حدث خطأ' : 'An error occurred',
+        variant: 'destructive'
+      });
+    }
   };
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
+    // Client-side validation
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       toast({
         title: t.error,
@@ -78,12 +136,139 @@ export function ProfilePage() {
       });
       return;
     }
+
+    try {
+      const result = await changePassword.mutateAsync(passwordForm);
+      
+      if (result.success) {
+        toast({
+          title: t.successSave,
+          description: language === 'ar' ? 'تم تغيير كلمة المرور' : 'Password changed successfully'
+        });
+        setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      } else {
+        toast({
+          title: t.error,
+          description: result.error?.message || (language === 'ar' ? 'فشل في تغيير كلمة المرور' : 'Failed to change password'),
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      toast({
+        title: t.error,
+        description: language === 'ar' ? 'حدث خطأ' : 'An error occurred',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: t.error,
+        description: language === 'ar' ? 'نوع الملف غير مدعوم' : 'File type not supported',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: t.error,
+        description: language === 'ar' ? 'حجم الملف كبير جداً' : 'File too large',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    try {
+      const result = await uploadAvatar.mutateAsync(file);
+      
+      if (result.success && result.data) {
+        // Update auth context with new avatar
+        updateUser({ avatar: result.data.avatar });
+        
+        toast({
+          title: t.successSave,
+          description: language === 'ar' ? 'تم تحديث الصورة الشخصية' : 'Avatar updated successfully'
+        });
+      } else {
+        toast({
+          title: t.error,
+          description: result.error?.message || (language === 'ar' ? 'فشل في رفع الصورة' : 'Failed to upload avatar'),
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      toast({
+        title: t.error,
+        description: language === 'ar' ? 'حدث خطأ' : 'An error occurred',
+        variant: 'destructive'
+      });
+    }
+
+    // Clear file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleDeleteAvatar = async () => {
+    try {
+      const result = await deleteAvatar.mutateAsync();
+      
+      if (result.success) {
+        updateUser({ avatar: undefined });
+        toast({
+          title: t.successSave,
+          description: language === 'ar' ? 'تم حذف الصورة الشخصية' : 'Avatar deleted successfully'
+        });
+      } else {
+        toast({
+          title: t.error,
+          description: result.error?.message || (language === 'ar' ? 'فشل في حذف الصورة' : 'Failed to delete avatar'),
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      toast({
+        title: t.error,
+        description: language === 'ar' ? 'حدث خطأ' : 'An error occurred',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleLanguageChange = async (newLanguage: 'ar' | 'en') => {
+    setLanguage(newLanguage);
     
-    toast({
-      title: t.successSave,
-      description: language === 'ar' ? 'تم تغيير كلمة المرور' : 'Password changed successfully'
-    });
-    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    // Save preference to backend
+    try {
+      await updateProfile.mutateAsync({ language: newLanguage });
+    } catch (error) {
+      // Silently fail - UI already updated
+    }
+  };
+
+  const handleThemeChange = async (newTheme: 'light' | 'dark') => {
+    setTheme(newTheme);
+    
+    // Save preference to backend
+    try {
+      await updateProfile.mutateAsync({ theme: newTheme });
+    } catch (error) {
+      // Silently fail - UI already updated
+    }
   };
 
   const getRoleBadge = (role: string) => {
@@ -102,6 +287,10 @@ export function ProfilePage() {
       </Badge>
     );
   };
+
+  const isSaving = updateProfile.isPending;
+  const isChangingPassword = changePassword.isPending;
+  const isUploadingAvatar = uploadAvatar.isPending;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -138,37 +327,63 @@ export function ProfilePage() {
               <div className="flex flex-col md:flex-row items-center gap-6">
                 <div className="relative">
                   <Avatar className="w-24 h-24 border-4 border-slate-700">
-                    <AvatarImage src={user?.avatar} />
+                    <AvatarImage src={profileUser?.avatar} />
                     <AvatarFallback className="bg-blue-600 text-white text-2xl">
-                      {user?.fullName?.[0] || user?.username?.[0]?.toUpperCase() || 'U'}
+                      {profileUser?.fullName?.[0] || profileUser?.username?.[0]?.toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   <Button
                     size="icon"
                     className="absolute bottom-0 end-0 rounded-full bg-blue-600 hover:bg-blue-700 w-8 h-8"
+                    onClick={handleAvatarClick}
+                    disabled={isUploadingAvatar}
                   >
-                    <Camera className="w-4 h-4" />
+                    {isUploadingAvatar ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Camera className="w-4 h-4" />
+                    )}
                   </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
                 </div>
                 <div className="text-center md:text-start flex-1">
-                  <h2 className="text-xl font-bold text-white">{user?.fullName || user?.username}</h2>
-                  <p className="text-slate-400">{user?.email}</p>
+                  <h2 className="text-xl font-bold text-white">{profileUser?.fullName || profileUser?.username}</h2>
+                  <p className="text-slate-400">{profileUser?.email}</p>
                   <div className="flex items-center justify-center md:justify-start gap-2 mt-2">
-                    {getRoleBadge(user?.role || 'viewer')}
-                    {user?.isActive && (
+                    {getRoleBadge(profileUser?.role || 'viewer')}
+                    {profileUser?.isActive && (
                       <Badge variant="outline" className="text-green-400 border-green-500/30">
                         {language === 'ar' ? 'نشط' : 'Active'}
                       </Badge>
                     )}
                   </div>
                 </div>
-                <Button
-                  variant="outline"
-                  className="border-slate-700"
-                  onClick={() => setIsEditing(!isEditing)}
-                >
-                  {isEditing ? (language === 'ar' ? 'إلغاء' : 'Cancel') : (language === 'ar' ? 'تعديل' : 'Edit')}
-                </Button>
+                <div className="flex gap-2">
+                  {profileUser?.avatar && (
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="border-red-500/30 text-red-400 hover:bg-red-500/10"
+                      onClick={handleDeleteAvatar}
+                      disabled={isUploadingAvatar}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    className="border-slate-700"
+                    onClick={() => setIsEditing(!isEditing)}
+                  >
+                    {isEditing ? (language === 'ar' ? 'إلغاء' : 'Cancel') : (language === 'ar' ? 'تعديل' : 'Edit')}
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -186,7 +401,7 @@ export function ProfilePage() {
                 <div className="space-y-2">
                   <Label className="text-slate-300">{t.username}</Label>
                   <Input
-                    value={user?.username}
+                    value={profileUser?.username}
                     disabled
                     className="bg-slate-800/30 border-slate-700 text-slate-400"
                   />
@@ -241,9 +456,17 @@ export function ProfilePage() {
             </CardContent>
             {isEditing && (
               <CardFooter className="border-t border-slate-800 pt-4">
-                <Button onClick={handleSaveProfile} className="bg-blue-600 hover:bg-blue-700">
-                  <Save className="w-4 h-4 me-2" />
-                  {t.save}
+                <Button 
+                  onClick={handleSaveProfile} 
+                  className="bg-blue-600 hover:bg-blue-700"
+                  disabled={isSaving}
+                >
+                  {isSaving ? (
+                    <Loader2 className="w-4 h-4 me-2 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4 me-2" />
+                  )}
+                  {isSaving ? (language === 'ar' ? 'جاري الحفظ...' : 'Saving...') : t.save}
                 </Button>
               </CardFooter>
             )}
@@ -260,21 +483,21 @@ export function ProfilePage() {
                   <Building2 className="w-5 h-5 text-blue-400" />
                   <div>
                     <p className="text-sm text-slate-400">{language === 'ar' ? 'المنظمة' : 'Organization'}</p>
-                    <p className="text-white font-medium">{user?.organization?.name || '-'}</p>
+                    <p className="text-white font-medium">{profileUser?.organization?.name || '-'}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-3 bg-slate-800/30 rounded-lg">
                   <Calendar className="w-5 h-5 text-green-400" />
                   <div>
                     <p className="text-sm text-slate-400">{language === 'ar' ? 'تاريخ الانضمام' : 'Join Date'}</p>
-                    <p className="text-white font-medium">{user?.hireDate ? formatDate(user.hireDate) : '-'}</p>
+                    <p className="text-white font-medium">{profileUser?.hireDate ? formatDate(profileUser.hireDate) : '-'}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-3 bg-slate-800/30 rounded-lg">
                   <Calendar className="w-5 h-5 text-purple-400" />
                   <div>
                     <p className="text-sm text-slate-400">{language === 'ar' ? 'رصيد الإجازات' : 'Leave Balance'}</p>
-                    <p className="text-white font-medium">{user?.leaveBalance || 0} {language === 'ar' ? 'يوم' : 'days'}</p>
+                    <p className="text-white font-medium">{profileUser?.leaveBalance || 0} {language === 'ar' ? 'يوم' : 'days'}</p>
                   </div>
                 </div>
               </div>
@@ -341,11 +564,26 @@ export function ProfilePage() {
                   />
                 </div>
               </div>
+              <p className="text-xs text-slate-500 mt-2">
+                {language === 'ar' 
+                  ? 'يجب أن تكون كلمة المرور 6 أحرف على الأقل وتحتوي على حرف ورقم'
+                  : 'Password must be at least 6 characters with at least one letter and one number'}
+              </p>
             </CardContent>
             <CardFooter className="border-t border-slate-800 pt-4">
-              <Button onClick={handleChangePassword} className="bg-blue-600 hover:bg-blue-700">
-                <Key className="w-4 h-4 me-2" />
-                {language === 'ar' ? 'تغيير كلمة المرور' : 'Change Password'}
+              <Button 
+                onClick={handleChangePassword} 
+                className="bg-blue-600 hover:bg-blue-700"
+                disabled={isChangingPassword}
+              >
+                {isChangingPassword ? (
+                  <Loader2 className="w-4 h-4 me-2 animate-spin" />
+                ) : (
+                  <Key className="w-4 h-4 me-2" />
+                )}
+                {isChangingPassword 
+                  ? (language === 'ar' ? 'جاري التغيير...' : 'Changing...') 
+                  : (language === 'ar' ? 'تغيير كلمة المرور' : 'Change Password')}
               </Button>
             </CardFooter>
           </Card>
@@ -370,7 +608,7 @@ export function ProfilePage() {
                   <Button
                     variant={language === 'ar' ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => setLanguage('ar')}
+                    onClick={() => handleLanguageChange('ar')}
                     className={language === 'ar' ? 'bg-blue-600' : 'border-slate-700'}
                   >
                     العربية
@@ -378,7 +616,7 @@ export function ProfilePage() {
                   <Button
                     variant={language === 'en' ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => setLanguage('en')}
+                    onClick={() => handleLanguageChange('en')}
                     className={language === 'en' ? 'bg-blue-600' : 'border-slate-700'}
                   >
                     English
@@ -398,7 +636,7 @@ export function ProfilePage() {
                   <Button
                     variant={theme === 'light' ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => setTheme('light')}
+                    onClick={() => handleThemeChange('light')}
                     className={theme === 'light' ? 'bg-blue-600' : 'border-slate-700'}
                   >
                     <Sun className="w-4 h-4 me-1" />
@@ -407,7 +645,7 @@ export function ProfilePage() {
                   <Button
                     variant={theme === 'dark' ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => setTheme('dark')}
+                    onClick={() => handleThemeChange('dark')}
                     className={theme === 'dark' ? 'bg-blue-600' : 'border-slate-700'}
                   >
                     <Moon className="w-4 h-4 me-1" />

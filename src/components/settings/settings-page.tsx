@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -718,9 +719,9 @@ export function SettingsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-col items-center gap-4">
-                    <div className="w-32 h-32 rounded-lg bg-slate-800 border-2 border-dashed border-slate-600 flex items-center justify-center">
+                    <div className="w-32 h-32 rounded-lg bg-slate-800 border-2 border-dashed border-slate-600 flex items-center justify-center relative overflow-hidden">
                       {companySettings.logo ? (
-                        <img src={companySettings.logo} alt="Logo" className="w-full h-full object-cover rounded-lg" />
+                        <Image src={companySettings.logo} alt="Logo" fill className="object-cover rounded-lg" />
                       ) : (
                         <Building2 className="w-12 h-12 text-slate-500" />
                       )}

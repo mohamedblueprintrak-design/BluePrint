@@ -531,8 +531,17 @@ export function useAIChat() {
   const { token } = useAuth();
   
   return useMutation({
-    mutationFn: (data: { message: string; model?: string }) => 
-      apiRequest<{ response: string; tokens: number }>('POST', 'ai-chat', data, token)
+    mutationFn: async (data: { message: string; model?: string; history?: Array<{ role: string; content: string }> }) => {
+      const response = await fetch('/api/ai-chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(data)
+      });
+      return response.json();
+    }
   });
 }
 
@@ -693,6 +702,258 @@ export function useCreateExpense() {
       apiRequest('POST', 'expense', data, token),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
+    }
+  });
+}
+
+// ============================================
+// Profile Hooks
+// ============================================
+
+export interface ProfileUpdate {
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  jobTitle?: string;
+  department?: string;
+  nationality?: string;
+  language?: 'ar' | 'en';
+  theme?: 'light' | 'dark';
+  notifications?: {
+    email: boolean;
+    push: boolean;
+  };
+}
+
+export interface PasswordChange {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+// Helper for profile API calls
+async function profileApiRequest<T>(
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+  endpoint: string,
+  data?: any,
+  token?: string | null
+): Promise<ApiResponse<T>> {
+  const url = `/api/profile${endpoint ? '/' + endpoint : ''}`;
+  
+  const options: RequestInit = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    }
+  };
+
+  if (data && method !== 'GET') {
+    options.body = JSON.stringify(data);
+  }
+
+  const response = await fetch(url, options);
+  return response.json();
+}
+
+export function useProfile() {
+  const { token } = useAuth();
+  
+  return useQuery({
+    queryKey: ['profile'],
+    queryFn: () => profileApiRequest<User>('GET', '', {}, token),
+    enabled: !!token
+  });
+}
+
+export function useUpdateProfile() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: ProfileUpdate) => 
+      profileApiRequest<User>('PUT', '', data, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['me'] });
+    }
+  });
+}
+
+export function useChangePassword() {
+  const { token } = useAuth();
+  
+  return useMutation({
+    mutationFn: (data: PasswordChange) => 
+      profileApiRequest('PUT', 'password', data, token)
+  });
+}
+
+export function useUploadAvatar() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await fetch('/api/profile/avatar', {
+        method: 'POST',
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: formData
+      });
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['me'] });
+    }
+  });
+}
+
+export function useDeleteAvatar() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/profile/avatar', {
+        method: 'DELETE',
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        }
+      });
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['me'] });
+    }
+  });
+}
+
+// ============================================
+// File Upload Hook
+// ============================================
+
+export interface UploadResult {
+  url: string;
+  name: string;
+  filename: string;
+  type: string;
+  category: string;
+  size: number;
+  uploadedBy: string;
+  uploadedAt: string;
+}
+
+export function useUploadFile() {
+  const { token } = useAuth();
+  
+  return useMutation({
+    mutationFn: async (file: File): Promise<ApiResponse<UploadResult>> => {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: formData
+      });
+      
+      return response.json();
+    }
+  });
+}
+
+export function useUploadMultipleFiles() {
+  const { token } = useAuth();
+  
+  return useMutation({
+    mutationFn: async (files: File[]): Promise<ApiResponse<UploadResult[]>> => {
+      const results: UploadResult[] = [];
+      
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          },
+          body: formData
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+          results.push(result.data);
+        } else {
+          return { success: false, error: result.error };
+        }
+      }
+      
+      return { success: true, data: results };
+    }
+  });
+}
+
+// ============================================
+// Report Export Hook
+// ============================================
+
+export type ExportType = 'pdf' | 'excel';
+export type ReportType = 'financial' | 'projects' | 'tasks' | 'clients' | 'invoices';
+
+export interface ExportParams {
+  type: ExportType;
+  report: ReportType;
+  startDate?: string;
+  endDate?: string;
+  language?: 'ar' | 'en';
+}
+
+export function useExportReport() {
+  const { token } = useAuth();
+  
+  return useMutation({
+    mutationFn: async (params: ExportParams): Promise<boolean> => {
+      const queryParams = new URLSearchParams();
+      queryParams.set('type', params.type);
+      queryParams.set('report', params.report);
+      if (params.startDate) queryParams.set('startDate', params.startDate);
+      if (params.endDate) queryParams.set('endDate', params.endDate);
+      if (params.language) queryParams.set('language', params.language);
+      
+      const response = await fetch(`/api/reports/export?${queryParams.toString()}`, {
+        method: 'GET',
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Export failed');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${params.report}-report.${params.type === 'pdf' ? 'pdf' : 'xlsx'}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      return true;
     }
   });
 }

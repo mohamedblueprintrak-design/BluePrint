@@ -1,37 +1,89 @@
 'use client';
 
+import { lazy, Suspense } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from '@/context/auth-context';
 import { AppProvider, useApp } from '@/context/app-context';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 import { LoginPage } from '@/components/auth/login-page';
-import { DashboardPage } from '@/components/dashboard/dashboard-page';
-import { ProjectsPage } from '@/components/projects/projects-page';
-import { ClientsPage } from '@/components/clients/clients-page';
-import { InvoicesPage } from '@/components/invoices/invoices-page';
-import { TasksPage } from '@/components/tasks/tasks-page';
-import { HRPage } from '@/components/hr/hr-page';
-import { SettingsPage } from '@/components/settings/settings-page';
-import { KnowledgePage } from '@/components/knowledge/knowledge-page';
-import { AIChatPage } from '@/components/ai-chat/ai-chat-page';
-import { ReportsPage } from '@/components/reports/reports-page';
-import { SuppliersPage } from '@/components/suppliers/suppliers-page';
-import { InventoryPage } from '@/components/inventory/inventory-page';
-import { ContractsPage } from '@/components/contracts/contracts-page';
-import { SiteDiaryPage } from '@/components/site-diary/site-diary-page';
-import { DocumentsPage } from '@/components/documents/documents-page';
-import { ProposalsPage } from '@/components/proposals/proposals-page';
-import { ProfilePage } from '@/components/profile/profile-page';
-import { AdminPage } from '@/components/admin/admin-page';
-import { ActivitiesPage } from '@/components/activities/activities-page';
-import { BOQPage } from '@/components/boq/boq-page';
-import { PurchaseOrdersPage } from '@/components/purchase-orders/purchase-orders-page';
-import { DefectsPage } from '@/components/defects/defects-page';
-import { BudgetsPage } from '@/components/budgets/budgets-page';
-import { VouchersPage } from '@/components/vouchers/vouchers-page';
-import { useTranslation } from '@/lib/translations';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+
 import { Building2, Loader2 } from 'lucide-react';
+
+// Lazy load page components (all use named exports)
+const DashboardPage = lazy(() => 
+  import('@/components/dashboard/dashboard-page').then(mod => ({ default: mod.DashboardPage }))
+);
+const ProjectsPage = lazy(() => 
+  import('@/components/projects/projects-page').then(mod => ({ default: mod.ProjectsPage }))
+);
+const ClientsPage = lazy(() => 
+  import('@/components/clients/clients-page').then(mod => ({ default: mod.ClientsPage }))
+);
+const InvoicesPage = lazy(() => 
+  import('@/components/invoices/invoices-page').then(mod => ({ default: mod.InvoicesPage }))
+);
+const TasksPage = lazy(() => 
+  import('@/components/tasks/tasks-page').then(mod => ({ default: mod.TasksPage }))
+);
+const HRPage = lazy(() => 
+  import('@/components/hr/hr-page').then(mod => ({ default: mod.HRPage }))
+);
+const SettingsPage = lazy(() => 
+  import('@/components/settings/settings-page').then(mod => ({ default: mod.SettingsPage }))
+);
+const KnowledgePage = lazy(() => 
+  import('@/components/knowledge/knowledge-page').then(mod => ({ default: mod.KnowledgePage }))
+);
+const AIChatPage = lazy(() => 
+  import('@/components/ai-chat/ai-chat-page').then(mod => ({ default: mod.AIChatPage }))
+);
+const ReportsPage = lazy(() => 
+  import('@/components/reports/reports-page').then(mod => ({ default: mod.ReportsPage }))
+);
+const SuppliersPage = lazy(() => 
+  import('@/components/suppliers/suppliers-page').then(mod => ({ default: mod.SuppliersPage }))
+);
+const InventoryPage = lazy(() => 
+  import('@/components/inventory/inventory-page').then(mod => ({ default: mod.InventoryPage }))
+);
+const ContractsPage = lazy(() => 
+  import('@/components/contracts/contracts-page').then(mod => ({ default: mod.ContractsPage }))
+);
+const SiteDiaryPage = lazy(() => 
+  import('@/components/site-diary/site-diary-page').then(mod => ({ default: mod.SiteDiaryPage }))
+);
+const DocumentsPage = lazy(() => 
+  import('@/components/documents/documents-page').then(mod => ({ default: mod.DocumentsPage }))
+);
+const ProposalsPage = lazy(() => 
+  import('@/components/proposals/proposals-page').then(mod => ({ default: mod.ProposalsPage }))
+);
+const ProfilePage = lazy(() => 
+  import('@/components/profile/profile-page').then(mod => ({ default: mod.ProfilePage }))
+);
+const AdminPage = lazy(() => 
+  import('@/components/admin/admin-page').then(mod => ({ default: mod.AdminPage }))
+);
+const ActivitiesPage = lazy(() => 
+  import('@/components/activities/activities-page').then(mod => ({ default: mod.ActivitiesPage }))
+);
+const BOQPage = lazy(() => 
+  import('@/components/boq/boq-page').then(mod => ({ default: mod.BOQPage }))
+);
+const PurchaseOrdersPage = lazy(() => 
+  import('@/components/purchase-orders/purchase-orders-page').then(mod => ({ default: mod.PurchaseOrdersPage }))
+);
+const DefectsPage = lazy(() => 
+  import('@/components/defects/defects-page').then(mod => ({ default: mod.DefectsPage }))
+);
+const BudgetsPage = lazy(() => 
+  import('@/components/budgets/budgets-page').then(mod => ({ default: mod.BudgetsPage }))
+);
+const VouchersPage = lazy(() => 
+  import('@/components/vouchers/vouchers-page').then(mod => ({ default: mod.VouchersPage }))
+);
 
 // Create a single QueryClient instance outside the component
 const queryClient = new QueryClient({
@@ -44,7 +96,16 @@ const queryClient = new QueryClient({
   },
 });
 
-// Loading Skeleton Component
+// Page Loader Component for Suspense fallback
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center h-64">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+    </div>
+  );
+}
+
+// Loading Skeleton Component for initial app load
 function LoadingSkeleton() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-950">
@@ -64,8 +125,7 @@ function LoadingSkeleton() {
 // Main app content
 function AppContent() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { language, isRTL, currentPage, sidebarCollapsed } = useApp();
-  const { t } = useTranslation(language);
+  const { isRTL, currentPage, sidebarCollapsed } = useApp();
 
   // Loading state
   if (authLoading) {
@@ -77,60 +137,37 @@ function AppContent() {
     return <LoginPage />;
   }
 
-  // Render current page content
+  // Render current page content with Suspense for lazy loading
   const renderPageContent = () => {
-    switch (currentPage) {
-      case 'dashboard':
-        return <DashboardPage />;
-      case 'projects':
-        return <ProjectsPage />;
-      case 'clients':
-        return <ClientsPage />;
-      case 'proposals':
-        return <ProposalsPage />;
-      case 'invoices':
-        return <InvoicesPage />;
-      case 'tasks':
-        return <TasksPage />;
-      case 'hr':
-        return <HRPage />;
-      case 'suppliers':
-        return <SuppliersPage />;
-      case 'inventory':
-        return <InventoryPage />;
-      case 'contracts':
-        return <ContractsPage />;
-      case 'siteDiary':
-        return <SiteDiaryPage />;
-      case 'documents':
-        return <DocumentsPage />;
-      case 'knowledge':
-        return <KnowledgePage />;
-      case 'aiChat':
-        return <AIChatPage />;
-      case 'reports':
-        return <ReportsPage />;
-      case 'settings':
-        return <SettingsPage />;
-      case 'profile':
-        return <ProfilePage />;
-      case 'admin':
-        return <AdminPage />;
-      case 'activities':
-        return <ActivitiesPage />;
-      case 'boq':
-        return <BOQPage />;
-      case 'purchaseOrders':
-        return <PurchaseOrdersPage />;
-      case 'defects':
-        return <DefectsPage />;
-      case 'budgets':
-        return <BudgetsPage />;
-      case 'vouchers':
-        return <VouchersPage />;
-      default:
-        return <DashboardPage />;
-    }
+    return (
+      <Suspense fallback={<PageLoader />}>
+        {currentPage === 'dashboard' && <DashboardPage />}
+        {currentPage === 'projects' && <ProjectsPage />}
+        {currentPage === 'clients' && <ClientsPage />}
+        {currentPage === 'proposals' && <ProposalsPage />}
+        {currentPage === 'invoices' && <InvoicesPage />}
+        {currentPage === 'tasks' && <TasksPage />}
+        {currentPage === 'hr' && <HRPage />}
+        {currentPage === 'suppliers' && <SuppliersPage />}
+        {currentPage === 'inventory' && <InventoryPage />}
+        {currentPage === 'contracts' && <ContractsPage />}
+        {currentPage === 'siteDiary' && <SiteDiaryPage />}
+        {currentPage === 'documents' && <DocumentsPage />}
+        {currentPage === 'knowledge' && <KnowledgePage />}
+        {currentPage === 'aiChat' && <AIChatPage />}
+        {currentPage === 'reports' && <ReportsPage />}
+        {currentPage === 'settings' && <SettingsPage />}
+        {currentPage === 'profile' && <ProfilePage />}
+        {currentPage === 'admin' && <AdminPage />}
+        {currentPage === 'activities' && <ActivitiesPage />}
+        {currentPage === 'boq' && <BOQPage />}
+        {currentPage === 'purchaseOrders' && <PurchaseOrdersPage />}
+        {currentPage === 'defects' && <DefectsPage />}
+        {currentPage === 'budgets' && <BudgetsPage />}
+        {currentPage === 'vouchers' && <VouchersPage />}
+        {currentPage === undefined && <DashboardPage />}
+      </Suspense>
+    );
   };
 
   // Authenticated - show main app
@@ -173,11 +210,13 @@ function AppContent() {
 export default function BluePrintApp() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <AppProvider>
-          <AppContent />
-        </AppProvider>
-      </AuthProvider>
+      <ErrorBoundary>
+        <AuthProvider>
+          <AppProvider>
+            <AppContent />
+          </AppProvider>
+        </AuthProvider>
+      </ErrorBoundary>
     </QueryClientProvider>
   );
 }

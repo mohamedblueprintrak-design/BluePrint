@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import * as jose from 'jose';
+import { sendEmail } from '@/lib/email';
+import { emailTemplates } from '@/lib/email-templates';
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters');
 
@@ -133,7 +135,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { clientId, projectId, items, subtotal, taxRate, discountAmount, dueDate, notes, terms } = body;
+    const { clientId, projectId, items, subtotal, taxRate, discountAmount, dueDate, notes, terms, sendNotification } = body;
 
     try {
       const count = await db.invoice.count({ where: { organizationId: user.organizationId } });
@@ -158,8 +160,42 @@ export async function POST(request: NextRequest) {
           terms,
           issueDate: new Date(),
           organizationId: user.organizationId
-        }
+        },
+        include: { client: true }
       });
+
+      // Send email notification if client has email and sendNotification is true
+      if (sendNotification !== false && invoice.client?.email) {
+        try {
+          // Check if user has email notifications enabled for invoices
+          const notificationSettings = await db.notificationSettings.findUnique({
+            where: { userId: user.id }
+          });
+
+          if (!notificationSettings || notificationSettings.emailInvoices) {
+            const formattedDueDate = dueDate 
+              ? new Date(dueDate).toLocaleDateString('ar-AE', { year: 'numeric', month: 'long', day: 'numeric' })
+              : undefined;
+
+            const emailTemplate = emailTemplates.invoiceCreated(
+              invoice.client.name,
+              invoiceNumber,
+              total,
+              formattedDueDate
+            );
+
+            await sendEmail({
+              to: invoice.client.email,
+              subject: emailTemplate.subject,
+              html: emailTemplate.html,
+              text: emailTemplate.text
+            });
+          }
+        } catch (emailError) {
+          console.error('Failed to send invoice email:', emailError);
+          // Don't fail the request if email fails
+        }
+      }
 
       return successResponse({ id: invoice.id, invoiceNumber, total });
     } catch (dbError) {
@@ -167,6 +203,34 @@ export async function POST(request: NextRequest) {
       const invoiceNumber = `INV-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`;
       const taxAmount = (subtotal || 0) * (taxRate || 5) / 100;
       const total = (subtotal || 0) + taxAmount - (discountAmount || 0);
+
+      // In demo mode, simulate email sending
+      if (sendNotification !== false && clientId) {
+        try {
+          const client = await db.client.findUnique({ where: { id: clientId } });
+          if (client?.email) {
+            const formattedDueDate = dueDate 
+              ? new Date(dueDate).toLocaleDateString('ar-AE', { year: 'numeric', month: 'long', day: 'numeric' })
+              : undefined;
+
+            const emailTemplate = emailTemplates.invoiceCreated(
+              client.name,
+              invoiceNumber,
+              total,
+              formattedDueDate
+            );
+
+            await sendEmail({
+              to: client.email,
+              subject: emailTemplate.subject,
+              html: emailTemplate.html,
+              text: emailTemplate.text
+            });
+          }
+        } catch (emailError) {
+          console.error('Failed to send invoice email (demo):', emailError);
+        }
+      }
 
       return successResponse({ 
         id: `demo-inv-${Date.now()}`, 

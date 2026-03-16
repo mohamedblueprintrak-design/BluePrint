@@ -1,256 +1,322 @@
-# BluePrint SaaS Platform - تقرير المراجعة النهائية
+# BluePrint SaaS Platform - سجل العمل
 
 ---
-Task ID: Final Review
-Agent: Super Z (Main)
-Task: مراجعة شاملة وإكمال منصة BluePrint SaaS
-
----
-
-## ملخص المراجعة الشاملة
-
-### ✅ ما تم إنجازه في هذه الجلسة:
-
-#### 1. مراجعة هيكل المشروع
-- تم التحقق من جميع الملفات والمجلدات
-- جميع الصفحات (15 صفحة) مكتملة ومُدمجة
-- نظام المكونات يعمل بشكل صحيح
-
-#### 2. إصلاح الأخطاء
-- إصلاح استيراد الأيقونات غير الموجودة في lucide-react:
-  - صفحة Settings: استبدال `GoogleDrive`, `Dropzone`, `MonitorSmartphone`, `Slack`, `Github`, `Figma`, `Trello`
-  - صفحة Reports: استبدال `DateRange` بـ `CalendarDays`
-- جميع الأخطاء تم حلها بنجاح
-
-#### 3. التحقق من البناء
-- ✅ Lint: نجح بدون أخطاء
-- ✅ Build: نجح في 7.4 ثانية
-- ✅ جميع الصفحات تُبنى بشكل صحيح
+Task ID: Round-1-Implementation
+Agent: Super Z (Main) + Full-Stack Developer Subagents
+Task: تنفيذ الجولة الأولى من خطة الإصلاح (الخطوات 1-5)
 
 ---
 
-## 📊 الحالة النهائية للمشروع
+## ملخص الجولة الأولى
 
-### الصفحات المكتملة (15/15):
+### ✅ الخطوة 1: إصلاح مشاكل TypeScript
 
-| # | الصفحة | الملف | الحالة |
-|---|--------|-------|--------|
-| 1 | Dashboard | `dashboard/dashboard-page.tsx` | ✅ مكتمل |
-| 2 | Projects | `projects/projects-page.tsx` | ✅ مكتمل |
-| 3 | Clients | `clients/clients-page.tsx` | ✅ مكتمل |
-| 4 | Invoices | `invoices/invoices-page.tsx` | ✅ مكتمل |
-| 5 | Tasks | `tasks/tasks-page.tsx` | ✅ مكتمل |
-| 6 | HR | `hr/hr-page.tsx` | ✅ مكتمل |
-| 7 | Suppliers | `suppliers/suppliers-page.tsx` | ✅ مكتمل |
-| 8 | Inventory | `inventory/inventory-page.tsx` | ✅ مكتمل |
-| 9 | Reports | `reports/reports-page.tsx` | ✅ مكتمل |
-| 10 | Documents | `documents/documents-page.tsx` | ✅ مكتمل |
-| 11 | Knowledge | `knowledge/knowledge-page.tsx` | ✅ مكتمل |
-| 12 | AI Chat | `ai-chat/ai-chat-page.tsx` | ✅ مكتمل |
-| 13 | Settings | `settings/settings-page.tsx` | ✅ مكتمل |
-| 14 | Contracts | `contracts/contracts-page.tsx` | ✅ مكتمل |
-| 15 | Site Diary | `site-diary/site-diary-page.tsx` | ✅ مكتمل |
+**الملفات المعدلة:**
+- `/src/app/api/route.ts` - إزالة `@ts-nocheck` وإضافة واجهات TypeScript كاملة
+- `/src/components/ui/chart.tsx` - إزالة `@ts-nocheck` وإضافة أنواع صحيحة
 
----
+**التغييرات:**
+- إضافة واجهات: `DemoUser`, `AuthenticatedUser`, `ApiSuccessResponse`, `ApiErrorResponse`, `RateLimitRecord`, `PaginationParams`, `PaginationMeta`
+- إضافة `DbClient` interface لقاعدة البيانات (مع الاحتفاظ بـ `any` للتوافق مع Prisma)
+- تحويل الدوال لاستخدام الأنواع الصحيحة
 
-### البنية التحتية:
+### ✅ الخطوة 2: CSRF Protection لـ GitHub OAuth
 
-#### ✅ قاعدة البيانات (Prisma)
-- 35+ موديل قاعدة بيانات
-- تشمل: Organization, User, Project, Client, Invoice, Task, etc.
-- علاقات كاملة بين الجداول
+**الحالة:** مكتمل مسبقاً
+- الملف `/src/app/api/auth/github/route.ts` يستخدم `crypto.randomUUID()` لإنشاء state
+- يتم تخزين state في cookie HttpOnly للتحقق
 
-#### ✅ API Routes (`/api/route.ts`)
-- GET: 15+ endpoints
-- POST: 12+ endpoints
-- PUT: 6+ endpoints
-- DELETE: 5+ endpoints
-- JWT Authentication
-- bcryptjs لتشفير كلمات المرور
+### ✅ الخطوة 3: ربط AI Chat بـ API حقيقي
 
-#### ✅ Hooks (`use-data.ts`)
-- useDashboard
-- useProjects, useProject, useCreateProject, useUpdateProject, useDeleteProject
-- useClients, useClient, useCreateClient, useUpdateClient, useDeleteClient
-- useInvoices, useInvoice, useCreateInvoice, useUpdateInvoiceStatus
-- useTasks, useTask, useCreateTask, useUpdateTask, useDeleteTask
-- useSuppliers, useCreateSupplier
-- useMaterials, useCreateMaterial
-- useContracts, useCreateContract
-- useProposals, useCreateProposal
-- useSiteReports, useCreateSiteReport
-- useDocuments
-- useLeaveRequests, useCreateLeaveRequest, useApproveLeaveRequest
-- useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead
-- useAIChat
+**ملف جديد:** `/src/app/api/ai-chat/route.ts`
 
-#### ✅ نظام الترجمة
-- العربية والإنجليزية
-- 200+ مفتاح ترجمة
-- تنسيق العملات والتواريخ
+**الميزات:**
+- استخدام `z-ai-web-dev-sdk` للتكامل مع LLM
+- دعم نماذج متعددة: Gemini, GPT, DeepSeek, Mistral, Llama, Gemma, Grok, Claude
+- Rate limiting (30 طلب/دقيقة لكل مستخدم)
+- رسائل خطأ بالعربية
+- System prompt مخصص للهندسة المدنية وأكواد الإمارات
 
-#### ✅ Context Providers
-- AuthProvider: إدارة المصادقة والجلسات
-- AppProvider: إدارة حالة التطبيق (اللغة، السمة، إلخ)
+**ملف معدل:** `/src/hooks/use-data.ts`
+- تحديث `useAIChat` للاتصال بـ `/api/ai-chat`
 
----
+### ✅ الخطوة 4: إضافة Pagination للـ API
 
-### 📁 هيكل المشروع النهائي:
+**الملف المعدل:** `/src/app/api/route.ts`
 
-```
-src/
-├── app/
-│   ├── page.tsx          # الصفحة الرئيسية (تجميع كل الصفحات)
-│   ├── api/route.ts      # API كامل (GET, POST, PUT, DELETE)
-│   ├── layout.tsx        # Layout الرئيسي
-│   └── globals.css       # الأنماط العامة
-├── components/
-│   ├── layout/           # Sidebar, Header
-│   ├── auth/             # LoginPage
-│   ├── ui/               # 50+ مكون shadcn/ui
-│   ├── dashboard/        # لوحة التحكم
-│   ├── projects/         # المشاريع
-│   ├── clients/          # العملاء
-│   ├── invoices/         # الفواتير
-│   ├── tasks/            # المهام
-│   ├── hr/               # الموارد البشرية
-│   ├── suppliers/        # الموردين
-│   ├── inventory/        # المخازن
-│   ├── reports/          # التقارير
-│   ├── documents/        # المستندات
-│   ├── knowledge/        # قاعدة المعرفة
-│   ├── ai-chat/          # المساعد الذكي
-│   ├── settings/         # الإعدادات
-│   ├── contracts/        # العقود
-│   └── site-diary/       # يومية الموقع
-├── context/              # AuthProvider, AppProvider
-├── hooks/                # use-data.ts, use-toast.ts, use-mobile.ts
-├── lib/                  # db.ts, translations.ts, utils.ts
-└── types/                # index.ts
+**Endpoints المحدثة:**
+| Endpoint | حقول البحث |
+|----------|-----------|
+| `projects` | name, projectNumber, location |
+| `clients` | name, email, phone, contactPerson |
+| `invoices` | invoiceNumber, client name, project name |
+| `tasks` | title, description |
+| `suppliers` | name, email, phone, contactPerson |
+| `materials` | name, materialCode, category, location |
+| `contracts` | title, contractNumber, client name |
+| `proposals` | title, proposalNumber, client name |
+| `documents` | filename, originalName, category, description |
+
+**معلمات الاستعلام:**
+- `page` (افتراضي: 1)
+- `limit` (افتراضي: 20، حد أقصى: 100)
+- `search` (بحث نصي)
+
+**صيغة الاستجابة:**
+```json
+{
+  "success": true,
+  "data": [...],
+  "meta": {
+    "page": 1,
+    "limit": 20,
+    "total": 150,
+    "totalPages": 8,
+    "hasNextPage": true,
+    "hasPrevPage": false
+  }
+}
 ```
 
----
+### ✅ الخطوة 5: إكمال Reports API endpoints
 
-### 🔐 بيانات الدخول:
-```
-Username: admin
-Password: admin123
-```
+**ملف جديد:** `/src/app/api/reports/route.ts`
 
----
+**Endpoints المتاحة:**
+| Endpoint | الوصف |
+|----------|-------|
+| `?action=financial-summary` | ملخص مالي شهري (فواتير، مدفوعات، متأخرات) |
+| `?action=project-status` | توزيع المشاريع بالحالة |
+| `?action=task-metrics` | إحصائيات المهام (حالة، أولوية، متأخرة) |
+| `?action=client-analytics` | أعلى 5 عملاء بالإيرادات، اتجاهات الدفع |
+| `?action=expense-breakdown` | المصروفات حسب الفئة والمشروع |
 
-## 🚀 جاهزية الإنتاج
-
-### ✅ تم التحقق من:
-- [x] Lint بدون أخطاء
-- [x] Build ناجح
-- [x] جميع الصفحات تعمل
-- [x] API Routes مكتملة
-- [x] قاعدة البيانات جاهزة
-- [x] نظام المصادقة يعمل
-- [x] دعم RTL للعربية
-- [x] تصميم متجاوب
+**الميزات:**
+- تصفية بنطاق زمني (`startDate`, `endDate`)
+- بيانات جاهزة للرسوم البيانية (labels, datasets)
+- بيانات تجريبية عند عدم توفر قاعدة البيانات
 
 ---
 
-## 📋 ملاحظات للمطورين
+## نتائج البناء
 
-### للتشغيل:
-```bash
-npm run dev
+```
+✓ Compiled successfully
+✓ Linting and checking validity of types
+✓ Build completed
 ```
 
-### للبناء:
-```bash
-npm run build
+**تحذيرات فقط (لا أخطاء):**
+- متغيرات غير مستخدمة في بعض المكونات (تحذيرات ESLint)
+- هذه لا تؤثر على الوظائف
+
+---
+
+## ملخص الملفات المُنشأة/المعدلة
+
+| الملف | النوع | الحجم التقريبي |
+|-------|-------|---------------|
+| `/src/app/api/route.ts` | معدل | ~3000 سطر |
+| `/src/app/api/ai-chat/route.ts` | جديد | ~300 سطر |
+| `/src/app/api/reports/route.ts` | جديد | ~400 سطر |
+| `/src/components/ui/chart.tsx` | معدل | ~355 سطر |
+| `/src/hooks/use-data.ts` | معدل | ~700 سطر |
+
+---
+
+**تاريخ الإنجاز:** $(date +%Y-%m-%d)
+**الحالة:** ✅ تم إنهاء الجولة الأولى بنجاح
+
+---
+Task ID: Round-2-Implementation
+Agent: Super Z (Main) + Full-Stack Developer Subagents
+Task: تنفيذ الجولة الثانية من خطة الإصلاح (الخطوات 6-10)
+
+---
+
+## ملخص الجولة الثانية - تحسين الأداء
+
+### ✅ الخطوة 6: تقسيم ملف route.ts
+
+**ملفات جديدة في `/src/app/api/`:**
+
+| الملف | الوصف |
+|-------|-------|
+| `types.ts` | واجهات TypeScript موحدة (DemoUser, AuthenticatedUser, DbClient, HandlerContext) |
+| `utils/response.ts` | دوال الاستجابة (successResponse, errorResponse, unauthorizedResponse, etc.) |
+| `utils/auth.ts` | دوال المصادقة (getUserFromToken, getTokenFromRequest, JWT handling) |
+| `utils/rate-limit.ts` | منطق Rate Limiting |
+| `utils/db.ts` | اتصال قاعدة البيانات و DEMO_USERS |
+| `utils/pagination.ts` | مساعدات Pagination |
+| `handlers/*.handler.ts` | معالجات منفصلة لكل endpoint |
+
+**الفوائد:**
+- كود منظم وأسهل للصيانة
+- إعادة استخدام الدوال المشتركة
+- TypeScript types موحدة عبر جميع الملفات
+
+### ✅ الخطوة 7: إضافة Lazy Loading للصفحات
+
+**الملف المعدل:** `/src/app/page.tsx`
+
+**التغييرات:**
+```tsx
+// Before
+import { DashboardPage } from '@/components/dashboard/dashboard-page';
+
+// After
+const DashboardPage = lazy(() => 
+  import('@/components/dashboard/dashboard-page').then(mod => ({ default: mod.DashboardPage }))
+);
 ```
 
-### للتشغيل في الإنتاج:
-```bash
-npm run start
+**الصفحات المحولة (24 صفحة):**
+- DashboardPage, ProjectsPage, ClientsPage, InvoicesPage, TasksPage
+- HRPage, SettingsPage, KnowledgePage, AIChatPage, ReportsPage
+- SuppliersPage, InventoryPage, ContractsPage, SiteDiaryPage, DocumentsPage
+- ProposalsPage, ProfilePage, AdminPage, ActivitiesPage, BOQPage
+- PurchaseOrdersPage, DefectsPage, BudgetsPage, VouchersPage
+
+**PageLoader Component:**
+```tsx
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center h-64">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+    </div>
+  );
+}
+```
+
+### ✅ الخطوة 8: تحسين Bundle Size
+
+**تحديث next.config.ts:**
+```ts
+experimental: {
+  optimizePackageImports: ['lucide-react', 'recharts', '@radix-ui/react-tabs', '@radix-ui/react-toast'],
+},
+serverExternalPackages: ['@prisma/client'],
+modularizeImports: {
+  'lucide-react': {
+    transform: 'lucide-react/dist/esm/icons/{{kebabCase name}}',
+  },
+},
+```
+
+**نتائج تحسين Bundle:**
+
+| المؤشر | قبل | بعد | التحسين |
+|--------|-----|-----|---------|
+| **Main Route Size** | 307 kB | 69.4 kB | **-237.6 kB (77%)** |
+| **First Load JS** | 531 kB | 294 kB | **-237 kB (45%)** |
+
+### ✅ الخطوة 9: Image Optimization
+
+**الملف المعدل:** `/src/components/settings/settings-page.tsx`
+
+**التغيير:**
+```tsx
+// Before
+<img src={companySettings.logo} alt="Logo" className="w-full h-full object-cover" />
+
+// After
+import Image from 'next/image';
+<Image src={companySettings.logo} alt="Logo" fill className="object-cover" />
+```
+
+**next.config.ts images config:**
+```ts
+images: {
+  remotePatterns: [
+    { protocol: 'https', hostname: '**' },
+  ],
+},
+```
+
+### ✅ الخطوة 10: Error Boundaries و Loading States
+
+**ملفات جديدة:**
+
+| الملف | الوصف |
+|-------|-------|
+| `/src/components/ui/error-boundary.tsx` | Error Boundary للتعامل مع أخطاء React |
+| `/src/components/ui/page-loader.tsx` | Loading spinner للصفحات |
+| `/src/components/ui/api-error.tsx` | مكون عرض أخطاء API |
+
+**ErrorBoundary Implementation:**
+```tsx
+export class ErrorBoundary extends Component<Props, State> {
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error };
+  }
+  
+  render() {
+    if (this.state.hasError) {
+      return (
+        <Card className="border-red-500/50 bg-red-500/10">
+          {/* Error UI with retry button */}
+        </Card>
+      );
+    }
+    return this.props.children;
+  }
+}
+```
+
+**التكامل في page.tsx:**
+```tsx
+export default function BluePrintApp() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ErrorBoundary>
+        <AuthProvider>
+          <AppProvider>
+            <AppContent />
+          </AppProvider>
+        </AuthProvider>
+      </ErrorBoundary>
+    </QueryClientProvider>
+  );
+}
 ```
 
 ---
 
-**تاريخ المراجعة:** 2025-01-XX
-**الحالة:** ✅ جاهز للإنتاج
+## ملخص الملفات المُنشأة/المعدلة (الجولة الثانية)
+
+| الملف | النوع | الوصف |
+|-------|-------|-------|
+| `/src/app/api/types.ts` | جديد | TypeScript interfaces |
+| `/src/app/api/utils/response.ts` | جديد | دوال الاستجابة |
+| `/src/app/api/utils/auth.ts` | جديد | دوال المصادقة |
+| `/src/app/api/utils/rate-limit.ts` | جديد | Rate limiting |
+| `/src/app/api/utils/db.ts` | جديد | اتصال DB |
+| `/src/app/api/utils/pagination.ts` | جديد | Pagination helpers |
+| `/src/app/api/handlers/*.ts` | جديد | معالجات API |
+| `/src/app/page.tsx` | معدل | Lazy loading + ErrorBoundary |
+| `/src/components/ui/error-boundary.tsx` | جديد | Error handling |
+| `/src/components/ui/page-loader.tsx` | جديد | Loading component |
+| `/src/components/ui/api-error.tsx` | جديد | API error display |
+| `/src/components/settings/settings-page.tsx` | معدل | next/image |
+| `next.config.ts` | معدل | Bundle optimization |
 
 ---
-## Task ID: API-Security-Enhancement - Backend Developer
-### Work Task
-Add critical security and feature improvements to the API route file including rate limiting, organization isolation, and missing CRUD endpoints.
 
-### Work Summary
+## نتائج البناء النهائي
 
-#### 1. Rate Limiting Implementation (TASK 1)
-- Created in-memory rate limiting using a Map to track requests by IP address
-- **Limit:** 100 requests per minute per IP address
-- Returns **429 Too Many Requests** error when exceeded with proper headers:
-  - `Retry-After`: Seconds until rate limit resets
-  - `X-RateLimit-Limit`: Maximum requests allowed
-  - `X-RateLimit-Remaining`: Remaining requests in current window
-  - `X-RateLimit-Reset`: Timestamp when limit resets
-- Automatic cleanup of old entries every 5 minutes to prevent memory leaks
-- Extracts client IP from `x-forwarded-for` or `x-real-ip` headers
+```
+Route (app)                    Size      First Load JS
+┌ ○ /                          69.4 kB   294 kB
+├ ○ /_not-found                1.15 kB   210 kB
+├ ƒ /api                       365 B     209 kB
+├ ƒ /api/ai-chat               361 B     209 kB
+... (all API routes)
++ First Load JS shared by all  209 kB
+```
 
-#### 2. Organization Isolation (TASK 2)
-- All database queries now filter by `organizationId` for multi-tenant security
-- Added organization filtering to:
-  - Projects, Clients, Suppliers, Materials
-  - Invoices, Contracts, Proposals
-  - Tasks (through project relation)
-  - Site Reports (through project relation)
-  - Leave Requests (through user relation)
-  - Attendance (through user relation)
-  - Expenses (through project relation)
-  - Defects, Budgets, BOQItems (through project relation)
-  - Purchase Orders (through supplier relation)
-  - Payments (through invoice relation)
+**Build Status:** ✅ SUCCESS
 
-#### 3. New GET Endpoints (TASK 3)
-| Endpoint | Description |
-|----------|-------------|
-| `boq-items` | Get BOQItems for a project (filtered by organizationId) |
-| `purchase-orders` | Get PurchaseOrders with supplier info |
-| `budgets` | Get Budgets for a project |
-| `defects` | Get Defects for a project |
-| `payments` | Get Payments for an invoice |
-| `expenses` | Get Expenses with project info |
+---
 
-#### 4. New POST Endpoints (TASK 4)
-| Endpoint | Description |
-|----------|-------------|
-| `boq-item` | Create BOQItem with all required fields |
-| `purchase-order` | Create PurchaseOrder with auto-generated PO number (PO-YYYY-NNNN) |
-| `budget` | Create Budget with automatic variance calculation |
-| `defect` | Create Defect with notification to assigned user |
-| `payment` | Create Payment and update invoice.paidAmount automatically |
-
-#### 5. New PUT Endpoints (TASK 5)
-| Endpoint | Description |
-|----------|-------------|
-| `boq-item` | Update BOQItem with auto-calculation of totalPrice |
-| `purchase-order` | Update PurchaseOrder |
-| `purchase-order-status` | Update status only |
-| `budget` | Update Budget with automatic variance calculation |
-| `defect` | Update Defect |
-| `defect-resolve` | Resolve defect (set status to 'Closed', set resolvedAt) |
-
-#### 6. New DELETE Endpoints (TASK 6)
-| Endpoint | Description |
-|----------|-------------|
-| `boq-item` | Delete BOQItem (with organization verification) |
-| `purchase-order` | Delete PurchaseOrder |
-| `budget` | Delete Budget |
-| `defect` | Delete Defect |
-
-#### Security Features Added:
-- All endpoints verify authentication before processing
-- All endpoints verify organization ownership before operations
-- Rate limiting on all GET, POST, PUT, DELETE handlers
-- Proper error handling with Arabic error messages
-- Version bump to 3.1.0
-
-#### Verification:
-- ✅ `npm run lint` passed without errors
-- ✅ All endpoints follow existing code style and patterns
+**تاريخ الإنجاز:** 2025-01-XX
+**الحالة:** ✅ تم إنهاء الجولة الثانية بنجاح

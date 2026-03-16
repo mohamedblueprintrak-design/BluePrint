@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import * as jose from 'jose';
+import { sendEmail } from '@/lib/email';
+import { emailTemplates } from '@/lib/email-templates';
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters');
 
@@ -139,7 +141,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { title, description, projectId, assignedToId, priority, dueDate, estimatedHours, tags } = body;
+    const { title, description, projectId, assignedToId, priority, dueDate, estimatedHours, tags, sendNotification } = body;
 
     if (!title) return errorResponse('عنوان المهمة مطلوب');
 
@@ -155,26 +157,95 @@ export async function POST(request: NextRequest) {
           dueDate: dueDate ? new Date(dueDate) : null,
           estimatedHours,
           tags: tags ? JSON.stringify(tags) : null
-        }
+        },
+        include: { project: true, assignee: true }
       });
 
       // Create notification for assignee
       if (assignedToId) {
-        await db.notification.create({
-          data: {
-            userId: assignedToId,
-            title: 'مهمة جديدة',
-            message: `تم تعيين مهمة: ${title}`,
-            notificationType: 'task',
-            referenceType: 'task',
-            referenceId: task.id
+        try {
+          await db.notification.create({
+            data: {
+              userId: assignedToId,
+              title: 'مهمة جديدة',
+              message: `تم تعيين مهمة: ${title}`,
+              notificationType: 'task',
+              referenceType: 'task',
+              referenceId: task.id
+            }
+          });
+        } catch (notifError) {
+          console.error('Failed to create task notification:', notifError);
+        }
+
+        // Send email notification if assignee has email
+        if (sendNotification !== false && task.assignee?.email) {
+          try {
+            // Check if assignee has email notifications enabled for tasks
+            const notificationSettings = await db.notificationSettings.findUnique({
+              where: { userId: assignedToId }
+            });
+
+            if (!notificationSettings || notificationSettings.emailTasks) {
+              const projectName = task.project?.name || 'غير محدد';
+              const formattedDueDate = dueDate 
+                ? new Date(dueDate).toLocaleDateString('ar-AE', { year: 'numeric', month: 'long', day: 'numeric' })
+                : undefined;
+
+              const emailTemplate = emailTemplates.taskAssigned(
+                task.assignee.fullName || task.assignee.username,
+                title,
+                projectName,
+                formattedDueDate,
+                priority
+              );
+
+              await sendEmail({
+                to: task.assignee.email,
+                subject: emailTemplate.subject,
+                html: emailTemplate.html,
+                text: emailTemplate.text
+              });
+            }
+          } catch (emailError) {
+            console.error('Failed to send task assignment email:', emailError);
+            // Don't fail the request if email fails
           }
-        });
+        }
       }
 
       return successResponse({ id: task.id, title: task.title });
     } catch (dbError) {
       // Demo mode
+      // Simulate email sending in demo mode
+      if (sendNotification !== false && assignedToId) {
+        try {
+          const assignee = await db.user.findUnique({ where: { id: assignedToId } });
+          if (assignee?.email) {
+            const formattedDueDate = dueDate 
+              ? new Date(dueDate).toLocaleDateString('ar-AE', { year: 'numeric', month: 'long', day: 'numeric' })
+              : undefined;
+
+            const emailTemplate = emailTemplates.taskAssigned(
+              assignee.fullName || assignee.username,
+              title,
+              'مشروع تجريبي',
+              formattedDueDate,
+              priority
+            );
+
+            await sendEmail({
+              to: assignee.email,
+              subject: emailTemplate.subject,
+              html: emailTemplate.html,
+              text: emailTemplate.text
+            });
+          }
+        } catch (emailError) {
+          console.error('Failed to send task assignment email (demo):', emailError);
+        }
+      }
+
       return successResponse({ 
         id: `demo-task-${Date.now()}`, 
         title,

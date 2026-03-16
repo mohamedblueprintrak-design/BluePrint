@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
-import { useDashboard, useProjects, useTasks, useInvoices, useClients } from '@/hooks/use-data';
+import { useDashboard, useProjects, useTasks, useInvoices, useClients, useExportReport, type ReportType } from '@/hooks/use-data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -328,12 +328,14 @@ export function ReportsPage() {
   const [customDateFrom, setCustomDateFrom] = useState<Date>();
   const [customDateTo, setCustomDateTo] = useState<Date>();
   const [showCustomDatePicker, setShowCustomDatePicker] = useState(false);
+  const [selectedReportType, setSelectedReportType] = useState<ReportType>('financial');
   
   const { data: dashboardData } = useDashboard();
   const { data: projectsData } = useProjects();
   const { data: tasksData } = useTasks();
   const { data: invoicesData } = useInvoices();
   const { data: clientsData } = useClients();
+  const exportReport = useExportReport();
   
   const stats = dashboardData?.data;
   const projects = projectsData?.data || [];
@@ -513,18 +515,36 @@ export function ReportsPage() {
   // Export handlers
   const handleExportPDF = async () => {
     setIsExporting(true);
-    // Simulate export
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsExporting(false);
-    // In real app, this would generate and download a PDF
+    try {
+      await exportReport.mutateAsync({
+        type: 'pdf',
+        report: selectedReportType,
+        startDate: customDateFrom?.toISOString().split('T')[0],
+        endDate: customDateTo?.toISOString().split('T')[0],
+        language,
+      });
+    } catch (error) {
+      console.error('Export failed:', error);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleExportExcel = async () => {
     setIsExporting(true);
-    // Simulate export
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsExporting(false);
-    // In real app, this would generate and download an Excel file
+    try {
+      await exportReport.mutateAsync({
+        type: 'excel',
+        report: selectedReportType,
+        startDate: customDateFrom?.toISOString().split('T')[0],
+        endDate: customDateTo?.toISOString().split('T')[0],
+        language,
+      });
+    } catch (error) {
+      console.error('Export failed:', error);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handlePrint = () => {
@@ -554,6 +574,21 @@ export function ReportsPage() {
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
+          {/* Report Type Selector */}
+          <Select value={selectedReportType} onValueChange={(value) => setSelectedReportType(value as ReportType)}>
+            <SelectTrigger className="w-[160px] bg-slate-800/50 border-slate-700 text-white">
+              <FileBarChart className="w-4 h-4 me-2 text-slate-400" />
+              <SelectValue placeholder={language === 'ar' ? 'نوع التقرير' : 'Report Type'} />
+            </SelectTrigger>
+            <SelectContent className="bg-slate-900 border-slate-800">
+              <SelectItem value="financial">{language === 'ar' ? 'التقرير المالي' : 'Financial Report'}</SelectItem>
+              <SelectItem value="projects">{language === 'ar' ? 'تقرير المشاريع' : 'Projects Report'}</SelectItem>
+              <SelectItem value="tasks">{language === 'ar' ? 'تقرير المهام' : 'Tasks Report'}</SelectItem>
+              <SelectItem value="clients">{language === 'ar' ? 'تقرير العملاء' : 'Clients Report'}</SelectItem>
+              <SelectItem value="invoices">{language === 'ar' ? 'تقرير الفواتير' : 'Invoices Report'}</SelectItem>
+            </SelectContent>
+          </Select>
+
           {/* Date Range Filter */}
           <Select value={dateRange} onValueChange={(value) => {
             setDateRange(value);

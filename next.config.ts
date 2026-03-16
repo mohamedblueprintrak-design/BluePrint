@@ -2,12 +2,22 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from '@sentry/nextjs';
 
 const nextConfig: NextConfig = {
-  // Enable experimental features
+  // Enable experimental features for bundle optimization
   experimental: {
-    // Enable server components
-    serverComponentsExternalPackages: ['@prisma/client'],
+    // Optimize package imports for tree-shaking
+    optimizePackageImports: ['lucide-react', 'recharts', '@radix-ui/react-tabs', '@radix-ui/react-toast'],
   },
-  
+
+  // Move serverExternalPackages from experimental (Next.js 15+)
+  serverExternalPackages: ['@prisma/client'],
+
+  // Modularize imports for lucide-react to enable tree-shaking
+  modularizeImports: {
+    'lucide-react': {
+      transform: 'lucide-react/dist/esm/icons/{{kebabCase name}}',
+    },
+  },
+
   // Image optimization
   images: {
     remotePatterns: [
@@ -17,7 +27,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  
+
   // Security headers
   async headers() {
     return [
