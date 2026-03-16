@@ -1,36 +1,261 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BluePrint SaaS Platform
 
-## Getting Started
+<p align="center">
+  <img src="public/logo.png" alt="BluePrint Logo" width="200"/>
+</p>
 
-First, run the development server:
+<p align="center">
+  <strong>نظام إدارة مكاتب الاستشارات الهندسية - منصة SaaS متكاملة</strong>
+</p>
+
+<p align="center">
+  <a href="https://github.com/mohamedblueprintrak-design/BluePrint/actions">
+    <img src="https://github.com/mohamedblueprintrak-design/BluePrint/workflows/CI/CD%20Pipeline/badge.svg" alt="CI/CD Pipeline"/>
+  </a>
+  <a href="https://github.com/mohamedblueprintrak-design/BluePrint/blob/main/LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"/>
+  </a>
+</p>
+
+---
+
+## 📋 نظرة عامة
+
+BluePrint هو نظام إدارة متكامل لمكاتب الاستشارات الهندسية، يوفر حلولاً شاملة لإدارة:
+
+- المشاريع والمهام
+- العملاء والموردين
+- الفواتير والعقود
+- المخازن والمواد
+- الموارد البشرية
+- التقارير والتحليلات
+
+## ✨ الميزات
+
+### 🏢 إدارة المنظمات
+- نظام اشتراكات متكامل (SaaS)
+- عزل البيانات بين المنظمات
+- إدارة الصلاحيات والأدوار
+
+### 📊 لوحة التحكم
+- إحصائيات شاملة
+- رسوم بيانية تفاعلية
+- تنبيهات وإشعارات
+
+### 👥 إدارة المستخدمين
+- نظام مصادقة JWT آمن
+- أدوار متعددة (مدير، مستخدم)
+- إدارة الصلاحيات
+
+### 📁 المشاريع
+- إدارة المشاريع الكاملة
+- جدول الكميات (BOQ)
+- تقارير الموقع
+- إدارة العيوب
+
+### 💰 المالية
+- الفواتير والعروض
+- العقود والاتفاقيات
+- المصروفات والميزانيات
+- السندات المحاسبية
+
+### 🏭 المخازن
+- إدارة المواد
+- المخزون والحد الأدنى
+- أوامر الشراء
+- الموردين
+
+### 👔 الموارد البشرية
+- الحضور والانصراف
+- طلبات الإجازة
+- شهادات الموظفين
+
+### 🤖 الذكاء الاصطناعي
+- مساعد ذكي للاستفسارات
+- تحليل البيانات
+- اقتراحات مخصصة
+
+## 🚀 التقنيات المستخدمة
+
+- **Frontend**: Next.js 15, React 19, TypeScript
+- **Styling**: Tailwind CSS 4, shadcn/ui
+- **Database**: PostgreSQL, Prisma ORM
+- **Authentication**: JWT (jose), bcryptjs
+- **State Management**: TanStack Query (React Query)
+- **Testing**: Jest, React Testing Library
+- **Monitoring**: Sentry
+- **Deployment**: Vercel
+
+## 📦 التثبيت
+
+### المتطلبات
+
+- Node.js 20+
+- PostgreSQL 14+
+- npm أو yarn أو pnpm
+
+### خطوات التثبيت
+
+1. **استنساخ المستودع**
+
+```bash
+git clone https://github.com/mohamedblueprintrak-design/BluePrint.git
+cd BluePrint
+```
+
+2. **تثبيت الاعتماديات**
+
+```bash
+npm install
+```
+
+3. **إعداد متغيرات البيئة**
+
+```bash
+cp .env.example .env
+# قم بتحرير .env وإضافة قيمك
+```
+
+4. **إعداد قاعدة البيانات**
+
+```bash
+npx prisma migrate dev
+npx prisma generate
+```
+
+5. **تهيئة البيانات (اختياري)**
+
+```bash
+npm run seed
+```
+
+6. **تشغيل التطبيق**
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+افتح [http://localhost:3000](http://localhost:3000) في المتصفح.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🧪 الاختبارات
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# تشغيل جميع الاختبارات
+npm test
 
-## Learn More
+# تشغيل الاختبارات في وضع المراقبة
+npm run test:watch
 
-To learn more about Next.js, take a look at the following resources:
+# توليد تقرير التغطية
+npm run test:coverage
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📁 هيكل المشروع
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+blueprint/
+├── .github/
+│   └── workflows/        # GitHub Actions CI/CD
+├── prisma/
+│   ├── schema.prisma     # نموذج قاعدة البيانات
+│   └── seed.ts           # بيانات أولية
+├── public/               # الملفات الثابتة
+├── src/
+│   ├── app/              # Next.js App Router
+│   │   ├── api/          # API Routes
+│   │   ├── page.tsx      # الصفحة الرئيسية
+│   │   └── layout.tsx    # تخطيط التطبيق
+│   ├── components/       # مكونات React
+│   │   ├── ui/           # مكونات shadcn/ui
+│   │   └── ...           # مكونات المشروع
+│   ├── hooks/            # React Hooks
+│   │   └── queries/      # TanStack Query hooks
+│   ├── lib/              # Utilities
+│   │   ├── db.ts         # Prisma Client
+│   │   ├── env.ts        # Environment validation
+│   │   └── translations.ts # الترجمات
+│   ├── providers/        # React Providers
+│   │   └── query-provider.tsx # TanStack Query Provider
+│   └── types/            # TypeScript types
+├── .env.example          # نموذج متغيرات البيئة
+├── .gitignore           # ملفات Git المستبعدة
+├── jest.config.ts       # إعداد Jest
+├── next.config.ts       # إعداد Next.js
+├── package.json         # اعتماديات المشروع
+├── tailwind.config.ts   # إعداد Tailwind CSS
+└── tsconfig.json        # إعداد TypeScript
+```
 
-## Deploy on Vercel
+## 🔐 متغيرات البيئة
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| المتغير | الوصف | مطلوب |
+|---------|-------|-------|
+| `DATABASE_URL` | رابط قاعدة البيانات | ✅ |
+| `DIRECT_DATABASE_URL` | رابط مباشر لقاعدة البيانات | ✅ |
+| `JWT_SECRET` | مفتاح JWT (32+ حرف) | ✅ |
+| `JWT_EXPIRES_IN` | مدة صلاحية JWT | ❌ |
+| `NEXT_PUBLIC_APP_URL` | رابط التطبيق | ❌ |
+| `SENTRY_DSN` | رابط Sentry | ❌ |
+| `OPENAI_API_KEY` | مفتاح OpenAI | ❌ |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🔒 الأمان
+
+- ✅ تشفير كلمات المرور بـ bcryptjs
+- ✅ JWT tokens للمصادقة
+- ✅ Rate limiting (100 طلب/دقيقة)
+- ✅ Organization isolation
+- ✅ CORS protection
+- ✅ Security headers
+
+## 🚢 النشر
+
+### Vercel (موصى به)
+
+1. اربط المستودع بـ Vercel
+2. أضف متغيرات البيئة في إعدادات المشروع
+3. انشر!
+
+```bash
+npm i -g vercel
+vercel --prod
+```
+
+### Docker
+
+```bash
+docker build -t blueprint .
+docker run -p 3000:3000 blueprint
+```
+
+## 🤝 المساهمة
+
+نرحب بمساهماتكم! يرجى اتباع الخطوات التالية:
+
+1. انسخ المستودع (Fork)
+2. أنشئ فرعاً جديداً (`git checkout -b feature/amazing-feature`)
+3. أجرِ تغييراتك (`git commit -m 'Add amazing feature'`)
+4. ادفع الفرع (`git push origin feature/amazing-feature`)
+5. افتح Pull Request
+
+## 📄 الترخيص
+
+هذا المشروع مرخص بموجب [MIT License](LICENSE).
+
+## 👨‍💻 المطور
+
+**Mohamed BluePrint**
+
+- GitHub: [@mohamedblueprintrak-design](https://github.com/mohamedblueprintrak-design)
+
+## 🙏 الشكر
+
+- [Next.js](https://nextjs.org/)
+- [Prisma](https://prisma.io/)
+- [shadcn/ui](https://ui.shadcn.com/)
+- [Tailwind CSS](https://tailwindcss.com/)
+
+---
+
+<p align="center">
+  Made with ❤️ in UAE
+</p>
