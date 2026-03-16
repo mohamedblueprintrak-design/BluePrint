@@ -6,8 +6,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
 }
 
 // ============================================
@@ -46,6 +47,8 @@ model Organization {
   settings       OrganizationSetting[]
   subscriptions  Subscription[]
   integrations   Integration[]
+  vouchers       Voucher[]
+  certificates   Certificate[]
 }
 
 model Subscription {
@@ -152,8 +155,8 @@ model User {
   auditLogs       AuditLog[]
   apiKeys         ApiKey[]
   sessions        Session[]
-  comments        Comment[]
   activities      Activity[]
+  comments        Comment[]
 }
 
 model Session {
@@ -264,8 +267,8 @@ model Project {
   proposals           Proposal[]
   siteVisits          SiteVisit[]
   milestones          ProjectMilestone[]
-  comments            Comment[]
   activities          Activity[]
+  certificates        Certificate[]
 }
 
 model ProjectMilestone {
@@ -704,7 +707,6 @@ model Task {
   assignee      User?     @relation("TaskAssignee", fields: [assignedToId], references: [id])
   creator       User?     @relation("TaskCreator", fields: [createdById], references: [id])
   subtasks      SubTask[]
-  comments      Comment[]
 }
 
 model SubTask {
@@ -841,8 +843,6 @@ model Comment {
   updatedAt     DateTime  @updatedAt
 
   user          User      @relation(fields: [userId], references: [id])
-  project       Project?  @relation(fields: [entityId], references: [id])
-  task          Task?     @relation(fields: [entityId], references: [id])
 }
 
 // ============================================
@@ -1009,6 +1009,8 @@ model Voucher {
   organizationId  String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+
+  organization    Organization? @relation(fields: [organizationId], references: [id])
 }
 
 // ============================================
@@ -1034,4 +1036,7 @@ model Certificate {
   organizationId    String?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
+
+  organization      Organization? @relation(fields: [organizationId], references: [id])
+  project           Project   @relation(fields: [projectId], references: [id])
 }

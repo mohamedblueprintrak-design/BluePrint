@@ -1462,6 +1462,69 @@ export async function POST(request: NextRequest) {
         return successResponse({ id: certificate.id, certificateNumber });
       }
 
+      case 'seed': {
+        // Create default organization and admin user if they don't exist
+        // This is useful for Vercel deployment where we can't run seed scripts
+        const existingOrg = await db.organization.findFirst();
+        
+        if (existingOrg) {
+          return successResponse({ 
+            message: 'البيانات موجودة بالفعل', 
+            organizationId: existingOrg.id,
+            login: 'admin / admin123'
+          });
+        }
+
+        // Create organization
+        const org = await db.organization.create({
+          data: {
+            name: 'BluePrint Engineering',
+            slug: 'blueprint-eng',
+            email: 'info@blueprint.ae',
+            currency: 'AED',
+            timezone: 'Asia/Dubai',
+            locale: 'ar',
+          }
+        });
+
+        // Create admin user
+        const hashedPassword = await bcrypt.hash('admin123', 10);
+        const admin = await db.user.create({
+          data: {
+            username: 'admin',
+            email: 'admin@blueprint.ae',
+            password: hashedPassword,
+            fullName: 'مدير النظام',
+            role: 'admin',
+            isActive: true,
+            organizationId: org.id,
+          }
+        });
+
+        // Create a Plan for subscriptions
+        const plan = await db.plan.create({
+          data: {
+            name: 'Enterprise',
+            slug: 'enterprise',
+            description: 'خطة المؤسسات - جميع الميزات',
+            price: 500,
+            currency: 'AED',
+            interval: 'month',
+            features: JSON.stringify(['unlimited_projects', 'unlimited_users', 'ai_assistant', 'reports', 'api_access']),
+            limits: JSON.stringify({ projects: -1, users: -1, storage: 100 }),
+            isActive: true,
+          }
+        });
+
+        return successResponse({ 
+          message: 'تم إنشاء البيانات الأولية بنجاح',
+          organizationId: org.id,
+          adminId: admin.id,
+          planId: plan.id,
+          login: 'admin / admin123'
+        });
+      }
+
       case 'ai-chat': {
         if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
         const { message, model = 'gemini', conversationHistory = [] } = body;
