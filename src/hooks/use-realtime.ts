@@ -3,9 +3,12 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useAuth } from '@/context/auth-context';
 import { useQueryClient } from '@tanstack/react-query';
-import { Notification, NotificationType } from '@/types';
+import type { Notification as NotificationType, NotificationType as NotifType } from '@/types';
 
-interface RealtimeNotification extends Notification {
+// التحقق من بيئة المتصفح
+const isBrowser = typeof window !== 'undefined';
+
+interface RealtimeNotification extends NotificationType {
   timestamp?: string;
 }
 
@@ -25,7 +28,7 @@ interface RealtimeState {
 }
 
 // رسائل الإشعارات بالعربية
-const NOTIFICATION_MESSAGES: Record<NotificationType, { title: string; icon: string }> = {
+const NOTIFICATION_MESSAGES: Record<NotifType, { title: string; icon: string }> = {
   task_assigned: { title: 'مهمة جديدة', icon: '📋' },
   task_completed: { title: 'مهمة مكتملة', icon: '✅' },
   task_due_soon: { title: 'موعد مهمة قريب', icon: '⏰' },
@@ -45,6 +48,25 @@ const NOTIFICATION_MESSAGES: Record<NotificationType, { title: string; icon: str
   approval_required: { title: 'يتطلب موافقة', icon: '✋' },
 };
 
+// إظهار إشعار المتصفح (دالة مستقلة)
+function showBrowserNotification(notification: RealtimeNotification) {
+  if (!isBrowser || !('Notification' in window)) return;
+  
+  // استخدام window.Notification للتفريق بين API والنوع
+  const BrowserNotification = window.Notification;
+  
+  if (BrowserNotification.permission === 'granted') {
+    const notifInfo = NOTIFICATION_MESSAGES[notification.notificationType] || NOTIFICATION_MESSAGES.system;
+    
+    new BrowserNotification(`${notifInfo.icon} ${notification.title}`, {
+      body: notification.message || '',
+      icon: '/logo.svg',
+      tag: notification.id,
+      requireInteraction: notification.priority === 'urgent'
+    });
+  }
+}
+
 export function useRealtime(options: UseRealtimeOptions = {}) {
   const {
     onNotification,
@@ -58,7 +80,7 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
   const queryClient = useQueryClient();
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectAttemptsRef = useRef(0);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [state, setState] = useState<RealtimeState>({
     isConnected: false,
@@ -69,7 +91,9 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
 
   // معالجة الأحداث الواردة
   const handleEvent = useCallback((event: MessageEvent) => {
-    const eventType = event.type || event.event;
+    if (!isBrowser) return;
+    
+    const eventType = (event as any).event || 'message';
     
     try {
       const data = JSON.parse(event.data);
@@ -120,25 +144,10 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
     }
   }, [onNotification, onUnreadCountChange, queryClient]);
 
-  // إظهار إشعار المتصفح
-  const showBrowserNotification = useCallback((notification: RealtimeNotification) => {
-    if (typeof window === 'undefined' || !('Notification' in window)) return;
-    
-    if (Notification.permission === 'granted') {
-      const notifInfo = NOTIFICATION_MESSAGES[notification.notificationType] || NOTIFICATION_MESSAGES.system;
-      
-      new Notification(`${notifInfo.icon} ${notification.title}`, {
-        body: notification.message || '',
-        icon: '/logo.svg',
-        tag: notification.id,
-        requireInteraction: notification.priority === 'urgent'
-      });
-    }
-  }, []);
-
   // إنشاء اتصال SSE
   const connect = useCallback(() => {
-    if (!token || !enabled) return;
+    // التحقق من بيئة المتصفح
+    if (!isBrowser || !token || !enabled) return;
     
     // إغلاق الاتصال السابق إذا كان موجوداً
     if (eventSourceRef.current) {
@@ -146,8 +155,7 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
     }
 
     try {
-      // إنشاء اتصال SSE مع التوكن في الرأس
-      // ملاحظة: EventSource لا يدعم headers، لذا سنستخدم معامل query
+      // إنشاء اتصال SSE مع التوكن في query parameter
       const url = `/api/notifications/stream?token=${encodeURIComponent(token)}`;
       const eventSource = new EventSource(url, {
         withCredentials: true
@@ -166,12 +174,12 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
       eventSource.addEventListener('unread_count', handleEvent);
       eventSource.addEventListener('heartbeat', handleEvent);
 
-      eventSource.onerror = (error) => {
-        console.error('خطأ في اتصال SSE:', error);
+      eventSource.onerror = () => {
+        console.error('خطأ في اتصال SSE');
         setState(prev => ({ 
           ...prev, 
           isConnected: false, 
-          error: 'فقدان الاتصال ب系统中 الإشعارات' 
+          error: 'فقدان الاتصال بنظام الإشعارات' 
         }));
         
         eventSource.close();
@@ -218,24 +226,28 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
 
   // طلب إذن الإشعارات
   const requestNotificationPermission = useCallback(async () => {
-    if (typeof window === 'undefined' || !('Notification' in window)) {
+    if (!isBrowser || !('Notification' in window)) {
       return false;
     }
     
-    if (Notification.permission === 'granted') {
+    const BrowserNotification = window.Notification;
+    
+    if (BrowserNotification.permission === 'granted') {
       return true;
     }
     
-    if (Notification.permission !== 'denied') {
-      const permission = await Notification.requestPermission();
+    if (BrowserNotification.permission !== 'denied') {
+      const permission = await BrowserNotification.requestPermission();
       return permission === 'granted';
     }
     
     return false;
   }, []);
 
-  // إنشاء اتصال عند تحميل المكون
+  // إنشاء اتصال عند تحميل المكون (فقط في المتصفح)
   useEffect(() => {
+    if (!isBrowser) return;
+    
     if (token && enabled) {
       connect();
     }

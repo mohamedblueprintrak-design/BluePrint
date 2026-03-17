@@ -25,9 +25,16 @@ export async function POST(request: NextRequest) {
   const signature = request.headers.get('stripe-signature') || '';
 
   // Verify webhook signature
-  let event: Stripe.Event;
+  let event: Stripe.Event | null;
   try {
     event = constructWebhookEvent(body, signature);
+    if (!event) {
+      console.error('Webhook signature verification failed: null event');
+      return NextResponse.json(
+        { error: 'Webhook signature verification failed' },
+        { status: 400 }
+      );
+    }
   } catch (err) {
     console.error('Webhook signature verification failed:', err);
     return NextResponse.json(
@@ -92,27 +99,38 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   }
 
   try {
-    // Update or create subscription record
-    await db.subscription.upsert({
+    // Try to find existing subscription
+    const existingSubscription = await db.subscription.findFirst({
       where: {
         stripeSubscriptionId: session.subscription as string,
       },
-      update: {
-        status: 'active',
-        currentPeriodStart: new Date(),
-        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-      },
-      create: {
-        organizationId,
-        planId,
-        status: 'active',
-        stripeSubscriptionId: session.subscription as string,
-        stripeCustomerId: session.customer as string,
-        stripePaymentIntentId: session.payment_intent as string,
-        currentPeriodStart: new Date(),
-        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      },
     });
+
+    if (existingSubscription) {
+      // Update existing subscription
+      await db.subscription.update({
+        where: { id: existingSubscription.id },
+        data: {
+          status: 'active',
+          currentPeriodStart: new Date(),
+          currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+        },
+      });
+    } else {
+      // Create new subscription
+      await db.subscription.create({
+        data: {
+          organizationId,
+          planId,
+          status: 'active',
+          stripeSubscriptionId: session.subscription as string,
+          stripeCustomerId: session.customer as string,
+          stripePaymentIntentId: session.payment_intent as string,
+          currentPeriodStart: new Date(),
+          currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
+      });
+    }
 
     // Update organization subscription status
     await db.organization.update({
@@ -150,6 +168,9 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   const { organizationId } = subscription.metadata || {};
   const status = mapStripeStatus(subscription.status);
+  
+  // Access properties safely
+  const sub = subscription as any;
 
   try {
     // Update subscription in database
@@ -159,9 +180,9 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       },
       data: {
         status,
-        currentPeriodStart: new Date(subscription.current_period_start * 1000),
-        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-        cancelAtPeriodEnd: subscription.cancel_at_period_end,
+        currentPeriodStart: new Date(sub.current_period_start * 1000),
+        currentPeriodEnd: new Date(sub.current_period_end * 1000),
+        cancelAtPeriodEnd: sub.cancel_at_period_end,
       },
     });
 
@@ -216,7 +237,8 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
  * Handle invoice.paid event
  */
 async function handleInvoicePaid(invoice: Stripe.Invoice) {
-  const subscriptionId = invoice.subscription as string;
+  const inv = invoice as any;
+  const subscriptionId = inv.subscription as string;
 
   try {
     // Create payment record
@@ -226,7 +248,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
         amount: invoice.amount_paid / 100, // Convert from cents
         currency: invoice.currency.toUpperCase(),
         status: 'succeeded',
-        stripePaymentIntentId: invoice.payment_intent as string,
+        stripePaymentIntentId: inv.payment_intent as string,
         stripeInvoiceId: invoice.id,
         receiptUrl: invoice.hosted_invoice_url || undefined,
         description: `Invoice ${invoice.number}`,
@@ -244,14 +266,15 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
  * Handle invoice.payment_failed event
  */
 async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
-  const { organizationId } = (invoice as any).metadata || {};
+  const inv = invoice as any;
+  const { organizationId } = inv.metadata || {};
 
   try {
     // Update subscription status to past_due
-    if (invoice.subscription) {
+    if (inv.subscription) {
       await db.subscription.updateMany({
         where: {
-          stripeSubscriptionId: invoice.subscription as string,
+          stripeSubscriptionId: inv.subscription as string,
         },
         data: {
           status: 'past_due',

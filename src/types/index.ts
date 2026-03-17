@@ -30,7 +30,7 @@ export interface User {
   organization?: Organization;
 }
 
-export type UserRole = 'admin' | 'engineer' | 'accountant' | 'hr' | 'project_manager' | 'viewer';
+export type UserRole = 'admin' | 'manager' | 'engineer' | 'accountant' | 'hr' | 'project_manager' | 'viewer';
 
 export interface Session {
   id: string;

@@ -38,11 +38,11 @@ export async function GET(request: NextRequest) {
     
     const orders = await db.purchaseOrder.findMany({
       where: whereClause,
-      include: { supplier: { select: { name: true } }, items: true },
+      include: { items: true },
       orderBy: { createdAt: 'desc' }
     });
     
-    return success(orders.map((o: any) => ({ ...o, supplierName: o.supplier?.name })));
+    return success(orders);
   } catch (e) {
     console.log('Purchase orders fetch error:', e);
     let filtered = DEMO_PURCHASE_ORDERS;

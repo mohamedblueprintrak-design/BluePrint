@@ -25,8 +25,17 @@ export async function GET(request: NextRequest) {
   const user = await getUser(request);
   if (!user) return error('غير مصرح', 'UNAUTHORIZED', 401);
   try {
-    const docs = await db.document.findMany({ include: { uploader: true }, orderBy: { createdAt: 'desc' }, take: 50 });
-    return success(docs.map(d => ({ ...d, uploader: d.uploader?.fullName || d.uploader?.username })));
+    const docs = await db.document.findMany({ orderBy: { createdAt: 'desc' }, take: 50 });
+    
+    // جلب بيانات المستخدمين الذين رفعوا المستندات
+    const uploaderIds = [...new Set(docs.map(d => d.uploadedBy).filter(Boolean))] as string[];
+    const uploaders = await db.user.findMany({ where: { id: { in: uploaderIds } } });
+    const uploaderMap = new Map(uploaders.map(u => [u.id, u.fullName || u.username]));
+    
+    return success(docs.map(d => ({ 
+      ...d, 
+      uploaderName: d.uploadedBy ? uploaderMap.get(d.uploadedBy) || 'غير معروف' : null 
+    })));
   } catch { return success(DEMO_DOCS); }
 }
 
@@ -36,9 +45,9 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     try {
-      const doc = await db.document.create({ data: { ...body, uploadedById: user.id } });
-      return success({ id: doc.id, filename: doc.filename });
-    } catch { return success({ id: `demo-doc-${Date.now()}`, filename: body.filename || 'ملف جديد' }); }
+      const doc = await db.document.create({ data: { ...body, uploadedBy: user.id } });
+      return success({ id: doc.id, fileName: doc.fileName });
+    } catch { return success({ id: `demo-doc-${Date.now()}`, fileName: body.fileName || 'ملف جديد' }); }
   } catch (e: any) { return error(e.message, "SERVER_ERROR", 500); }
 }
 
@@ -47,6 +56,7 @@ export async function DELETE(request: NextRequest) {
   if (!user) return error('غير مصرح', 'UNAUTHORIZED', 401);
   try {
     const id = new URL(request.url).searchParams.get('id');
+    if (!id) return error('معرف المستند مطلوب');
     try { await db.document.delete({ where: { id } }); } catch {}
     return success({ message: 'تم الحذف' });
   } catch (e: any) { return error(e.message, "SERVER_ERROR", 500); }

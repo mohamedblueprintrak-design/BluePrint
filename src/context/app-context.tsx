@@ -104,7 +104,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsedState] = useState(() => {
-    const value = getInitialValue(STORAGE_KEYS.sidebarCollapsed, 'false');
+    const value = getInitialValue<string>(STORAGE_KEYS.sidebarCollapsed, 'false');
     return value === 'true';
   });
   

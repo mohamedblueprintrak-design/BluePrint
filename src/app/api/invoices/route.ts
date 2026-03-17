@@ -87,12 +87,13 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const where: any = { organizationId: user.organizationId };
       if (status) where.status = status;
 
       const invoices = await db.invoice.findMany({
         where,
-        include: { client: true, project: true },
+        include: { client: true },
         orderBy: { createdAt: 'desc' }
       });
 
@@ -102,12 +103,12 @@ export async function GET(request: NextRequest) {
         clientId: i.clientId,
         client: i.client?.name,
         projectId: i.projectId,
-        project: i.project?.name,
-        items: i.items ? JSON.parse(i.items as string) : [],
+        project: null,
+        items: [], // لا يوجد حقل items في الـ schema
         subtotal: i.subtotal,
         taxRate: i.taxRate,
         taxAmount: i.taxAmount,
-        discountAmount: i.discountAmount,
+        discountAmount: 0, // لا يوجد حقل discountAmount
         total: i.total,
         paidAmount: i.paidAmount,
         status: i.status,
@@ -135,29 +136,26 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { clientId, projectId, items, subtotal, taxRate, discountAmount, dueDate, notes, terms, sendNotification } = body;
+    const { clientId, projectId, subtotal, taxRate, dueDate, notes, sendNotification } = body;
 
     try {
       const count = await db.invoice.count({ where: { organizationId: user.organizationId } });
       const invoiceNumber = `INV-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
       
-      const taxAmount = (subtotal || 0) * (taxRate || 5) / 100;
-      const total = (subtotal || 0) + taxAmount - (discountAmount || 0);
+      const calculatedTaxAmount = (subtotal || 0) * (taxRate || 5) / 100;
+      const total = (subtotal || 0) + calculatedTaxAmount;
 
       const invoice = await db.invoice.create({
         data: {
           invoiceNumber,
           clientId,
           projectId,
-          items: JSON.stringify(items || []),
           subtotal: subtotal || 0,
           taxRate: taxRate || 5,
-          taxAmount,
-          discountAmount: discountAmount || 0,
+          taxAmount: calculatedTaxAmount,
           total,
-          dueDate: dueDate ? new Date(dueDate) : null,
+          dueDate: dueDate ? new Date(dueDate) : undefined,
           notes,
-          terms,
           issueDate: new Date(),
           organizationId: user.organizationId
         },
@@ -201,8 +199,8 @@ export async function POST(request: NextRequest) {
     } catch (_dbError) {
       // Demo mode
       const invoiceNumber = `INV-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`;
-      const taxAmount = (subtotal || 0) * (taxRate || 5) / 100;
-      const total = (subtotal || 0) + taxAmount - (discountAmount || 0);
+      const calculatedTaxAmount = (subtotal || 0) * (taxRate || 5) / 100;
+      const total = (subtotal || 0) + calculatedTaxAmount;
 
       // In demo mode, simulate email sending
       if (sendNotification !== false && clientId) {

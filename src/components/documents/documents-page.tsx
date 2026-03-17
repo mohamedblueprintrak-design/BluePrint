@@ -249,6 +249,10 @@ export function DocumentsPage() {
 
       // Step 2: Create document record in database
       const fileData = uploadResult.data;
+      if (!fileData) {
+        throw new Error('Upload succeeded but no file data returned');
+      }
+      
       const tags = uploadForm.tags ? uploadForm.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
       
       const documentData: CreateDocumentData = {

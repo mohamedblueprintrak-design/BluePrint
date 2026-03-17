@@ -25,8 +25,12 @@ export async function GET(request: NextRequest) {
   const user = await getUser(request);
   if (!user) return error('غير مصرح', 'UNAUTHORIZED', 401);
   try {
-    const data = await db.proposal.findMany({ where: { organizationId: user.organizationId }, include: { client: true }, orderBy: { createdAt: 'desc' } });
-    return success(data.map(p => ({ ...p, client: p.client?.name })));
+    const data = await db.proposal.findMany({ 
+      where: { organizationId: user.organizationId }, 
+      include: { items: true }, 
+      orderBy: { createdAt: 'desc' } 
+    });
+    return success(data);
   } catch { return success(DEMO_PROPOSALS); }
 }
 
@@ -59,6 +63,7 @@ export async function DELETE(request: NextRequest) {
   if (!user) return error('غير مصرح', 'UNAUTHORIZED', 401);
   try {
     const id = new URL(request.url).searchParams.get('id');
+    if (!id) return error('معرف العرض مطلوب');
     try { await db.proposal.delete({ where: { id } }); } catch {}
     return success({ message: 'تم الحذف' });
   } catch (e: any) { return error(e.message, "SERVER_ERROR", 500); }

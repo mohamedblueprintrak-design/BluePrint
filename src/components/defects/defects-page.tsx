@@ -50,17 +50,17 @@ const STATUS_OPTIONS = [
 interface Defect {
   id: string;
   title: string;
-  description: string;
+  description?: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
   status: 'Open' | 'In_Progress' | 'Resolved' | 'Closed';
-  location: string;
+  location?: string;
   projectId: string;
-  projectName: string;
-  assignedTo: string;
+  projectName?: string;
+  assignedTo?: string;
   imageId?: string;
-  resolvedAt?: string;
+  resolvedAt?: string | Date;
   resolutionNotes?: string;
-  createdAt: string;
+  createdAt: string | Date;
 }
 
 export function DefectsPage() {

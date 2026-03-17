@@ -60,6 +60,7 @@ export async function DELETE(request: NextRequest) {
   if (!user) return error('غير مصرح', 'UNAUTHORIZED', 401);
   try {
     const id = new URL(request.url).searchParams.get('id');
+    if (!id) return error('معرف المادة مطلوب');
     try { await db.material.update({ where: { id }, data: { isActive: false } }); } catch {}
     return success({ message: 'تم الحذف' });
   } catch (e: any) { return error(e.message, "SERVER_ERROR", 500); }

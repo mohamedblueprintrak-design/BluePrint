@@ -77,12 +77,12 @@ export function AdminPage() {
   const deleteUser = useDeleteUser();
   
   // Extract users from response
-  const users = usersResponse?.success ? usersResponse.data : [];
+  const users = usersResponse?.success ? (usersResponse.data ?? []) : [];
   const dashboard = dashboardResponse?.success ? dashboardResponse.data : null;
   
   // Calculate stats from real data
-  const totalUsers = users.length;
-  const activeUsers = users.filter((u: AdminUser) => u.isActive).length;
+  const totalUsers = users?.length ?? 0;
+  const activeUsers = (users ?? []).filter((u: AdminUser) => u.isActive).length;
   const inactiveUsers = totalUsers - activeUsers;
   
   // State

@@ -94,7 +94,8 @@ export async function POST(request: NextRequest) {
       }
 
       // Try database first, fall back to demo users
-      let foundUser = null;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let foundUser: any = null;
       
       try {
         const { db } = await import('@/lib/db');

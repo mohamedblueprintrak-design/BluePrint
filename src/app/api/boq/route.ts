@@ -8,7 +8,7 @@ async function getUser(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
   const tokenCookie = request.cookies.get('bp_token')?.value;
   
-  let token = null;
+  let token: string | null = null;
   if (authHeader?.startsWith('Bearer ')) {
     token = authHeader.substring(7);
   } else if (tokenCookie) {

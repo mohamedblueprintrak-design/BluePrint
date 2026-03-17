@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import * as jose from 'jose';
-import { sendEmail } from '@/lib/email';
-import { emailTemplates } from '@/lib/email-templates';
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters');
 
@@ -43,8 +41,7 @@ const DEMO_TASKS = [
     description: 'مراجعة المخططات المعمارية للمشروع',
     projectId: 'demo-project-001',
     project: 'برج الأعمال',
-    assignedToId: null,
-    assignee: null,
+    assignedTo: null,
     priority: 'high',
     status: 'in_progress',
     dueDate: new Date('2025-02-01'),
@@ -57,8 +54,7 @@ const DEMO_TASKS = [
     description: 'تحضير التقرير الأسبوعي للمشروع',
     projectId: 'demo-project-001',
     project: 'برج الأعمال',
-    assignedToId: null,
-    assignee: null,
+    assignedTo: null,
     priority: 'medium',
     status: 'todo',
     dueDate: new Date('2025-01-30'),
@@ -71,8 +67,7 @@ const DEMO_TASKS = [
     description: 'التحقق من تقدم أعمال المقاول',
     projectId: 'demo-project-002',
     project: 'مجمع الفيلات',
-    assignedToId: null,
-    assignee: null,
+    assignedTo: null,
     priority: 'urgent',
     status: 'todo',
     dueDate: new Date('2025-01-28'),
@@ -102,7 +97,7 @@ export async function GET(request: NextRequest) {
 
       const tasks = await db.task.findMany({
         where,
-        include: { project: true, assignee: true },
+        include: { project: true },
         orderBy: { createdAt: 'desc' }
       });
 
@@ -112,8 +107,7 @@ export async function GET(request: NextRequest) {
         description: t.description,
         projectId: t.projectId,
         project: t.project?.name,
-        assignedToId: t.assignedToId,
-        assignee: t.assignee?.fullName || t.assignee?.username,
+        assignedTo: t.assignedTo,
         priority: t.priority,
         status: t.status,
         dueDate: t.dueDate,
@@ -122,9 +116,9 @@ export async function GET(request: NextRequest) {
         actualHours: t.actualHours,
         createdAt: t.createdAt
       })));
-    } catch (_dbError) {
+    } catch {
       // Demo mode
-      let tasks = DEMO_TASKS;
+      let tasks = [...DEMO_TASKS];
       if (status) tasks = tasks.filter(t => t.status === status);
       if (priority) tasks = tasks.filter(t => t.priority === priority);
       return successResponse(tasks);
@@ -141,7 +135,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { title, description, projectId, assignedToId, priority, dueDate, estimatedHours, tags, sendNotification } = body;
+    const { title, description, projectId, assignedTo, priority, dueDate, estimatedHours } = body;
 
     if (!title) return errorResponse('عنوان المهمة مطلوب');
 
@@ -151,22 +145,20 @@ export async function POST(request: NextRequest) {
           title,
           description,
           projectId,
-          assignedToId,
-          createdById: user.id,
+          assignedTo,
           priority: priority || 'medium',
           dueDate: dueDate ? new Date(dueDate) : null,
           estimatedHours,
-          tags: tags ? JSON.stringify(tags) : null
         },
-        include: { project: true, assignee: true }
+        include: { project: true }
       });
 
       // Create notification for assignee
-      if (assignedToId) {
+      if (assignedTo) {
         try {
           await db.notification.create({
             data: {
-              userId: assignedToId,
+              userId: assignedTo,
               title: 'مهمة جديدة',
               message: `تم تعيين مهمة: ${title}`,
               notificationType: 'task',
@@ -177,80 +169,11 @@ export async function POST(request: NextRequest) {
         } catch (notifError) {
           console.error('Failed to create task notification:', notifError);
         }
-
-        // Send email notification if assignee has email
-        if (sendNotification !== false && task.assignee?.email) {
-          try {
-            // Check if assignee has email notifications enabled for tasks
-            const notificationSettings = await (db as any).notificationSettings?.findUnique({
-              where: { userId: assignedToId }
-            });
-
-            if (!notificationSettings || notificationSettings.emailTasks) {
-              const projectName = task.project?.name || 'غير محدد';
-              const formattedDueDate = dueDate 
-                ? new Date(dueDate).toLocaleDateString('ar-AE', { year: 'numeric', month: 'long', day: 'numeric' })
-                : undefined;
-
-              const emailTemplate = emailTemplates.taskAssigned(
-                task.assignee.fullName || task.assignee.username,
-                title,
-                projectName,
-                formattedDueDate,
-                priority
-              );
-
-              await sendEmail({
-                to: task.assignee.email,
-                subject: emailTemplate.subject,
-                html: emailTemplate.html,
-                text: emailTemplate.text
-              });
-            }
-          } catch (emailError) {
-            console.error('Failed to send task assignment email:', emailError);
-            // Don't fail the request if email fails
-          }
-        }
       }
 
       return successResponse({ id: task.id, title: task.title });
-    } catch (_dbError) {
-      // Demo mode
-      // Simulate email sending in demo mode
-      if (sendNotification !== false && assignedToId) {
-        try {
-          const assignee = await db.user.findUnique({ where: { id: assignedToId } });
-          if (assignee?.email) {
-            const formattedDueDate = dueDate 
-              ? new Date(dueDate).toLocaleDateString('ar-AE', { year: 'numeric', month: 'long', day: 'numeric' })
-              : undefined;
-
-            const emailTemplate = emailTemplates.taskAssigned(
-              assignee.fullName || assignee.username,
-              title,
-              'مشروع تجريبي',
-              formattedDueDate,
-              priority
-            );
-
-            await sendEmail({
-              to: assignee.email,
-              subject: emailTemplate.subject,
-              html: emailTemplate.html,
-              text: emailTemplate.text
-            });
-          }
-        } catch (emailError) {
-          console.error('Failed to send task assignment email (demo):', emailError);
-        }
-      }
-
-      return successResponse({ 
-        id: `demo-task-${Date.now()}`, 
-        title,
-        message: 'تم إنشاء المهمة (وضع تجريبي)'
-      });
+    } catch {
+      return successResponse({ id: `demo-task-${Date.now()}`, title });
     }
   } catch (error: any) {
     return errorResponse(error.message, 'SERVER_ERROR', 500);
@@ -291,7 +214,7 @@ export async function PUT(request: NextRequest) {
         data
       });
       return successResponse(task);
-    } catch (_dbError) {
+    } catch {
       return successResponse({ id, ...data, message: 'تم التحديث (وضع تجريبي)' });
     }
   } catch (error: any) {
@@ -325,7 +248,7 @@ export async function DELETE(request: NextRequest) {
       
       await db.task.delete({ where: { id } });
       return successResponse({ message: 'تم حذف المهمة' });
-    } catch (_dbError) {
+    } catch {
       return successResponse({ message: 'تم الحذف (وضع تجريبي)' });
     }
   } catch (error: any) {

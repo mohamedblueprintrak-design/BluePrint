@@ -569,7 +569,13 @@ export function useAIChat() {
   const { token } = useAuth();
   
   return useMutation({
-    mutationFn: async (data: { message: string; model?: string; history?: Array<{ role: string; content: string }> }) => {
+    mutationFn: async (data: { 
+      message?: string; 
+      model?: string; 
+      history?: Array<{ role: string; content: string }>;
+      skill?: string;
+      skillParams?: Record<string, any>;
+    }) => {
       const response = await fetch('/api/ai-chat', {
         method: 'POST',
         headers: {
@@ -861,7 +867,7 @@ export function useDefects(projectId?: string) {
   
   return useQuery({
     queryKey: ['defects', projectId],
-    queryFn: () => defectApiRequest<Defect[]>(projectId ? { projectId } : {}, token),
+    queryFn: () => defectApiRequest<Defect[]>('GET', projectId ? { projectId } : undefined, token),
     enabled: !!token
   });
 }
@@ -1348,7 +1354,7 @@ export function useBOQItems(projectId?: string) {
   
   return useQuery({
     queryKey: ['boq-items', projectId],
-    queryFn: () => boqApiRequest<BOQItem[]>(projectId ? { projectId } : {}, token),
+    queryFn: () => boqApiRequest<BOQItem[]>('GET', projectId ? { projectId } : undefined, token),
     enabled: !!token
   });
 }
@@ -1466,7 +1472,7 @@ export function usePurchaseOrders(projectId?: string) {
   
   return useQuery({
     queryKey: ['purchase-orders', projectId],
-    queryFn: () => poApiRequest<PurchaseOrder[]>(projectId ? { projectId } : {}, token),
+    queryFn: () => poApiRequest<PurchaseOrder[]>('GET', projectId ? { projectId } : undefined, token),
     enabled: !!token
   });
 }
@@ -1570,7 +1576,7 @@ export function useKnowledgeArticles(filters?: { category?: string; search?: str
   
   return useQuery({
     queryKey: ['knowledge-articles', filters],
-    queryFn: () => knowledgeApiRequest<KnowledgeArticle[]>(filters || {}, token),
+    queryFn: () => knowledgeApiRequest<KnowledgeArticle[]>('GET', filters, token),
     enabled: !!token
   });
 }
@@ -1580,7 +1586,7 @@ export function useKnowledgeArticle(id: string | null) {
   
   return useQuery({
     queryKey: ['knowledge-article', id],
-    queryFn: () => knowledgeApiRequest<KnowledgeArticle>({ id }, token),
+    queryFn: () => knowledgeApiRequest<KnowledgeArticle>('GET', { id }, token),
     enabled: !!token && !!id
   });
 }

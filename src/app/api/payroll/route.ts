@@ -226,7 +226,7 @@ export async function POST(request: NextRequest) {
 
       case 'process_payroll': {
         const { month, year, employees } = data;
-        const results = [];
+        const results: { employeeId: string; netSalary: number; status: string }[] = [];
         let totalPayroll = 0;
 
         for (const emp of employees) {

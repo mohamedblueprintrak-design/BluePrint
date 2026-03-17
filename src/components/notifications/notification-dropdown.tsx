@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuth } from '@/context/auth-context';
 import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead } from '@/hooks/use-data';
 import { useRealtime } from '@/hooks/use-realtime';
@@ -22,7 +22,7 @@ import {
   FileSignature, Plane, Ban, DollarSign, Bug, Settings,
   Loader2
 } from 'lucide-react';
-import { NotificationType, Notification } from '@/types';
+import type { NotificationType, Notification } from '@/types';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -86,8 +86,8 @@ export function NotificationDropdown({ isRTL }: NotificationDropdownProps) {
   const markAsRead = useMarkNotificationRead();
   const markAllAsRead = useMarkAllNotificationsRead();
   
-  // الاتصال الفوري
-  const { isConnected, unreadCount: realtimeUnreadCount } = useRealtime({
+  // الاتصال الفوري - يعمل فقط في المتصفح
+  const { isConnected } = useRealtime({
     onNotification: () => {
       // إعادة تحميل الإشعارات عند وصول إشعار جديد
       refetch();
@@ -97,8 +97,6 @@ export function NotificationDropdown({ isRTL }: NotificationDropdownProps) {
     },
     enabled: !!token
   });
-
-  // تحديث العد عند تغيير الإشعارات - يتم تحديثه من callback
 
   // معالجة تحديد إشعار كمقروء
   const handleMarkAsRead = useCallback(async (id: string, e: React.MouseEvent) => {

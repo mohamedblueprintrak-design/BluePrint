@@ -165,9 +165,10 @@ export function FileUpload({
     disabled: disabled || uploading,
     onDropRejected: (fileRejections) => {
       const rejection = fileRejections[0];
-      if (rejection.errors[0]?.code === 'file-too-large') {
+      const errorCode = rejection.errors[0]?.code;
+      if (errorCode === 'file-too-large') {
         setError(TRANSLATIONS.fileSize);
-      } else if (rejection.errors[0]?.code === 'file-invalid-type') {
+      } else if (errorCode === 'file-invalid-type') {
         setError(TRANSLATIONS.fileType);
       } else {
         setError(rejection.errors[0]?.message || TRANSLATIONS.uploadError);

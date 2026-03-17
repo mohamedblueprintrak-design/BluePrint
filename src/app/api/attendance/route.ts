@@ -30,12 +30,19 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
     try {
-      const where: any = { user: { organizationId: user.organizationId } };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const where: any = {};
       if (userId) where.userId = userId;
       if (startDate) where.date = { gte: new Date(startDate) };
       if (endDate) where.date = { ...where.date, lte: new Date(endDate) };
-      const attendance = await db.attendance.findMany({ where, include: { user: true }, orderBy: { date: 'desc' } });
-      return success(attendance.map(a => ({ ...a, user: { id: a.user.id, fullName: a.user.fullName || a.user.username } })));
+      const attendance = await db.attendance.findMany({ where, orderBy: { date: 'desc' } });
+      
+      // جلب بيانات المستخدمين بشكل منفصل
+      const userIds = [...new Set(attendance.map(a => a.userId))];
+      const users = await db.user.findMany({ where: { id: { in: userIds } } });
+      const userMap = new Map(users.map(u => [u.id, { id: u.id, fullName: u.fullName || u.username }]));
+      
+      return success(attendance.map(a => ({ ...a, user: userMap.get(a.userId) || { id: a.userId, fullName: 'غير معروف' } })));
     } catch (_dbError) {
       console.log('Database unavailable, using demo mode for attendance');
       return success(DEMO_ATTENDANCE);

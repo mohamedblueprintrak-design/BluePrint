@@ -313,7 +313,7 @@ export function generateProposalPDF(
     doc.setTextColor(...COLORS.secondary);
     doc.setFont('helvetica', isBold ? 'bold' : 'normal');
     doc.text(label + ':', totalsX, yPos);
-    doc.setTextColor(isHighlight ? COLORS.primary : COLORS.text);
+    doc.setTextColor(...(isHighlight ? COLORS.primary : COLORS.text));
     doc.text(value, totalsX + totalsWidth, yPos, { align: 'right' });
     yPos += 6;
   };

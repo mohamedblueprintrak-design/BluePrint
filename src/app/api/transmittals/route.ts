@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
 
       // Generate transmittal number if not provided
       const transmittalNumber = transmittalData.transmittalNumber || 
-        await generateTransmittalNumber(user.organizationId);
+        await generateTransmittalNumber(user.organizationId || undefined);
 
       const transmittal = await db.transmittal.create({
         data: {

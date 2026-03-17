@@ -89,12 +89,13 @@ export async function GET(request: NextRequest) {
         email: c.email,
         phone: c.phone,
         address: c.address,
+        city: c.city,
+        country: c.country,
         contactPerson: c.contactPerson,
         taxNumber: c.taxNumber,
-        clientType: c.clientType,
         creditLimit: c.creditLimit,
-        totalInvoiced: c.totalInvoiced,
-        totalPaid: c.totalPaid,
+        paymentTerms: c.paymentTerms,
+        notes: c.notes,
         isActive: c.isActive,
         createdAt: c.createdAt
       })));
@@ -115,7 +116,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { name, email, phone, address, contactPerson, taxNumber, clientType, creditLimit, notes } = body;
+    const { name, email, phone, address, city, country, contactPerson, taxNumber, creditLimit, paymentTerms, notes } = body;
 
     if (!name) return errorResponse('اسم العميل مطلوب');
 
@@ -126,10 +127,12 @@ export async function POST(request: NextRequest) {
           email,
           phone,
           address,
+          city,
+          country,
           contactPerson,
           taxNumber,
-          clientType: clientType || 'company',
           creditLimit: creditLimit || 0,
+          paymentTerms: paymentTerms || 30,
           notes,
           organizationId: user.organizationId
         }
@@ -159,10 +162,13 @@ export async function PUT(request: NextRequest) {
 
     if (!id) return errorResponse('معرف العميل مطلوب');
 
+    // Remove fields that don't exist in schema
+    const { clientType, totalInvoiced, totalPaid, website, ...validData } = data as any;
+
     try {
       const client = await db.client.update({
         where: { id, organizationId: user.organizationId },
-        data
+        data: validData
       });
       return successResponse(client);
     } catch (_dbError) {

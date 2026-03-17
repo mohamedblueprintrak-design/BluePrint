@@ -357,7 +357,7 @@ export function generateInvoicePDF(
 
     yPos += 5;
     const balance = invoice.total - invoice.paidAmount;
-    doc.setTextColor(balance > 0 ? COLORS.warning : COLORS.success);
+    doc.setTextColor(...(balance > 0 ? COLORS.warning : COLORS.success));
     doc.text(translations.balanceDue + ':', totalsX, yPos, { align: isRTL ? 'right' : 'left' });
     doc.text(formatCurrency(balance), totalsX + totalsWidth, yPos, { align: isRTL ? 'left' : 'right' });
   }

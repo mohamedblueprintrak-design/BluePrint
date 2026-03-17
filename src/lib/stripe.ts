@@ -38,7 +38,7 @@ export function getStripe(): Stripe {
       throw new Error('STRIPE_SECRET_KEY is not configured');
     }
     _stripe = new Stripe(secretKey, {
-      apiVersion: '2025-03-31.basil',
+      apiVersion: '2026-02-25.clover',
       typescript: true,
     });
   }

@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { name, location, projectType, clientId, contractValue, description, projectManagerId } = body;
+    const { name, location, projectType, clientId, contractValue, description, managerId } = body;
 
     if (!name) return errorResponse('اسم المشروع مطلوب');
 
@@ -110,24 +110,22 @@ export async function POST(request: NextRequest) {
         clientId,
         contractValue: contractValue ? parseFloat(contractValue) : 0,
         description,
-        projectManagerId,
+        managerId,
         organizationId: orgId
       }
     });
 
-    // Add user to project
-    await db.projectUser.create({
-      data: { projectId: project.id, userId: user.id, permission: 'admin' }
-    });
-
-    // Create audit log
-    await db.auditLog.create({
+    // Create activity log
+    await db.activity.create({
       data: {
         userId: user.id,
-        action: 'create',
+        projectId: project.id,
         entityType: 'project',
         entityId: project.id,
-        newValues: JSON.stringify(project)
+        action: 'create',
+        description: `تم إنشاء مشروع جديد: ${project.name}`,
+        newValue: JSON.stringify(project),
+        organizationId: orgId
       }
     });
 

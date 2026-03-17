@@ -5,69 +5,44 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createBillingPortalSession } from '@/lib/stripe';
-import { db } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { organizationId } = body;
+    const { customerId } = body;
 
-    if (!organizationId) {
+    if (!customerId) {
       return NextResponse.json(
         {
           success: false,
           error: {
-            code: 'MISSING_ORGANIZATION_ID',
-            message: 'معرف المنظمة مطلوب',
+            code: 'MISSING_CUSTOMER_ID',
+            message: 'معرف العميل مطلوب',
           },
         },
         { status: 400 }
       );
     }
 
-    // Get organization's Stripe customer ID
-    let stripeCustomerId: string | null = null;
+    // Create billing portal session
+    const origin = request.headers.get('origin') || 'http://localhost:3000';
+    const session = await createBillingPortalSession(
+      customerId,
+      `${origin}/settings/billing`
+    );
 
-    try {
-      const organization = await db.organization.findUnique({
-        where: { id: organizationId },
-        select: { stripeCustomerId: true },
-      });
-
-      if (!organization?.stripeCustomerId) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: {
-              code: 'NO_STRIPE_CUSTOMER',
-              message: 'لا يوجد حساب Stripe مرتبط بهذه المنظمة',
-            },
-          },
-          { status: 400 }
-        );
-      }
-
-      stripeCustomerId = organization.stripeCustomerId;
-    } catch (dbError) {
-      console.log('Database not available');
+    if (!session) {
       return NextResponse.json(
         {
           success: false,
           error: {
-            code: 'DATABASE_ERROR',
-            message: 'قاعدة البيانات غير متاحة',
+            code: 'PORTAL_SESSION_ERROR',
+            message: 'فشل في إنشاء جلسة البوابة',
           },
         },
         { status: 500 }
       );
     }
-
-    // Create billing portal session
-    const origin = request.headers.get('origin') || 'http://localhost:3000';
-    const session = await createBillingPortalSession(
-      stripeCustomerId,
-      `${origin}/settings/billing`
-    );
 
     return NextResponse.json({
       success: true,

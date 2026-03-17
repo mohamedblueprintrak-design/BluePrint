@@ -66,6 +66,7 @@ export async function DELETE(request: NextRequest) {
   if (!user) return error('غير مصرح', 'UNAUTHORIZED', 401);
   try {
     const id = new URL(request.url).searchParams.get('id');
+    if (!id) return error('معرف التقرير مطلوب');
     try { await db.siteReport.delete({ where: { id } }); } catch {}
     return success({ message: 'تم الحذف' });
   } catch (e: any) { return error(e.message, "SERVER_ERROR", 500); }

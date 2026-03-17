@@ -37,7 +37,7 @@ export async function PUT(request: NextRequest): Promise<NextResponse<ApiSuccess
     const validationResult = passwordChangeSchema.safeParse(body);
     if (!validationResult.success) {
       return errorResponse(
-        validationResult.error.errors[0]?.message || 'Invalid input',
+        validationResult.error.issues[0]?.message || 'Invalid input',
         'VALIDATION_ERROR',
         400
       );
