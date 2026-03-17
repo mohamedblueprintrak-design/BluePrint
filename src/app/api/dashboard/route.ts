@@ -2,12 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import * as jose from 'jose';
 
-// SECURITY: Validate JWT_SECRET with fallback
-const jwtSecretValue = process.env.JWT_SECRET;
-if (!jwtSecretValue) {
-  console.warn('WARNING: JWT_SECRET not set in dashboard route');
-}
-const JWT_SECRET = new TextEncoder().encode(jwtSecretValue || 'dashboard-fallback-secret-not-for-production');
+// SECURITY: Validate JWT_SECRET with fallback (must match auth route)
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters');
 
 async function getUserFromToken(request: NextRequest) {
   const authHeader = request.headers.get('authorization');

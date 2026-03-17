@@ -4,9 +4,8 @@ import { AuthenticatedUser, DemoUser } from '../types';
 import { getDb } from './db';
 
 // Security: JWT secret must come from environment only
-// Lazy initialization to prevent build-time errors
-const isProduction = process.env.NODE_ENV === 'production';
-const DEV_SECRET = 'blueprint-dev-secret-key-not-for-production-use-32chars';
+// IMPORTANT: This MUST match the secret used in all API routes
+const JWT_SECRET_FALLBACK = 'blueprint-demo-secret-key-for-development-minimum-32-characters';
 
 /**
  * Get JWT secret bytes - lazily initialized to prevent build errors
@@ -17,16 +16,10 @@ function getJwtSecretBytes(): Uint8Array {
   const jwtSecret = process.env.JWT_SECRET;
   
   if (!jwtSecret) {
-    if (isProduction) {
-      console.error('CRITICAL: JWT_SECRET environment variable is not set in production!');
-      // In production without JWT_SECRET, use fallback (this shouldn't happen in real production)
-      // But we don't throw to prevent build failures
-    } else {
-      console.warn('WARNING: Using demo JWT secret. Set JWT_SECRET in production!');
-    }
+    console.warn('WARNING: Using demo JWT secret. Set JWT_SECRET in production!');
   }
   
-  return new TextEncoder().encode(jwtSecret || DEV_SECRET);
+  return new TextEncoder().encode(jwtSecret || JWT_SECRET_FALLBACK);
 }
 
 // Export JWT_SECRET as a function that returns Uint8Array
