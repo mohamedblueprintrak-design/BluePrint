@@ -40,13 +40,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load auth state from localStorage or cookies (for GitHub OAuth)
+  // Load auth state from localStorage or cookies
   useEffect(() => {
     // First check localStorage
     let storedToken = localStorage.getItem(AUTH_TOKEN_KEY);
     let storedUser = localStorage.getItem(AUTH_USER_KEY);
     
-    // If not in localStorage, check cookies (set by GitHub OAuth)
+    // If not in localStorage, check cookies
     if (!storedToken || !storedUser) {
       const cookieToken = getCookie(AUTH_TOKEN_KEY);
       const cookieUser = getCookie(AUTH_USER_KEY);
@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem(AUTH_TOKEN_KEY, cookieToken);
         localStorage.setItem(AUTH_USER_KEY, cookieUser);
         
-        // Clear the cookies (we'll use localStorage from now on)
+        // Clear the cookies
         deleteCookie(AUTH_TOKEN_KEY);
         deleteCookie(AUTH_USER_KEY);
       }
@@ -78,31 +78,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const apiCall = async (action: string, data?: any, useToken?: string) => {
-    const url = `/api?action=${action}`;
-    const options: RequestInit = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...((useToken || token) ? { Authorization: `Bearer ${useToken || token}` } : {})
-      },
-      body: JSON.stringify(data)
-    };
-    const response = await fetch(url, options);
-    return response.json();
-  };
-
   const login = async (data: LoginForm): Promise<ApiResponse> => {
     setIsLoading(true);
     try {
-      const result = await apiCall('login', data);
+      const response = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'login', ...data })
+      });
+      const result = await response.json();
+      
       if (result.success) {
         const newToken = result.data.accessToken;
         setToken(newToken);
         localStorage.setItem(AUTH_TOKEN_KEY, newToken);
 
         // Fetch user data
-        const userResult = await apiCall('me', {}, newToken);
+        const meResponse = await fetch('/api/auth', {
+          method: 'GET',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${newToken}`
+          }
+        });
+        const userResult = await meResponse.json();
+        
         if (userResult.success) {
           setUser(userResult.data);
           localStorage.setItem(AUTH_USER_KEY, JSON.stringify(userResult.data));
@@ -120,12 +120,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (data: RegisterForm): Promise<ApiResponse> => {
     setIsLoading(true);
     try {
-      const result = await apiCall('register', {
-        username: data.username,
-        email: data.email,
-        password: data.password,
-        fullName: data.fullName
+      const response = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          action: 'register',
+          username: data.username,
+          email: data.email,
+          password: data.password,
+          fullName: data.fullName
+        })
       });
+      const result = await response.json();
       return { success: result.success, error: result.error };
     } catch (error: any) {
       return { success: false, error: { code: 'NETWORK_ERROR', message: error.message } };
@@ -152,7 +158,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshUser = async () => {
     if (!token) return;
     try {
-      const result = await apiCall('me', {});
+      const response = await fetch('/api/auth', {
+        method: 'GET',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const result = await response.json();
       if (result.success) {
         setUser(result.data);
         localStorage.setItem(AUTH_USER_KEY, JSON.stringify(result.data));

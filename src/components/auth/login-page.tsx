@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
@@ -16,6 +17,7 @@ export function LoginPage() {
   const { login, register, isLoading } = useAuth();
   const { language, setLanguage } = useApp();
   const { t } = useTranslation(language);
+  const router = useRouter();
   
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
   const [registerForm, setRegisterForm] = useState({
@@ -32,7 +34,10 @@ export function LoginPage() {
     e.preventDefault();
     setError('');
     const result = await login(loginForm);
-    if (!result.success) {
+    if (result.success) {
+      // Redirect to dashboard on successful login
+      router.push('/dashboard');
+    } else {
       setError(result.error?.message || t.loginError);
     }
   };
