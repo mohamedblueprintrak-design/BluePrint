@@ -47,5 +47,20 @@ test
 prompt
 
 server.log
+
 # Skills directory
 /skills/
+
+# Lock files (keep only package-lock.json)
+bun.lock
+yarn.lock
+
+# Local development
+/download/
+/upload/
+worklog.md
+dev.log
+
+# Database files
+db/*.db
+*.db-journal
