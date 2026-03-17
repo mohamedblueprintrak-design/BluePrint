@@ -414,21 +414,22 @@ export function Sidebar() {
     >
       {/* Collapse Toggle Button */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-slate-800">
-        {!sidebarCollapsed && (
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-white">{/* t.appName */}</h1>
-            </div>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shrink-0">
+            <Building2 className="w-5 h-5 text-white" />
           </div>
-        )}
+          {!sidebarCollapsed && (
+            <div className="overflow-hidden transition-all duration-300">
+              <h1 className="text-lg font-bold text-white whitespace-nowrap">{t.appName}</h1>
+              <p className="text-xs text-slate-400 whitespace-nowrap">{t.appSubtitle}</p>
+            </div>
+          )}
+        </div>
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="text-slate-400 hover:text-white hover:bg-slate-800"
+          className="text-slate-400 hover:text-white hover:bg-slate-800 transition-all duration-200"
         >
           {sidebarCollapsed ? (
             <PanelLeft className="w-5 h-5" />

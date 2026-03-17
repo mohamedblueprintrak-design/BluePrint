@@ -11,7 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Building2, Mail, Lock, User, AlertCircle, Loader2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Building2, Mail, Lock, User, AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react';
 
 export function LoginPage() {
   const { login, register, isLoading } = useAuth();
@@ -29,6 +30,10 @@ export function LoginPage() {
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,33 +146,64 @@ export function LoginPage() {
                         placeholder={t.username}
                         value={loginForm.username}
                         onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
-                        className="ps-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500"
+                        className="ps-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500/20"
                         required
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="login-password" className="text-slate-300">
-                      {t.password}
-                    </Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="login-password" className="text-slate-300">
+                        {t.password}
+                      </Label>
+                      <button
+                        type="button"
+                        className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                      >
+                        {language === 'ar' ? 'نسيت كلمة المرور؟' : 'Forgot password?'}
+                      </button>
+                    </div>
                     <div className="relative">
                       <Lock className="absolute start-3 top-3 h-4 w-4 text-slate-500" />
                       <Input
                         id="login-password"
-                        type="password"
+                        type={showLoginPassword ? 'text' : 'password'}
                         placeholder={t.password}
                         value={loginForm.password}
                         onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                        className="ps-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500"
+                        className="ps-10 pe-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500/20"
                         required
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowLoginPassword(!showLoginPassword)}
+                        className="absolute end-3 top-3 text-slate-500 hover:text-slate-300 transition-colors"
+                      >
+                        {showLoginPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
                     </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="remember-me"
+                      checked={rememberMe}
+                      onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                      className="border-slate-600 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                    />
+                    <Label htmlFor="remember-me" className="text-sm text-slate-400 cursor-pointer">
+                      {language === 'ar' ? 'تذكرني' : 'Remember me'}
+                    </Label>
                   </div>
 
                   <Button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
+                    className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 transition-all duration-300 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -193,7 +229,7 @@ export function LoginPage() {
                         placeholder={t.fullName}
                         value={registerForm.fullName}
                         onChange={(e) => setRegisterForm({ ...registerForm, fullName: e.target.value })}
-                        className="ps-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500"
+                        className="ps-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500/20"
                         required
                       />
                     </div>
@@ -211,7 +247,7 @@ export function LoginPage() {
                         placeholder={t.username}
                         value={registerForm.username}
                         onChange={(e) => setRegisterForm({ ...registerForm, username: e.target.value })}
-                        className="ps-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500"
+                        className="ps-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500/20"
                         required
                       />
                     </div>
@@ -229,7 +265,7 @@ export function LoginPage() {
                         placeholder={t.email}
                         value={registerForm.email}
                         onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
-                        className="ps-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500"
+                        className="ps-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500/20"
                         required
                       />
                     </div>
@@ -243,13 +279,24 @@ export function LoginPage() {
                       <Lock className="absolute start-3 top-3 h-4 w-4 text-slate-500" />
                       <Input
                         id="register-password"
-                        type="password"
+                        type={showRegisterPassword ? 'text' : 'password'}
                         placeholder={t.password}
                         value={registerForm.password}
                         onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
-                        className="ps-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500"
+                        className="ps-10 pe-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500/20"
                         required
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                        className="absolute end-3 top-3 text-slate-500 hover:text-slate-300 transition-colors"
+                      >
+                        {showRegisterPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
                     </div>
                   </div>
 
@@ -261,19 +308,30 @@ export function LoginPage() {
                       <Lock className="absolute start-3 top-3 h-4 w-4 text-slate-500" />
                       <Input
                         id="register-confirm"
-                        type="password"
+                        type={showConfirmPassword ? 'text' : 'password'}
                         placeholder={t.confirmPassword}
                         value={registerForm.confirmPassword}
                         onChange={(e) => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
-                        className="ps-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500"
+                        className="ps-10 pe-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500/20"
                         required
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute end-3 top-3 text-slate-500 hover:text-slate-300 transition-colors"
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
                     </div>
                   </div>
 
                   <Button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
+                    className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 transition-all duration-300 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -288,12 +346,28 @@ export function LoginPage() {
         </Card>
 
         {/* Demo Credentials */}
-        <div className="mt-4 p-4 rounded-lg bg-slate-800/30 border border-slate-700/50">
-          <p className="text-sm text-slate-400 text-center">
-            {language === 'ar' 
-              ? 'للتجربة: admin / admin123' 
-              : 'Demo: admin / admin123'}
-          </p>
+        <div className="mt-4 p-4 rounded-lg bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/20">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-slate-400 mb-1">
+                {language === 'ar' ? 'بيانات التجربة:' : 'Demo credentials:'}
+              </p>
+              <p className="text-sm font-medium text-blue-400">
+                admin / admin123
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setLoginForm({ username: 'admin', password: 'admin123' });
+              }}
+              className="text-xs text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
+            >
+              {language === 'ar' ? 'استخدام' : 'Use'}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

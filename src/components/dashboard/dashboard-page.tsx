@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
 import { useDashboard, useProjects, useTasks, useInvoices } from '@/hooks/use-data';
@@ -18,7 +19,7 @@ import {
 } from '@/components/ui/select';
 import {
   Building2, Users, DollarSign, CheckSquare, AlertTriangle,
-  ArrowUpRight, ArrowDownRight, Clock, FileText, Loader2
+  ArrowUpRight, ArrowDownRight, Clock, FileText, Loader2, Plus
 } from 'lucide-react';
 import {
   RevenueChart,
@@ -36,6 +37,7 @@ import {
 type Period = '7d' | '30d' | '90d' | 'year';
 
 export function DashboardPage() {
+  const router = useRouter();
   const { language, setCurrentPage } = useApp();
   const { t, formatCurrency, formatDate } = useTranslation(language);
   
@@ -166,7 +168,7 @@ export function DashboardPage() {
   return (
     <div className="space-y-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
       {/* Welcome Banner */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 p-6 text-white">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 p-6 text-white shadow-lg shadow-blue-500/20">
         <div className="relative z-10">
           <h2 className="text-2xl font-bold mb-2">
             {language === 'ar' ? 'مرحباً بك في BluePrint 👋' : 'Welcome to BluePrint 👋'}
@@ -179,6 +181,7 @@ export function DashboardPage() {
         </div>
         <div className="absolute end-0 top-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
         <div className="absolute start-10 bottom-0 w-32 h-32 bg-white/10 rounded-full translate-y-1/2" />
+        <div className="absolute end-20 top-1/2 w-20 h-20 bg-white/5 rounded-full" />
       </div>
 
       {/* Period Selector */}
@@ -199,10 +202,13 @@ export function DashboardPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((stat, index) => (
-          <Card key={index} className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-colors">
+          <Card 
+            key={index} 
+            className="bg-slate-900/50 border-slate-800 hover:border-slate-700 hover:shadow-lg hover:shadow-slate-900/50 transition-all duration-300 hover:-translate-y-1 group"
+          >
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
-                <div className={`p-2 rounded-lg ${stat.bgColor}`}>
+                <div className={`p-2.5 rounded-xl ${stat.bgColor} group-hover:scale-110 transition-transform duration-300`}>
                   <stat.icon className={`w-5 h-5 ${stat.color}`} />
                 </div>
                 <div className={`flex items-center gap-1 text-sm ${stat.trendUp ? 'text-green-400' : 'text-red-400'}`}>
@@ -336,7 +342,7 @@ export function DashboardPage() {
                 {language === 'ar' ? 'آخر المشاريع' : 'Recent projects'}
               </CardDescription>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => setCurrentPage('projects')} className="text-blue-400">
+            <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard/projects')} className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10">
               {t.view} {language === 'ar' ? 'الكل' : 'All'}
             </Button>
           </CardHeader>
@@ -412,50 +418,60 @@ export function DashboardPage() {
             <CardContent className="grid grid-cols-2 gap-3">
               <Button 
                 variant="outline" 
-                className="h-20 flex flex-col gap-2 bg-slate-800/50 border-slate-700 hover:bg-slate-800 hover:border-blue-500"
-                onClick={() => setCurrentPage('projects')}
+                className="h-24 flex flex-col gap-2 bg-slate-800/50 border-slate-700 hover:bg-blue-500/20 hover:border-blue-500 transition-all duration-300 group"
+                onClick={() => router.push('/dashboard/projects')}
               >
-                <Building2 className="w-5 h-5 text-blue-400" />
-                <span className="text-xs">{t.newProject}</span>
+                <div className="p-2 rounded-lg bg-blue-500/20 group-hover:bg-blue-500/30 transition-colors">
+                  <Building2 className="w-5 h-5 text-blue-400" />
+                </div>
+                <span className="text-xs text-slate-300 group-hover:text-white">{t.newProject}</span>
               </Button>
               <Button 
                 variant="outline" 
-                className="h-20 flex flex-col gap-2 bg-slate-800/50 border-slate-700 hover:bg-slate-800 hover:border-green-500"
-                onClick={() => setCurrentPage('clients')}
+                className="h-24 flex flex-col gap-2 bg-slate-800/50 border-slate-700 hover:bg-green-500/20 hover:border-green-500 transition-all duration-300 group"
+                onClick={() => router.push('/dashboard/clients')}
               >
-                <Users className="w-5 h-5 text-green-400" />
-                <span className="text-xs">{t.newClient}</span>
+                <div className="p-2 rounded-lg bg-green-500/20 group-hover:bg-green-500/30 transition-colors">
+                  <Users className="w-5 h-5 text-green-400" />
+                </div>
+                <span className="text-xs text-slate-300 group-hover:text-white">{t.newClient}</span>
               </Button>
               <Button 
                 variant="outline" 
-                className="h-20 flex flex-col gap-2 bg-slate-800/50 border-slate-700 hover:bg-slate-800 hover:border-cyan-500"
-                onClick={() => setCurrentPage('invoices')}
+                className="h-24 flex flex-col gap-2 bg-slate-800/50 border-slate-700 hover:bg-cyan-500/20 hover:border-cyan-500 transition-all duration-300 group"
+                onClick={() => router.push('/dashboard/invoices')}
               >
-                <DollarSign className="w-5 h-5 text-cyan-400" />
-                <span className="text-xs">{t.newInvoice}</span>
+                <div className="p-2 rounded-lg bg-cyan-500/20 group-hover:bg-cyan-500/30 transition-colors">
+                  <DollarSign className="w-5 h-5 text-cyan-400" />
+                </div>
+                <span className="text-xs text-slate-300 group-hover:text-white">{t.newInvoice}</span>
               </Button>
               <Button 
                 variant="outline" 
-                className="h-20 flex flex-col gap-2 bg-slate-800/50 border-slate-700 hover:bg-slate-800 hover:border-orange-500"
-                onClick={() => setCurrentPage('tasks')}
+                className="h-24 flex flex-col gap-2 bg-slate-800/50 border-slate-700 hover:bg-orange-500/20 hover:border-orange-500 transition-all duration-300 group"
+                onClick={() => router.push('/dashboard/tasks')}
               >
-                <CheckSquare className="w-5 h-5 text-orange-400" />
-                <span className="text-xs">{t.newTask}</span>
+                <div className="p-2 rounded-lg bg-orange-500/20 group-hover:bg-orange-500/30 transition-colors">
+                  <CheckSquare className="w-5 h-5 text-orange-400" />
+                </div>
+                <span className="text-xs text-slate-300 group-hover:text-white">{t.newTask}</span>
               </Button>
             </CardContent>
           </Card>
 
           {/* Open Defects */}
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-slate-900/50 border-slate-800 hover:border-red-500/50 transition-colors cursor-pointer" onClick={() => router.push('/dashboard/defects')}>
             <CardHeader>
               <CardTitle className="text-white text-lg flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-red-400" />
+                <div className="p-1.5 rounded-lg bg-red-500/20">
+                  <AlertTriangle className="w-5 h-5 text-red-400" />
+                </div>
                 {t.openDefects}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-center py-4">
-                <p className="text-4xl font-bold text-red-400">{stats?.defects?.open || 0}</p>
+                <p className="text-5xl font-bold text-red-400">{stats?.defects?.open || 0}</p>
                 <p className="text-sm text-slate-400 mt-2">
                   {language === 'ar' ? 'عيوب تحتاج معالجة' : 'Defects need attention'}
                 </p>
@@ -474,7 +490,7 @@ export function DashboardPage() {
               <CheckSquare className="w-5 h-5 text-orange-400" />
               {t.pendingTasks}
             </CardTitle>
-            <Button variant="ghost" size="sm" onClick={() => setCurrentPage('tasks')} className="text-blue-400">
+            <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard/tasks')} className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10">
               {t.view} {language === 'ar' ? 'الكل' : 'All'}
             </Button>
           </CardHeader>
@@ -531,7 +547,7 @@ export function DashboardPage() {
               <DollarSign className="w-5 h-5 text-cyan-400" />
               {t.pendingInvoices}
             </CardTitle>
-            <Button variant="ghost" size="sm" onClick={() => setCurrentPage('invoices')} className="text-blue-400">
+            <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard/invoices')} className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10">
               {t.view} {language === 'ar' ? 'الكل' : 'All'}
             </Button>
           </CardHeader>
