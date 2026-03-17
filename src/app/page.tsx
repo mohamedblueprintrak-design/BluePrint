@@ -1,222 +1,153 @@
 'use client';
 
-import { lazy, Suspense } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider, useAuth } from '@/context/auth-context';
-import { AppProvider, useApp } from '@/context/app-context';
-import { Sidebar } from '@/components/layout/sidebar';
-import { Header } from '@/components/layout/header';
-import { LoginPage } from '@/components/auth/login-page';
-import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { PricingPage } from '@/components/pricing/pricing-page';
 
-import { Building2, Loader2 } from 'lucide-react';
-
-// Lazy load page components (all use named exports)
-const DashboardPage = lazy(() => 
-  import('@/components/dashboard/dashboard-page').then(mod => ({ default: mod.DashboardPage }))
-);
-const ProjectsPage = lazy(() => 
-  import('@/components/projects/projects-page').then(mod => ({ default: mod.ProjectsPage }))
-);
-const ClientsPage = lazy(() => 
-  import('@/components/clients/clients-page').then(mod => ({ default: mod.ClientsPage }))
-);
-const InvoicesPage = lazy(() => 
-  import('@/components/invoices/invoices-page').then(mod => ({ default: mod.InvoicesPage }))
-);
-const TasksPage = lazy(() => 
-  import('@/components/tasks/tasks-page').then(mod => ({ default: mod.TasksPage }))
-);
-const HRPage = lazy(() => 
-  import('@/components/hr/hr-page').then(mod => ({ default: mod.HRPage }))
-);
-const SettingsPage = lazy(() => 
-  import('@/components/settings/settings-page').then(mod => ({ default: mod.SettingsPage }))
-);
-const KnowledgePage = lazy(() => 
-  import('@/components/knowledge/knowledge-page').then(mod => ({ default: mod.KnowledgePage }))
-);
-const AIChatPage = lazy(() => 
-  import('@/components/ai-chat/ai-chat-page').then(mod => ({ default: mod.AIChatPage }))
-);
-const ReportsPage = lazy(() => 
-  import('@/components/reports/reports-page').then(mod => ({ default: mod.ReportsPage }))
-);
-const SuppliersPage = lazy(() => 
-  import('@/components/suppliers/suppliers-page').then(mod => ({ default: mod.SuppliersPage }))
-);
-const InventoryPage = lazy(() => 
-  import('@/components/inventory/inventory-page').then(mod => ({ default: mod.InventoryPage }))
-);
-const ContractsPage = lazy(() => 
-  import('@/components/contracts/contracts-page').then(mod => ({ default: mod.ContractsPage }))
-);
-const SiteDiaryPage = lazy(() => 
-  import('@/components/site-diary/site-diary-page').then(mod => ({ default: mod.SiteDiaryPage }))
-);
-const DocumentsPage = lazy(() => 
-  import('@/components/documents/documents-page').then(mod => ({ default: mod.DocumentsPage }))
-);
-const ProposalsPage = lazy(() => 
-  import('@/components/proposals/proposals-page').then(mod => ({ default: mod.ProposalsPage }))
-);
-const ProfilePage = lazy(() => 
-  import('@/components/profile/profile-page').then(mod => ({ default: mod.ProfilePage }))
-);
-const AdminPage = lazy(() => 
-  import('@/components/admin/admin-page').then(mod => ({ default: mod.AdminPage }))
-);
-const ActivitiesPage = lazy(() => 
-  import('@/components/activities/activities-page').then(mod => ({ default: mod.ActivitiesPage }))
-);
-const BOQPage = lazy(() => 
-  import('@/components/boq/boq-page').then(mod => ({ default: mod.BOQPage }))
-);
-const PurchaseOrdersPage = lazy(() => 
-  import('@/components/purchase-orders/purchase-orders-page').then(mod => ({ default: mod.PurchaseOrdersPage }))
-);
-const DefectsPage = lazy(() => 
-  import('@/components/defects/defects-page').then(mod => ({ default: mod.DefectsPage }))
-);
-const BudgetsPage = lazy(() => 
-  import('@/components/budgets/budgets-page').then(mod => ({ default: mod.BudgetsPage }))
-);
-const VouchersPage = lazy(() => 
-  import('@/components/vouchers/vouchers-page').then(mod => ({ default: mod.VouchersPage }))
-);
-
-// Create a single QueryClient instance outside the component
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000,
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
-
-// Page Loader Component for Suspense fallback
-function PageLoader() {
+export default function Home() {
   return (
-    <div className="flex items-center justify-center h-64">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-    </div>
-  );
-}
-
-// Loading Skeleton Component for initial app load
-function LoadingSkeleton() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center animate-pulse">
-          <Building2 className="w-8 h-8 text-white" />
+    <div className="min-h-screen bg-slate-950">
+      {/* Header */}
+      <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+              <svg viewBox="0 0 24 24" className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 21h18M3 7v1a3 3 0 003 3h12a3 3 0 003-3V7M3 7l9-4 9 4M7 11v6M12 11v6M17 11v6" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-white">BluePrint</h1>
+              <p className="text-xs text-slate-400">Engineering Consultancy Platform</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <a href="#pricing" className="text-slate-400 hover:text-white transition-colors text-sm">
+              الأسعار
+            </a>
+            <a href="#features" className="text-slate-400 hover:text-white transition-colors text-sm">
+              المميزات
+            </a>
+            <a href="https://github.com/mohamedblueprintrak-design/BluePrint" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors text-sm">
+              GitHub
+            </a>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
-          <p className="text-slate-400">جاري التحميل...</p>
+      </header>
+
+      {/* Hero Section */}
+      <section className="py-20 text-center">
+        <div className="max-w-4xl mx-auto px-4">
+          <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
+            نظام إدارة متكامل
+            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">
+              لمكاتب الاستشارات الهندسية
+            </span>
+          </h1>
+          <p className="text-xl text-slate-400 mb-8 max-w-2xl mx-auto">
+            منصة SaaS شاملة لإدارة المشاريع والعملاء والفواتير والموارد البشرية مع مساعد ذكي متخصص في الهندسة
+          </p>
+          <div className="flex items-center justify-center gap-4">
+            <a href="#pricing" className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-medium transition-colors">
+              ابدأ الآن مجاناً
+            </a>
+            <a href="https://github.com/mohamedblueprintrak-design/BluePrint" target="_blank" rel="noopener noreferrer" className="border border-slate-700 hover:border-slate-600 text-white px-8 py-3 rounded-lg font-medium transition-colors">
+              عرض المشروع
+            </a>
+          </div>
         </div>
-      </div>
-    </div>
-  );
-}
+      </section>
 
-// Main app content
-function AppContent() {
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { isRTL, currentPage, sidebarCollapsed } = useApp();
+      {/* Features Section */}
+      <section id="features" className="py-20 bg-slate-900/30">
+        <div className="max-w-7xl mx-auto px-4">
+          <h2 className="text-3xl font-bold text-white text-center mb-12">
+            مميزات المنصة
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Feature 1 */}
+            <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
+              <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">إدارة المشاريع</h3>
+              <p className="text-slate-400">تتبع كامل للمشاريع مع جدول الكميات والمعالم الرئيسية وتقارير الموقع</p>
+            </div>
 
-  // Loading state
-  if (authLoading) {
-    return <LoadingSkeleton />;
-  }
+            {/* Feature 2 */}
+            <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
+              <div className="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">المساعد الذكي</h3>
+              <p className="text-slate-400">مساعد AI متخصص في الهندسة يدعم نماذج GPT-4 و Gemini و DeepSeek</p>
+            </div>
 
-  // Not authenticated - show login
-  if (!isAuthenticated) {
-    return <LoginPage />;
-  }
+            {/* Feature 3 */}
+            <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
+              <div className="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">الفواتير والعقود</h3>
+              <p className="text-slate-400">نظام فوترة متكامل مع دعم الضرائب وإدارة العقود والتغييرات</p>
+            </div>
 
-  // Render current page content with Suspense for lazy loading
-  const renderPageContent = () => {
-    return (
-      <Suspense fallback={<PageLoader />}>
-        {currentPage === 'dashboard' && <DashboardPage />}
-        {currentPage === 'projects' && <ProjectsPage />}
-        {currentPage === 'clients' && <ClientsPage />}
-        {currentPage === 'proposals' && <ProposalsPage />}
-        {currentPage === 'invoices' && <InvoicesPage />}
-        {currentPage === 'tasks' && <TasksPage />}
-        {currentPage === 'hr' && <HRPage />}
-        {currentPage === 'suppliers' && <SuppliersPage />}
-        {currentPage === 'inventory' && <InventoryPage />}
-        {currentPage === 'contracts' && <ContractsPage />}
-        {currentPage === 'siteDiary' && <SiteDiaryPage />}
-        {currentPage === 'documents' && <DocumentsPage />}
-        {currentPage === 'knowledge' && <KnowledgePage />}
-        {currentPage === 'aiChat' && <AIChatPage />}
-        {currentPage === 'reports' && <ReportsPage />}
-        {currentPage === 'settings' && <SettingsPage />}
-        {currentPage === 'profile' && <ProfilePage />}
-        {currentPage === 'admin' && <AdminPage />}
-        {currentPage === 'activities' && <ActivitiesPage />}
-        {currentPage === 'boq' && <BOQPage />}
-        {currentPage === 'purchaseOrders' && <PurchaseOrdersPage />}
-        {currentPage === 'defects' && <DefectsPage />}
-        {currentPage === 'budgets' && <BudgetsPage />}
-        {currentPage === 'vouchers' && <VouchersPage />}
-        {currentPage === undefined && <DashboardPage />}
-      </Suspense>
-    );
-  };
+            {/* Feature 4 */}
+            <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
+              <div className="w-12 h-12 rounded-lg bg-yellow-500/20 flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">الموارد البشرية</h3>
+              <p className="text-slate-400">إدارة الحضور والإجازات والرواتب مع نظام موافقات متكامل</p>
+            </div>
 
-  // Authenticated - show main app
-  return (
-    <div 
-      className={`min-h-screen bg-slate-950 ${isRTL ? 'rtl' : 'ltr'}`}
-      dir={isRTL ? 'rtl' : 'ltr'}
-    >
-      {/* Sidebar */}
-      <Sidebar />
+            {/* Feature 5 */}
+            <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
+              <div className="w-12 h-12 rounded-lg bg-red-500/20 flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">الإشراف الميداني</h3>
+              <p className="text-slate-400">نظام العيوب واليوميات الميدانية مع دعم الصور والموقع الجغرافي</p>
+            </div>
 
-      {/* Main Content */}
-      <main 
-        className={`
-          min-h-screen transition-all duration-300
-          ${sidebarCollapsed 
-            ? (isRTL ? 'mr-20' : 'ml-20') 
-            : (isRTL ? 'mr-64' : 'ml-64')
-          }
-          md:${sidebarCollapsed 
-            ? (isRTL ? 'mr-20' : 'ml-20') 
-            : (isRTL ? 'mr-64' : 'ml-64')
-          }
-          mr-0 ml-0 md:mr-0 md:ml-0
-        `}
-      >
-        {/* Header */}
-        <Header />
-
-        {/* Page Content */}
-        <div className="p-4 md:p-6">
-          {renderPageContent()}
+            {/* Feature 6 */}
+            <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
+              <div className="w-12 h-12 rounded-lg bg-cyan-500/20 flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">التقارير والتحليلات</h3>
+              <p className="text-slate-400">تقارير PDF و Excel مع لوحات تحكم تفاعلية ومؤشرات أداء</p>
+            </div>
+          </div>
         </div>
-      </main>
-    </div>
-  );
-}
+      </section>
 
-// Main page component
-export default function BluePrintApp() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <ErrorBoundary>
-        <AuthProvider>
-          <AppProvider>
-            <AppContent />
-          </AppProvider>
-        </AuthProvider>
-      </ErrorBoundary>
-    </QueryClientProvider>
+      {/* Pricing Section */}
+      <section id="pricing" className="py-20">
+        <PricingPage lang="ar" />
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-slate-800 bg-slate-900/50 py-8">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <p className="text-slate-400 text-sm">
+            © 2024 BluePrint. جميع الحقوق محفوظة.
+          </p>
+          <p className="text-slate-500 text-xs mt-2">
+            تم التطوير بواسطة BluePrint Ultimate AI Engineering Architect
+          </p>
+        </div>
+      </footer>
+    </div>
   );
 }

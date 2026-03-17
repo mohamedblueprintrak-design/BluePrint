@@ -1,30 +1,50 @@
+/**
+ * Jest Configuration for BluePrint
+ * إعدادات Jest للاختبارات
+ */
+
 import type { Config } from 'jest';
-import nextJest from 'next/jest.js';
 
-const createJestConfig = nextJest({
-  // Provide the path to your Next.js app to load next.config.js and .env files in your test environment
-  dir: './',
-});
-
-// Add any custom config to be passed to Jest
 const config: Config = {
-  coverageProvider: 'v8',
+  displayName: 'blueprint',
   testEnvironment: 'jsdom',
-  // Add more setup options before each test is run
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   testMatch: [
-    '**/__tests__/**/*.test.ts',
-    '**/__tests__/**/*.test.tsx',
+    '<rootDir>/src/**/__tests__/**/*.test.{ts,tsx}',
+    '<rootDir>/src/**/*.test.{ts,tsx}',
   ],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
-    '!src/**/*.stories.{ts,tsx}',
+    '!src/**/__tests__/**',
+    '!src/**/index.ts',
   ],
+  coverageThreshold: {
+    global: {
+      branches: 30,
+      functions: 30,
+      lines: 30,
+      statements: 30,
+    },
+  },
+  coverageReporters: ['text', 'lcov', 'html'],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/.next/',
+    '/dist/',
+  ],
+  transform: {
+    '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.json' }],
+  },
+  transformIgnorePatterns: [
+    'node_modules/(?!(next|@next|stripe|uuid)/)',
+  ],
+  verbose: true,
+  testTimeout: 15000,
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
 };
 
-// createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
-export default createJestConfig(config);
+export default config;
