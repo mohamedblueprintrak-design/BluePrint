@@ -1509,3 +1509,131 @@ export function useDeletePurchaseOrder() {
     }
   });
 }
+
+// ============================================
+// Knowledge Base Hooks
+// ============================================
+
+export interface KnowledgeArticle {
+  id: string;
+  title: string;
+  content: string;
+  category?: 'guide' | 'faq' | 'policy' | 'template';
+  tags?: string[];
+  authorId?: string;
+  isPublished?: boolean;
+  viewCount?: number;
+  helpfulCount?: number;
+  createdAt: Date | string;
+  updatedAt?: Date | string;
+}
+
+// Helper for Knowledge API calls
+async function knowledgeApiRequest<T>(
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+  data?: any,
+  token?: string | null
+): Promise<ApiResponse<T>> {
+  const isGet = method === 'GET';
+  const searchParams = new URLSearchParams();
+  
+  if (isGet && data) {
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        searchParams.append(key, String(value));
+      }
+    });
+  }
+  
+  const url = isGet 
+    ? `/api/knowledge?${searchParams.toString()}`
+    : '/api/knowledge';
+  
+  const options: RequestInit = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    }
+  };
+
+  if (data && !isGet) {
+    options.body = JSON.stringify(data);
+  }
+
+  const response = await fetch(url, options);
+  return response.json();
+}
+
+export function useKnowledgeArticles(filters?: { category?: string; search?: string }) {
+  const { token } = useAuth();
+  
+  return useQuery({
+    queryKey: ['knowledge-articles', filters],
+    queryFn: () => knowledgeApiRequest<KnowledgeArticle[]>(filters || {}, token),
+    enabled: !!token
+  });
+}
+
+export function useKnowledgeArticle(id: string | null) {
+  const { token } = useAuth();
+  
+  return useQuery({
+    queryKey: ['knowledge-article', id],
+    queryFn: () => knowledgeApiRequest<KnowledgeArticle>({ id }, token),
+    enabled: !!token && !!id
+  });
+}
+
+export function useCreateKnowledgeArticle() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: Partial<KnowledgeArticle>) => 
+      knowledgeApiRequest<KnowledgeArticle>('POST', data, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['knowledge-articles'] });
+    }
+  });
+}
+
+export function useUpdateKnowledgeArticle() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: { id: string } & Partial<KnowledgeArticle>) => 
+      knowledgeApiRequest<KnowledgeArticle>('PUT', data, token),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['knowledge-articles'] });
+      queryClient.invalidateQueries({ queryKey: ['knowledge-article', variables.id] });
+    }
+  });
+}
+
+export function useDeleteKnowledgeArticle() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (id: string) => 
+      knowledgeApiRequest('DELETE', { id }, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['knowledge-articles'] });
+    }
+  });
+}
+
+export function useMarkArticleHelpful() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (id: string) => 
+      knowledgeApiRequest<KnowledgeArticle>('PUT', { id, helpful: true }, token),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['knowledge-article', id] });
+    }
+  });
+}
