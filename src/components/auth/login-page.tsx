@@ -35,8 +35,9 @@ export function LoginPage() {
     setError('');
     const result = await login(loginForm);
     if (result.success) {
-      // Redirect to dashboard on successful login
-      router.push('/dashboard');
+      // Use window.location for reliable redirect after login
+      // This ensures the new page loads with fresh auth state from localStorage
+      window.location.href = '/dashboard';
     } else {
       setError(result.error?.message || t.loginError);
     }

@@ -41,7 +41,7 @@ const DEMO_USERS: Array<{
     id: 'demo-admin-001',
     username: 'admin',
     email: 'admin@blueprint.ae',
-    password: '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZRGdjGj/n3.sCP9eNiBx.qL/4ZcS.', // admin123
+    password: '$2b$10$.ELmlEHTPMDITIuJQzJ2IOGo87dOUXo3zE515Lq.WQMyHvDWzAX6.', // admin123
     fullName: 'مدير النظام',
     role: 'admin',
     isActive: true,
@@ -62,7 +62,7 @@ const DEMO_USERS: Array<{
     id: 'demo-user-001',
     username: 'user',
     email: 'user@blueprint.ae',
-    password: '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZRGdjGj/n3.sCP9eNiBx.qL/4ZcS.', // admin123
+    password: '$2b$10$.ELmlEHTPMDITIuJQzJ2IOGo87dOUXo3zE515Lq.WQMyHvDWzAX6.', // admin123
     fullName: 'مستخدم تجريبي',
     role: 'viewer',
     isActive: true,
