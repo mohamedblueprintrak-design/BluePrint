@@ -1,9 +1,7 @@
 'use client';
 
-import { AuthProvider, useAuth } from '@/context/auth-context';
-import { AppProvider } from '@/context/app-context';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useState, useEffect } from 'react';
+import { useAuth } from '@/context/auth-context';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 
@@ -48,24 +46,9 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [queryClient] = useState(() => new QueryClient({
-    defaultOptions: {
-      queries: {
-        staleTime: 60 * 1000,
-        refetchOnWindowFocus: false,
-      },
-    },
-  }));
-
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <AppProvider>
-          <AuthGuard>
-            {children}
-          </AuthGuard>
-        </AppProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <AuthGuard>
+      {children}
+    </AuthGuard>
   );
 }

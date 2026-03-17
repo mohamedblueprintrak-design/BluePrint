@@ -1,13 +1,10 @@
 'use client';
 
-import { AuthProvider } from '@/context/auth-context';
-import { AppProvider } from '@/context/app-context';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { LoginPage } from '@/components/auth/login-page';
 import { useAuth } from '@/context/auth-context';
 import { Loader2 } from 'lucide-react';
+import { LoginPage } from '@/components/auth/login-page';
 
 // Inner component that checks if already logged in
 function LoginGuard({ children }: { children: React.ReactNode }) {
@@ -46,24 +43,9 @@ function LoginGuard({ children }: { children: React.ReactNode }) {
 }
 
 export default function LoginRoute() {
-  const [queryClient] = useState(() => new QueryClient({
-    defaultOptions: {
-      queries: {
-        staleTime: 60 * 1000,
-        refetchOnWindowFocus: false,
-      },
-    },
-  }));
-
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <AppProvider>
-          <LoginGuard>
-            <LoginPage />
-          </LoginGuard>
-        </AppProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <LoginGuard>
+      <LoginPage />
+    </LoginGuard>
   );
 }
