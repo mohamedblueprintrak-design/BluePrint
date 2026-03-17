@@ -29,6 +29,9 @@ export default function Home() {
             <a href="https://github.com/mohamedblueprintrak-design/BluePrint" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors text-sm">
               GitHub
             </a>
+            <a href="/dashboard" className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+              تسجيل الدخول
+            </a>
           </div>
         </div>
       </header>

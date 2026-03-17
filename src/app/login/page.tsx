@@ -1,20 +1,22 @@
 'use client';
 
-import { AuthProvider, useAuth } from '@/context/auth-context';
+import { AuthProvider } from '@/context/auth-context';
 import { AppProvider } from '@/context/app-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { LoginPage } from '@/components/auth/login-page';
+import { useAuth } from '@/context/auth-context';
 import { Loader2 } from 'lucide-react';
 
-// Inner component that checks auth
-function AuthGuard({ children }: { children: React.ReactNode }) {
+// Inner component that checks if already logged in
+function LoginGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/login');
+    if (!isLoading && isAuthenticated) {
+      router.push('/dashboard');
     }
   }, [isLoading, isAuthenticated, router]);
 
@@ -29,7 +31,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!isAuthenticated) {
+  if (isAuthenticated) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -43,11 +45,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function LoginRoute() {
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
@@ -61,9 +59,9 @@ export default function DashboardLayout({
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <AppProvider>
-          <AuthGuard>
-            {children}
-          </AuthGuard>
+          <LoginGuard>
+            <LoginPage />
+          </LoginGuard>
         </AppProvider>
       </AuthProvider>
     </QueryClientProvider>
