@@ -1,11 +1,8 @@
-'use client';
-
+import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
-import { AuthProvider } from "@/context/auth-context";
-import { AppProvider } from "@/context/app-context";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState } from "react";
+import { Providers } from "@/components/providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,32 +14,26 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const metadata: Metadata = {
+  title: "BluePrint Engineering Consultancy",
+  description: "نظام إدارة متكامل لشركات الاستشارات الهندسية",
+  keywords: ["BluePrint", "Engineering", "Consultancy", "إدارة", "هندسة"],
+  authors: [{ name: "BluePrint Team" }],
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [queryClient] = useState(() => new QueryClient({
-    defaultOptions: {
-      queries: {
-        staleTime: 60 * 1000,
-        refetchOnWindowFocus: false,
-      },
-    },
-  }));
-
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <AppProvider>
-              {children}
-            </AppProvider>
-          </AuthProvider>
-        </QueryClientProvider>
+        <Providers>
+          {children}
+        </Providers>
         <Toaster />
       </body>
     </html>
