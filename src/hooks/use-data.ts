@@ -1289,13 +1289,40 @@ export function useDeleteUser() {
 // BOQ (Bill of Quantities) Hooks
 // ============================================
 
+// Helper for BOQ API calls
+async function boqApiRequest<T>(
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+  data?: any,
+  token?: string | null
+): Promise<ApiResponse<T>> {
+  const isGet = method === 'GET';
+  const url = isGet && data 
+    ? `/api/boq?${new URLSearchParams(data).toString()}`
+    : '/api/boq';
+  
+  const options: RequestInit = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    }
+  };
+
+  if (data && !isGet) {
+    options.body = JSON.stringify(data);
+  }
+
+  const response = await fetch(url, options);
+  return response.json();
+}
+
 export function useBOQItems(projectId?: string) {
   const { token } = useAuth();
   
   return useQuery({
     queryKey: ['boq-items', projectId],
-    queryFn: () => apiRequest<BOQItem[]>('GET', 'boq-items', { projectId }, token),
-    enabled: !!token && !!projectId
+    queryFn: () => boqApiRequest<BOQItem[]>(projectId ? { projectId } : {}, token),
+    enabled: !!token
   });
 }
 
@@ -1305,7 +1332,7 @@ export function useCreateBOQItem() {
   
   return useMutation({
     mutationFn: (data: Partial<BOQItem>) => 
-      apiRequest<BOQItem>('POST', 'boq-item', data, token),
+      boqApiRequest<BOQItem>('POST', data, token),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['boq-items', variables.projectId] });
       queryClient.invalidateQueries({ queryKey: ['project', variables.projectId] });
@@ -1319,7 +1346,7 @@ export function useUpdateBOQItem() {
   
   return useMutation({
     mutationFn: (data: { id: string; projectId?: string } & Partial<BOQItem>) => 
-      apiRequest<BOQItem>('PUT', 'boq-item', data, token),
+      boqApiRequest<BOQItem>('PUT', data, token),
     onSuccess: (_, variables) => {
       if (variables.projectId) {
         queryClient.invalidateQueries({ queryKey: ['boq-items', variables.projectId] });
@@ -1335,7 +1362,7 @@ export function useDeleteBOQItem() {
   
   return useMutation({
     mutationFn: ({ id, projectId: _projectId }: { id: string; projectId?: string }) => 
-      apiRequest('DELETE', 'boq-item', { id }, token),
+      boqApiRequest('DELETE', { id }, token),
     onSuccess: (_, variables) => {
       if (variables.projectId) {
         queryClient.invalidateQueries({ queryKey: ['boq-items', variables.projectId] });

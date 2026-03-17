@@ -163,6 +163,129 @@ model Project {
   tasks               Task[]
   risks               Risk[]
   transmittals        Transmittal[]
+  boqItems            BOQItem[]
+  defects             Defect[]
+  siteReports         SiteReport[]
+  proposals           Proposal[]
+}
+
+// ============================================
+// جدول الكميات (Bill of Quantities)
+// ============================================
+
+model BOQItem {
+  id            String    @id @default(cuid())
+  projectId     String
+  itemNumber    String?
+  description   String
+  unit          String?
+  quantity      Float     @default(0)
+  unitPrice     Float     @default(0)
+  totalPrice    Float     @default(0)
+  category      String?   // civil, structural, mep, finishing, external, infrastructure
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// العيوب والملاحظات (Defects Tracking)
+// ============================================
+
+model Defect {
+  id              String    @id @default(cuid())
+  projectId       String
+  title           String
+  description     String?
+  severity        String    @default("medium") // low, medium, high, critical
+  status          String    @default("Open") // Open, In_Progress, Resolved, Closed
+  location        String?
+  imageId         String?
+  assignedTo      String?
+  resolvedAt      DateTime?
+  resolutionNotes String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  project         Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// تقارير الموقع (Site Diary)
+// ============================================
+
+model SiteReport {
+  id                String    @id @default(cuid())
+  projectId         String
+  reportDate        DateTime  @default(now())
+  reportNumber      String?
+  weather           String?
+  temperature       Float?
+  workersCount      Int       @default(0)
+  workDescription   String?
+  workArea          String?
+  workProgress      Float     @default(0)
+  issues            String?
+  safetyIssues      String?
+  equipmentUsed     String?
+  materialsReceived String?
+  nextSteps         String?
+  nextDayPlan       String?
+  preparedById      String?
+  approvedById      String?
+  photos            String?   // JSON array
+  attachments       String?   // JSON array
+  summary           String?
+  status            String    @default("draft") // draft, submitted, approved
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  project           Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// العروض والمقترحات (Proposals System)
+// ============================================
+
+model Proposal {
+  id              String    @id @default(cuid())
+  organizationId  String?
+  projectId       String?
+  proposalNumber  String    @unique
+  clientId        String?
+  title           String?
+  issueDate       DateTime?
+  validUntil      DateTime?
+  subtotal        Float     @default(0)
+  taxRate         Float     @default(5)
+  taxAmount       Float     @default(0)
+  discountAmount  Float     @default(0)
+  totalAmount     Float     @default(0)
+  status          String    @default("draft") // draft, sent, accepted, rejected, expired
+  notes           String?
+  terms           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  project         Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  items           ProposalItem[]
+}
+
+model ProposalItem {
+  id            String    @id @default(cuid())
+  proposalId    String
+  description   String
+  quantity      Float     @default(1)
+  unitPrice     Float     @default(0)
+  unit          String?
+  total         Float     @default(0)
+  sortOrder     Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  proposal      Proposal  @relation(fields: [proposalId], references: [id], onDelete: Cascade)
 }
 
 model Task {
@@ -340,4 +463,184 @@ model Invoice {
   updatedAt       DateTime  @updatedAt
 
   client          Client?   @relation(fields: [clientId], references: [id])
+}
+
+// ============================================
+// الموارد البشرية (HR Management)
+// ============================================
+
+model Attendance {
+  id            String    @id @default(cuid())
+  userId        String
+  date          DateTime  @default(now())
+  checkIn       String?   // Time string HH:mm
+  checkOut      String?   // Time string HH:mm
+  status        String    @default("present") // present, absent, late, leave, holiday
+  workHours     Float     @default(0)
+  overtimeHours Float     @default(0)
+  notes         String?
+  location      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model LeaveRequest {
+  id              String    @id @default(cuid())
+  userId          String
+  leaveType       String    @default("annual") // annual, sick, emergency, maternity, paternity, unpaid
+  startDate       DateTime
+  endDate         DateTime
+  daysCount       Float     @default(1)
+  reason          String?
+  status          String    @default("pending") // pending, approved, rejected, cancelled
+  approvedById    String?
+  approvedAt      DateTime?
+  rejectionReason String?
+  attachment      String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// ============================================
+// المخزون والمشتريات (Inventory & Purchase Orders)
+// ============================================
+
+model Material {
+  id              String    @id @default(cuid())
+  organizationId  String?
+  materialCode    String?   @unique
+  name            String
+  category        String?
+  unit            String
+  unitPrice       Float     @default(0)
+  currentStock    Float     @default(0)
+  minStock        Float     @default(0)
+  maxStock        Float     @default(0)
+  location        String?
+  supplierId      String?
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  transactions    MaterialTransaction[]
+}
+
+model MaterialTransaction {
+  id              String    @id @default(cuid())
+  materialId      String
+  projectId       String?
+  transactionType String    // in, out, adjustment
+  quantity        Float     @default(0)
+  unitPrice       Float?
+  totalValue      Float?
+  notes           String?
+  reference       String?
+  createdById     String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  material        Material  @relation(fields: [materialId], references: [id], onDelete: Cascade)
+}
+
+model PurchaseOrder {
+  id                String    @id @default(cuid())
+  organizationId    String?
+  poNumber          String    @unique
+  supplierId        String?
+  projectId         String?
+  orderDate         DateTime  @default(now())
+  expectedDate      DateTime?
+  subtotal          Float     @default(0)
+  taxRate           Float     @default(5)
+  taxAmount         Float     @default(0)
+  totalAmount       Float     @default(0)
+  status            String    @default("draft") // draft, submitted, approved, received, cancelled
+  notes             String?
+  terms             String?
+  approvedById      String?
+  approvedAt        DateTime?
+  createdById       String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  items             PurchaseOrderItem[]
+}
+
+model PurchaseOrderItem {
+  id              String    @id @default(cuid())
+  purchaseOrderId String
+  materialId      String?
+  description     String
+  quantity        Float     @default(1)
+  unitPrice       Float     @default(0)
+  unit            String?
+  total           Float     @default(0)
+  receivedQty     Float     @default(0)
+  sortOrder       Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// قاعدة المعرفة (Knowledge Base)
+// ============================================
+
+model KnowledgeArticle {
+  id              String    @id @default(cuid())
+  organizationId  String?
+  title           String
+  content         String    // Markdown content
+  category        String?   // guide, faq, policy, template
+  tags            String?   // JSON array
+  authorId        String?
+  isPublished     Boolean   @default(false)
+  viewCount       Int       @default(0)
+  helpfulCount    Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// ============================================
+// الإشعارات (Notifications)
+// ============================================
+
+model Notification {
+  id                String    @id @default(cuid())
+  userId            String
+  title             String
+  message           String?
+  notificationType  String    @default("system") // system, task, project, invoice, approval, mention
+  referenceType     String?
+  referenceId       String?
+  isRead            Boolean   @default(false)
+  priority          String    @default("normal") // low, normal, high, urgent
+  readAt            DateTime?
+  actionUrl         String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+// ============================================
+// الموردون (Suppliers)
+// ============================================
+
+model Supplier {
+  id              String    @id @default(cuid())
+  organizationId  String?
+  name            String
+  supplierType    String    @default("materials") // materials, equipment, services, subcontractor
+  email           String?
+  phone           String?
+  address         String?
+  taxNumber       String?
+  contactPerson   String?
+  rating          Float     @default(0)
+  creditLimit     Float     @default(0)
+  isApproved      Boolean   @default(false)
+  isActive        Boolean   @default(true)
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }

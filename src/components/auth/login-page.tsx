@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Building2, Mail, Lock, User, AlertCircle, Loader2, Github } from 'lucide-react';
+import { Building2, Mail, Lock, User, AlertCircle, Loader2 } from 'lucide-react';
 
 export function LoginPage() {
   const { login, register, isLoading } = useAuth();
@@ -169,31 +169,6 @@ export function LoginPage() {
                     ) : null}
                     {t.login}
                   </Button>
-
-                  {/* Divider */}
-                  <div className="relative my-4">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t border-slate-700" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-slate-900/50 px-2 text-slate-500">
-                        {language === 'ar' ? 'أو' : 'or'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* GitHub Login Button */}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full bg-slate-800 border-slate-700 text-white hover:bg-slate-700 hover:text-white"
-                    onClick={() => {
-                      window.location.href = '/api/auth/github';
-                    }}
-                  >
-                    <Github className="w-5 h-5 me-2" />
-                    {language === 'ar' ? 'تسجيل الدخول بـ GitHub' : 'Sign in with GitHub'}
-                  </Button>
                 </form>
               </TabsContent>
 
@@ -299,31 +274,6 @@ export function LoginPage() {
                       <Loader2 className="w-4 h-4 animate-spin me-2" />
                     ) : null}
                     {t.register}
-                  </Button>
-
-                  {/* Divider */}
-                  <div className="relative my-4">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t border-slate-700" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-slate-900/50 px-2 text-slate-500">
-                        {language === 'ar' ? 'أو' : 'or'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* GitHub Sign Up Button */}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full bg-slate-800 border-slate-700 text-white hover:bg-slate-700 hover:text-white"
-                    onClick={() => {
-                      window.location.href = '/api/auth/github';
-                    }}
-                  >
-                    <Github className="w-5 h-5 me-2" />
-                    {language === 'ar' ? 'التسجيل بـ GitHub' : 'Sign up with GitHub'}
                   </Button>
                 </form>
               </TabsContent>
