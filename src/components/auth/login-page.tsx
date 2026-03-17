@@ -17,7 +17,7 @@ import { Building2, Mail, Lock, User, AlertCircle, Loader2, Eye, EyeOff } from '
 export function LoginPage() {
   const { login, register, isLoading } = useAuth();
   const { language, setLanguage } = useApp();
-  const { t } = useTranslation(language);
+  const { t } = useTranslation(language || 'ar'); // Default to 'ar' if language is undefined
   const router = useRouter();
   
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
