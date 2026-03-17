@@ -1,0 +1,343 @@
+// BluePrint Engineering Consultancy - SaaS Platform
+// نظام إدارة مكاتب الاستشارات الهندسية
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// المنظمة والاشتراكات (SaaS Core)
+// ============================================
+
+model Organization {
+  id               String    @id @default(cuid())
+  name             String
+  slug             String    @unique
+  logo             String?
+  description      String?
+  website          String?
+  phone            String?
+  email            String?
+  address          String?
+  taxNumber        String?
+  currency         String    @default("AED")
+  timezone         String    @default("Asia/Dubai")
+  locale           String    @default("ar")
+  isActive         Boolean   @default(true)
+  planId           String?
+  trialEndsAt      DateTime?
+  subscriptionStatus String  @default("trial")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  users            User[]
+  subscriptions    Subscription[]
+  plan             Plan?     @relation(fields: [planId], references: [id])
+}
+
+model Plan {
+  id              String    @id @default(cuid())
+  name            String
+  slug            String    @unique
+  nameAr          String?   // Arabic name
+  description     String?
+  descriptionAr   String?   // Arabic description
+  price           Float
+  currency        String    @default("AED")
+  interval        String    @default("month") // month, year
+  stripeProductId String?
+  stripePriceId   String?
+  features        String    // JSON string
+  limits          String    // JSON string for limits
+  isActive        Boolean   @default(true)
+  sortOrder       Int       @default(0)
+  createdAt       DateTime  @default(now())
+
+  subscriptions   Subscription[]
+  organizations   Organization[]
+}
+
+model Subscription {
+  id                  String    @id @default(cuid())
+  organizationId      String
+  planId              String
+  status              String    @default("active") // active, canceled, past_due, trialing
+  currentPeriodStart  DateTime
+  currentPeriodEnd    DateTime
+  cancelAtPeriodEnd   Boolean   @default(false)
+  stripeSubscriptionId String?
+  stripeCustomerId    String?
+  stripePaymentIntentId String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  organization        Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  plan               Plan        @relation(fields: [planId], references: [id])
+  payments           Payment[]
+}
+
+model Payment {
+  id                  String    @id @default(cuid())
+  subscriptionId      String
+  amount              Float
+  currency            String    @default("AED")
+  status              String    @default("pending") // pending, succeeded, failed, refunded
+  stripePaymentIntentId String?
+  stripeChargeId      String?
+  stripeInvoiceId     String?
+  receiptUrl          String?
+  description         String?
+  metadata            String?   // JSON
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  subscription        Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// المستخدمون والصلاحيات
+// ============================================
+
+model User {
+  id              String   @id @default(cuid())
+  organizationId  String?
+  username        String   @unique
+  email           String   @unique
+  password        String?
+  fullName        String?
+  role            String   @default("viewer") // admin, manager, engineer, accountant, viewer
+  isActive        Boolean  @default(true)
+  emailVerified   DateTime?
+  avatar          String?
+  language        String   @default("ar")
+  theme           String   @default("dark")
+  phone           String?
+  jobTitle        String?
+  department      String?
+  lastLoginAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organization    Organization? @relation(fields: [organizationId], references: [id])
+  sessions        Session[]
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  token        String   @unique
+  userAgent    String?
+  ipAddress    String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// المشاريع (Core Models)
+// ============================================
+
+model Project {
+  id                  String    @id @default(cuid())
+  organizationId      String?
+  name                String
+  projectNumber       String?   @unique
+  location            String?
+  projectType         String?
+  status              String    @default("pending")
+  progressPercentage  Float     @default(0.0)
+  description         String?
+  contractValue       Float?
+  contractDate        DateTime?
+  expectedStartDate   DateTime?
+  expectedEndDate     DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  tasks               Task[]
+  risks               Risk[]
+  transmittals        Transmittal[]
+}
+
+model Task {
+  id            String    @id @default(cuid())
+  title         String
+  description   String?
+  projectId     String?
+  parentId      String?   // For task hierarchy/subtasks
+  assignedTo    String?   // User ID assigned to task
+  priority      String    @default("medium") // low, medium, high, critical
+  status        String    @default("todo") // todo, in_progress, review, done, cancelled
+  startDate     DateTime? // For Gantt chart
+  endDate       DateTime? // For Gantt chart
+  dueDate       DateTime?
+  progress      Float     @default(0) // 0-100
+  estimatedHours Float?   // Estimated duration in hours
+  actualHours   Float?    // Actual hours spent
+  dependencies  String?   // JSON array of task IDs this task depends on
+  order         Int       @default(0) // Sort order for Gantt display
+  color         String?   // Color code for Gantt bar
+  isMilestone   Boolean   @default(false) // Milestone marker
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  project       Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent        Task?     @relation("TaskHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  subtasks      Task[]    @relation("TaskHierarchy")
+}
+
+// ============================================
+// سجل المخاطر (Risk Register)
+// ============================================
+
+model Risk {
+  id              String    @id @default(cuid())
+  projectId       String?
+  title           String
+  description     String?
+  category        String    @default("technical") // technical, financial, schedule, external, organizational
+  probability     Int       @default(1) // 1-5 (Low to High)
+  impact          Int       @default(1) // 1-5 (Low to High)
+  riskScore       Int       @default(1) // probability * impact
+  status          String    @default("open") // open, mitigated, closed, accepted
+  priority        String    @default("medium") // low, medium, high, critical
+  identifiedDate  DateTime  @default(now())
+  targetDate      DateTime? // Target resolution date
+  closedDate      DateTime?
+  owner           String?   // User ID responsible for risk
+  mitigationPlan  String?
+  contingencyPlan String?
+  triggerEvents   String?   // JSON array of trigger conditions
+  responseStrategy String?  // avoid, mitigate, transfer, accept
+  residualRisk    Int?      // Risk score after mitigation
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  riskActions     RiskAction[]
+
+  project         Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model RiskAction {
+  id          String    @id @default(cuid())
+  riskId      String
+  action      String
+  assignedTo  String?   // User ID
+  dueDate     DateTime?
+  status      String    @default("pending") // pending, in_progress, completed
+  completedAt DateTime?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  risk        Risk      @relation(fields: [riskId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// نظام الإرسال (Transmittal System)
+// ============================================
+
+model Transmittal {
+  id                String    @id @default(cuid())
+  projectId         String?
+  transmittalNumber String    @unique
+  subject           String
+  description       String?
+  senderId          String?   // User ID
+  recipientName     String
+  recipientEmail    String?
+  recipientCompany  String?
+  recipientPhone    String?
+  sendDate          DateTime  @default(now())
+  dueDate           DateTime?
+  status            String    @default("draft") // draft, sent, acknowledged, rejected, overdue
+  priority          String    @default("normal") // low, normal, high, urgent
+  deliveryMethod    String    @default("email") // email, hand, courier, post
+  trackingNumber    String?   // For courier/post
+  acknowledgedDate  DateTime?
+  acknowledgedBy    String?
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  items             TransmittalItem[]
+  responses         TransmittalResponse[]
+
+  project           Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model TransmittalItem {
+  id              String    @id @default(cuid())
+  transmittalId   String
+  documentNumber  String
+  documentTitle   String
+  revision        String    @default("A")
+  copies          Int       @default(1)
+  documentType    String?   // drawing, specification, report, calculation, etc.
+  status          String    @default("for_review") // for_review, for_approval, for_information, for_action
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  transmittal     Transmittal @relation(fields: [transmittalId], references: [id], onDelete: Cascade)
+}
+
+model TransmittalResponse {
+  id              String    @id @default(cuid())
+  transmittalId   String
+  responseDate    DateTime  @default(now())
+  responseType    String    // acknowledged, approved, approved_with_comments, rejected, revise_resubmit
+  respondentName  String
+  respondentEmail String?
+  comments        String?
+  attachments     String?   // JSON array of file paths
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  transmittal     Transmittal @relation(fields: [transmittalId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// العميل والفاتورة
+// ============================================
+
+model Client {
+  id             String    @id @default(cuid())
+  organizationId String?
+  name           String
+  email          String?
+  phone          String?
+  address        String?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  invoices       Invoice[]
+}
+
+model Invoice {
+  id              String    @id @default(cuid())
+  organizationId  String?
+  invoiceNumber   String    @unique
+  clientId        String?
+  projectId       String?
+  issueDate       DateTime?
+  dueDate         DateTime?
+  subtotal        Float     @default(0.0)
+  taxRate         Float     @default(5.0)
+  taxAmount       Float     @default(0.0)
+  total           Float     @default(0.0)
+  paidAmount      Float     @default(0.0)
+  status          String    @default("draft")
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  client          Client?   @relation(fields: [clientId], references: [id])
+}
