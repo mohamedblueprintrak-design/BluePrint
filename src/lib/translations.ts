@@ -609,18 +609,20 @@ export const translations = {
 export type TranslationKey = keyof typeof translations.ar;
 
 export function useTranslation(language: Language) {
-  const t = translations[language];
+  // Ensure we have a valid language, default to 'ar' if undefined
+  const safeLanguage: Language = language || 'ar';
+  const t = translations[safeLanguage];
   
   const formatCurrency = (amount: number, currency: string = 'AED') => {
     const symbols: Record<string, string> = {
-      AED: language === 'ar' ? 'درهم' : 'AED',
-      SAR: language === 'ar' ? 'ريال' : 'SAR',
+      AED: safeLanguage === 'ar' ? 'درهم' : 'AED',
+      SAR: safeLanguage === 'ar' ? 'ريال' : 'SAR',
       USD: '$',
       EUR: '€',
-      EGP: language === 'ar' ? 'ج.م' : 'EGP'
+      EGP: safeLanguage === 'ar' ? 'ج.م' : 'EGP'
     };
     const symbol = symbols[currency] || currency;
-    return language === 'ar' 
+    return safeLanguage === 'ar' 
       ? `${amount.toLocaleString('ar-EG')} ${symbol}`
       : `${symbol}${amount.toLocaleString('en-US')}`;
   };
@@ -628,7 +630,7 @@ export function useTranslation(language: Language) {
   const formatDate = (date: Date | string | null | undefined) => {
     if (!date) return '-';
     const d = new Date(date);
-    return d.toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US', {
+    return d.toLocaleDateString(safeLanguage === 'ar' ? 'ar-EG' : 'en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
@@ -638,7 +640,7 @@ export function useTranslation(language: Language) {
   const formatDateTime = (date: Date | string | null | undefined) => {
     if (!date) return '-';
     const d = new Date(date);
-    return d.toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US', {
+    return d.toLocaleString(safeLanguage === 'ar' ? 'ar-EG' : 'en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -648,11 +650,11 @@ export function useTranslation(language: Language) {
   };
   
   const formatNumber = (num: number) => {
-    return num.toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US');
+    return num.toLocaleString(safeLanguage === 'ar' ? 'ar-EG' : 'en-US');
   };
   
   const formatPercentage = (num: number) => {
-    return language === 'ar' 
+    return safeLanguage === 'ar' 
       ? `%${num.toLocaleString('ar-EG')}`
       : `${num.toLocaleString('en-US')}%`;
   };
@@ -664,6 +666,6 @@ export function useTranslation(language: Language) {
     formatDateTime, 
     formatNumber,
     formatPercentage,
-    isRTL: language === 'ar'
+    isRTL: safeLanguage === 'ar'
   };
 }

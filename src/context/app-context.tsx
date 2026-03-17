@@ -56,29 +56,57 @@ const STORAGE_KEYS = {
   sidebarCollapsed: 'bp_sidebar_collapsed'
 };
 
-function getInitialValue<T>(key: string, defaultValue: T): T {
+const DEFAULT_VALUES = {
+  theme: 'dark' as Theme,
+  language: 'ar' as Language,
+  currency: 'AED' as Currency,
+  sidebarCollapsed: false
+};
+
+function getInitialValue<T>(key: string, defaultValue: T, validValues?: T[]): T {
+  // During SSR, return default value
   if (typeof window === 'undefined') return defaultValue;
-  const stored = localStorage.getItem(key);
-  return stored ? (stored as T) : defaultValue;
+  
+  try {
+    const stored = localStorage.getItem(key);
+    if (stored !== null) {
+      // If validValues provided, check if stored value is valid
+      if (validValues && !validValues.includes(stored as T)) {
+        return defaultValue;
+      }
+      return stored as T;
+    }
+  } catch (e) {
+    // localStorage might not be available
+    console.warn('localStorage not available:', e);
+  }
+  return defaultValue;
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
   // Theme state
-  const [theme, setThemeState] = useState<Theme>(() => getInitialValue(STORAGE_KEYS.theme, 'dark'));
+  const [theme, setThemeState] = useState<Theme>(() => 
+    getInitialValue(STORAGE_KEYS.theme, DEFAULT_VALUES.theme, ['dark', 'light', 'system'])
+  );
   const [isDark, setIsDark] = useState(true);
   
   // Language state
-  const [language, setLanguageState] = useState<Language>(() => getInitialValue(STORAGE_KEYS.language, 'ar'));
+  const [language, setLanguageState] = useState<Language>(() => 
+    getInitialValue(STORAGE_KEYS.language, DEFAULT_VALUES.language, ['ar', 'en'])
+  );
   const isRTL = language === 'ar';
   
   // Currency state
-  const [currency, setCurrencyState] = useState<Currency>(() => getInitialValue(STORAGE_KEYS.currency, 'AED'));
+  const [currency, setCurrencyState] = useState<Currency>(() => 
+    getInitialValue(STORAGE_KEYS.currency, DEFAULT_VALUES.currency, ['AED', 'SAR', 'USD', 'EUR', 'EGP'])
+  );
   
   // Sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [sidebarCollapsed, setSidebarCollapsedState] = useState(() => 
-    getInitialValue<string>(STORAGE_KEYS.sidebarCollapsed, 'false') === 'true'
-  );
+  const [sidebarCollapsed, setSidebarCollapsedState] = useState(() => {
+    const value = getInitialValue(STORAGE_KEYS.sidebarCollapsed, 'false');
+    return value === 'true';
+  });
   
   // Current Page state
   const [currentPage, setCurrentPage] = useState('dashboard');
