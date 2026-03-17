@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  // Remove standalone output for Vercel - Vercel handles Next.js natively
+  // output: "standalone",
   
   // Enable React Strict Mode for better development experience
   reactStrictMode: true,
