@@ -33,30 +33,32 @@ function errorResponse(message: string, code = 'ERROR', status = 400) {
   );
 }
 
-// Demo notifications
+// Demo notifications مع أنواع جديدة
 const DEMO_NOTIFICATIONS = [
   {
     id: 'demo-notif-001',
     userId: 'demo-user-001',
-    title: 'مهمة جديدة',
+    title: 'مهمة جديدة معينة',
     message: 'تم تعيين مهمة جديدة لك: مراجعة مخططات البناء',
-    notificationType: 'task',
+    notificationType: 'task_assigned',
     referenceType: 'task',
     referenceId: 'demo-task-001',
     isRead: false,
     priority: 'high',
+    actionUrl: '/dashboard/tasks?id=demo-task-001',
     createdAt: new Date(Date.now() - 1000 * 60 * 30) // 30 minutes ago
   },
   {
     id: 'demo-notif-002',
     userId: 'demo-user-001',
-    title: 'موافقة على الإجازة',
+    title: 'إجازة موافق عليها',
     message: 'تم الموافقة على طلب الإجازة الخاص بك',
-    notificationType: 'leave',
+    notificationType: 'leave_approved',
     referenceType: 'leave',
     referenceId: 'demo-leave-001',
     isRead: true,
     priority: 'normal',
+    actionUrl: '/dashboard/hr',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24) // 1 day ago
   },
   {
@@ -64,12 +66,65 @@ const DEMO_NOTIFICATIONS = [
     userId: 'demo-user-001',
     title: 'فاتورة جديدة',
     message: 'تم إنشاء فاتورة جديدة: INV-2025-0001',
-    notificationType: 'invoice',
+    notificationType: 'invoice_created',
     referenceType: 'invoice',
     referenceId: 'demo-inv-001',
     isRead: false,
     priority: 'normal',
+    actionUrl: '/dashboard/invoices?id=demo-inv-001',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2) // 2 hours ago
+  },
+  {
+    id: 'demo-notif-004',
+    userId: 'demo-user-001',
+    title: 'مخزون منخفض',
+    message: 'التنبيه: المخزون من الحديد أقل من الحد الأدنى',
+    notificationType: 'low_stock',
+    referenceType: 'material',
+    referenceId: 'demo-mat-001',
+    isRead: false,
+    priority: 'urgent',
+    actionUrl: '/dashboard/inventory?material=demo-mat-001',
+    createdAt: new Date(Date.now() - 1000 * 60 * 15) // 15 minutes ago
+  },
+  {
+    id: 'demo-notif-005',
+    userId: 'demo-user-001',
+    title: 'موعد تسليم قريب',
+    message: 'موعد تسليم مشروع فيلا النخيل بعد 3 أيام',
+    notificationType: 'deadline_approaching',
+    referenceType: 'project',
+    referenceId: 'demo-proj-001',
+    isRead: false,
+    priority: 'high',
+    actionUrl: '/dashboard/projects?id=demo-proj-001',
+    createdAt: new Date(Date.now() - 1000 * 60 * 60) // 1 hour ago
+  },
+  {
+    id: 'demo-notif-006',
+    userId: 'demo-user-001',
+    title: 'دفعة مستلمة',
+    message: 'تم استلام دفعة بقيمة 50,000 درهم من عميل شركة الفجر',
+    notificationType: 'payment_received',
+    referenceType: 'invoice',
+    referenceId: 'demo-inv-002',
+    isRead: true,
+    priority: 'normal',
+    actionUrl: '/dashboard/invoices?id=demo-inv-002',
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3) // 3 hours ago
+  },
+  {
+    id: 'demo-notif-007',
+    userId: 'demo-user-001',
+    title: 'عيب مُبلغ عنه',
+    message: 'تم الإبلاغ عن عيب جديد في موقع مشروع البرج',
+    notificationType: 'defect_reported',
+    referenceType: 'defect',
+    referenceId: 'demo-defect-001',
+    isRead: false,
+    priority: 'high',
+    actionUrl: '/dashboard/defects?id=demo-defect-001',
+    createdAt: new Date(Date.now() - 1000 * 60 * 45) // 45 minutes ago
   }
 ];
 
@@ -82,10 +137,12 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const unreadOnly = searchParams.get('unreadOnly') === 'true';
     const limit = parseInt(searchParams.get('limit') || '20', 10);
+    const type = searchParams.get('type'); // تصفية حسب النوع
 
     try {
       const where: any = { userId: user.id };
       if (unreadOnly) where.isRead = false;
+      if (type) where.notificationType = type;
 
       const notifications = await db.notification.findMany({
         where,
@@ -95,6 +152,13 @@ export async function GET(request: NextRequest) {
 
       const unreadCount = await db.notification.count({
         where: { userId: user.id, isRead: false }
+      });
+
+      // إحصائيات حسب النوع
+      const typeStats = await db.notification.groupBy({
+        by: ['notificationType'],
+        where: { userId: user.id, isRead: false },
+        _count: true
       });
 
       return successResponse(
@@ -112,7 +176,7 @@ export async function GET(request: NextRequest) {
           createdAt: n.createdAt,
           readAt: n.readAt
         })),
-        { unreadCount }
+        { unreadCount, typeStats }
       );
     } catch (_dbError) {
       // Demo mode
@@ -120,10 +184,26 @@ export async function GET(request: NextRequest) {
       if (unreadOnly) {
         notifications = notifications.filter(n => !n.isRead);
       }
+      if (type) {
+        notifications = notifications.filter(n => n.notificationType === type);
+      }
+      
+      const typeStats = notifications
+        .filter(n => !n.isRead)
+        .reduce((acc, n) => {
+          acc[n.notificationType] = (acc[n.notificationType] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
       
       return successResponse(
         notifications.slice(0, limit),
-        { unreadCount: notifications.filter(n => !n.isRead).length }
+        { 
+          unreadCount: notifications.filter(n => !n.isRead).length,
+          typeStats: Object.entries(typeStats).map(([notificationType, count]) => ({
+            notificationType,
+            _count: count
+          }))
+        }
       );
     }
   } catch (error: any) {
@@ -138,13 +218,18 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { id, markAllRead } = body;
+    const { id, markAllRead, types } = body;
 
     try {
       if (markAllRead) {
         // Mark all notifications as read
+        const where: any = { userId: user.id, isRead: false };
+        if (types && types.length > 0) {
+          where.notificationType = { in: types };
+        }
+        
         await db.notification.updateMany({
-          where: { userId: user.id, isRead: false },
+          where,
           data: { isRead: true, readAt: new Date() }
         });
         return successResponse({ message: 'تم تحديد جميع الإشعارات كمقروءة' });
@@ -177,6 +262,7 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     const deleteAll = searchParams.get('all') === 'true';
+    const deleteRead = searchParams.get('read') === 'true';
 
     try {
       if (deleteAll) {
@@ -185,6 +271,14 @@ export async function DELETE(request: NextRequest) {
           where: { userId: user.id }
         });
         return successResponse({ message: 'تم حذف جميع الإشعارات' });
+      }
+
+      if (deleteRead) {
+        // Delete only read notifications
+        await db.notification.deleteMany({
+          where: { userId: user.id, isRead: true }
+        });
+        return successResponse({ message: 'تم حذف الإشعارات المقروءة' });
       }
 
       if (!id) return errorResponse('معرف الإشعار مطلوب');
@@ -211,11 +305,33 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { userId, title, message, notificationType, referenceType, referenceId, priority, actionUrl } = body;
+    const { 
+      userId, 
+      title, 
+      message, 
+      notificationType, 
+      referenceType, 
+      referenceId, 
+      priority, 
+      actionUrl 
+    } = body;
 
     if (!userId || !title) {
       return errorResponse('معرف المستخدم والعنوان مطلوبان');
     }
+
+    // التحقق من صحة نوع الإشعار
+    const validTypes = [
+      'task_assigned', 'task_completed', 'task_due_soon',
+      'invoice_created', 'invoice_paid', 'invoice_overdue',
+      'low_stock', 'new_message', 'deadline_approaching',
+      'project_update', 'contract_signed',
+      'leave_approved', 'leave_rejected',
+      'payment_received', 'defect_reported',
+      'system', 'approval_required'
+    ];
+    
+    const finalType = validTypes.includes(notificationType) ? notificationType : 'system';
 
     try {
       const notification = await db.notification.create({
@@ -223,7 +339,7 @@ export async function POST(request: NextRequest) {
           userId,
           title,
           message,
-          notificationType: notificationType || 'system',
+          notificationType: finalType,
           referenceType,
           referenceId,
           priority: priority || 'normal',
@@ -231,17 +347,20 @@ export async function POST(request: NextRequest) {
         }
       });
 
+      // بث الإشعار في الوقت الفوري (سيتم معالجته بواسطة stream endpoint)
       return successResponse({
         id: notification.id,
         title: notification.title,
-        message: 'تم إنشاء الإشعار'
+        message: 'تم إنشاء الإشعار',
+        realtime: true
       });
     } catch (_dbError) {
       // Demo mode
       return successResponse({
         id: `demo-notif-${Date.now()}`,
         title,
-        message: 'تم إنشاء الإشعار (وضع تجريبي)'
+        message: 'تم إنشاء الإشعار (وضع تجريبي)',
+        realtime: true
       });
     }
   } catch (error: any) {

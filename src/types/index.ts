@@ -565,12 +565,31 @@ export interface BOQItem {
 // Notification Types
 // ============================================
 
+export type NotificationType = 
+  | 'task_assigned'       // مهمة جديدة معينة
+  | 'task_completed'      // مهمة مكتملة
+  | 'task_due_soon'       // موعد مهمة قريب
+  | 'invoice_created'     // فاتورة جديدة
+  | 'invoice_paid'        // فاتورة مدفوعة
+  | 'invoice_overdue'     // فاتورة متأخرة
+  | 'low_stock'           // مخزون منخفض
+  | 'new_message'         // رسالة جديدة
+  | 'deadline_approaching' // موعد تسليم قريب
+  | 'project_update'      // تحديث مشروع
+  | 'contract_signed'     // عقد موقع
+  | 'leave_approved'      // إجازة موافق عليها
+  | 'leave_rejected'      // إجازة مرفوضة
+  | 'payment_received'    // دفعة مستلمة
+  | 'defect_reported'     // عيب مُبلغ عنه
+  | 'system'              // إشعار نظام
+  | 'approval_required';  // يتطلب موافقة
+
 export interface Notification {
   id: string;
   userId: string;
   title: string;
   message?: string;
-  notificationType: 'system' | 'task' | 'project' | 'invoice' | 'approval' | 'mention';
+  notificationType: NotificationType;
   referenceType?: string;
   referenceId?: string;
   isRead: boolean;
@@ -578,6 +597,40 @@ export interface Notification {
   readAt?: Date;
   actionUrl?: string;
   createdAt: Date;
+}
+
+// إعدادات الإشعارات
+export interface NotificationSettings {
+  id?: string;
+  userId: string;
+  emailInvoices: boolean;
+  emailTasks: boolean;
+  emailLeaves: boolean;
+  emailProjects: boolean;
+  emailPayments: boolean;
+  pushEnabled: boolean;
+  pushTasks: boolean;
+  pushLeaves: boolean;
+  pushProjects: boolean;
+  digestEmail: boolean;
+}
+
+// بيانات الإشعار الجديد
+export interface NewNotificationData {
+  userId: string;
+  title: string;
+  message?: string;
+  notificationType: NotificationType;
+  referenceType?: string;
+  referenceId?: string;
+  priority?: 'low' | 'normal' | 'high' | 'urgent';
+  actionUrl?: string;
+}
+
+// استجابة SSE للإشعارات
+export interface NotificationSSEEvent {
+  type: 'notification' | 'heartbeat' | 'connected';
+  data?: Notification | { count: number; timestamp: string };
 }
 
 // ============================================

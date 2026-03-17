@@ -3,9 +3,7 @@
 import { useAuth } from '@/context/auth-context';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
-import { useNotifications } from '@/hooks/use-data';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -30,10 +28,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  Bell, Moon, Sun, Plus, ChevronDown, Home,
+  Moon, Sun, Plus, ChevronDown, Home,
   Calendar, Search
 } from 'lucide-react';
 import Link from 'next/link';
+import { NotificationDropdown } from '@/components/notifications/notification-dropdown';
 
 const CURRENCIES = ['AED', 'SAR', 'USD', 'EUR', 'EGP'] as const;
 
@@ -47,13 +46,10 @@ export function Header({ title, actions }: HeaderProps) {
   const { 
     theme: _theme, setTheme, language, isDark, isRTL,
     currency, setCurrency, currentPage, 
-    setNotificationsPanelOpen, setCommandPaletteOpen,
+    setCommandPaletteOpen,
     openQuickAddDialog
   } = useApp();
   const { t, formatDate } = useTranslation(language);
-  const { data: notificationsData } = useNotifications(true);
-  
-  const unreadCount = notificationsData?.data?.filter((n: any) => !n.isRead).length || 0;
   
   const getPageTitle = () => {
     if (title) return title;
@@ -242,20 +238,8 @@ export function Header({ title, actions }: HeaderProps) {
             {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </Button>
 
-          {/* Notifications */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setNotificationsPanelOpen(true)}
-            className="text-slate-400 hover:text-white hover:bg-slate-800 relative"
-          >
-            <Bell className="w-5 h-5" />
-            {unreadCount > 0 && (
-              <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center bg-red-500 text-white text-xs">
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </Badge>
-            )}
-          </Button>
+          {/* Notifications with Real-time Dropdown */}
+          <NotificationDropdown isRTL={isRTL} />
 
           {/* Custom Actions */}
           {actions}
