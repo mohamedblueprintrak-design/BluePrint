@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
@@ -39,8 +40,37 @@ interface SidebarItem {
   label: string;
   icon: React.ElementType;
   badge?: number;
+  href: string;
   children?: SidebarItem[];
 }
+
+// Route mapping for navigation
+const getRoutes = (language: 'ar' | 'en'): Record<string, string> => ({
+  'dashboard': '/dashboard',
+  'projects': '/dashboard/projects',
+  'clients': '/dashboard/clients',
+  'proposals': '/dashboard/proposals',
+  'contracts': '/dashboard/contracts',
+  'invoices': '/dashboard/invoices',
+  'vouchers': '/dashboard/vouchers',
+  'budgets': '/dashboard/budgets',
+  'tasks': '/dashboard/tasks',
+  'hr': '/dashboard/hr',
+  'suppliers': '/dashboard/suppliers',
+  'purchaseOrders': '/dashboard/purchase-orders',
+  'inventory': '/dashboard/inventory',
+  'boq': '/dashboard/boq',
+  'siteDiary': '/dashboard/site-diary',
+  'defects': '/dashboard/defects',
+  'documents': '/dashboard/documents',
+  'knowledge': '/dashboard/knowledge',
+  'aiChat': '/dashboard/ai-chat',
+  'reports': '/dashboard/reports',
+  'settings': '/dashboard/settings',
+  'admin': '/dashboard/admin',
+  'activities': '/dashboard/activities',
+  'profile': '/dashboard/profile',
+});
 
 // Sidebar Content Component - shared between desktop and mobile
 function SidebarContent({ 
@@ -50,6 +80,8 @@ function SidebarContent({
   onClose?: () => void;
   isMobile?: boolean;
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
   const { user, logout } = useAuth();
   const { 
     theme, setTheme, language, setLanguage, isDark, isRTL,
@@ -58,37 +90,48 @@ function SidebarContent({
   } = useApp();
   const { t } = useTranslation(language);
 
+  const routes = getRoutes(language);
+
   const menuItems: SidebarItem[] = [
-    { id: 'dashboard', label: t.dashboard, icon: Home },
-    { id: 'projects', label: t.projects, icon: Building2 },
-    { id: 'clients', label: t.clients, icon: Users },
-    { id: 'proposals', label: t.proposals, icon: FileText },
-    { id: 'contracts', label: t.contracts, icon: FileCheck },
-    { id: 'invoices', label: t.invoices, icon: DollarSign },
-    { id: 'vouchers', label: language === 'ar' ? 'السندات' : 'Vouchers', icon: Receipt },
-    { id: 'budgets', label: language === 'ar' ? 'الميزانيات' : 'Budgets', icon: Calculator },
-    { id: 'tasks', label: t.tasks, icon: CheckSquare, badge: 3 },
-    { id: 'hr', label: t.hr, icon: Users },
-    { id: 'suppliers', label: t.suppliers, icon: Briefcase },
-    { id: 'purchaseOrders', label: language === 'ar' ? 'طلبات الشراء' : 'Purchase Orders', icon: ShoppingCart },
-    { id: 'inventory', label: t.inventory, icon: Package },
-    { id: 'boq', label: language === 'ar' ? 'جدول الكميات' : 'BOQ', icon: FileSpreadsheet },
-    { id: 'siteDiary', label: t.siteDiary, icon: FileSpreadsheet },
-    { id: 'defects', label: language === 'ar' ? 'العيوب والمخالفات' : 'Defects', icon: AlertTriangle },
-    { id: 'documents', label: t.documents, icon: FileText },
-    { id: 'knowledge', label: t.knowledge, icon: BookOpen },
-    { id: 'aiChat', label: t.aiChat, icon: Bot },
-    { id: 'reports', label: t.reports, icon: BarChart3 },
-    { id: 'settings', label: t.settings, icon: Settings },
+    { id: 'dashboard', label: t.dashboard, icon: Home, href: '/dashboard' },
+    { id: 'projects', label: t.projects, icon: Building2, href: '/dashboard/projects' },
+    { id: 'clients', label: t.clients, icon: Users, href: '/dashboard/clients' },
+    { id: 'proposals', label: t.proposals, icon: FileText, href: '/dashboard/proposals' },
+    { id: 'contracts', label: t.contracts, icon: FileCheck, href: '/dashboard/contracts' },
+    { id: 'invoices', label: t.invoices, icon: DollarSign, href: '/dashboard/invoices' },
+    { id: 'vouchers', label: language === 'ar' ? 'السندات' : 'Vouchers', icon: Receipt, href: '/dashboard/vouchers' },
+    { id: 'budgets', label: language === 'ar' ? 'الميزانيات' : 'Budgets', icon: Calculator, href: '/dashboard/budgets' },
+    { id: 'tasks', label: t.tasks, icon: CheckSquare, badge: 3, href: '/dashboard/tasks' },
+    { id: 'hr', label: t.hr, icon: Users, href: '/dashboard/hr' },
+    { id: 'suppliers', label: t.suppliers, icon: Briefcase, href: '/dashboard/suppliers' },
+    { id: 'purchaseOrders', label: language === 'ar' ? 'طلبات الشراء' : 'Purchase Orders', icon: ShoppingCart, href: '/dashboard/purchase-orders' },
+    { id: 'inventory', label: t.inventory, icon: Package, href: '/dashboard/inventory' },
+    { id: 'boq', label: language === 'ar' ? 'جدول الكميات' : 'BOQ', icon: FileSpreadsheet, href: '/dashboard/boq' },
+    { id: 'siteDiary', label: t.siteDiary, icon: FileSpreadsheet, href: '/dashboard/site-diary' },
+    { id: 'defects', label: language === 'ar' ? 'العيوب والمخالفات' : 'Defects', icon: AlertTriangle, href: '/dashboard/defects' },
+    { id: 'documents', label: t.documents, icon: FileText, href: '/dashboard/documents' },
+    { id: 'knowledge', label: t.knowledge, icon: BookOpen, href: '/dashboard/knowledge' },
+    { id: 'aiChat', label: t.aiChat, icon: Bot, href: '/dashboard/ai-chat' },
+    { id: 'reports', label: t.reports, icon: BarChart3, href: '/dashboard/reports' },
+    { id: 'settings', label: t.settings, icon: Settings, href: '/dashboard/settings' },
   ];
 
   const adminItems: SidebarItem[] = [
-    { id: 'admin', label: t.admin, icon: Shield },
-    { id: 'activities', label: t.activities, icon: Zap },
+    { id: 'admin', label: language === 'ar' ? 'الإدارة' : 'Admin', icon: Shield, href: '/dashboard/admin' },
+    { id: 'activities', label: t.activities, icon: Zap, href: '/dashboard/activities' },
   ];
 
-  const handleItemClick = (id: string) => {
+  // Sync currentPage with pathname
+  useEffect(() => {
+    const pageId = Object.entries(routes).find(([, route]) => pathname === route)?.[0];
+    if (pageId && pageId !== currentPage) {
+      setCurrentPage(pageId);
+    }
+  }, [pathname, setCurrentPage, currentPage, routes]);
+
+  const handleItemClick = (id: string, href: string) => {
     setCurrentPage(id);
+    router.push(href);
     if (isMobile && onClose) {
       onClose();
     }
@@ -146,7 +189,7 @@ function SidebarContent({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
-                    onClick={() => handleItemClick(item.id)}
+                    onClick={() => handleItemClick(item.id, item.href)}
                     className={cn(
                       "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
                       currentPage === item.id 
@@ -186,7 +229,7 @@ function SidebarContent({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
-                        onClick={() => handleItemClick(item.id)}
+                        onClick={() => handleItemClick(item.id, item.href)}
                         className={cn(
                           "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
                           currentPage === item.id 
@@ -269,10 +312,7 @@ function SidebarContent({
               <DropdownMenuSeparator className="bg-slate-800" />
               
               <DropdownMenuItem 
-                onClick={() => {
-                  setCurrentPage('profile');
-                  if (isMobile && onClose) onClose();
-                }}
+                onClick={() => handleItemClick('profile', '/dashboard/profile')}
                 className="text-slate-300 focus:bg-slate-800"
               >
                 <User className="w-4 h-4 me-2" />
@@ -280,10 +320,7 @@ function SidebarContent({
               </DropdownMenuItem>
               
               <DropdownMenuItem 
-                onClick={() => {
-                  setCurrentPage('settings');
-                  if (isMobile && onClose) onClose();
-                }}
+                onClick={() => handleItemClick('settings', '/dashboard/settings')}
                 className="text-slate-300 focus:bg-slate-800"
               >
                 <Settings className="w-4 h-4 me-2" />
