@@ -829,12 +829,39 @@ export interface Defect {
   createdAt: Date | string;
 }
 
+// Helper for Defect API calls
+async function defectApiRequest<T>(
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+  data?: any,
+  token?: string | null
+): Promise<ApiResponse<T>> {
+  const isGet = method === 'GET';
+  const url = isGet && data 
+    ? `/api/defects?${new URLSearchParams(data).toString()}`
+    : '/api/defects';
+  
+  const options: RequestInit = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    }
+  };
+
+  if (data && !isGet) {
+    options.body = JSON.stringify(data);
+  }
+
+  const response = await fetch(url, options);
+  return response.json();
+}
+
 export function useDefects(projectId?: string) {
   const { token } = useAuth();
   
   return useQuery({
     queryKey: ['defects', projectId],
-    queryFn: () => apiRequest<Defect[]>('GET', 'defects', projectId ? { projectId } : {}, token),
+    queryFn: () => defectApiRequest<Defect[]>(projectId ? { projectId } : {}, token),
     enabled: !!token
   });
 }
@@ -845,7 +872,7 @@ export function useCreateDefect() {
   
   return useMutation({
     mutationFn: (data: Partial<Defect>) => 
-      apiRequest<Defect>('POST', 'defect', data, token),
+      defectApiRequest<Defect>('POST', data, token),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['defects', variables.projectId] });
     }
@@ -858,7 +885,7 @@ export function useUpdateDefect() {
   
   return useMutation({
     mutationFn: (data: { id: string } & Partial<Defect>) => 
-      apiRequest<Defect>('PUT', 'defect', data, token),
+      defectApiRequest<Defect>('PUT', data, token),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['defects'] });
     }
@@ -871,7 +898,7 @@ export function useDeleteDefect() {
   
   return useMutation({
     mutationFn: (id: string) => 
-      apiRequest('DELETE', 'defect', { id }, token),
+      defectApiRequest('DELETE', { id }, token),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['defects'] });
     }
