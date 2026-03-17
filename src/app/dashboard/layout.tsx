@@ -4,6 +4,10 @@ import { useAuth } from '@/context/auth-context';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
+import { Sidebar } from '@/components/layout/sidebar';
+import { Header } from '@/components/layout/header';
+import { cn } from '@/lib/utils';
+import { useApp } from '@/context/app-context';
 
 // Inner component that checks auth
 function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -46,9 +50,31 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const { sidebarCollapsed, isRTL } = useApp();
+
   return (
     <AuthGuard>
-      {children}
+      <div className="min-h-screen bg-slate-950">
+        {/* Sidebar */}
+        <Sidebar />
+        
+        {/* Main Content Area */}
+        <main 
+          className={cn(
+            "transition-all duration-300 min-h-screen",
+            isRTL ? "mr-20 md:mr-64" : "ml-20 md:ml-64",
+            sidebarCollapsed && (isRTL ? "mr-20" : "ml-20")
+          )}
+        >
+          {/* Header */}
+          <Header />
+          
+          {/* Page Content */}
+          <div className="p-4 md:p-6">
+            {children}
+          </div>
+        </main>
+      </div>
     </AuthGuard>
   );
 }
