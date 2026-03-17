@@ -345,7 +345,8 @@ function SidebarContent({
 }
 
 export function Sidebar() {
-  const { isRTL, sidebarCollapsed, setSidebarCollapsed } = useApp();
+  const { isRTL, sidebarCollapsed, setSidebarCollapsed, language } = useApp();
+  const { t } = useTranslation(language);
   const [isMobile, setIsMobile] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
