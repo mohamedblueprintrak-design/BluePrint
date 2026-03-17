@@ -1398,3 +1398,114 @@ export function useDeleteBOQItem() {
     }
   });
 }
+
+// ============================================
+// Purchase Orders Hooks
+// ============================================
+
+export interface PurchaseOrder {
+  id: string;
+  poNumber: string;
+  supplierId?: string;
+  supplierName?: string;
+  projectId?: string;
+  projectName?: string;
+  orderDate?: Date | string;
+  expectedDate?: Date | string;
+  subtotal?: number;
+  taxRate?: number;
+  taxAmount?: number;
+  totalAmount?: number;
+  status?: string;
+  notes?: string;
+  terms?: string;
+  items?: PurchaseOrderItem[];
+  createdAt?: Date | string;
+}
+
+export interface PurchaseOrderItem {
+  id?: string;
+  purchaseOrderId?: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  unit?: string;
+  total?: number;
+  sortOrder?: number;
+}
+
+// Helper for PO API calls
+async function poApiRequest<T>(
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+  data?: any,
+  token?: string | null
+): Promise<ApiResponse<T>> {
+  const isGet = method === 'GET';
+  const url = isGet && data 
+    ? `/api/purchase-orders?${new URLSearchParams(data).toString()}`
+    : '/api/purchase-orders';
+  
+  const options: RequestInit = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    }
+  };
+
+  if (data && !isGet) {
+    options.body = JSON.stringify(data);
+  }
+
+  const response = await fetch(url, options);
+  return response.json();
+}
+
+export function usePurchaseOrders(projectId?: string) {
+  const { token } = useAuth();
+  
+  return useQuery({
+    queryKey: ['purchase-orders', projectId],
+    queryFn: () => poApiRequest<PurchaseOrder[]>(projectId ? { projectId } : {}, token),
+    enabled: !!token
+  });
+}
+
+export function useCreatePurchaseOrder() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: Partial<PurchaseOrder>) => 
+      poApiRequest<PurchaseOrder>('POST', data, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+    }
+  });
+}
+
+export function useUpdatePurchaseOrder() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: { id: string } & Partial<PurchaseOrder>) => 
+      poApiRequest<PurchaseOrder>('PUT', data, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+    }
+  });
+}
+
+export function useDeletePurchaseOrder() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (id: string) => 
+      poApiRequest('DELETE', { id }, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+    }
+  });
+}

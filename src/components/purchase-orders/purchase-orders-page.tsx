@@ -3,12 +3,13 @@
 import { useState } from 'react';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
-import { useProjects, useSuppliers } from '@/hooks/use-data';
+import { useProjects, useSuppliers, usePurchaseOrders, useCreatePurchaseOrder, useUpdatePurchaseOrder } from '@/hooks/use-data';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -28,38 +29,16 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import {
   ShoppingCart, Plus, Search, Eye, Edit, Send, CheckCircle,
-  Clock, XCircle, Package, Building2, Calendar, DollarSign, Truck
+  Clock, XCircle, Package, Building2, Calendar, DollarSign, Truck,
+  Loader2, AlertCircle
 } from 'lucide-react';
 
 const PO_STATUSES = [
   { value: 'draft', label: 'مسودة', labelEn: 'Draft', color: 'bg-slate-500' },
-  { value: 'pending', label: 'قيد المراجعة', labelEn: 'Pending', color: 'bg-yellow-500' },
+  { value: 'submitted', label: 'قيد المراجعة', labelEn: 'Submitted', color: 'bg-yellow-500' },
   { value: 'approved', label: 'معتمد', labelEn: 'Approved', color: 'bg-blue-500' },
-  { value: 'ordered', label: 'تم الطلب', labelEn: 'Ordered', color: 'bg-purple-500' },
   { value: 'received', label: 'تم الاستلام', labelEn: 'Received', color: 'bg-green-500' },
   { value: 'cancelled', label: 'ملغي', labelEn: 'Cancelled', color: 'bg-red-500' },
-];
-
-interface PurchaseOrder {
-  id: string;
-  poNumber: string;
-  supplierId: string;
-  supplierName: string;
-  projectId: string;
-  projectName: string;
-  orderDate: string;
-  expectedDate: string;
-  total: number;
-  status: string;
-  items: { description: string; quantity: number; unitPrice: number }[];
-  createdAt: string;
-}
-
-const mockPOs: PurchaseOrder[] = [
-  { id: '1', poNumber: 'PO-2024-0001', supplierId: 's1', supplierName: 'شركة الخرسانة المتحدة', projectId: 'p1', projectName: 'برج دبي', orderDate: new Date().toISOString(), expectedDate: new Date(Date.now() + 7 * 86400000).toISOString(), total: 125000, status: 'approved', items: [{ description: 'خرسانة C25', quantity: 100, unitPrice: 320 }], createdAt: new Date().toISOString() },
-  { id: '2', poNumber: 'PO-2024-0002', supplierId: 's2', supplierName: 'مؤسسة الحديد والتسليح', projectId: 'p1', projectName: 'برج دبي', orderDate: new Date(Date.now() - 86400000).toISOString(), expectedDate: new Date(Date.now() + 3 * 86400000).toISOString(), total: 280000, status: 'ordered', items: [{ description: 'حديد تسليح Grade 60', quantity: 100, unitPrice: 2800 }], createdAt: new Date(Date.now() - 86400000).toISOString() },
-  { id: '3', poNumber: 'PO-2024-0003', supplierId: 's3', supplierName: 'شركة المواد العازلة', projectId: 'p2', projectName: 'فيلا المرفأ', orderDate: new Date(Date.now() - 172800000).toISOString(), expectedDate: new Date(Date.now() - 86400000).toISOString(), total: 45000, status: 'received', items: [{ description: 'عزل مائي', quantity: 500, unitPrice: 90 }], createdAt: new Date(Date.now() - 172800000).toISOString() },
-  { id: '4', poNumber: 'PO-2024-0004', supplierId: 's1', supplierName: 'شركة الخرسانة المتحدة', projectId: 'p3', projectName: 'مجمع تجاري', orderDate: new Date().toISOString(), expectedDate: new Date(Date.now() + 14 * 86400000).toISOString(), total: 85000, status: 'pending', items: [{ description: 'خرسانة C30', quantity: 200, unitPrice: 350 }], createdAt: new Date().toISOString() },
 ];
 
 export function PurchaseOrdersPage() {
@@ -76,30 +55,34 @@ export function PurchaseOrdersPage() {
   const projects = projectsData?.data || [];
   const suppliers = suppliersData?.data || [];
   
-  const [purchaseOrders] = useState<PurchaseOrder[]>(mockPOs);
+  const { data: poData, isLoading, error } = usePurchaseOrders();
+  const purchaseOrders = poData?.data || [];
+  
+  const createMutation = useCreatePurchaseOrder();
+  const updateMutation = useUpdatePurchaseOrder();
   
   const [formData, setFormData] = useState({
     supplierId: '',
     projectId: '',
     orderDate: new Date().toISOString().split('T')[0],
     expectedDate: '',
-    items: [{ description: '', quantity: 1, unitPrice: 0 }],
+    items: [{ description: '', quantity: 1, unitPrice: 0, unit: '' }],
     notes: '',
   });
 
-  const filteredPOs = purchaseOrders.filter((po) => {
-    const matchesSearch = po.poNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          po.supplierName.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredPOs = purchaseOrders.filter((po: any) => {
+    const matchesSearch = po.poNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          po.supplierName?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || po.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   const stats = {
     total: purchaseOrders.length,
-    pending: purchaseOrders.filter(po => po.status === 'pending').length,
-    ordered: purchaseOrders.filter(po => po.status === 'ordered').length,
-    received: purchaseOrders.filter(po => po.status === 'received').length,
-    totalValue: purchaseOrders.reduce((sum, po) => sum + po.total, 0),
+    pending: purchaseOrders.filter((po: any) => po.status === 'submitted').length,
+    approved: purchaseOrders.filter((po: any) => po.status === 'approved').length,
+    received: purchaseOrders.filter((po: any) => po.status === 'received').length,
+    totalValue: purchaseOrders.reduce((sum: number, po: any) => sum + (po.totalAmount || 0), 0),
   };
 
   const getStatusBadge = (status: string) => {
@@ -114,7 +97,7 @@ export function PurchaseOrdersPage() {
   const handleAddItem = () => {
     setFormData({
       ...formData,
-      items: [...formData.items, { description: '', quantity: 1, unitPrice: 0 }]
+      items: [...formData.items, { description: '', quantity: 1, unitPrice: 0, unit: '' }]
     });
   };
 
@@ -143,12 +126,62 @@ export function PurchaseOrdersPage() {
       return;
     }
     
-    toast({
-      title: t.successSave,
-      description: language === 'ar' ? 'تم إنشاء أمر الشراء بنجاح' : 'Purchase order created successfully'
+    createMutation.mutate({
+      projectId: formData.projectId || undefined,
+      supplierId: formData.supplierId,
+      orderDate: formData.orderDate,
+      expectedDate: formData.expectedDate || undefined,
+      items: formData.items.map(item => ({
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        unit: item.unit
+      })),
+      notes: formData.notes
+    }, {
+      onSuccess: () => {
+        toast({
+          title: t.successSave,
+          description: language === 'ar' ? 'تم إنشاء أمر الشراء بنجاح' : 'Purchase order created successfully'
+        });
+        setShowAddDialog(false);
+        setFormData({
+          supplierId: '',
+          projectId: '',
+          orderDate: new Date().toISOString().split('T')[0],
+          expectedDate: '',
+          items: [{ description: '', quantity: 1, unitPrice: 0, unit: '' }],
+          notes: '',
+        });
+      },
+      onError: () => {
+        toast({
+          title: t.error,
+          description: language === 'ar' ? 'فشل في إنشاء أمر الشراء' : 'Failed to create purchase order',
+          variant: 'destructive'
+        });
+      }
     });
-    setShowAddDialog(false);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+          <p className="text-red-400">{language === 'ar' ? 'فشل في تحميل البيانات' : 'Failed to load data'}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -398,7 +431,7 @@ export function PurchaseOrdersPage() {
 
       {/* PO List */}
       <div className="space-y-4">
-        {filteredPOs.map((po) => (
+        {filteredPOs.map((po: any) => (
           <Card key={po.id} className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-colors">
             <CardContent className="p-4">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -411,19 +444,21 @@ export function PurchaseOrdersPage() {
                       <h3 className="text-white font-medium">{po.poNumber}</h3>
                       {getStatusBadge(po.status)}
                     </div>
-                    <p className="text-slate-400 text-sm">{po.supplierName}</p>
+                    <p className="text-slate-400 text-sm">{po.supplierName || (language === 'ar' ? 'غير محدد' : 'Not specified')}</p>
                     <div className="flex flex-wrap gap-4 mt-2 text-xs text-slate-500">
-                      <div className="flex items-center gap-1">
-                        <Building2 className="w-3 h-3" />
-                        <span>{po.projectName}</span>
-                      </div>
+                      {po.projectName && (
+                        <div className="flex items-center gap-1">
+                          <Building2 className="w-3 h-3" />
+                          <span>{po.projectName}</span>
+                        </div>
+                      )}
                       <div className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
                         <span>{formatDate(po.orderDate)}</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <Package className="w-3 h-3" />
-                        <span>{po.items.length} {language === 'ar' ? 'بند' : 'items'}</span>
+                        <span>{po.items?.length || 0} {language === 'ar' ? 'بند' : 'items'}</span>
                       </div>
                     </div>
                   </div>
@@ -431,10 +466,12 @@ export function PurchaseOrdersPage() {
                 
                 <div className="flex items-center gap-4">
                   <div className="text-end">
-                    <p className="text-xl font-bold text-cyan-400">{formatCurrency(po.total)}</p>
-                    <p className="text-xs text-slate-500">
-                      {language === 'ar' ? 'تسليم متوقع:' : 'Expected:'} {formatDate(po.expectedDate)}
-                    </p>
+                    <p className="text-xl font-bold text-cyan-400">{formatCurrency(po.totalAmount || 0)}</p>
+                    {po.expectedDate && (
+                      <p className="text-xs text-slate-500">
+                        {language === 'ar' ? 'تسليم متوقع:' : 'Expected:'} {formatDate(po.expectedDate)}
+                      </p>
+                    )}
                   </div>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white">
@@ -443,7 +480,7 @@ export function PurchaseOrdersPage() {
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white">
                       <Edit className="w-4 h-4" />
                     </Button>
-                    {po.status === 'pending' && (
+                    {po.status === 'draft' && (
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-green-400 hover:text-green-300">
                         <Send className="w-4 h-4" />
                       </Button>
@@ -454,6 +491,13 @@ export function PurchaseOrdersPage() {
             </CardContent>
           </Card>
         ))}
+        
+        {filteredPOs.length === 0 && (
+          <div className="text-center py-12">
+            <ShoppingCart className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+            <p className="text-slate-400">{language === 'ar' ? 'لا توجد أوامر شراء' : 'No purchase orders found'}</p>
+          </div>
+        )}
       </div>
     </div>
   );
