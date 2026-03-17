@@ -41,6 +41,7 @@ import {
   FileText, Plus, Search, Eye, Edit, Trash2, Download,
   Clock, AlertCircle, CheckCircle, Calendar
 } from 'lucide-react';
+import { downloadInvoicePDF, previewInvoicePDF } from '@/lib/pdf/invoice-pdf';
 
 // Invoice Status Configuration
 const INVOICE_STATUSES = [
@@ -769,7 +770,37 @@ export function InvoicesPage() {
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white">
                         <Edit className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-slate-400 hover:text-cyan-400"
+                        onClick={() => {
+                          downloadInvoicePDF({
+                            invoiceNumber: invoice.invoiceNumber,
+                            clientName: invoice.client?.name || 'Client',
+                            clientEmail: invoice.client?.email,
+                            clientPhone: invoice.client?.phone,
+                            clientAddress: invoice.client?.address,
+                            projectName: invoice.project?.name,
+                            issueDate: invoice.issueDate,
+                            dueDate: invoice.dueDate,
+                            items: invoice.items || [],
+                            subtotal: invoice.subtotal || 0,
+                            taxRate: invoice.taxRate || 5,
+                            taxAmount: invoice.taxAmount || 0,
+                            discountAmount: invoice.discountAmount || 0,
+                            total: invoice.total || 0,
+                            notes: invoice.notes,
+                            terms: invoice.terms,
+                            status: invoice.status,
+                            paidAmount: invoice.paidAmount || 0,
+                          }, undefined, language);
+                          toast({
+                            title: language === 'ar' ? 'تم التحميل' : 'Downloaded',
+                            description: language === 'ar' ? 'تم تحميل الفاتورة بنجاح' : 'Invoice downloaded successfully'
+                          });
+                        }}
+                      >
                         <Download className="w-4 h-4" />
                       </Button>
                       <Button 
@@ -938,7 +969,33 @@ export function InvoicesPage() {
             >
               {t.close}
             </Button>
-            <Button className="bg-blue-600 hover:bg-blue-700">
+            <Button 
+              className="bg-blue-600 hover:bg-blue-700"
+              onClick={() => {
+                if (selectedInvoice) {
+                  downloadInvoicePDF({
+                    invoiceNumber: selectedInvoice.invoiceNumber,
+                    clientName: selectedInvoice.client?.name || 'Client',
+                    clientEmail: selectedInvoice.client?.email,
+                    clientPhone: selectedInvoice.client?.phone,
+                    clientAddress: selectedInvoice.client?.address,
+                    projectName: selectedInvoice.project?.name,
+                    issueDate: selectedInvoice.issueDate,
+                    dueDate: selectedInvoice.dueDate,
+                    items: selectedInvoice.items || [],
+                    subtotal: selectedInvoice.subtotal || 0,
+                    taxRate: selectedInvoice.taxRate || 5,
+                    taxAmount: selectedInvoice.taxAmount || 0,
+                    discountAmount: selectedInvoice.discountAmount || 0,
+                    total: selectedInvoice.total || 0,
+                    notes: selectedInvoice.notes,
+                    terms: selectedInvoice.terms,
+                    status: selectedInvoice.status,
+                    paidAmount: selectedInvoice.paidAmount || 0,
+                  }, undefined, language);
+                }
+              }}
+            >
               <Download className="w-4 h-4 me-2" />
               {language === 'ar' ? 'تصدير PDF' : 'Export PDF'}
             </Button>
