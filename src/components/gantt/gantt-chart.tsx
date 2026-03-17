@@ -1,15 +1,15 @@
 'use client';
 
 /**
- * Gantt Chart Component
- * مخطط جانت للمهام والمشاريع
+ * Gantt Chart Component with Drag & Drop
+ * مخطط جانت للمهام والمشاريع مع السحب والإفلات
  */
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { 
   ChevronLeft, ChevronRight, ZoomIn, ZoomOut, 
   Plus, Edit2, Trash2, Calendar, Clock, 
-  CheckCircle, AlertCircle, Play, Pause
+  CheckCircle, AlertCircle, Play, Pause, GripHorizontal
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -107,6 +107,13 @@ export function GanttChart({
   const [selectedTask, setSelectedTask] = useState<GanttTask | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  
+  // Drag state
+  const [draggedTask, setDraggedTask] = useState<GanttTask | null>(null);
+  const [dragMode, setDragMode] = useState<'move' | 'resize-left' | 'resize-right' | null>(null);
+  const [dragStartX, setDragStartX] = useState(0);
+  const [originalDates, setOriginalDates] = useState<{ start: Date | null; end: Date | null } | null>(null);
+  const timelineRef = useRef<HTMLDivElement>(null);
 
   const isRTL = lang === 'ar';
 
@@ -229,7 +236,84 @@ export function GanttChart({
     setIsEditDialogOpen(true);
   };
 
-  // Handle task drag (simplified - in production would use drag library)
+  // Drag handlers
+  const handleDragStart = (e: React.MouseEvent, task: GanttTask, mode: 'move' | 'resize-left' | 'resize-right') => {
+    e.preventDefault();
+    setDraggedTask(task);
+    setDragMode(mode);
+    setDragStartX(e.clientX);
+    setOriginalDates({ start: task.startDate, end: task.endDate });
+    
+    // Add global mouse move and up listeners
+    document.addEventListener('mousemove', handleDragMove);
+    document.addEventListener('mouseup', handleDragEnd);
+  };
+
+  const handleDragMove = useCallback((e: MouseEvent) => {
+    if (!draggedTask || !dragMode || !originalDates || !timelineRef.current) return;
+
+    const timelineWidth = timelineRef.current.offsetWidth;
+    const deltaX = e.clientX - dragStartX;
+    const daysDelta = Math.round((deltaX / timelineWidth) * timelineHeaders.length);
+
+    if (daysDelta === 0) return;
+
+    const ONE_DAY = 24 * 60 * 60 * 1000;
+
+    let newStartDate = originalDates.start;
+    let newEndDate = originalDates.end;
+
+    if (dragMode === 'move') {
+      // Move entire task
+      if (originalDates.start) {
+        newStartDate = new Date(originalDates.start.getTime() + daysDelta * ONE_DAY);
+      }
+      if (originalDates.end) {
+        newEndDate = new Date(originalDates.end.getTime() + daysDelta * ONE_DAY);
+      }
+    } else if (dragMode === 'resize-left') {
+      // Resize from left (change start date)
+      if (originalDates.start && originalDates.end) {
+        const newStart = new Date(originalDates.start.getTime() + daysDelta * ONE_DAY);
+        if (newStart < originalDates.end) {
+          newStartDate = newStart;
+        }
+      }
+    } else if (dragMode === 'resize-right') {
+      // Resize from right (change end date)
+      if (originalDates.start && originalDates.end) {
+        const newEnd = new Date(originalDates.end.getTime() + daysDelta * ONE_DAY);
+        if (newEnd > originalDates.start) {
+          newEndDate = newEnd;
+        }
+      }
+    }
+
+    // Update task temporarily
+    setTasks(prev => prev.map(t => 
+      t.id === draggedTask.id 
+        ? { ...t, startDate: newStartDate, endDate: newEndDate }
+        : t
+    ));
+  }, [draggedTask, dragMode, dragStartX, originalDates, timelineHeaders.length]);
+
+  const handleDragEnd = useCallback(() => {
+    if (draggedTask) {
+      const updatedTask = tasks.find(t => t.id === draggedTask.id);
+      if (updatedTask) {
+        onTaskUpdate?.(updatedTask);
+      }
+    }
+    
+    setDraggedTask(null);
+    setDragMode(null);
+    setOriginalDates(null);
+    
+    document.removeEventListener('mousemove', handleDragMove);
+    document.removeEventListener('mouseup', handleDragEnd);
+  }, [draggedTask, tasks, onTaskUpdate, handleDragMove]);
+
+  // Handle task drag (legacy - simplified)
   const handleTaskDrag = (task: GanttTask, newStartDate: Date) => {
     const duration = task.endDate 
       ? Math.ceil((task.endDate.getTime() - (task.startDate?.getTime() || 0)) / (1000 * 60 * 60 * 24))
@@ -402,6 +486,7 @@ export function GanttChart({
             {/* Task Rows */}
             {tasks.map((task) => {
               const position = getTaskPosition(task);
+              const isBeingDragged = draggedTask?.id === task.id;
               
               return (
                 <div
@@ -410,24 +495,57 @@ export function GanttChart({
                 >
                   {position && (
                     <div
-                      className="absolute top-2 h-8 rounded-lg flex items-center px-2 cursor-pointer hover:opacity-80 transition-opacity"
+                      className={`absolute top-2 h-8 rounded-lg flex items-center group ${
+                        isBeingDragged ? 'ring-2 ring-white ring-opacity-50' : ''
+                      }`}
                       style={{
                         left: position.left,
                         width: position.width,
                         backgroundColor: task.color || PRIORITY_COLORS[task.priority],
+                        cursor: dragMode === 'move' ? 'grabbing' : 'grab',
                       }}
-                      onClick={() => handleTaskClick(task)}
                     >
+                      {/* Left Resize Handle */}
                       <div
-                        className="h-full rounded-l-lg"
+                        className="absolute left-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-white/20 rounded-l-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          handleDragStart(e, task, 'resize-left');
+                        }}
+                      >
+                        <GripHorizontal className="w-3 h-3 text-white/50" />
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div
+                        className="h-full rounded-l-lg flex-1"
                         style={{
                           width: `${task.progress}%`,
                           backgroundColor: 'rgba(255,255,255,0.3)',
                         }}
                       />
-                      <span className="text-xs text-white truncate px-1">
-                        {task.title}
-                      </span>
+
+                      {/* Task Title - Drag Area */}
+                      <div 
+                        className="flex-1 px-2 cursor-grab"
+                        onMouseDown={(e) => handleDragStart(e, task, 'move')}
+                        onClick={() => !draggedTask && handleTaskClick(task)}
+                      >
+                        <span className="text-xs text-white truncate block">
+                          {task.title}
+                        </span>
+                      </div>
+
+                      {/* Right Resize Handle */}
+                      <div
+                        className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-white/20 rounded-r-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          handleDragStart(e, task, 'resize-right');
+                        }}
+                      >
+                        <GripHorizontal className="w-3 h-3 text-white/50" />
+                      </div>
                     </div>
                   )}
 
