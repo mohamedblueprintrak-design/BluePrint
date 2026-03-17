@@ -3,24 +3,30 @@ import * as jose from 'jose';
 import ZAI from 'z-ai-web-dev-sdk';
 import { getJWTSecret } from '../utils/auth';
 
-// API Response types (kept for documentation purposes)
-// These interfaces define the expected response structure from the LLM API
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-interface _CompletionChoice {
+// API Response types
+interface CompletionChoice {
   message?: {
     content?: string;
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-interface _CompletionUsage {
+interface CompletionUsage {
   total_tokens?: number;
+}
+
+interface SearchFunctionResultItem {
+  url: string;
+  name: string;
+  snippet: string;
+  host_name: string;
+  rank: number;
+  date: string;
+  favicon: string;
 }
 
 // Rate Limiting: In-memory store for request tracking
 const aiChatRateLimitStore = new Map<string, { count: number; resetTime: number }>();
-const AI_CHAT_RATE_LIMIT_REQUESTS = 30; // requests per window for AI chat
+const AI_CHAT_RATE_LIMIT_REQUESTS = 50; // Increased for skills
 const AI_CHAT_RATE_LIMIT_WINDOW = 60000; // 1 minute in ms
 
 // Clean up old rate limit entries every 5 minutes
@@ -44,7 +50,6 @@ function getClientIP(request: NextRequest): string {
 
 // Check rate limit for AI chat requests
 function checkRateLimit(request: NextRequest, userId?: string): { allowed: boolean; remaining: number; resetTime: number } {
-  // Rate limit by user ID if available, otherwise by IP
   const key = userId || getClientIP(request);
   const now = Date.now();
   const record = aiChatRateLimitStore.get(key);
@@ -163,6 +168,8 @@ const SYSTEM_PROMPT = `أنت "بلو"، مساعد ذكي متخصص في ال�
 - تقديم معلومات عن أسعار مواد البناء في السوق الإماراتي
 - المساعدة في التصميم الإنشائي والمعماري
 - الإجابة على استفسارات الهندسة المدنية
+- البحث في الإنترنت عند الحاجة لمعلومات حديثة
+- توليد صور توضيحية عند الطلب
 
 إرشادات الرد:
 - قدم إجابات دقيقة وواضحة باللغة العربية
@@ -170,10 +177,126 @@ const SYSTEM_PROMPT = `أنت "بلو"، مساعد ذكي متخصص في ال�
 - اذكر المعايير والأكواد المعمول بها في الإمارات عند الحاجة
 - إذا كان السؤال خارج تخصصك، اعتذر بلطف وقدم التوجيه المناسب
 - استخدم تنسيق Markdown للجداول والقوائم والكود عند الحاجة
+- عند طلب صورة، اكتب "【صورة: وصف الصورة】" وسأقوم بتوليدها
 
 كن ودوداً ومحترفاً في جميع تفاعلاتك.`;
 
-// POST handler for AI Chat
+// Skill: Web Search
+async function performWebSearch(query: string, numResults: number = 5): Promise<SearchFunctionResultItem[]> {
+  try {
+    const zai = await ZAI.create();
+    const searchResult = await zai.functions.invoke("web_search", {
+      query: query,
+      num: numResults
+    });
+    return searchResult as SearchFunctionResultItem[];
+  } catch (error) {
+    console.error('Web Search Error:', error);
+    return [];
+  }
+}
+
+// Skill: Image Generation
+async function generateImage(prompt: string, size: string = '1024x1024'): Promise<string | null> {
+  try {
+    const zai = await ZAI.create();
+    const response = await zai.images.generations.create({
+      prompt: prompt,
+      size: size as any
+    });
+    return response.data?.[0]?.base64 || null;
+  } catch (error) {
+    console.error('Image Generation Error:', error);
+    return null;
+  }
+}
+
+// Skill: Translation
+async function translateText(text: string, targetLang: string = 'ar'): Promise<string> {
+  try {
+    const zai = await ZAI.create();
+    const completion = await zai.chat.completions.create({
+      model: 'gemini-2.0-flash',
+      messages: [
+        { role: 'system', content: `You are a professional translator. Translate the following text to ${targetLang === 'ar' ? 'Arabic' : 'English'}. Only return the translation, no explanations.` },
+        { role: 'user', content: text }
+      ],
+      temperature: 0.3,
+      max_tokens: 2000,
+    });
+    return completion.choices?.[0]?.message?.content || text;
+  } catch (error) {
+    console.error('Translation Error:', error);
+    return text;
+  }
+}
+
+// Skill: Code Explanation
+async function explainCode(code: string, language: string = 'ar'): Promise<string> {
+  try {
+    const zai = await ZAI.create();
+    const completion = await zai.chat.completions.create({
+      model: 'gemini-2.0-flash',
+      messages: [
+        { role: 'system', content: `You are a code expert. Explain the following code ${language === 'ar' ? 'in Arabic' : 'in English'}. Be clear and educational.` },
+        { role: 'user', content: `Explain this code:\n\n\`\`\`\n${code}\n\`\`\`` }
+      ],
+      temperature: 0.5,
+      max_tokens: 2000,
+    });
+    return completion.choices?.[0]?.message?.content || '';
+  } catch (error) {
+    console.error('Code Explanation Error:', error);
+    return '';
+  }
+}
+
+// Skill: Summarization
+async function summarizeText(text: string, language: string = 'ar'): Promise<string> {
+  try {
+    const zai = await ZAI.create();
+    const completion = await zai.chat.completions.create({
+      model: 'gemini-2.0-flash',
+      messages: [
+        { role: 'system', content: `You are a summarization expert. Summarize the following text ${language === 'ar' ? 'in Arabic' : 'in English'}. Be concise but comprehensive.` },
+        { role: 'user', content: text }
+      ],
+      temperature: 0.3,
+      max_tokens: 1000,
+    });
+    return completion.choices?.[0]?.message?.content || '';
+  } catch (error) {
+    console.error('Summarization Error:', error);
+    return '';
+  }
+}
+
+// Skill: Sentiment Analysis
+async function analyzeSentiment(text: string): Promise<{ sentiment: string; confidence: number; details: string }> {
+  try {
+    const zai = await ZAI.create();
+    const completion = await zai.chat.completions.create({
+      model: 'gemini-2.0-flash',
+      messages: [
+        { role: 'system', content: 'Analyze the sentiment of the text. Return JSON: {"sentiment": "positive/negative/neutral", "confidence": 0-1, "details": "brief explanation"}' },
+        { role: 'user', content: text }
+      ],
+      temperature: 0.3,
+      max_tokens: 500,
+    });
+    const result = completion.choices?.[0]?.message?.content || '';
+    try {
+      return JSON.parse(result);
+    } catch {
+      return { sentiment: 'neutral', confidence: 0.5, details: result };
+    }
+  } catch (error) {
+    console.error('Sentiment Analysis Error:', error);
+    return { sentiment: 'neutral', confidence: 0, details: 'Error analyzing sentiment' };
+  }
+}
+
+// Main POST handler
 export async function POST(request: NextRequest) {
   try {
     // Authenticate user
@@ -190,7 +313,18 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json();
-    const { message, model = 'gemini-2.0-flash', history = [] } = body;
+    const { 
+      message, 
+      model = 'gemini-2.0-flash', 
+      history = [],
+      skill, // Optional skill parameter
+      skillParams // Parameters for the skill
+    } = body;
+
+    // Handle specific skills
+    if (skill) {
+      return await handleSkillRequest(skill, skillParams, user);
+    }
 
     // Validate message
     if (!message || typeof message !== 'string' || message.trim().length === 0) {
@@ -205,6 +339,63 @@ export async function POST(request: NextRequest) {
     // Validate model
     const selectedModel = MODEL_MAPPING[model] || 'gemini-2.0-flash';
 
+    // Check if user wants to search the web
+    const wantsWebSearch = message.includes('ابحث') || 
+                          message.includes('بحث') || 
+                          message.includes('search') ||
+                          message.includes('ما هو') ||
+                          message.includes('ما هي') ||
+                          message.includes('كم سعر') ||
+                          message.includes('أسعار') ||
+                          message.includes('أخبار') ||
+                          message.includes('معلومات عن');
+
+    // Check if user wants an image
+    const wantsImage = message.includes('صورة') || 
+                      message.includes('ارسم') ||
+                      message.includes('صمم') ||
+                      message.includes('generate image') ||
+                      message.includes('create image') ||
+                      message.includes('【صورة:');
+
+    let webSearchResults: SearchFunctionResultItem[] = [];
+    let generatedImage: string | null = null;
+
+    // Perform web search if needed
+    if (wantsWebSearch) {
+      const searchQuery = message
+        .replace('ابحث عن', '')
+        .replace('ابحث', '')
+        .replace('بحث', '')
+        .replace('search for', '')
+        .replace('search', '')
+        .trim();
+      webSearchResults = await performWebSearch(searchQuery, 5);
+    }
+
+    // Generate image if needed
+    if (wantsImage) {
+      const imagePrompt = message
+        .replace('صورة', '')
+        .replace('ارسم', '')
+        .replace('صمم', '')
+        .replace('generate image', '')
+        .replace('create image', '')
+        .replace('【صورة:', '')
+        .replace('】', '')
+        .trim();
+      generatedImage = await generateImage(`Professional architectural/engineering illustration: ${imagePrompt}`);
+    }
+
+    // Build context with search results
+    let contextMessage = message;
+    if (webSearchResults.length > 0) {
+      contextMessage += '\n\nنتائج البحث من الإنترنت:\n';
+      webSearchResults.forEach((result, index) => {
+        contextMessage += `${index + 1}. ${result.name}\n   ${result.snippet}\n   المصدر: ${result.url}\n\n`;
+      });
+    }
+
     // Build messages array for the LLM
     const messages = [
       { role: 'system', content: SYSTEM_PROMPT },
@@ -212,7 +403,7 @@ export async function POST(request: NextRequest) {
         role: msg.role === 'user' ? 'user' : 'assistant',
         content: msg.content
       })),
-      { role: 'user', content: message.trim() }
+      { role: 'user', content: contextMessage.trim() }
     ];
 
     // Initialize ZAI SDK
@@ -227,16 +418,23 @@ export async function POST(request: NextRequest) {
     });
 
     // Extract response
-    const responseContent = completion.choices?.[0]?.message?.content || '';
+    let responseContent = (completion as any).choices?.[0]?.message?.content || '';
+    
+    // Add image to response if generated
+    if (generatedImage) {
+      responseContent += `\n\n![صورة مولدة](data:image/png;base64,${generatedImage})`;
+    }
     
     // Estimate token count (approximate)
-    const tokens = completion.usage?.total_tokens || 
+    const tokens = (completion as any).usage?.total_tokens || 
       Math.ceil((message.length + responseContent.length) / 4);
 
     return successResponse({
       response: responseContent,
       tokens: tokens,
-      model: selectedModel
+      model: selectedModel,
+      webSearchResults: webSearchResults.length > 0 ? webSearchResults : undefined,
+      generatedImage: generatedImage ? true : undefined
     });
 
   } catch (error: any) {
@@ -265,6 +463,71 @@ export async function POST(request: NextRequest) {
       'SERVER_ERROR',
       500
     );
+  }
+}
+
+// Handle skill-specific requests
+async function handleSkillRequest(skill: string, params: any, user: any): Promise<NextResponse> {
+  switch (skill) {
+    case 'web_search': {
+      const { query, num = 5 } = params || {};
+      if (!query) {
+        return errorResponse('يرجى تحديد كلمة البحث.');
+      }
+      const results = await performWebSearch(query, num);
+      return successResponse({ results, skill: 'web_search' });
+    }
+    
+    case 'generate_image': {
+      const { prompt, size = '1024x1024' } = params || {};
+      if (!prompt) {
+        return errorResponse('يرجى تحديد وصف الصورة.');
+      }
+      const imageBase64 = await generateImage(prompt, size);
+      if (!imageBase64) {
+        return errorResponse('فشل في توليد الصورة. يرجى المحاولة مرة أخرى.', 'IMAGE_ERROR', 500);
+      }
+      return successResponse({ image: imageBase64, skill: 'generate_image' });
+    }
+    
+    case 'translate': {
+      const { text, targetLang = 'ar' } = params || {};
+      if (!text) {
+        return errorResponse('يرجى تحديد النص للترجمة.');
+      }
+      const translation = await translateText(text, targetLang);
+      return successResponse({ translation, original: text, targetLang, skill: 'translate' });
+    }
+    
+    case 'explain_code': {
+      const { code, language = 'ar' } = params || {};
+      if (!code) {
+        return errorResponse('يرجى تحديد الكود للشرح.');
+      }
+      const explanation = await explainCode(code, language);
+      return successResponse({ explanation, skill: 'explain_code' });
+    }
+    
+    case 'summarize': {
+      const { text, language = 'ar' } = params || {};
+      if (!text) {
+        return errorResponse('يرجى تحديد النص للتلخيص.');
+      }
+      const summary = await summarizeText(text, language);
+      return successResponse({ summary, skill: 'summarize' });
+    }
+    
+    case 'sentiment': {
+      const { text } = params || {};
+      if (!text) {
+        return errorResponse('يرجى تحديد النص لتحليل المشاعر.');
+      }
+      const analysis = await analyzeSentiment(text);
+      return successResponse({ ...analysis, skill: 'sentiment' });
+    }
+    
+    default:
+      return errorResponse(`المهارة "${skill}" غير معروفة.`, 'UNKNOWN_SKILL', 400);
   }
 }
 

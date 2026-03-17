@@ -58,6 +58,12 @@ import {
   Settings,
   PanelLeft,
   X,
+  Image as ImageIcon,
+  Languages,
+  FileSearch,
+  Brain,
+  Globe,
+  Wand2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -102,6 +108,64 @@ const AI_MODELS = [
   { id: 'claude-3.5-sonnet', name: 'Claude 3.5 Sonnet', provider: 'Anthropic', type: 'Advanced', color: 'bg-pink-600' },
 ];
 
+// AI Skills Configuration - FREE SKILLS
+const AI_SKILLS = [
+  { 
+    id: 'web_search', 
+    nameAr: 'بحث الإنترنت', 
+    nameEn: 'Web Search',
+    icon: Globe, 
+    color: 'text-blue-400',
+    descriptionAr: 'البحث في الإنترنت للحصول على معلومات محدثة',
+    descriptionEn: 'Search the web for up-to-date information'
+  },
+  { 
+    id: 'generate_image', 
+    nameAr: 'توليد الصور', 
+    nameEn: 'Image Generation',
+    icon: ImageIcon, 
+    color: 'text-purple-400',
+    descriptionAr: 'إنشاء صور بالذكاء الاصطناعي',
+    descriptionEn: 'Create AI-generated images'
+  },
+  { 
+    id: 'translate', 
+    nameAr: 'الترجمة', 
+    nameEn: 'Translation',
+    icon: Languages, 
+    color: 'text-green-400',
+    descriptionAr: 'ترجمة النصوص بين العربية والإنجليزية',
+    descriptionEn: 'Translate text between Arabic and English'
+  },
+  { 
+    id: 'explain_code', 
+    nameAr: 'شرح الكود', 
+    nameEn: 'Code Explanation',
+    icon: Code, 
+    color: 'text-cyan-400',
+    descriptionAr: 'شرح وتبسيط أكواد البرمجة',
+    descriptionEn: 'Explain and simplify programming code'
+  },
+  { 
+    id: 'summarize', 
+    nameAr: 'تلخيص النصوص', 
+    nameEn: 'Summarization',
+    icon: FileSearch, 
+    color: 'text-orange-400',
+    descriptionAr: 'تلخيص النصوص الطويلة بشكل مختصر',
+    descriptionEn: 'Summarize long texts concisely'
+  },
+  { 
+    id: 'sentiment', 
+    nameAr: 'تحليل المشاعر', 
+    nameEn: 'Sentiment Analysis',
+    icon: Brain, 
+    color: 'text-pink-400',
+    descriptionAr: 'تحليل المشاعر والعواطف في النصوص',
+    descriptionEn: 'Analyze emotions and sentiments in text'
+  },
+];
+
 // Quick Prompts
 const QUICK_PROMPTS = [
   { id: 'calc', labelAr: 'حسابات هندسية', labelEn: 'Engineering Calculations', icon: Calculator, color: 'text-blue-400' },
@@ -119,6 +183,9 @@ interface ChatMessage {
   model?: string;
   tokens?: number;
   isLoading?: boolean;
+  skill?: string;
+  imageData?: string;
+  searchResults?: any[];
 }
 
 // Chat History Type
@@ -164,7 +231,7 @@ function CodeBlock({ code, language }: { code: string; language?: string }) {
 }
 
 // Markdown-like Content Renderer with XSS Protection
-function MessageContent({ content }: { content: string }) {
+function MessageContent({ content, imageData }: { content: string; imageData?: string }) {
   // SECURITY: Sanitize HTML to prevent XSS attacks
   const sanitizeHtml = (html: string): string => {
     return html
@@ -175,7 +242,7 @@ function MessageContent({ content }: { content: string }) {
       // Remove javascript: URLs
       .replace(/javascript:/gi, '')
       // Remove data: URLs (can contain malicious content)
-      .replace(/data:/gi, '')
+      .replace(/data:(?!image\/)/gi, '')
       // Escape any remaining HTML tags except allowed ones
       .replace(/<(?!\/?(strong|em|code|br|span)\b)[^>]*>/gi, '');
   };
@@ -184,6 +251,34 @@ function MessageContent({ content }: { content: string }) {
     const parts: React.ReactNode[] = [];
     const remaining = text;
     let keyIndex = 0;
+    
+    // Check for base64 image data
+    if (imageData) {
+      parts.push(
+        <div key={keyIndex++} className="my-3 rounded-lg overflow-hidden border border-slate-700">
+          <img 
+            src={`data:image/png;base64,${imageData}`} 
+            alt="AI Generated" 
+            className="max-w-full h-auto"
+          />
+        </div>
+      );
+    }
+    
+    // Check for markdown image syntax with base64
+    const base64ImageRegex = /!\[([^\]]*)\]\(data:image\/[^)]+\)/g;
+    const base64Match = base64ImageRegex.exec(remaining);
+    if (base64Match && !imageData) {
+      parts.push(
+        <div key={keyIndex++} className="my-3 rounded-lg overflow-hidden border border-slate-700">
+          <img 
+            src={base64Match[0].match(/data:image\/[^)]+/)?.[0] || ''} 
+            alt="AI Generated" 
+            className="max-w-full h-auto"
+          />
+        </div>
+      );
+    }
     
     // Process code blocks
     const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
@@ -269,6 +364,7 @@ export function AIChatPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+  const [activeSkill, setActiveSkill] = useState<string | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -311,28 +407,54 @@ export function AIChatPage() {
     }]);
     
     try {
-      const result = await aiChatMutation.mutateAsync({
-        message: userMessage.content,
-        model: selectedModel,
-      });
-      
-      // Remove loading and add real response
-      setMessages(prev => prev.filter(m => m.id !== loadingId));
-      
-      const assistantMessage: ChatMessage = {
-        id: (Date.now() + 2).toString(),
-        role: 'assistant',
-        content: result.data?.response || language === 'ar' 
-          ? 'عذراً، لم أتمكن من معالجة طلبك.' 
-          : 'Sorry, I could not process your request.',
-        timestamp: new Date(),
-        model: selectedModel,
-        tokens: result.data?.tokens,
-      };
-      
-      setMessages(prev => [...prev, assistantMessage]);
+      // If a skill is active, use it
+      if (activeSkill) {
+        const result = await aiChatMutation.mutateAsync({
+          message: userMessage.content,
+          model: selectedModel,
+          skill: activeSkill,
+          skillParams: getSkillParams(activeSkill, userMessage.content)
+        });
+        
+        setMessages(prev => prev.filter(m => m.id !== loadingId));
+        
+        const assistantMessage: ChatMessage = {
+          id: (Date.now() + 2).toString(),
+          role: 'assistant',
+          content: formatSkillResponse(result, activeSkill),
+          timestamp: new Date(),
+          model: selectedModel,
+          skill: activeSkill,
+          imageData: result.data?.image,
+        };
+        
+        setMessages(prev => [...prev, assistantMessage]);
+        setActiveSkill(null);
+      } else {
+        // Regular chat
+        const result = await aiChatMutation.mutateAsync({
+          message: userMessage.content,
+          model: selectedModel,
+        });
+        
+        setMessages(prev => prev.filter(m => m.id !== loadingId));
+        
+        const assistantMessage: ChatMessage = {
+          id: (Date.now() + 2).toString(),
+          role: 'assistant',
+          content: result.data?.response || language === 'ar' 
+            ? 'عذراً، لم أتمكن من معالجة طلبك.' 
+            : 'Sorry, I could not process your request.',
+          timestamp: new Date(),
+          model: selectedModel,
+          tokens: result.data?.tokens,
+          imageData: result.data?.generatedImage ? result.data?.image : undefined,
+          searchResults: result.data?.webSearchResults,
+        };
+        
+        setMessages(prev => [...prev, assistantMessage]);
+      }
     } catch (_error) {
-      // Remove loading and add error message
       setMessages(prev => prev.filter(m => m.id !== loadingId));
       
       const errorMessage: ChatMessage = {
@@ -347,6 +469,64 @@ export function AIChatPage() {
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsTyping(false);
+    }
+  };
+  
+  // Get skill parameters based on skill type
+  const getSkillParams = (skillId: string, input: string) => {
+    switch (skillId) {
+      case 'web_search':
+        return { query: input, num: 5 };
+      case 'generate_image':
+        return { prompt: input, size: '1024x1024' };
+      case 'translate':
+        return { text: input, targetLang: language === 'ar' ? 'en' : 'ar' };
+      case 'explain_code':
+        return { code: input, language: language };
+      case 'summarize':
+        return { text: input, language: language };
+      case 'sentiment':
+        return { text: input };
+      default:
+        return { input };
+    }
+  };
+  
+  // Format skill response
+  const formatSkillResponse = (result: any, skillId: string): string => {
+    const data = result.data;
+    switch (skillId) {
+      case 'web_search':
+        if (data?.results?.length > 0) {
+          let response = language === 'ar' ? '🔍 نتائج البحث:\n\n' : '🔍 Search Results:\n\n';
+          data.results.forEach((r: any, i: number) => {
+            response += `**${i + 1}. ${r.name}**\n${r.snippet}\n🔗 ${r.url}\n\n`;
+          });
+          return response;
+        }
+        return language === 'ar' ? 'لم يتم العثور على نتائج.' : 'No results found.';
+      
+      case 'generate_image':
+        return language === 'ar' ? '🖼️ تم توليد الصورة بنجاح!' : '🖼️ Image generated successfully!';
+      
+      case 'translate':
+        return `**${language === 'ar' ? 'الترجمة' : 'Translation'}:**\n\n${data?.translation || ''}`;
+      
+      case 'explain_code':
+        return `**${language === 'ar' ? 'شرح الكود' : 'Code Explanation'}:**\n\n${data?.explanation || ''}`;
+      
+      case 'summarize':
+        return `**${language === 'ar' ? 'الملخص' : 'Summary'}:**\n\n${data?.summary || ''}`;
+      
+      case 'sentiment':
+        const sentimentEmoji = data?.sentiment === 'positive' ? '😊' : data?.sentiment === 'negative' ? '😢' : '😐';
+        return `**${language === 'ar' ? 'تحليل المشاعر' : 'Sentiment Analysis'}:** ${sentimentEmoji}\n\n` +
+               `**${language === 'ar' ? 'المشاعر' : 'Sentiment'}:** ${data?.sentiment}\n` +
+               `**${language === 'ar' ? 'الثقة' : 'Confidence'}:** ${Math.round((data?.confidence || 0) * 100)}%\n` +
+               `**${language === 'ar' ? 'التفاصيل' : 'Details'}:** ${data?.details}`;
+      
+      default:
+        return data?.response || '';
     }
   };
   
@@ -369,6 +549,7 @@ export function AIChatPage() {
   const handleClearChat = () => {
     setMessages([]);
     setCurrentSessionId(null);
+    setActiveSkill(null);
   };
   
   // Handle new chat
@@ -386,6 +567,7 @@ export function AIChatPage() {
     }
     setMessages([]);
     setCurrentSessionId(null);
+    setActiveSkill(null);
   };
   
   // Handle quick prompt
@@ -407,6 +589,11 @@ export function AIChatPage() {
     
     setInput(prompts[promptId] || '');
     inputRef.current?.focus();
+  };
+  
+  // Handle skill selection
+  const handleSkillSelect = (skillId: string) => {
+    setActiveSkill(activeSkill === skillId ? null : skillId);
   };
   
   // Filter chat sessions by search
@@ -621,6 +808,28 @@ export function AIChatPage() {
               {currentModel.type}
             </Badge>
           </div>
+          
+          {/* Skills Bar */}
+          <div className="flex items-center gap-2 mt-3 flex-wrap">
+            <span className="text-xs text-slate-400">{language === 'ar' ? 'المهارات:' : 'Skills:'}</span>
+            {AI_SKILLS.map((skill) => (
+              <Button
+                key={skill.id}
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "h-7 text-xs gap-1.5 border-slate-700",
+                  activeSkill === skill.id 
+                    ? "bg-blue-500/20 border-blue-500 text-blue-400" 
+                    : "bg-slate-800/50 hover:bg-slate-800 text-slate-300"
+                )}
+                onClick={() => handleSkillSelect(skill.id)}
+              >
+                <skill.icon className={cn("w-3 h-3", skill.color)} />
+                {language === 'ar' ? skill.nameAr : skill.nameEn}
+              </Button>
+            ))}
+          </div>
         </CardHeader>
         
         {/* Messages Area */}
@@ -655,6 +864,24 @@ export function AIChatPage() {
                       </span>
                     </Button>
                   ))}
+                </div>
+                
+                {/* Skills Info */}
+                <div className="mt-8 pt-6 border-t border-slate-800 w-full max-w-lg">
+                  <p className="text-sm text-slate-400 mb-3">
+                    {language === 'ar' ? '✨ مهارات متاحة:' : '✨ Available Skills:'}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {AI_SKILLS.map((skill) => (
+                      <div 
+                        key={skill.id}
+                        className="flex items-center gap-2 p-2 rounded-lg bg-slate-800/30 text-xs"
+                      >
+                        <skill.icon className={cn("w-4 h-4", skill.color)} />
+                        <span className="text-slate-300">{language === 'ar' ? skill.nameAr : skill.nameEn}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             ) : (
@@ -697,7 +924,7 @@ export function AIChatPage() {
                         {message.isLoading ? (
                           <TypingIndicator />
                         ) : (
-                          <MessageContent content={message.content} />
+                          <MessageContent content={message.content} imageData={message.imageData} />
                         )}
                       </div>
                       
@@ -714,6 +941,16 @@ export function AIChatPage() {
                             <span>•</span>
                             <Badge variant="outline" className="text-xs border-slate-700 text-slate-400 py-0 px-1.5">
                               {AI_MODELS.find(m => m.id === message.model)?.name || message.model}
+                            </Badge>
+                          </>
+                        )}
+                        
+                        {message.skill && (
+                          <>
+                            <span>•</span>
+                            <Badge variant="outline" className="text-xs border-purple-700 text-purple-400 py-0 px-1.5 gap-1">
+                              <Wand2 className="w-2 h-2" />
+                              {AI_SKILLS.find(s => s.id === message.skill)?.nameAr || message.skill}
                             </Badge>
                           </>
                         )}
@@ -753,6 +990,25 @@ export function AIChatPage() {
         
         {/* Input Area */}
         <div className="border-t border-slate-800 p-4">
+          {/* Active Skill Indicator */}
+          {activeSkill && (
+            <div className="flex items-center gap-2 mb-2 px-2 py-1.5 bg-blue-500/10 rounded-lg border border-blue-500/30">
+              <Wand2 className="w-4 h-4 text-blue-400" />
+              <span className="text-sm text-blue-400">
+                {language === 'ar' ? 'المهارة النشطة: ' : 'Active Skill: '}
+                {AI_SKILLS.find(s => s.id === activeSkill)?.nameAr || activeSkill}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-5 w-5 p-0 ms-auto text-slate-400 hover:text-white"
+                onClick={() => setActiveSkill(null)}
+              >
+                <X className="w-3 h-3" />
+              </Button>
+            </div>
+          )}
+          
           {/* Quick Prompts (when there are messages) */}
           {messages.length > 0 && (
             <div className="flex gap-2 mb-3 overflow-x-auto pb-2">
@@ -781,7 +1037,12 @@ export function AIChatPage() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyPress}
-                placeholder={t.askBlu}
+                placeholder={activeSkill 
+                  ? (language === 'ar' 
+                      ? `أدخل ${AI_SKILLS.find(s => s.id === activeSkill)?.descriptionAr || 'المدخلات'}...`
+                      : `Enter ${AI_SKILLS.find(s => s.id === activeSkill)?.descriptionEn || 'input'}...`)
+                  : t.askBlu
+                }
                 className="min-h-[44px] max-h-32 resize-none bg-slate-800/50 border-slate-700 focus:border-blue-500 pe-12"
                 rows={1}
                 disabled={isTyping}
