@@ -1,8 +1,7 @@
 # Netlify Configuration for Next.js 15
 
 [build]
-  # Set DATABASE_URL from NETLIFY_DATABASE_URL if not already set, then run build
-  command = "export DATABASE_URL=${DATABASE_URL:-$NETLIFY_DATABASE_URL} && prisma generate && prisma db push --accept-data-loss && next build"
+  command = "prisma generate && next build"
   publish = ".next"
 
 [build.environment]
