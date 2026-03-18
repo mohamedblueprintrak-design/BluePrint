@@ -7,23 +7,11 @@
 [build.environment]
   NODE_VERSION = "20"
 
-# Enable Next.js Runtime
+# Enable Next.js Runtime Plugin - This is essential for Next.js to work
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
-# Redirect all requests to Next.js
-[[redirects]]
-  from = "/*"
-  to = "/.netlify/functions/next/:splat"
-  status = 200
-  conditions = {Role = ["admin"]}
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-
-# Headers for security
+# Headers for security and caching
 [[headers]]
   for = "/*"
   [headers.values]
@@ -35,10 +23,5 @@
 # Cache static assets
 [[headers]]
   for = "/_next/static/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
-[[headers]]
-  for = "/static/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
