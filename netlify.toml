@@ -1,12 +1,12 @@
 # Netlify Configuration for Next.js
-# The @netlify/plugin-nextjs handles all routing automatically
 
 [build]
-  command = "prisma generate && next build"
+  command = "rm -rf node_modules .next && npm install && prisma generate && next build"
   publish = ".next"
 
 [build.environment]
   NODE_VERSION = "20"
+  NPM_FLAGS = "--force"
 
 # Essential: Enable Next.js Runtime Plugin
 [[plugins]]
