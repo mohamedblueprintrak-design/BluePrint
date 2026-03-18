@@ -190,8 +190,14 @@ function SidebarContent({
             <TooltipProvider key={item.id} delayDuration={0}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button
-                    onClick={() => handleItemClick(item.id, item.href)}
+                  <Link
+                    href={item.href}
+                    onClick={() => {
+                      setCurrentPage(item.id);
+                      if (isMobile && onClose) {
+                        onClose();
+                      }
+                    }}
                     className={cn(
                       "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
                       currentPage === item.id 
@@ -211,7 +217,7 @@ function SidebarContent({
                         )}
                       </>
                     )}
-                  </button>
+                  </Link>
                 </TooltipTrigger>
                 {!isMobile && sidebarCollapsed && (
                   <TooltipContent side={isRTL ? 'left' : 'right'}>
@@ -230,8 +236,14 @@ function SidebarContent({
                 <TooltipProvider key={item.id} delayDuration={0}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button
-                        onClick={() => handleItemClick(item.id, item.href)}
+                      <Link
+                        href={item.href}
+                        onClick={() => {
+                          setCurrentPage(item.id);
+                          if (isMobile && onClose) {
+                            onClose();
+                          }
+                        }}
                         className={cn(
                           "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
                           currentPage === item.id 
@@ -244,7 +256,7 @@ function SidebarContent({
                         {(!isMobile && sidebarCollapsed ? false : true) && (
                           <span className="flex-1 text-end">{item.label}</span>
                         )}
-                      </button>
+                      </Link>
                     </TooltipTrigger>
                     {!isMobile && sidebarCollapsed && (
                       <TooltipContent side={isRTL ? 'left' : 'right'}>

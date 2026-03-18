@@ -62,8 +62,9 @@ export default function DashboardLayout({
         <main 
           className={cn(
             "transition-all duration-300 min-h-screen",
-            isRTL ? "mr-20 md:mr-64" : "ml-20 md:ml-64",
-            sidebarCollapsed && (isRTL ? "mr-20" : "ml-20")
+            sidebarCollapsed 
+              ? (isRTL ? "mr-20" : "ml-20")
+              : (isRTL ? "mr-64" : "ml-64")
           )}
         >
           {/* Header */}
