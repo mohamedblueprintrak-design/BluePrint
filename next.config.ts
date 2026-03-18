@@ -91,6 +91,7 @@ const nextConfig: NextConfig = {
               "base-uri 'self'",
               "form-action 'self'",
               "frame-ancestors 'self'",
+              "navigate-to 'self'",
             ].join('; '),
           }]),
         ],

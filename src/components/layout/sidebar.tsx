@@ -133,7 +133,8 @@ function SidebarContent({
 
   const handleItemClick = (id: string, href: string) => {
     setCurrentPage(id);
-    router.push(href);
+    // Use window.location for reliable navigation on Netlify
+    window.location.href = href;
     if (isMobile && onClose) {
       onClose();
     }
