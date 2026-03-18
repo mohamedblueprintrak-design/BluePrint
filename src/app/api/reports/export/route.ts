@@ -278,27 +278,27 @@ export async function GET(request: NextRequest) {
       switch (report) {
         case 'financial': {
           const data = getDemoFinancialData(start, end, language, currency);
-          buffer = generateFinancialReportPDF(data);
+          buffer = await generateFinancialReportPDF(data);
           break;
         }
         case 'projects': {
           const data = getDemoProjectData(language);
-          buffer = generateProjectReportPDF(data);
+          buffer = await generateProjectReportPDF(data);
           break;
         }
         case 'tasks': {
           const data = getDemoTaskData(language);
-          buffer = generateTaskReportPDF(data);
+          buffer = await generateTaskReportPDF(data);
           break;
         }
         case 'clients': {
           const data = getDemoClientData(language, currency);
-          buffer = generateClientReportPDF(data);
+          buffer = await generateClientReportPDF(data);
           break;
         }
         case 'invoices': {
           const data = getDemoInvoiceData(language, currency);
-          buffer = generateInvoiceReportPDF(data);
+          buffer = await generateInvoiceReportPDF(data);
           break;
         }
         default:

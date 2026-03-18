@@ -1,5 +1,7 @@
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+// Server-side PDF generation
+// This file should only be imported in server components/API routes
+
+import type { NextRequest } from 'next/server';
 
 // Types for report data
 export interface FinancialReportData {
@@ -105,6 +107,15 @@ export interface InvoiceReportData {
   language: 'ar' | 'en';
 }
 
+// Dynamic import for server-side only
+async function getJsPDF() {
+  // @ts-ignore
+  const { default: jsPDF } = await import('jspdf');
+  // @ts-ignore
+  const { default: autoTable } = await import('jspdf-autotable');
+  return { jsPDF, autoTable };
+}
+
 // Format number with thousand separators
 function formatNumber(num: number): string {
   return num.toLocaleString('en-US');
@@ -144,7 +155,8 @@ function getPriorityLabel(priority: string, language: 'ar' | 'en'): string {
 }
 
 // Generate Financial Report PDF
-export function generateFinancialReportPDF(data: FinancialReportData): Buffer {
+export async function generateFinancialReportPDF(data: FinancialReportData): Promise<Buffer> {
+  const { jsPDF, autoTable } = await getJsPDF();
   const doc = new jsPDF('landscape');
   const isRTL = data.language === 'ar';
   
@@ -247,7 +259,8 @@ export function generateFinancialReportPDF(data: FinancialReportData): Buffer {
 }
 
 // Generate Project Report PDF
-export function generateProjectReportPDF(data: ProjectReportData): Buffer {
+export async function generateProjectReportPDF(data: ProjectReportData): Promise<Buffer> {
+  const { jsPDF, autoTable } = await getJsPDF();
   const doc = new jsPDF('landscape');
   const isRTL = data.language === 'ar';
   
@@ -342,7 +355,8 @@ export function generateProjectReportPDF(data: ProjectReportData): Buffer {
 }
 
 // Generate Task Report PDF
-export function generateTaskReportPDF(data: TaskReportData): Buffer {
+export async function generateTaskReportPDF(data: TaskReportData): Promise<Buffer> {
+  const { jsPDF, autoTable } = await getJsPDF();
   const doc = new jsPDF('landscape');
   const isRTL = data.language === 'ar';
   
@@ -438,7 +452,8 @@ export function generateTaskReportPDF(data: TaskReportData): Buffer {
 }
 
 // Generate Client Report PDF
-export function generateClientReportPDF(data: ClientReportData): Buffer {
+export async function generateClientReportPDF(data: ClientReportData): Promise<Buffer> {
+  const { jsPDF, autoTable } = await getJsPDF();
   const doc = new jsPDF('landscape');
   const isRTL = data.language === 'ar';
   
@@ -532,7 +547,8 @@ export function generateClientReportPDF(data: ClientReportData): Buffer {
 }
 
 // Generate Invoice Report PDF
-export function generateInvoiceReportPDF(data: InvoiceReportData): Buffer {
+export async function generateInvoiceReportPDF(data: InvoiceReportData): Promise<Buffer> {
+  const { jsPDF, autoTable } = await getJsPDF();
   const doc = new jsPDF('landscape');
   const isRTL = data.language === 'ar';
   

@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
   // Enable React Strict Mode for better development experience
   reactStrictMode: true,
   
+  // Use webpack instead of Turbopack for build (Turbopack has issues with some packages)
+  // Turbopack can still be used in development with `next dev --turbopack`
+  
   // TypeScript configuration - DO NOT ignore build errors in production
   typescript: {
     // Only ignore build errors in development
@@ -78,6 +81,9 @@ const nextConfig: NextConfig = {
     },
   },
   
+  // Turbopack configuration (empty to use webpack for build)
+  turbopack: {},
+  
   // Environment variables that should be available on the client
   env: {
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || 'BluePrint',
@@ -108,6 +114,17 @@ const nextConfig: NextConfig = {
     fetches: {
       fullUrl: process.env.NODE_ENV === 'development',
     },
+  },
+  
+  // Webpack configuration for fixing issues with certain packages
+  webpack: (config) => {
+    // Handle canvas dependency for jspdf (optional, not needed in browser)
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'canvas': false,
+    };
+    
+    return config;
   },
 };
 

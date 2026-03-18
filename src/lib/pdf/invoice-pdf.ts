@@ -1,7 +1,5 @@
-'use client';
-
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+// Client-side PDF generation for invoices
+// Uses dynamic imports to handle jspdf
 
 // Types
 interface InvoiceItem {
@@ -88,11 +86,18 @@ const getStatusColor = (status: string): [number, number, number] => {
   }
 };
 
-export function generateInvoicePDF(
+// Dynamic import type
+type JsPDFType = any;
+
+export async function generateInvoicePDF(
   invoice: InvoiceData,
   organization?: OrganizationInfo,
   lang: 'ar' | 'en' = 'en'
-): jsPDF {
+): Promise<JsPDFType> {
+  // Dynamic import for client-side
+  const jsPDF = (await import('jspdf')).default;
+  const autoTable = (await import('jspdf-autotable')).default;
+
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -416,22 +421,22 @@ export function generateInvoicePDF(
 }
 
 // Generate and download invoice PDF
-export function downloadInvoicePDF(
+export async function downloadInvoicePDF(
   invoice: InvoiceData,
   organization?: OrganizationInfo,
   lang: 'ar' | 'en' = 'en'
-): void {
-  const doc = generateInvoicePDF(invoice, organization, lang);
+): Promise<void> {
+  const doc = await generateInvoicePDF(invoice, organization, lang);
   doc.save(`Invoice-${invoice.invoiceNumber}.pdf`);
 }
 
 // Generate and open invoice PDF in new tab
-export function previewInvoicePDF(
+export async function previewInvoicePDF(
   invoice: InvoiceData,
   organization?: OrganizationInfo,
   lang: 'ar' | 'en' = 'en'
-): void {
-  const doc = generateInvoicePDF(invoice, organization, lang);
+): Promise<void> {
+  const doc = await generateInvoicePDF(invoice, organization, lang);
   const pdfBlob = doc.output('blob');
   const url = URL.createObjectURL(pdfBlob);
   window.open(url, '_blank');
