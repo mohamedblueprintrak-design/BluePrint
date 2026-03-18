@@ -11,7 +11,8 @@ export const DEMO_USERS: DemoUser[] = DEMO_MODE_ENABLED ? [
     username: 'admin',
     email: 'admin@blueprint.ae',
     // SECURITY: Bcrypt hash - never expose the plain password in logs or responses
-    password: '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZRGdjGj/n3.sCP9eNiBx.qL/4ZcS.',
+    // Password: admin123
+    password: '$2b$10$.ELmlEHTPMDITIuJQzJ2IOGo87dOUXo3zE515Lq.WQMyHvDWzAX6.',
     fullName: 'مدير النظام',
     role: 'admin',
     isActive: true,
