@@ -1,12 +1,11 @@
 # Netlify Configuration for Next.js
 
 [build]
-  command = "rm -rf node_modules .next && npm install && prisma generate && next build"
+  command = "prisma generate && prisma db push --accept-data-loss && next build"
   publish = ".next"
 
 [build.environment]
   NODE_VERSION = "20"
-  NPM_FLAGS = "--force"
 
 # Essential: Enable Next.js Runtime Plugin
 [[plugins]]

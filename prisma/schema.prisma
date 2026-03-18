@@ -6,12 +6,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
-// Enable demo mode without database
-// Set DATABASE_URL="file:./dev.db" for local development
 
 // ============================================
 // المنظمة والاشتراكات (SaaS Core)
