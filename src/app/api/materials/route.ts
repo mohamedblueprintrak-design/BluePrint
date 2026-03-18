@@ -24,8 +24,9 @@ export async function GET(request: NextRequest) {
     const { db } = await import('@/lib/db');
     const materials = await db.material.findMany({ where: { organizationId: user.organizationId, isActive: true }, orderBy: { name: 'asc' } });
     return success(materials);
-  } catch (e: any) {
-    return error(e.message, 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, 'SERVER_ERROR', 500);
   }
 }
 
@@ -44,8 +45,9 @@ export async function POST(request: NextRequest) {
     if (!body.name || !body.unit) return error('اسم المادة والوحدة مطلوبان');
     const material = await db.material.create({ data: { ...body, organizationId: user.organizationId } });
     return success({ id: material.id, name: material.name });
-  } catch (e: any) {
-    return error(e.message, 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, 'SERVER_ERROR', 500);
   }
 }
 
@@ -63,8 +65,9 @@ export async function PUT(request: NextRequest) {
     const { id, ...data } = await request.json();
     await db.material.update({ where: { id }, data });
     return success({ id, ...data });
-  } catch (e: any) {
-    return error(e.message, 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, 'SERVER_ERROR', 500);
   }
 }
 
@@ -83,7 +86,8 @@ export async function DELETE(request: NextRequest) {
     if (!id) return error('معرف المادة مطلوب');
     await db.material.update({ where: { id }, data: { isActive: false } });
     return success({ message: 'تم الحذف' });
-  } catch (e: any) {
-    return error(e.message, 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, 'SERVER_ERROR', 500);
   }
 }

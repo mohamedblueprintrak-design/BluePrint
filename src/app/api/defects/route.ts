@@ -42,8 +42,9 @@ export async function GET(request: NextRequest) {
     });
     
     return success(defects.map((d: any) => ({ ...d, projectName: d.project?.name })));
-  } catch (e: any) {
-    return error(e.message || 'خطأ في الخادم', 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message || 'خطأ في الخادم', 'SERVER_ERROR', 500);
   }
 }
 
@@ -67,8 +68,9 @@ export async function POST(request: NextRequest) {
       data: { projectId, title, description, severity: severity || 'medium', status: 'Open', location, assignedTo }
     });
     return success(defect);
-  } catch (e: any) {
-    return error(e.message || 'خطأ في الخادم', 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message || 'خطأ في الخادم', 'SERVER_ERROR', 500);
   }
 }
 
@@ -104,8 +106,9 @@ export async function PUT(request: NextRequest) {
     
     const defect = await db.defect.update({ where: { id }, data: updateData });
     return success(defect);
-  } catch (e: any) {
-    return error(e.message || 'خطأ في الخادم', 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message || 'خطأ في الخادم', 'SERVER_ERROR', 500);
   }
 }
 
@@ -127,7 +130,8 @@ export async function DELETE(request: NextRequest) {
     
     await db.defect.delete({ where: { id } });
     return success({ message: 'تم الحذف بنجاح' });
-  } catch (e: any) {
-    return error(e.message || 'خطأ في الخادم', 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message || 'خطأ في الخادم', 'SERVER_ERROR', 500);
   }
 }

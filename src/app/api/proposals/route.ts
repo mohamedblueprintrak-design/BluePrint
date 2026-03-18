@@ -45,7 +45,8 @@ export async function POST(request: NextRequest) {
       const proposal = await db.proposal.create({ data: { ...body, proposalNumber, organizationId: user.organizationId } });
       return success({ id: proposal.id, proposalNumber });
     } catch { return success({ id: `demo-prop-${Date.now()}`, proposalNumber }); }
-  } catch (e: any) { return error(e.message, "SERVER_ERROR", 500); }
+  } catch (e) { const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, "SERVER_ERROR", 500); }
 }
 
 export async function PUT(request: NextRequest) {
@@ -55,7 +56,8 @@ export async function PUT(request: NextRequest) {
     const { id, ...data } = await request.json();
     try { await db.proposal.update({ where: { id }, data }); } catch {}
     return success({ id, ...data });
-  } catch (e: any) { return error(e.message, "SERVER_ERROR", 500); }
+  } catch (e) { const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, "SERVER_ERROR", 500); }
 }
 
 export async function DELETE(request: NextRequest) {
@@ -66,5 +68,6 @@ export async function DELETE(request: NextRequest) {
     if (!id) return error('معرف العرض مطلوب');
     try { await db.proposal.delete({ where: { id } }); } catch {}
     return success({ message: 'تم الحذف' });
-  } catch (e: any) { return error(e.message, "SERVER_ERROR", 500); }
+  } catch (e) { const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, "SERVER_ERROR", 500); }
 }

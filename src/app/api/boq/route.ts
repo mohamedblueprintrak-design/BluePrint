@@ -48,8 +48,9 @@ export async function GET(request: NextRequest) {
     }));
     
     return success(mappedItems);
-  } catch (e: any) {
-    return error(e.message, 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, 'SERVER_ERROR', 500);
   }
 }
 
@@ -88,8 +89,9 @@ export async function POST(request: NextRequest) {
     });
     
     return success(item);
-  } catch (e: any) {
-    return error(e.message, 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, 'SERVER_ERROR', 500);
   }
 }
 
@@ -126,8 +128,9 @@ export async function PUT(request: NextRequest) {
     });
     
     return success(item);
-  } catch (e: any) {
-    return error(e.message, 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, 'SERVER_ERROR', 500);
   }
 }
 
@@ -149,7 +152,8 @@ export async function DELETE(request: NextRequest) {
     
     await db.bOQItem.delete({ where: { id } });
     return success({ message: 'تم الحذف بنجاح' });
-  } catch (e: any) {
-    return error(e.message, 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, 'SERVER_ERROR', 500);
   }
 }

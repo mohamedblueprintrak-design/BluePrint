@@ -106,8 +106,9 @@ export async function POST(request: NextRequest) {
         createdAt: new Date().toISOString()
       });
     }
-  } catch (e: any) {
-    return error(e.message || 'خطأ في الخادم', 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message || 'خطأ في الخادم', 'SERVER_ERROR', 500);
   }
 }
 
@@ -135,8 +136,9 @@ export async function PUT(request: NextRequest) {
     } catch (dbError) {
       return success({ id, ...updateData, updatedAt: new Date().toISOString() });
     }
-  } catch (e: any) {
-    return error(e.message || 'خطأ في الخادم', 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message || 'خطأ في الخادم', 'SERVER_ERROR', 500);
   }
 }
 
@@ -152,7 +154,8 @@ export async function DELETE(request: NextRequest) {
     
     try { await db.knowledgeArticle.delete({ where: { id } }); } catch {}
     return success({ message: 'تم الحذف بنجاح' });
-  } catch (e: any) {
-    return error(e.message || 'خطأ في الخادم', 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message || 'خطأ في الخادم', 'SERVER_ERROR', 500);
   }
 }

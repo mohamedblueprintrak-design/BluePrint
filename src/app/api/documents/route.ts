@@ -30,8 +30,9 @@ export async function GET(request: NextRequest) {
       ...d, 
       uploaderName: d.uploadedBy ? uploaderMap.get(d.uploadedBy) || 'غير معروف' : null 
     })));
-  } catch (e: any) {
-    return error(e.message, 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, 'SERVER_ERROR', 500);
   }
 }
 
@@ -49,8 +50,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const doc = await db.document.create({ data: { ...body, uploadedBy: user.id } });
     return success({ id: doc.id, fileName: doc.fileName });
-  } catch (e: any) {
-    return error(e.message, 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, 'SERVER_ERROR', 500);
   }
 }
 
@@ -69,7 +71,8 @@ export async function DELETE(request: NextRequest) {
     if (!id) return error('معرف المستند مطلوب');
     await db.document.delete({ where: { id } });
     return success({ message: 'تم الحذف' });
-  } catch (e: any) {
-    return error(e.message, 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, 'SERVER_ERROR', 500);
   }
 }

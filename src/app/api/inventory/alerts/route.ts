@@ -133,8 +133,9 @@ export async function GET(request: NextRequest) {
     }
 
     return successResponse({ alertLevels: ALERT_LEVELS, lastChecked: new Date().toISOString() });
-  } catch (error: any) {
-    return errorResponse(error.message || 'حدث خطأ', 'SERVER_ERROR', 500);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return errorResponse(message, 'SERVER_ERROR', 500);
   }
 }
 
@@ -172,7 +173,8 @@ export async function POST(request: NextRequest) {
     }
 
     return errorResponse(`الإجراء "${action}" غير معروف`);
-  } catch (error: any) {
-    return errorResponse(error.message || 'حدث خطأ', 'SERVER_ERROR', 500);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return errorResponse(message, 'SERVER_ERROR', 500);
   }
 }

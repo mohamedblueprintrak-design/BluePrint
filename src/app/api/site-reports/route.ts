@@ -33,7 +33,8 @@ export async function GET(request: NextRequest) {
       const reports = await db.siteReport.findMany({ where, include: { project: true }, orderBy: { reportDate: 'desc' }, take: 50 });
       return success(reports.map(r => ({ ...r, project: r.project?.name })));
     } catch { return success(DEMO_REPORTS); }
-  } catch (e: any) { return error(e.message, "SERVER_ERROR", 500); }
+  } catch (e) { const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, "SERVER_ERROR", 500); }
 }
 
 export async function POST(request: NextRequest) {
@@ -48,7 +49,8 @@ export async function POST(request: NextRequest) {
       const report = await db.siteReport.create({ data: { ...body, reportNumber } });
       return success({ id: report.id, reportNumber });
     } catch { return success({ id: `demo-report-${Date.now()}`, reportNumber: `SR-${Date.now()}` }); }
-  } catch (e: any) { return error(e.message, "SERVER_ERROR", 500); }
+  } catch (e) { const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, "SERVER_ERROR", 500); }
 }
 
 export async function PUT(request: NextRequest) {
@@ -58,7 +60,8 @@ export async function PUT(request: NextRequest) {
     const { id, ...data } = await request.json();
     try { await db.siteReport.update({ where: { id }, data }); } catch {}
     return success({ id, ...data });
-  } catch (e: any) { return error(e.message, "SERVER_ERROR", 500); }
+  } catch (e) { const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, "SERVER_ERROR", 500); }
 }
 
 export async function DELETE(request: NextRequest) {
@@ -69,5 +72,6 @@ export async function DELETE(request: NextRequest) {
     if (!id) return error('معرف التقرير مطلوب');
     try { await db.siteReport.delete({ where: { id } }); } catch {}
     return success({ message: 'تم الحذف' });
-  } catch (e: any) { return error(e.message, "SERVER_ERROR", 500); }
+  } catch (e) { const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, "SERVER_ERROR", 500); }
 }

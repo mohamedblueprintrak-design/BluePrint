@@ -47,8 +47,9 @@ export async function GET(request: NextRequest) {
       status: 'approved',
       createdAt: b.createdAt
     })));
-  } catch (e: any) {
-    return error(e.message, 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, 'SERVER_ERROR', 500);
   }
 }
 
@@ -80,8 +81,9 @@ export async function POST(request: NextRequest) {
       } 
     });
     return success({ id: budget.id, amount: budget.actualAmount });
-  } catch (e: any) {
-    return error(e.message, 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, 'SERVER_ERROR', 500);
   }
 }
 
@@ -108,8 +110,9 @@ export async function PUT(request: NextRequest) {
       }
     });
     return success({ id, ...data });
-  } catch (e: any) {
-    return error(e.message, 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, 'SERVER_ERROR', 500);
   }
 }
 
@@ -128,7 +131,8 @@ export async function DELETE(request: NextRequest) {
     if (!id) return error('معرف المصروف مطلوب');
     await db.budget.delete({ where: { id } });
     return success({ message: 'تم الحذف' });
-  } catch (e: any) {
-    return error(e.message, 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, 'SERVER_ERROR', 500);
   }
 }

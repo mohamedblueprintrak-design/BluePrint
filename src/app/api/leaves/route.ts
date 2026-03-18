@@ -29,8 +29,9 @@ export async function GET(request: NextRequest) {
     if (status) where.status = status;
     const leaves = await db.leaveRequest.findMany({ where, include: { user: true, approver: true }, orderBy: { createdAt: 'desc' } });
     return success(leaves.map(l => ({ ...l, user: { id: l.user.id, fullName: l.user.fullName || l.user.username }, approver: l.approver?.fullName })));
-  } catch (e: any) {
-    return error(e.message, 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, 'SERVER_ERROR', 500);
   }
 }
 
@@ -52,8 +53,9 @@ export async function POST(request: NextRequest) {
     const daysCount = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
     const leave = await db.leaveRequest.create({ data: { ...body, userId: user.id, daysCount, startDate, endDate } });
     return success({ id: leave.id, daysCount });
-  } catch (e: any) {
-    return error(e.message, 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, 'SERVER_ERROR', 500);
   }
 }
 
@@ -147,7 +149,8 @@ export async function PUT(request: NextRequest) {
     }
 
     return success({ id, status });
-  } catch (e: any) {
-    return error(e.message, 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, 'SERVER_ERROR', 500);
   }
 }

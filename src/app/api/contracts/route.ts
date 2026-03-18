@@ -22,8 +22,9 @@ export async function GET(request: NextRequest) {
     const { db } = await import('@/lib/db');
     const data = await db.contract.findMany({ where: { organizationId: user.organizationId }, orderBy: { createdAt: 'desc' } });
     return success(data);
-  } catch (e: any) {
-    return error(e.message, 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, 'SERVER_ERROR', 500);
   }
 }
 
@@ -42,8 +43,9 @@ export async function POST(request: NextRequest) {
     if (!body.title || !body.contractNumber) return error('العنوان ورقم العقد مطلوبان');
     const contract = await db.contract.create({ data: { ...body, organizationId: user.organizationId } });
     return success({ id: contract.id });
-  } catch (e: any) {
-    return error(e.message, 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, 'SERVER_ERROR', 500);
   }
 }
 
@@ -61,8 +63,9 @@ export async function PUT(request: NextRequest) {
     const { id, ...data } = await request.json();
     await db.contract.update({ where: { id }, data });
     return success({ id });
-  } catch (e: any) {
-    return error(e.message, 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, 'SERVER_ERROR', 500);
   }
 }
 
@@ -81,7 +84,8 @@ export async function DELETE(request: NextRequest) {
     if (!id) return error('معرف العقد مطلوب');
     await db.contract.delete({ where: { id } });
     return success({ message: 'تم الحذف' });
-  } catch (e: any) {
-    return error(e.message, 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, 'SERVER_ERROR', 500);
   }
 }

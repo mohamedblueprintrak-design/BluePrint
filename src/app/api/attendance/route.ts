@@ -39,8 +39,9 @@ export async function GET(request: NextRequest) {
     const userMap = new Map(users.map(u => [u.id, { id: u.id, fullName: u.fullName || u.username }]));
     
     return success(attendance.map(a => ({ ...a, user: userMap.get(a.userId) || { id: a.userId, fullName: 'غير معروف' } })));
-  } catch (e: any) {
-    return error(e.message, 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, 'SERVER_ERROR', 500);
   }
 }
 
@@ -58,8 +59,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const att = await db.attendance.create({ data: { ...body, userId: body.userId || user.id } });
     return success({ id: att.id, date: att.date });
-  } catch (e: any) {
-    return error(e.message, 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, 'SERVER_ERROR', 500);
   }
 }
 
@@ -77,7 +79,8 @@ export async function PUT(request: NextRequest) {
     const { id, ...data } = await request.json();
     await db.attendance.update({ where: { id }, data });
     return success({ id, ...data });
-  } catch (e: any) {
-    return error(e.message, 'SERVER_ERROR', 500);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return error(message, 'SERVER_ERROR', 500);
   }
 }
