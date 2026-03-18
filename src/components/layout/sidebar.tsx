@@ -133,8 +133,6 @@ function SidebarContent({
 
   const handleItemClick = (id: string, href: string) => {
     setCurrentPage(id);
-    // Use window.location for reliable navigation on Netlify
-    window.location.href = href;
     if (isMobile && onClose) {
       onClose();
     }
@@ -192,7 +190,8 @@ function SidebarContent({
             <TooltipProvider key={item.id} delayDuration={0}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button
+                  <Link
+                    href={item.href}
                     onClick={() => handleItemClick(item.id, item.href)}
                     className={cn(
                       "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
@@ -213,7 +212,7 @@ function SidebarContent({
                         )}
                       </>
                     )}
-                  </button>
+                  </Link>
                 </TooltipTrigger>
                 {!isMobile && sidebarCollapsed && (
                   <TooltipContent side={isRTL ? 'left' : 'right'}>
@@ -232,7 +231,8 @@ function SidebarContent({
                 <TooltipProvider key={item.id} delayDuration={0}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button
+                      <Link
+                        href={item.href}
                         onClick={() => handleItemClick(item.id, item.href)}
                         className={cn(
                           "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
@@ -246,7 +246,7 @@ function SidebarContent({
                         {(!isMobile && sidebarCollapsed ? false : true) && (
                           <span className="flex-1 text-end">{item.label}</span>
                         )}
-                      </button>
+                      </Link>
                     </TooltipTrigger>
                     {!isMobile && sidebarCollapsed && (
                       <TooltipContent side={isRTL ? 'left' : 'right'}>
@@ -317,7 +317,10 @@ function SidebarContent({
               <DropdownMenuSeparator className="bg-slate-800" />
               
               <DropdownMenuItem 
-                onClick={() => handleItemClick('profile', '/dashboard/profile')}
+                onClick={() => {
+                  handleItemClick('profile', '/dashboard/profile');
+                  router.push('/dashboard/profile');
+                }}
                 className="text-slate-300 focus:bg-slate-800"
               >
                 <User className="w-4 h-4 me-2" />
@@ -325,7 +328,10 @@ function SidebarContent({
               </DropdownMenuItem>
               
               <DropdownMenuItem 
-                onClick={() => handleItemClick('settings', '/dashboard/settings')}
+                onClick={() => {
+                  handleItemClick('settings', '/dashboard/settings');
+                  router.push('/dashboard/settings');
+                }}
                 className="text-slate-300 focus:bg-slate-800"
               >
                 <Settings className="w-4 h-4 me-2" />
