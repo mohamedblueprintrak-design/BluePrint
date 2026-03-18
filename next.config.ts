@@ -1,14 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Remove standalone output for Vercel - Vercel handles Next.js natively
-  // output: "standalone",
-  
   // Enable React Strict Mode for better development experience
   reactStrictMode: true,
-  
-  // Use webpack instead of Turbopack for build (Turbopack has issues with some packages)
-  // Turbopack can still be used in development with `next dev --turbopack`
   
   // TypeScript configuration - DO NOT ignore build errors in production
   typescript: {
