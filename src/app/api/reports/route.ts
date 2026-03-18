@@ -652,8 +652,9 @@ export async function GET(request: NextRequest) {
       default:
         return errorResponse('إجراء غير معروف. Use one of: financial-summary, project-status, task-metrics, client-analytics, expense-breakdown');
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error('Reports API Error:', error);
-    return errorResponse(error.message || 'خطأ في الخادم', 'SERVER_ERROR', 500);
+    const message = error instanceof Error ? error.message : 'خطأ في الخادم';
+    return errorResponse(message, 'SERVER_ERROR', 500);
   }
 }
