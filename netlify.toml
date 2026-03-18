@@ -1,4 +1,4 @@
-# Netlify Configuration for Next.js
+# Netlify Configuration for Next.js 15
 
 [build]
   # Set DATABASE_URL from NETLIFY_DATABASE_URL if not already set, then run build
@@ -7,10 +7,15 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  NPM_FLAGS = "--legacy-peer-deps"
 
 # Essential: Enable Next.js Runtime Plugin
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+# Functions configuration for API routes
+[functions]
+  node_bundler = "esbuild"
 
 # Security headers
 [[headers]]
@@ -20,7 +25,6 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     X-XSS-Protection = "1; mode=block"
-    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
 
 # Cache static assets
 [[headers]]
