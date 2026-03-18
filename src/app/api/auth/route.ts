@@ -188,9 +188,10 @@ export async function POST(request: NextRequest) {
 
           console.log('User created successfully:', newUser.username);
           return successResponse({ id: newUser.id, username: newUser.username, message: 'تم إنشاء الحساب بنجاح' });
-        } catch (dbError: any) {
+        } catch (dbError) {
           console.error('Database error during registration:', dbError);
-          return errorResponse(dbError.message || 'خطأ في قاعدة البيانات', 'DB_ERROR', 500);
+          const message = dbError instanceof Error ? dbError.message : 'خطأ في قاعدة البيانات';
+          return errorResponse(message, 'DB_ERROR', 500);
         }
       }
       
