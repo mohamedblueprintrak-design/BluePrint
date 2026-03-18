@@ -1,24 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import * as jose from 'jose';
-
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters');
-
-async function getUserFromToken(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) return null;
-  
-  const token = authHeader.substring(7);
-  try {
-    const { payload } = await jose.jwtVerify(token, JWT_SECRET);
-    return await db.user.findUnique({ 
-      where: { id: payload.userId as string },
-      include: { organization: true }
-    });
-  } catch {
-    return null;
-  }
-}
+import { getUserFromRequest, isDemoUser, DEMO_DATA } from '../utils/demo-config';
 
 function successResponse(data: any, meta?: any) {
   const response = { success: true, data };
@@ -33,77 +14,49 @@ function errorResponse(message: string, code = 'ERROR', status = 400) {
   );
 }
 
-// Demo clients for testing without database
-const DEMO_CLIENTS = [
-  {
-    id: 'demo-client-001',
-    name: 'شركة البناء الحديث',
-    email: 'info@modernbuild.ae',
-    phone: '+971 50 123 4567',
-    address: 'دبي، الإمارات',
-    contactPerson: 'أحمد محمد',
-    taxNumber: '123456789',
-    clientType: 'company',
-    creditLimit: 500000,
-    totalInvoiced: 1250000,
-    totalPaid: 1000000,
-    isActive: true,
-    createdAt: new Date()
-  },
-  {
-    id: 'demo-client-002',
-    name: 'مؤسسة الخليج للمقاولات',
-    email: 'contact@gulfcontracting.ae',
-    phone: '+971 4 234 5678',
-    address: 'أبوظبي، الإمارات',
-    contactPerson: 'سعيد أحمد',
-    taxNumber: '987654321',
-    clientType: 'company',
-    creditLimit: 750000,
-    totalInvoiced: 890000,
-    totalPaid: 720000,
-    isActive: true,
-    createdAt: new Date()
-  }
-];
-
 // GET - List clients
 export async function GET(request: NextRequest) {
-  const user = await getUserFromToken(request);
+  const user = await getUserFromRequest(request);
   if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
 
+  // Demo mode - return demo data for demo users
+  if (isDemoUser(user.id)) {
+    return successResponse(DEMO_DATA.clients.map(c => ({
+      id: c.id,
+      name: c.name,
+      email: c.email,
+      phone: c.phone,
+      isActive: c.isActive,
+      createdAt: new Date()
+    })));
+  }
+
   try {
-    // Try database first
-    try {
-      const clients = await db.client.findMany({
-        where: { 
-          isActive: true,
-          organizationId: user.organizationId 
-        },
-        orderBy: { createdAt: 'desc' }
-      });
-      
-      return successResponse(clients.map(c => ({
-        id: c.id,
-        name: c.name,
-        email: c.email,
-        phone: c.phone,
-        address: c.address,
-        city: c.city,
-        country: c.country,
-        contactPerson: c.contactPerson,
-        taxNumber: c.taxNumber,
-        creditLimit: c.creditLimit,
-        paymentTerms: c.paymentTerms,
-        notes: c.notes,
-        isActive: c.isActive,
-        createdAt: c.createdAt
-      })));
-    } catch (_dbError) {
-      // Return demo clients if database not available
-      console.log('Database not available, using demo clients');
-      return successResponse(DEMO_CLIENTS);
-    }
+    const { db } = await import('@/lib/db');
+    const clients = await db.client.findMany({
+      where: { 
+        isActive: true,
+        organizationId: user.organizationId 
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    
+    return successResponse(clients.map(c => ({
+      id: c.id,
+      name: c.name,
+      email: c.email,
+      phone: c.phone,
+      address: c.address,
+      city: c.city,
+      country: c.country,
+      contactPerson: c.contactPerson,
+      taxNumber: c.taxNumber,
+      creditLimit: c.creditLimit,
+      paymentTerms: c.paymentTerms,
+      notes: c.notes,
+      isActive: c.isActive,
+      createdAt: c.createdAt
+    })));
   } catch (error: any) {
     return errorResponse(error.message, 'SERVER_ERROR', 500);
   }
@@ -111,41 +64,38 @@ export async function GET(request: NextRequest) {
 
 // POST - Create client
 export async function POST(request: NextRequest) {
-  const user = await getUserFromToken(request);
+  const user = await getUserFromRequest(request);
   if (!user || !user.organizationId) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
 
+  // Demo mode - cannot create real clients
+  if (isDemoUser(user.id)) {
+    return errorResponse('لا يمكن إنشاء عملاء في الوضع التجريبي', 'DEMO_MODE', 403);
+  }
+
   try {
+    const { db } = await import('@/lib/db');
     const body = await request.json();
     const { name, email, phone, address, city, country, contactPerson, taxNumber, creditLimit, paymentTerms, notes } = body;
 
     if (!name) return errorResponse('اسم العميل مطلوب');
 
-    try {
-      const client = await db.client.create({
-        data: {
-          name,
-          email,
-          phone,
-          address,
-          city,
-          country,
-          contactPerson,
-          taxNumber,
-          creditLimit: creditLimit || 0,
-          paymentTerms: paymentTerms || 30,
-          notes,
-          organizationId: user.organizationId
-        }
-      });
-      return successResponse({ id: client.id, name: client.name });
-    } catch (_dbError) {
-      // Demo mode - return success
-      return successResponse({ 
-        id: `demo-client-${Date.now()}`, 
+    const client = await db.client.create({
+      data: {
         name,
-        message: 'تم إنشاء العميل بنجاح (وضع تجريبي)'
-      });
-    }
+        email,
+        phone,
+        address,
+        city,
+        country,
+        contactPerson,
+        taxNumber,
+        creditLimit: creditLimit || 0,
+        paymentTerms: paymentTerms || 30,
+        notes,
+        organizationId: user.organizationId
+      }
+    });
+    return successResponse({ id: client.id, name: client.name });
   } catch (error: any) {
     return errorResponse(error.message, 'SERVER_ERROR', 500);
   }
@@ -153,10 +103,16 @@ export async function POST(request: NextRequest) {
 
 // PUT - Update client
 export async function PUT(request: NextRequest) {
-  const user = await getUserFromToken(request);
+  const user = await getUserFromRequest(request);
   if (!user || !user.organizationId) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
 
+  // Demo mode - cannot update clients
+  if (isDemoUser(user.id)) {
+    return errorResponse('لا يمكن تحديث العملاء في الوضع التجريبي', 'DEMO_MODE', 403);
+  }
+
   try {
+    const { db } = await import('@/lib/db');
     const body = await request.json();
     const { id, ...data } = body;
 
@@ -165,15 +121,11 @@ export async function PUT(request: NextRequest) {
     // Remove fields that don't exist in schema
     const { clientType, totalInvoiced, totalPaid, website, ...validData } = data as any;
 
-    try {
-      const client = await db.client.update({
-        where: { id, organizationId: user.organizationId },
-        data: validData
-      });
-      return successResponse(client);
-    } catch (_dbError) {
-      return successResponse({ id, ...data, message: 'تم التحديث (وضع تجريبي)' });
-    }
+    const client = await db.client.update({
+      where: { id, organizationId: user.organizationId },
+      data: validData
+    });
+    return successResponse(client);
   } catch (error: any) {
     return errorResponse(error.message, 'SERVER_ERROR', 500);
   }
@@ -181,24 +133,26 @@ export async function PUT(request: NextRequest) {
 
 // DELETE - Delete client
 export async function DELETE(request: NextRequest) {
-  const user = await getUserFromToken(request);
+  const user = await getUserFromRequest(request);
   if (!user || !user.organizationId) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
 
+  // Demo mode - cannot delete clients
+  if (isDemoUser(user.id)) {
+    return errorResponse('لا يمكن حذف العملاء في الوضع التجريبي', 'DEMO_MODE', 403);
+  }
+
   try {
+    const { db } = await import('@/lib/db');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) return errorResponse('معرف العميل مطلوب');
 
-    try {
-      await db.client.update({
-        where: { id, organizationId: user.organizationId },
-        data: { isActive: false }
-      });
-      return successResponse({ message: 'تم حذف العميل' });
-    } catch (_dbError) {
-      return successResponse({ message: 'تم الحذف (وضع تجريبي)' });
-    }
+    await db.client.update({
+      where: { id, organizationId: user.organizationId },
+      data: { isActive: false }
+    });
+    return successResponse({ message: 'تم حذف العميل' });
   } catch (error: any) {
     return errorResponse(error.message, 'SERVER_ERROR', 500);
   }

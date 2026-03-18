@@ -1,24 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import * as jose from 'jose';
-
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters');
-
-async function getUserFromToken(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) return null;
-  
-  const token = authHeader.substring(7);
-  try {
-    const { payload } = await jose.jwtVerify(token, JWT_SECRET);
-    return await db.user.findUnique({ 
-      where: { id: payload.userId as string },
-      include: { organization: true }
-    });
-  } catch {
-    return null;
-  }
-}
+import { getUserFromRequest, isDemoUser, DEMO_DATA } from '../utils/demo-config';
 
 function successResponse(data: any, meta?: any) {
   const response = { success: true, data };
@@ -32,16 +13,54 @@ function errorResponse(message: string, code = 'ERROR', status = 400) {
 
 // GET - List projects
 export async function GET(request: NextRequest) {
-  const user = await getUserFromToken(request);
+  const user = await getUserFromRequest(request);
   if (!user || !user.organizationId) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
-
-  const orgId = user.organizationId;
 
   const { searchParams } = new URL(request.url);
   const page = parseInt(searchParams.get('page') || '1');
   const limit = parseInt(searchParams.get('limit') || '20');
   const status = searchParams.get('status');
   const search = searchParams.get('search');
+
+  // Demo mode - return demo data for demo users
+  if (isDemoUser(user.id)) {
+    let filteredProjects = [...DEMO_DATA.projects];
+    
+    if (status) {
+      filteredProjects = filteredProjects.filter(p => p.status === status);
+    }
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filteredProjects = filteredProjects.filter(p => 
+        p.name.toLowerCase().includes(searchLower) ||
+        p.projectNumber.toLowerCase().includes(searchLower) ||
+        p.location.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    const total = filteredProjects.length;
+    const startIndex = (page - 1) * limit;
+    const paginatedProjects = filteredProjects.slice(startIndex, startIndex + limit);
+    
+    return successResponse(
+      paginatedProjects.map(p => ({
+        id: p.id,
+        name: p.name,
+        projectNumber: p.projectNumber,
+        location: p.location,
+        status: p.status,
+        contractValue: p.contractValue,
+        clientId: p.clientId,
+        client: p.client,
+        progressPercentage: p.progressPercentage,
+        createdAt: p.createdAt
+      })),
+      { page, limit, total, totalPages: Math.ceil(total / limit) }
+    );
+  }
+
+  // Real database queries for actual users
+  const orgId = user.organizationId;
 
   const where: any = { organizationId: orgId };
   if (status) where.status = status;
@@ -54,6 +73,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const { db } = await import('@/lib/db');
+    
     const [projects, total] = await Promise.all([
       db.project.findMany({
         where,
@@ -87,12 +108,18 @@ export async function GET(request: NextRequest) {
 
 // POST - Create project
 export async function POST(request: NextRequest) {
-  const user = await getUserFromToken(request);
+  const user = await getUserFromRequest(request);
   if (!user || !user.organizationId) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+
+  // Demo mode - cannot create real projects
+  if (isDemoUser(user.id)) {
+    return errorResponse('لا يمكن إنشاء مشاريع في الوضع التجريبي', 'DEMO_MODE', 403);
+  }
 
   const orgId = user.organizationId;
 
   try {
+    const { db } = await import('@/lib/db');
     const body = await request.json();
     const { name, location, projectType, clientId, contractValue, description, managerId } = body;
 

@@ -1,26 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import * as jose from 'jose';
-import { sendEmail } from '@/lib/email';
-import { emailTemplates } from '@/lib/email-templates';
-
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters');
-
-async function getUserFromToken(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) return null;
-  
-  const token = authHeader.substring(7);
-  try {
-    const { payload } = await jose.jwtVerify(token, JWT_SECRET);
-    return await db.user.findUnique({ 
-      where: { id: payload.userId as string },
-      include: { organization: true }
-    });
-  } catch {
-    return null;
-  }
-}
+import { getUserFromRequest, isDemoUser } from '../utils/demo-config';
 
 function successResponse(data: any, meta?: any) {
   const response = { success: true, data };
@@ -79,51 +58,52 @@ const DEMO_INVOICES = [
 
 // GET - List invoices
 export async function GET(request: NextRequest) {
-  const user = await getUserFromToken(request);
+  const user = await getUserFromRequest(request);
   if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
 
-  try {
-    const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status');
+  const { searchParams } = new URL(request.url);
+  const status = searchParams.get('status');
 
-    try {
-       
-      const where: any = { organizationId: user.organizationId };
-      if (status) where.status = status;
-
-      const invoices = await db.invoice.findMany({
-        where,
-        include: { client: true },
-        orderBy: { createdAt: 'desc' }
-      });
-
-      return successResponse(invoices.map(i => ({
-        id: i.id,
-        invoiceNumber: i.invoiceNumber,
-        clientId: i.clientId,
-        client: i.client?.name,
-        projectId: i.projectId,
-        project: null,
-        items: [], // لا يوجد حقل items في الـ schema
-        subtotal: i.subtotal,
-        taxRate: i.taxRate,
-        taxAmount: i.taxAmount,
-        discountAmount: 0, // لا يوجد حقل discountAmount
-        total: i.total,
-        paidAmount: i.paidAmount,
-        status: i.status,
-        issueDate: i.issueDate,
-        dueDate: i.dueDate,
-        createdAt: i.createdAt
-      })));
-    } catch (_dbError) {
-      // Demo mode
-      let invoices = DEMO_INVOICES;
-      if (status) {
-        invoices = invoices.filter(i => i.status === status);
-      }
-      return successResponse(invoices);
+  // Demo mode - return demo data for demo users
+  if (isDemoUser(user.id)) {
+    let invoices = [...DEMO_INVOICES];
+    if (status) {
+      invoices = invoices.filter(i => i.status === status);
     }
+    return successResponse(invoices);
+  }
+
+  try {
+    const { db } = await import('@/lib/db');
+    
+    const where: any = { organizationId: user.organizationId };
+    if (status) where.status = status;
+
+    const invoices = await db.invoice.findMany({
+      where,
+      include: { client: true },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    return successResponse(invoices.map(i => ({
+      id: i.id,
+      invoiceNumber: i.invoiceNumber,
+      clientId: i.clientId,
+      client: i.client?.name,
+      projectId: i.projectId,
+      project: null,
+      items: [],
+      subtotal: i.subtotal,
+      taxRate: i.taxRate,
+      taxAmount: i.taxAmount,
+      discountAmount: 0,
+      total: i.total,
+      paidAmount: i.paidAmount,
+      status: i.status,
+      issueDate: i.issueDate,
+      dueDate: i.dueDate,
+      createdAt: i.createdAt
+    })));
   } catch (error: any) {
     return errorResponse(error.message, 'SERVER_ERROR', 500);
   }
@@ -131,112 +111,77 @@ export async function GET(request: NextRequest) {
 
 // POST - Create invoice
 export async function POST(request: NextRequest) {
-  const user = await getUserFromToken(request);
+  const user = await getUserFromRequest(request);
   if (!user || !user.organizationId) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
 
+  // Demo mode - cannot create invoices
+  if (isDemoUser(user.id)) {
+    return errorResponse('لا يمكن إنشاء فواتير في الوضع التجريبي', 'DEMO_MODE', 403);
+  }
+
   try {
+    const { db } = await import('@/lib/db');
+    const { sendEmail } = await import('@/lib/email');
+    const { emailTemplates } = await import('@/lib/email-templates');
+    
     const body = await request.json();
     const { clientId, projectId, subtotal, taxRate, dueDate, notes, sendNotification } = body;
 
-    try {
-      const count = await db.invoice.count({ where: { organizationId: user.organizationId } });
-      const invoiceNumber = `INV-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
-      
-      const calculatedTaxAmount = (subtotal || 0) * (taxRate || 5) / 100;
-      const total = (subtotal || 0) + calculatedTaxAmount;
+    const count = await db.invoice.count({ where: { organizationId: user.organizationId } });
+    const invoiceNumber = `INV-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
+    
+    const calculatedTaxAmount = (subtotal || 0) * (taxRate || 5) / 100;
+    const total = (subtotal || 0) + calculatedTaxAmount;
 
-      const invoice = await db.invoice.create({
-        data: {
-          invoiceNumber,
-          clientId,
-          projectId,
-          subtotal: subtotal || 0,
-          taxRate: taxRate || 5,
-          taxAmount: calculatedTaxAmount,
-          total,
-          dueDate: dueDate ? new Date(dueDate) : undefined,
-          notes,
-          issueDate: new Date(),
-          organizationId: user.organizationId
-        },
-        include: { client: true }
-      });
-
-      // Send email notification if client has email and sendNotification is true
-      if (sendNotification !== false && invoice.client?.email) {
-        try {
-          // Check if user has email notifications enabled for invoices
-          const notificationSettings = await (db as any).notificationSettings?.findUnique({
-            where: { userId: user.id }
-          });
-
-          if (!notificationSettings || notificationSettings.emailInvoices) {
-            const formattedDueDate = dueDate 
-              ? new Date(dueDate).toLocaleDateString('ar-AE', { year: 'numeric', month: 'long', day: 'numeric' })
-              : undefined;
-
-            const emailTemplate = emailTemplates.invoiceCreated(
-              invoice.client.name,
-              invoiceNumber,
-              total,
-              formattedDueDate
-            );
-
-            await sendEmail({
-              to: invoice.client.email,
-              subject: emailTemplate.subject,
-              html: emailTemplate.html,
-              text: emailTemplate.text
-            });
-          }
-        } catch (emailError) {
-          console.error('Failed to send invoice email:', emailError);
-          // Don't fail the request if email fails
-        }
-      }
-
-      return successResponse({ id: invoice.id, invoiceNumber, total });
-    } catch (_dbError) {
-      // Demo mode
-      const invoiceNumber = `INV-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`;
-      const calculatedTaxAmount = (subtotal || 0) * (taxRate || 5) / 100;
-      const total = (subtotal || 0) + calculatedTaxAmount;
-
-      // In demo mode, simulate email sending
-      if (sendNotification !== false && clientId) {
-        try {
-          const client = await db.client.findUnique({ where: { id: clientId } });
-          if (client?.email) {
-            const formattedDueDate = dueDate 
-              ? new Date(dueDate).toLocaleDateString('ar-AE', { year: 'numeric', month: 'long', day: 'numeric' })
-              : undefined;
-
-            const emailTemplate = emailTemplates.invoiceCreated(
-              client.name,
-              invoiceNumber,
-              total,
-              formattedDueDate
-            );
-
-            await sendEmail({
-              to: client.email,
-              subject: emailTemplate.subject,
-              html: emailTemplate.html,
-              text: emailTemplate.text
-            });
-          }
-        } catch (emailError) {
-          console.error('Failed to send invoice email (demo):', emailError);
-        }
-      }
-
-      return successResponse({ 
-        id: `demo-inv-${Date.now()}`, 
-        invoiceNumber, 
+    const invoice = await db.invoice.create({
+      data: {
+        invoiceNumber,
+        clientId,
+        projectId,
+        subtotal: subtotal || 0,
+        taxRate: taxRate || 5,
+        taxAmount: calculatedTaxAmount,
         total,
-        message: 'تم إنشاء الفاتورة (وضع تجريبي)'
-      });
+        dueDate: dueDate ? new Date(dueDate) : undefined,
+        notes,
+        issueDate: new Date(),
+        organizationId: user.organizationId
+      },
+      include: { client: true }
+    });
+
+    // Send email notification if client has email and sendNotification is true
+    if (sendNotification !== false && invoice.client?.email) {
+      try {
+        const notificationSettings = await (db as any).notificationSettings?.findUnique({
+          where: { userId: user.id }
+        });
+
+        if (!notificationSettings || notificationSettings.emailInvoices) {
+          const formattedDueDate = dueDate 
+            ? new Date(dueDate).toLocaleDateString('ar-AE', { year: 'numeric', month: 'long', day: 'numeric' })
+            : undefined;
+
+          const emailTemplate = emailTemplates.invoiceCreated(
+            invoice.client.name,
+            invoiceNumber,
+            total,
+            formattedDueDate
+          );
+
+          await sendEmail({
+            to: invoice.client.email,
+            subject: emailTemplate.subject,
+            html: emailTemplate.html,
+            text: emailTemplate.text
+          });
+        }
+      } catch (emailError) {
+        console.error('Failed to send invoice email:', emailError);
+      }
     }
+
+    return successResponse({ id: invoice.id, invoiceNumber, total });
   } catch (error: any) {
     return errorResponse(error.message, 'SERVER_ERROR', 500);
   }
@@ -244,28 +189,30 @@ export async function POST(request: NextRequest) {
 
 // PUT - Update invoice status
 export async function PUT(request: NextRequest) {
-  const user = await getUserFromToken(request);
+  const user = await getUserFromRequest(request);
   if (!user || !user.organizationId) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
 
+  // Demo mode - cannot update invoices
+  if (isDemoUser(user.id)) {
+    return errorResponse('لا يمكن تحديث الفواتير في الوضع التجريبي', 'DEMO_MODE', 403);
+  }
+
   try {
+    const { db } = await import('@/lib/db');
     const body = await request.json();
     const { id, status, paidAmount } = body;
 
     if (!id) return errorResponse('معرف الفاتورة مطلوب');
 
-    try {
-      const updateData: any = {};
-      if (status) updateData.status = status;
-      if (paidAmount !== undefined) updateData.paidAmount = paidAmount;
+    const updateData: any = {};
+    if (status) updateData.status = status;
+    if (paidAmount !== undefined) updateData.paidAmount = paidAmount;
 
-      const invoice = await db.invoice.update({
-        where: { id, organizationId: user.organizationId },
-        data: updateData
-      });
-      return successResponse(invoice);
-    } catch (_dbError) {
-      return successResponse({ id, status, message: 'تم التحديث (وضع تجريبي)' });
-    }
+    const invoice = await db.invoice.update({
+      where: { id, organizationId: user.organizationId },
+      data: updateData
+    });
+    return successResponse(invoice);
   } catch (error: any) {
     return errorResponse(error.message, 'SERVER_ERROR', 500);
   }
@@ -273,23 +220,25 @@ export async function PUT(request: NextRequest) {
 
 // DELETE - Delete invoice
 export async function DELETE(request: NextRequest) {
-  const user = await getUserFromToken(request);
+  const user = await getUserFromRequest(request);
   if (!user || !user.organizationId) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
 
+  // Demo mode - cannot delete invoices
+  if (isDemoUser(user.id)) {
+    return errorResponse('لا يمكن حذف الفواتير في الوضع التجريبي', 'DEMO_MODE', 403);
+  }
+
   try {
+    const { db } = await import('@/lib/db');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) return errorResponse('معرف الفاتورة مطلوب');
 
-    try {
-      await db.invoice.delete({
-        where: { id, organizationId: user.organizationId }
-      });
-      return successResponse({ message: 'تم حذف الفاتورة' });
-    } catch (_dbError) {
-      return successResponse({ message: 'تم الحذف (وضع تجريبي)' });
-    }
+    await db.invoice.delete({
+      where: { id, organizationId: user.organizationId }
+    });
+    return successResponse({ message: 'تم حذف الفاتورة' });
   } catch (error: any) {
     return errorResponse(error.message, 'SERVER_ERROR', 500);
   }

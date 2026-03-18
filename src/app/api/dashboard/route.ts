@@ -1,36 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import * as jose from 'jose';
-
-// SECURITY: Validate JWT_SECRET with fallback (must match auth route)
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters');
-
-async function getUserFromToken(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) return null;
-  
-  const token = authHeader.substring(7);
-  try {
-    const { payload } = await jose.jwtVerify(token, JWT_SECRET);
-    const user = await db.user.findUnique({ 
-      where: { id: payload.userId as string },
-      include: { organization: true }
-    });
-    return user;
-  } catch {
-    return null;
-  }
-}
+import { getUserFromRequest, isDemoUser, DEMO_DATA } from '../utils/demo-config';
 
 export async function GET(request: NextRequest) {
-  const user = await getUserFromToken(request);
+  const user = await getUserFromRequest(request);
   if (!user || !user.organizationId) {
     return NextResponse.json({ success: false, error: { code: 'UNAUTHORIZED', message: 'غير مصرح' } }, { status: 401 });
   }
 
-  const orgId = user.organizationId;
+  // Demo mode - return demo data for demo users
+  if (isDemoUser(user.id)) {
+    return NextResponse.json({
+      success: true,
+      data: DEMO_DATA.dashboard
+    });
+  }
 
+  // Real database queries for actual users
   try {
+    const { db } = await import('@/lib/db');
+    const orgId = user.organizationId;
+
     // Parallel queries for better performance
     const [
       totalProjects, activeProjects, completedProjects, pendingProjects,

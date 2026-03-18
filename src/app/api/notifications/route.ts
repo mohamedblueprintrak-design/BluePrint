@@ -1,24 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import * as jose from 'jose';
-
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters');
-
-async function getUserFromToken(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) return null;
-  
-  const token = authHeader.substring(7);
-  try {
-    const { payload } = await jose.jwtVerify(token, JWT_SECRET);
-    return await db.user.findUnique({ 
-      where: { id: payload.userId as string },
-      include: { organization: true }
-    });
-  } catch {
-    return null;
-  }
-}
+import { getUserFromRequest, isDemoUser } from '../utils/demo-config';
 
 function successResponse(data: any, meta?: any) {
   const response = { success: true, data };
@@ -33,7 +14,7 @@ function errorResponse(message: string, code = 'ERROR', status = 400) {
   );
 }
 
-// Demo notifications مع أنواع جديدة
+// Demo notifications
 const DEMO_NOTIFICATIONS = [
   {
     id: 'demo-notif-001',
@@ -46,7 +27,7 @@ const DEMO_NOTIFICATIONS = [
     isRead: false,
     priority: 'high',
     actionUrl: '/dashboard/tasks?id=demo-task-001',
-    createdAt: new Date(Date.now() - 1000 * 60 * 30) // 30 minutes ago
+    createdAt: new Date(Date.now() - 1000 * 60 * 30)
   },
   {
     id: 'demo-notif-002',
@@ -59,7 +40,7 @@ const DEMO_NOTIFICATIONS = [
     isRead: true,
     priority: 'normal',
     actionUrl: '/dashboard/hr',
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24) // 1 day ago
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24)
   },
   {
     id: 'demo-notif-003',
@@ -72,7 +53,7 @@ const DEMO_NOTIFICATIONS = [
     isRead: false,
     priority: 'normal',
     actionUrl: '/dashboard/invoices?id=demo-inv-001',
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2) // 2 hours ago
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2)
   },
   {
     id: 'demo-notif-004',
@@ -85,7 +66,7 @@ const DEMO_NOTIFICATIONS = [
     isRead: false,
     priority: 'urgent',
     actionUrl: '/dashboard/inventory?material=demo-mat-001',
-    createdAt: new Date(Date.now() - 1000 * 60 * 15) // 15 minutes ago
+    createdAt: new Date(Date.now() - 1000 * 60 * 15)
   },
   {
     id: 'demo-notif-005',
@@ -98,7 +79,7 @@ const DEMO_NOTIFICATIONS = [
     isRead: false,
     priority: 'high',
     actionUrl: '/dashboard/projects?id=demo-proj-001',
-    createdAt: new Date(Date.now() - 1000 * 60 * 60) // 1 hour ago
+    createdAt: new Date(Date.now() - 1000 * 60 * 60)
   },
   {
     id: 'demo-notif-006',
@@ -111,7 +92,7 @@ const DEMO_NOTIFICATIONS = [
     isRead: true,
     priority: 'normal',
     actionUrl: '/dashboard/invoices?id=demo-inv-002',
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3) // 3 hours ago
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3)
   },
   {
     id: 'demo-notif-007',
@@ -124,88 +105,89 @@ const DEMO_NOTIFICATIONS = [
     isRead: false,
     priority: 'high',
     actionUrl: '/dashboard/defects?id=demo-defect-001',
-    createdAt: new Date(Date.now() - 1000 * 60 * 45) // 45 minutes ago
+    createdAt: new Date(Date.now() - 1000 * 60 * 45)
   }
 ];
 
 // GET - List notifications
 export async function GET(request: NextRequest) {
-  const user = await getUserFromToken(request);
+  const user = await getUserFromRequest(request);
   if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
 
-  try {
-    const { searchParams } = new URL(request.url);
-    const unreadOnly = searchParams.get('unreadOnly') === 'true';
-    const limit = parseInt(searchParams.get('limit') || '20', 10);
-    const type = searchParams.get('type'); // تصفية حسب النوع
+  const { searchParams } = new URL(request.url);
+  const unreadOnly = searchParams.get('unreadOnly') === 'true';
+  const limit = parseInt(searchParams.get('limit') || '20', 10);
+  const type = searchParams.get('type');
 
-    try {
-      const where: any = { userId: user.id };
-      if (unreadOnly) where.isRead = false;
-      if (type) where.notificationType = type;
-
-      const notifications = await db.notification.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        take: limit
-      });
-
-      const unreadCount = await db.notification.count({
-        where: { userId: user.id, isRead: false }
-      });
-
-      // إحصائيات حسب النوع
-      const typeStats = await db.notification.groupBy({
-        by: ['notificationType'],
-        where: { userId: user.id, isRead: false },
-        _count: true
-      });
-
-      return successResponse(
-        notifications.map(n => ({
-          id: n.id,
-          userId: n.userId,
-          title: n.title,
-          message: n.message,
-          notificationType: n.notificationType,
-          referenceType: n.referenceType,
-          referenceId: n.referenceId,
-          isRead: n.isRead,
-          priority: n.priority,
-          actionUrl: n.actionUrl,
-          createdAt: n.createdAt,
-          readAt: n.readAt
-        })),
-        { unreadCount, typeStats }
-      );
-    } catch (_dbError) {
-      // Demo mode
-      let notifications = DEMO_NOTIFICATIONS;
-      if (unreadOnly) {
-        notifications = notifications.filter(n => !n.isRead);
-      }
-      if (type) {
-        notifications = notifications.filter(n => n.notificationType === type);
-      }
-      
-      const typeStats = notifications
-        .filter(n => !n.isRead)
-        .reduce((acc, n) => {
-          acc[n.notificationType] = (acc[n.notificationType] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>);
-      
-      return successResponse(
-        notifications.slice(0, limit),
-        { 
-          unreadCount: notifications.filter(n => !n.isRead).length,
-          typeStats: Object.entries(typeStats).map(([notificationType, count]) => ({
-            notificationType,
-            _count: count
-          }))
-        }
-      );
+  // Demo mode - return demo data for demo users
+  if (isDemoUser(user.id)) {
+    let notifications = [...DEMO_NOTIFICATIONS];
+    if (unreadOnly) {
+      notifications = notifications.filter(n => !n.isRead);
     }
+    if (type) {
+      notifications = notifications.filter(n => n.notificationType === type);
+    }
+    
+    const typeStats = notifications
+      .filter(n => !n.isRead)
+      .reduce((acc, n) => {
+        acc[n.notificationType] = (acc[n.notificationType] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+    
+    return successResponse(
+      notifications.slice(0, limit),
+      { 
+        unreadCount: notifications.filter(n => !n.isRead).length,
+        typeStats: Object.entries(typeStats).map(([notificationType, count]) => ({
+          notificationType,
+          _count: count
+        }))
+      }
+    );
+  }
+
+  try {
+    const { db } = await import('@/lib/db');
+    
+    const where: any = { userId: user.id };
+    if (unreadOnly) where.isRead = false;
+    if (type) where.notificationType = type;
+
+    const notifications = await db.notification.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: limit
+    });
+
+    const unreadCount = await db.notification.count({
+      where: { userId: user.id, isRead: false }
+    });
+
+    const typeStats = await db.notification.groupBy({
+      by: ['notificationType'],
+      where: { userId: user.id, isRead: false },
+      _count: true
+    });
+
+    return successResponse(
+      notifications.map(n => ({
+        id: n.id,
+        userId: n.userId,
+        title: n.title,
+        message: n.message,
+        notificationType: n.notificationType,
+        referenceType: n.referenceType,
+        referenceId: n.referenceId,
+        isRead: n.isRead,
+        priority: n.priority,
+        actionUrl: n.actionUrl,
+        createdAt: n.createdAt,
+        readAt: n.readAt
+      })),
+      { unreadCount, typeStats }
+    );
   } catch (error: any) {
     return errorResponse(error.message, 'SERVER_ERROR', 500);
   }
@@ -213,41 +195,40 @@ export async function GET(request: NextRequest) {
 
 // PUT - Mark notification(s) as read
 export async function PUT(request: NextRequest) {
-  const user = await getUserFromToken(request);
+  const user = await getUserFromRequest(request);
   if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
 
+  // Demo mode - just return success
+  if (isDemoUser(user.id)) {
+    return successResponse({ message: 'تم التحديث (وضع تجريبي)' });
+  }
+
   try {
+    const { db } = await import('@/lib/db');
     const body = await request.json();
     const { id, markAllRead, types } = body;
 
-    try {
-      if (markAllRead) {
-        // Mark all notifications as read
-        const where: any = { userId: user.id, isRead: false };
-        if (types && types.length > 0) {
-          where.notificationType = { in: types };
-        }
-        
-        await db.notification.updateMany({
-          where,
-          data: { isRead: true, readAt: new Date() }
-        });
-        return successResponse({ message: 'تم تحديد جميع الإشعارات كمقروءة' });
+    if (markAllRead) {
+      const where: any = { userId: user.id, isRead: false };
+      if (types && types.length > 0) {
+        where.notificationType = { in: types };
       }
-
-      if (!id) return errorResponse('معرف الإشعار مطلوب');
-
-      // Mark single notification as read
-      await db.notification.update({
-        where: { id, userId: user.id },
+      
+      await db.notification.updateMany({
+        where,
         data: { isRead: true, readAt: new Date() }
       });
-
-      return successResponse({ message: 'تم تحديد الإشعار كمقروء' });
-    } catch (_dbError) {
-      // Demo mode
-      return successResponse({ message: 'تم التحديث (وضع تجريبي)' });
+      return successResponse({ message: 'تم تحديد جميع الإشعارات كمقروءة' });
     }
+
+    if (!id) return errorResponse('معرف الإشعار مطلوب');
+
+    await db.notification.update({
+      where: { id, userId: user.id },
+      data: { isRead: true, readAt: new Date() }
+    });
+
+    return successResponse({ message: 'تم تحديد الإشعار كمقروء' });
   } catch (error: any) {
     return errorResponse(error.message, 'SERVER_ERROR', 500);
   }
@@ -255,44 +236,42 @@ export async function PUT(request: NextRequest) {
 
 // DELETE - Delete notification(s)
 export async function DELETE(request: NextRequest) {
-  const user = await getUserFromToken(request);
+  const user = await getUserFromRequest(request);
   if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
 
+  // Demo mode - just return success
+  if (isDemoUser(user.id)) {
+    return successResponse({ message: 'تم الحذف (وضع تجريبي)' });
+  }
+
   try {
+    const { db } = await import('@/lib/db');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     const deleteAll = searchParams.get('all') === 'true';
     const deleteRead = searchParams.get('read') === 'true';
 
-    try {
-      if (deleteAll) {
-        // Delete all notifications for user
-        await db.notification.deleteMany({
-          where: { userId: user.id }
-        });
-        return successResponse({ message: 'تم حذف جميع الإشعارات' });
-      }
-
-      if (deleteRead) {
-        // Delete only read notifications
-        await db.notification.deleteMany({
-          where: { userId: user.id, isRead: true }
-        });
-        return successResponse({ message: 'تم حذف الإشعارات المقروءة' });
-      }
-
-      if (!id) return errorResponse('معرف الإشعار مطلوب');
-
-      // Delete single notification
-      await db.notification.delete({
-        where: { id, userId: user.id }
+    if (deleteAll) {
+      await db.notification.deleteMany({
+        where: { userId: user.id }
       });
-
-      return successResponse({ message: 'تم حذف الإشعار' });
-    } catch (_dbError) {
-      // Demo mode
-      return successResponse({ message: 'تم الحذف (وضع تجريبي)' });
+      return successResponse({ message: 'تم حذف جميع الإشعارات' });
     }
+
+    if (deleteRead) {
+      await db.notification.deleteMany({
+        where: { userId: user.id, isRead: true }
+      });
+      return successResponse({ message: 'تم حذف الإشعارات المقروءة' });
+    }
+
+    if (!id) return errorResponse('معرف الإشعار مطلوب');
+
+    await db.notification.delete({
+      where: { id, userId: user.id }
+    });
+
+    return successResponse({ message: 'تم حذف الإشعار' });
   } catch (error: any) {
     return errorResponse(error.message, 'SERVER_ERROR', 500);
   }
@@ -300,10 +279,22 @@ export async function DELETE(request: NextRequest) {
 
 // POST - Create notification (internal use)
 export async function POST(request: NextRequest) {
-  const user = await getUserFromToken(request);
+  const user = await getUserFromRequest(request);
   if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
 
+  // Demo mode - just return success
+  if (isDemoUser(user.id)) {
+    const body = await request.json();
+    return successResponse({
+      id: `demo-notif-${Date.now()}`,
+      title: body.title,
+      message: 'تم إنشاء الإشعار (وضع تجريبي)',
+      realtime: true
+    });
+  }
+
   try {
+    const { db } = await import('@/lib/db');
     const body = await request.json();
     const { 
       userId, 
@@ -320,7 +311,6 @@ export async function POST(request: NextRequest) {
       return errorResponse('معرف المستخدم والعنوان مطلوبان');
     }
 
-    // التحقق من صحة نوع الإشعار
     const validTypes = [
       'task_assigned', 'task_completed', 'task_due_soon',
       'invoice_created', 'invoice_paid', 'invoice_overdue',
@@ -333,36 +323,25 @@ export async function POST(request: NextRequest) {
     
     const finalType = validTypes.includes(notificationType) ? notificationType : 'system';
 
-    try {
-      const notification = await db.notification.create({
-        data: {
-          userId,
-          title,
-          message,
-          notificationType: finalType,
-          referenceType,
-          referenceId,
-          priority: priority || 'normal',
-          actionUrl
-        }
-      });
-
-      // بث الإشعار في الوقت الفوري (سيتم معالجته بواسطة stream endpoint)
-      return successResponse({
-        id: notification.id,
-        title: notification.title,
-        message: 'تم إنشاء الإشعار',
-        realtime: true
-      });
-    } catch (_dbError) {
-      // Demo mode
-      return successResponse({
-        id: `demo-notif-${Date.now()}`,
+    const notification = await db.notification.create({
+      data: {
+        userId,
         title,
-        message: 'تم إنشاء الإشعار (وضع تجريبي)',
-        realtime: true
-      });
-    }
+        message,
+        notificationType: finalType,
+        referenceType,
+        referenceId,
+        priority: priority || 'normal',
+        actionUrl
+      }
+    });
+
+    return successResponse({
+      id: notification.id,
+      title: notification.title,
+      message: 'تم إنشاء الإشعار',
+      realtime: true
+    });
   } catch (error: any) {
     return errorResponse(error.message, 'SERVER_ERROR', 500);
   }

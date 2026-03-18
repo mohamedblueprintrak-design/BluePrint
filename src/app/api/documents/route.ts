@@ -1,17 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import * as jose from 'jose';
-
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters');
-
-async function getUser(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) return null;
-  try {
-    const { payload } = await jose.jwtVerify(authHeader.substring(7), JWT_SECRET);
-    return await db.user.findUnique({ where: { id: payload.userId as string }, include: { organization: true } });
-  } catch { return null; }
-}
+import { getUserFromRequest, isDemoUser } from '../utils/demo-config';
 
 const success = (data: any) => NextResponse.json({ success: true, data });
 const error = (message: string, code = 'ERROR', status = 400) => NextResponse.json({ success: false, error: { code, message } }, { status });
@@ -22,12 +10,18 @@ const DEMO_DOCS = [
 ];
 
 export async function GET(request: NextRequest) {
-  const user = await getUser(request);
+  const user = await getUserFromRequest(request);
   if (!user) return error('غير مصرح', 'UNAUTHORIZED', 401);
+
+  // Demo mode - return demo data for demo users
+  if (isDemoUser(user.id)) {
+    return success(DEMO_DOCS);
+  }
+
   try {
+    const { db } = await import('@/lib/db');
     const docs = await db.document.findMany({ orderBy: { createdAt: 'desc' }, take: 50 });
     
-    // جلب بيانات المستخدمين الذين رفعوا المستندات
     const uploaderIds = [...new Set(docs.map(d => d.uploadedBy).filter(Boolean))] as string[];
     const uploaders = await db.user.findMany({ where: { id: { in: uploaderIds } } });
     const uploaderMap = new Map(uploaders.map(u => [u.id, u.fullName || u.username]));
@@ -36,28 +30,46 @@ export async function GET(request: NextRequest) {
       ...d, 
       uploaderName: d.uploadedBy ? uploaderMap.get(d.uploadedBy) || 'غير معروف' : null 
     })));
-  } catch { return success(DEMO_DOCS); }
+  } catch (e: any) {
+    return error(e.message, 'SERVER_ERROR', 500);
+  }
 }
 
 export async function POST(request: NextRequest) {
-  const user = await getUser(request);
+  const user = await getUserFromRequest(request);
   if (!user) return error('غير مصرح', 'UNAUTHORIZED', 401);
+
+  // Demo mode - cannot create documents
+  if (isDemoUser(user.id)) {
+    return error('لا يمكن رفع مستندات في الوضع التجريبي', 'DEMO_MODE', 403);
+  }
+
   try {
+    const { db } = await import('@/lib/db');
     const body = await request.json();
-    try {
-      const doc = await db.document.create({ data: { ...body, uploadedBy: user.id } });
-      return success({ id: doc.id, fileName: doc.fileName });
-    } catch { return success({ id: `demo-doc-${Date.now()}`, fileName: body.fileName || 'ملف جديد' }); }
-  } catch (e: any) { return error(e.message, "SERVER_ERROR", 500); }
+    const doc = await db.document.create({ data: { ...body, uploadedBy: user.id } });
+    return success({ id: doc.id, fileName: doc.fileName });
+  } catch (e: any) {
+    return error(e.message, 'SERVER_ERROR', 500);
+  }
 }
 
 export async function DELETE(request: NextRequest) {
-  const user = await getUser(request);
+  const user = await getUserFromRequest(request);
   if (!user) return error('غير مصرح', 'UNAUTHORIZED', 401);
+
+  // Demo mode - cannot delete documents
+  if (isDemoUser(user.id)) {
+    return error('لا يمكن حذف المستندات في الوضع التجريبي', 'DEMO_MODE', 403);
+  }
+
   try {
+    const { db } = await import('@/lib/db');
     const id = new URL(request.url).searchParams.get('id');
     if (!id) return error('معرف المستند مطلوب');
-    try { await db.document.delete({ where: { id } }); } catch {}
+    await db.document.delete({ where: { id } });
     return success({ message: 'تم الحذف' });
-  } catch (e: any) { return error(e.message, "SERVER_ERROR", 500); }
+  } catch (e: any) {
+    return error(e.message, 'SERVER_ERROR', 500);
+  }
 }

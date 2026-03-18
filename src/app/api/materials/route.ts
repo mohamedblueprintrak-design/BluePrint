@@ -1,17 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import * as jose from 'jose';
-
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters');
-
-async function getUser(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) return null;
-  try {
-    const { payload } = await jose.jwtVerify(authHeader.substring(7), JWT_SECRET);
-    return await db.user.findUnique({ where: { id: payload.userId as string }, include: { organization: true } });
-  } catch { return null; }
-}
+import { getUserFromRequest, isDemoUser } from '../utils/demo-config';
 
 const success = (data: any) => NextResponse.json({ success: true, data });
 const error = (message: string, code = 'ERROR', status = 400) => NextResponse.json({ success: false, error: { code, message } }, { status });
@@ -24,44 +12,78 @@ const DEMO_MATERIALS = [
 ];
 
 export async function GET(request: NextRequest) {
-  const user = await getUser(request);
+  const user = await getUserFromRequest(request);
   if (!user) return error('غير مصرح', 'UNAUTHORIZED', 401);
+
+  // Demo mode - return demo data for demo users
+  if (isDemoUser(user.id)) {
+    return success(DEMO_MATERIALS);
+  }
+
   try {
+    const { db } = await import('@/lib/db');
     const materials = await db.material.findMany({ where: { organizationId: user.organizationId, isActive: true }, orderBy: { name: 'asc' } });
     return success(materials);
-  } catch { return success(DEMO_MATERIALS); }
+  } catch (e: any) {
+    return error(e.message, 'SERVER_ERROR', 500);
+  }
 }
 
 export async function POST(request: NextRequest) {
-  const user = await getUser(request);
+  const user = await getUserFromRequest(request);
   if (!user || !user.organizationId) return error('غير مصرح', 'UNAUTHORIZED', 401);
+
+  // Demo mode - cannot create materials
+  if (isDemoUser(user.id)) {
+    return error('لا يمكن إنشاء مواد في الوضع التجريبي', 'DEMO_MODE', 403);
+  }
+
   try {
+    const { db } = await import('@/lib/db');
     const body = await request.json();
     if (!body.name || !body.unit) return error('اسم المادة والوحدة مطلوبان');
-    try {
-      const material = await db.material.create({ data: { ...body, organizationId: user.organizationId } });
-      return success({ id: material.id, name: material.name });
-    } catch { return success({ id: `demo-mat-${Date.now()}`, name: body.name }); }
-  } catch (e: any) { return error(e.message, "SERVER_ERROR", 500); }
+    const material = await db.material.create({ data: { ...body, organizationId: user.organizationId } });
+    return success({ id: material.id, name: material.name });
+  } catch (e: any) {
+    return error(e.message, 'SERVER_ERROR', 500);
+  }
 }
 
 export async function PUT(request: NextRequest) {
-  const user = await getUser(request);
+  const user = await getUserFromRequest(request);
   if (!user) return error('غير مصرح', 'UNAUTHORIZED', 401);
+
+  // Demo mode - cannot update materials
+  if (isDemoUser(user.id)) {
+    return error('لا يمكن تحديث المواد في الوضع التجريبي', 'DEMO_MODE', 403);
+  }
+
   try {
+    const { db } = await import('@/lib/db');
     const { id, ...data } = await request.json();
-    try { await db.material.update({ where: { id }, data }); } catch {}
+    await db.material.update({ where: { id }, data });
     return success({ id, ...data });
-  } catch (e: any) { return error(e.message, "SERVER_ERROR", 500); }
+  } catch (e: any) {
+    return error(e.message, 'SERVER_ERROR', 500);
+  }
 }
 
 export async function DELETE(request: NextRequest) {
-  const user = await getUser(request);
+  const user = await getUserFromRequest(request);
   if (!user) return error('غير مصرح', 'UNAUTHORIZED', 401);
+
+  // Demo mode - cannot delete materials
+  if (isDemoUser(user.id)) {
+    return error('لا يمكن حذف المواد في الوضع التجريبي', 'DEMO_MODE', 403);
+  }
+
   try {
+    const { db } = await import('@/lib/db');
     const id = new URL(request.url).searchParams.get('id');
     if (!id) return error('معرف المادة مطلوب');
-    try { await db.material.update({ where: { id }, data: { isActive: false } }); } catch {}
+    await db.material.update({ where: { id }, data: { isActive: false } });
     return success({ message: 'تم الحذف' });
-  } catch (e: any) { return error(e.message, "SERVER_ERROR", 500); }
+  } catch (e: any) {
+    return error(e.message, 'SERVER_ERROR', 500);
+  }
 }

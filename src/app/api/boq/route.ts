@@ -1,32 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import * as jose from 'jose';
-
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters');
-
-async function getUser(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const tokenCookie = request.cookies.get('bp_token')?.value;
-  
-  let token: string | null = null;
-  if (authHeader?.startsWith('Bearer ')) {
-    token = authHeader.substring(7);
-  } else if (tokenCookie) {
-    token = tokenCookie;
-  }
-  
-  if (!token) return null;
-  
-  try {
-    const { payload } = await jose.jwtVerify(token, JWT_SECRET);
-    return await db.user.findUnique({ 
-      where: { id: payload.userId as string }, 
-      include: { organization: true } 
-    });
-  } catch { 
-    return null; 
-  }
-}
+import { getUserFromRequest, isDemoUser } from '../utils/demo-config';
 
 const success = (data: any, meta?: any) => NextResponse.json({ success: true, data, ...(meta ? { meta } : {}) });
 const error = (message: string, code = 'ERROR', status = 400) => NextResponse.json({ success: false, error: { code, message } }, { status });
@@ -41,13 +14,23 @@ const DEMO_BOQ_ITEMS = [
 ];
 
 export async function GET(request: NextRequest) {
-  const user = await getUser(request);
+  const user = await getUserFromRequest(request);
   if (!user) return error('غير مصرح', 'UNAUTHORIZED', 401);
   
   const { searchParams } = new URL(request.url);
   const projectId = searchParams.get('projectId');
+
+  // Demo mode - return demo data for demo users
+  if (isDemoUser(user.id)) {
+    const filteredItems = projectId 
+      ? DEMO_BOQ_ITEMS.filter(item => item.projectId === projectId || projectId === 'demo-project-001')
+      : DEMO_BOQ_ITEMS;
+    return success(filteredItems);
+  }
   
   try {
+    const { db } = await import('@/lib/db');
+    
     const whereClause: any = {};
     if (projectId) {
       whereClause.projectId = projectId;
@@ -65,20 +48,22 @@ export async function GET(request: NextRequest) {
     }));
     
     return success(mappedItems);
-  } catch (e) {
-    console.log('BOQ fetch error, returning demo data:', e);
-    const filteredItems = projectId 
-      ? DEMO_BOQ_ITEMS.filter(item => item.projectId === projectId || projectId === 'demo-project-001')
-      : DEMO_BOQ_ITEMS;
-    return success(filteredItems);
+  } catch (e: any) {
+    return error(e.message, 'SERVER_ERROR', 500);
   }
 }
 
 export async function POST(request: NextRequest) {
-  const user = await getUser(request);
+  const user = await getUserFromRequest(request);
   if (!user) return error('غير مصرح', 'UNAUTHORIZED', 401);
+
+  // Demo mode - cannot create BOQ items
+  if (isDemoUser(user.id)) {
+    return error('لا يمكن إنشاء بنود جدول الكميات في الوضع التجريبي', 'DEMO_MODE', 403);
+  }
   
   try {
+    const { db } = await import('@/lib/db');
     const body = await request.json();
     const { projectId, itemNumber, description, unit, quantity, unitPrice, category, notes } = body;
     
@@ -88,48 +73,37 @@ export async function POST(request: NextRequest) {
     
     const totalPrice = (quantity || 0) * (unitPrice || 0);
     
-    try {
-      const item = await db.bOQItem.create({
-        data: {
-          projectId,
-          itemNumber: itemNumber || null,
-          description,
-          unit: unit || null,
-          quantity: parseFloat(quantity) || 0,
-          unitPrice: parseFloat(unitPrice) || 0,
-          totalPrice,
-          category: category || null,
-          notes: notes || null
-        }
-      });
-      
-      return success(item);
-    } catch (dbError) {
-      console.log('BOQ create error, returning demo response:', dbError);
-      return success({
-        id: `boq-${Date.now()}`,
+    const item = await db.bOQItem.create({
+      data: {
         projectId,
-        itemNumber,
+        itemNumber: itemNumber || null,
         description,
-        unit,
+        unit: unit || null,
         quantity: parseFloat(quantity) || 0,
         unitPrice: parseFloat(unitPrice) || 0,
         totalPrice,
-        category,
-        notes,
-        createdAt: new Date().toISOString()
-      });
-    }
+        category: category || null,
+        notes: notes || null
+      }
+    });
+    
+    return success(item);
   } catch (e: any) {
-    return error(e.message || 'خطأ في الخادم', 'SERVER_ERROR', 500);
+    return error(e.message, 'SERVER_ERROR', 500);
   }
 }
 
 export async function PUT(request: NextRequest) {
-  const user = await getUser(request);
+  const user = await getUserFromRequest(request);
   if (!user) return error('غير مصدق', 'UNAUTHORIZED', 401);
+
+  // Demo mode - cannot update BOQ items
+  if (isDemoUser(user.id)) {
+    return error('لا يمكن تحديث بنود جدول الكميات في الوضع التجريبي', 'DEMO_MODE', 403);
+  }
   
   try {
+    const { db } = await import('@/lib/db');
     const body = await request.json();
     const { id, itemNumber, description, unit, quantity, unitPrice, category, notes } = body;
     
@@ -137,60 +111,45 @@ export async function PUT(request: NextRequest) {
     
     const totalPrice = (quantity || 0) * (unitPrice || 0);
     
-    try {
-      const item = await db.bOQItem.update({
-        where: { id },
-        data: {
-          itemNumber: itemNumber || null,
-          description,
-          unit: unit || null,
-          quantity: parseFloat(quantity) || 0,
-          unitPrice: parseFloat(unitPrice) || 0,
-          totalPrice,
-          category: category || null,
-          notes: notes || null
-        }
-      });
-      
-      return success(item);
-    } catch (dbError) {
-      console.log('BOQ update error, returning demo response:', dbError);
-      return success({
-        id,
-        itemNumber,
+    const item = await db.bOQItem.update({
+      where: { id },
+      data: {
+        itemNumber: itemNumber || null,
         description,
-        unit,
+        unit: unit || null,
         quantity: parseFloat(quantity) || 0,
         unitPrice: parseFloat(unitPrice) || 0,
         totalPrice,
-        category,
-        notes,
-        updatedAt: new Date().toISOString()
-      });
-    }
+        category: category || null,
+        notes: notes || null
+      }
+    });
+    
+    return success(item);
   } catch (e: any) {
-    return error(e.message || 'خطأ في الخادم', 'SERVER_ERROR', 500);
+    return error(e.message, 'SERVER_ERROR', 500);
   }
 }
 
 export async function DELETE(request: NextRequest) {
-  const user = await getUser(request);
+  const user = await getUserFromRequest(request);
   if (!user) return error('غير مصدق', 'UNAUTHORIZED', 401);
+
+  // Demo mode - cannot delete BOQ items
+  if (isDemoUser(user.id)) {
+    return error('لا يمكن حذف بنود جدول الكميات في الوضع التجريبي', 'DEMO_MODE', 403);
+  }
   
   try {
+    const { db } = await import('@/lib/db');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     
     if (!id) return error('معرف البند مطلوب');
     
-    try {
-      await db.bOQItem.delete({ where: { id } });
-      return success({ message: 'تم الحذف بنجاح' });
-    } catch (dbError) {
-      console.log('BOQ delete error:', dbError);
-      return success({ message: 'تم الحذف بنجاح' });
-    }
+    await db.bOQItem.delete({ where: { id } });
+    return success({ message: 'تم الحذف بنجاح' });
   } catch (e: any) {
-    return error(e.message || 'خطأ في الخادم', 'SERVER_ERROR', 500);
+    return error(e.message, 'SERVER_ERROR', 500);
   }
 }

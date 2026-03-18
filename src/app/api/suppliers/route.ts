@@ -1,18 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import * as jose from 'jose';
-
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters');
-
-async function getUserFromToken(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) return null;
-  const token = authHeader.substring(7);
-  try {
-    const { payload } = await jose.jwtVerify(token, JWT_SECRET);
-    return await db.user.findUnique({ where: { id: payload.userId as string }, include: { organization: true } });
-  } catch { return null; }
-}
+import { getUserFromRequest, isDemoUser } from '../utils/demo-config';
 
 function successResponse(data: any) { return NextResponse.json({ success: true, data }); }
 function errorResponse(message: string, code = 'ERROR', status = 400) {
@@ -25,55 +12,81 @@ const DEMO_SUPPLIERS = [
 ];
 
 export async function GET(request: NextRequest) {
-  const user = await getUserFromToken(request);
+  const user = await getUserFromRequest(request);
   if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
 
+  // Demo mode - return demo data for demo users
+  if (isDemoUser(user.id)) {
+    return successResponse(DEMO_SUPPLIERS);
+  }
+
   try {
+    const { db } = await import('@/lib/db');
     const suppliers = await db.supplier.findMany({ where: { organizationId: user.organizationId, isActive: true }, orderBy: { name: 'asc' } });
     return successResponse(suppliers);
-  } catch { return successResponse(DEMO_SUPPLIERS); }
+  } catch (error: any) {
+    return errorResponse(error.message, 'SERVER_ERROR', 500);
+  }
 }
 
 export async function POST(request: NextRequest) {
-  const user = await getUserFromToken(request);
+  const user = await getUserFromRequest(request);
   if (!user || !user.organizationId) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
 
+  // Demo mode - cannot create suppliers
+  if (isDemoUser(user.id)) {
+    return errorResponse('لا يمكن إنشاء موردين في الوضع التجريبي', 'DEMO_MODE', 403);
+  }
+
   try {
+    const { db } = await import('@/lib/db');
     const body = await request.json();
     if (!body.name) return errorResponse('اسم المورد مطلوب');
 
-    try {
-      const supplier = await db.supplier.create({ data: { ...body, organizationId: user.organizationId } });
-      return successResponse({ id: supplier.id, name: supplier.name });
-    } catch { return successResponse({ id: `demo-supp-${Date.now()}`, name: body.name }); }
-  } catch (error: any) { return errorResponse(error.message, 'SERVER_ERROR', 500); }
+    const supplier = await db.supplier.create({ data: { ...body, organizationId: user.organizationId } });
+    return successResponse({ id: supplier.id, name: supplier.name });
+  } catch (error: any) {
+    return errorResponse(error.message, 'SERVER_ERROR', 500);
+  }
 }
 
 export async function PUT(request: NextRequest) {
-  const user = await getUserFromToken(request);
+  const user = await getUserFromRequest(request);
   if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
 
+  // Demo mode - cannot update suppliers
+  if (isDemoUser(user.id)) {
+    return errorResponse('لا يمكن تحديث الموردين في الوضع التجريبي', 'DEMO_MODE', 403);
+  }
+
   try {
+    const { db } = await import('@/lib/db');
     const { id, ...data } = await request.json();
-    try {
-      const supplier = await db.supplier.update({ where: { id, organizationId: user.organizationId }, data });
-      return successResponse(supplier);
-    } catch { return successResponse({ id, ...data }); }
-  } catch (error: any) { return errorResponse(error.message, 'SERVER_ERROR', 500); }
+    const supplier = await db.supplier.update({ where: { id, organizationId: user.organizationId }, data });
+    return successResponse(supplier);
+  } catch (error: any) {
+    return errorResponse(error.message, 'SERVER_ERROR', 500);
+  }
 }
 
 export async function DELETE(request: NextRequest) {
-  const user = await getUserFromToken(request);
+  const user = await getUserFromRequest(request);
   if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
 
+  // Demo mode - cannot delete suppliers
+  if (isDemoUser(user.id)) {
+    return errorResponse('لا يمكن حذف الموردين في الوضع التجريبي', 'DEMO_MODE', 403);
+  }
+
   try {
+    const { db } = await import('@/lib/db');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     if (!id) return errorResponse('معرف المورد مطلوب');
     
-    try {
-      await db.supplier.update({ where: { id }, data: { isActive: false } });
-      return successResponse({ message: 'تم حذف المورد' });
-    } catch { return successResponse({ message: 'تم الحذف' }); }
-  } catch (error: any) { return errorResponse(error.message, 'SERVER_ERROR', 500); }
+    await db.supplier.update({ where: { id }, data: { isActive: false } });
+    return successResponse({ message: 'تم حذف المورد' });
+  } catch (error: any) {
+    return errorResponse(error.message, 'SERVER_ERROR', 500);
+  }
 }

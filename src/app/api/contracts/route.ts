@@ -1,65 +1,87 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import * as jose from 'jose';
-
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters');
-
-async function getUser(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) return null;
-  try {
-    const { payload } = await jose.jwtVerify(authHeader.substring(7), JWT_SECRET);
-    return await db.user.findUnique({ where: { id: payload.userId as string }, include: { organization: true } });
-  } catch { return null; }
-}
+import { getUserFromRequest, isDemoUser } from '../utils/demo-config';
 
 const success = (data: any) => NextResponse.json({ success: true, data });
 const error = (message: string, code = 'ERROR', status = 400) => NextResponse.json({ success: false, error: { code, message } }, { status });
 
-const DEMO_DATA = [
+const DEMO_CONTRACTS = [
   { id: 'demo-001', contractNumber: 'CTR-2025-001', title: 'عقد إنشاء برج الأعمال', contractType: 'lump_sum', contractValue: 15000000, status: 'active', startDate: '2025-01-01', endDate: '2026-06-30' },
   { id: 'demo-002', contractNumber: 'CTR-2025-002', title: 'عقد ترميم مجمع الفيلات', contractType: 'unit_price', contractValue: 5000000, status: 'pending', startDate: '2025-02-01', endDate: '2025-08-31' }
 ];
 
 export async function GET(request: NextRequest) {
-  const user = await getUser(request);
+  const user = await getUserFromRequest(request);
   if (!user) return error('غير مصرح', 'UNAUTHORIZED', 401);
+
+  // Demo mode - return demo data for demo users
+  if (isDemoUser(user.id)) {
+    return success(DEMO_CONTRACTS);
+  }
+
   try {
+    const { db } = await import('@/lib/db');
     const data = await db.contract.findMany({ where: { organizationId: user.organizationId }, orderBy: { createdAt: 'desc' } });
     return success(data);
-  } catch { return success(DEMO_DATA); }
+  } catch (e: any) {
+    return error(e.message, 'SERVER_ERROR', 500);
+  }
 }
 
 export async function POST(request: NextRequest) {
-  const user = await getUser(request);
+  const user = await getUserFromRequest(request);
   if (!user || !user.organizationId) return error('غير مصرح', 'UNAUTHORIZED', 401);
+
+  // Demo mode - cannot create contracts
+  if (isDemoUser(user.id)) {
+    return error('لا يمكن إنشاء عقود في الوضع التجريبي', 'DEMO_MODE', 403);
+  }
+
   try {
+    const { db } = await import('@/lib/db');
     const body = await request.json();
     if (!body.title || !body.contractNumber) return error('العنوان ورقم العقد مطلوبان');
-    try {
-      const contract = await db.contract.create({ data: { ...body, organizationId: user.organizationId } });
-      return success({ id: contract.id });
-    } catch { return success({ id: `demo-${Date.now()}`, ...body }); }
-  } catch (e: any) { return error(e.message, "SERVER_ERROR", 500); }
+    const contract = await db.contract.create({ data: { ...body, organizationId: user.organizationId } });
+    return success({ id: contract.id });
+  } catch (e: any) {
+    return error(e.message, 'SERVER_ERROR', 500);
+  }
 }
 
 export async function PUT(request: NextRequest) {
-  const user = await getUser(request);
+  const user = await getUserFromRequest(request);
   if (!user) return error('غير مصرح', 'UNAUTHORIZED', 401);
+
+  // Demo mode - cannot update contracts
+  if (isDemoUser(user.id)) {
+    return error('لا يمكن تحديث العقود في الوضع التجريبي', 'DEMO_MODE', 403);
+  }
+
   try {
+    const { db } = await import('@/lib/db');
     const { id, ...data } = await request.json();
-    try { await db.contract.update({ where: { id }, data }); return success({ id }); } 
-    catch { return success({ id, ...data }); }
-  } catch (e: any) { return error(e.message, "SERVER_ERROR", 500); }
+    await db.contract.update({ where: { id }, data });
+    return success({ id });
+  } catch (e: any) {
+    return error(e.message, 'SERVER_ERROR', 500);
+  }
 }
 
 export async function DELETE(request: NextRequest) {
-  const user = await getUser(request);
+  const user = await getUserFromRequest(request);
   if (!user) return error('غير مصرح', 'UNAUTHORIZED', 401);
+
+  // Demo mode - cannot delete contracts
+  if (isDemoUser(user.id)) {
+    return error('لا يمكن حذف العقود في الوضع التجريبي', 'DEMO_MODE', 403);
+  }
+
   try {
+    const { db } = await import('@/lib/db');
     const id = new URL(request.url).searchParams.get('id');
     if (!id) return error('معرف العقد مطلوب');
-    try { await db.contract.delete({ where: { id } }); } catch {}
+    await db.contract.delete({ where: { id } });
     return success({ message: 'تم الحذف' });
-  } catch (e: any) { return error(e.message, "SERVER_ERROR", 500); }
+  } catch (e: any) {
+    return error(e.message, 'SERVER_ERROR', 500);
+  }
 }
