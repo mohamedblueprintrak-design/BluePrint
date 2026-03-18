@@ -1,28 +1,9 @@
 /**
  * Cache Service Tests
+ * Tests the in-memory cache fallback when Redis is not available
  */
 
-// Mock Redis for testing
-jest.mock('redis', () => ({
-  createClient: jest.fn(() => ({
-    connect: jest.fn().mockRejectedValue(new Error('Redis not available in test')),
-    on: jest.fn(),
-    get: jest.fn(),
-    setEx: jest.fn(),
-    del: jest.fn(),
-    expire: jest.fn(),
-    ttl: jest.fn(),
-    incr: jest.fn(),
-    multi: jest.fn(() => ({
-      incr: jest.fn().mockReturnThis(),
-      ttl: jest.fn().mockReturnThis(),
-      exec: jest.fn().mockResolvedValue([1, -1]),
-    })),
-    scan: jest.fn().mockResolvedValue({ cursor: 0, keys: [] }),
-    socket: {},
-  })),
-}));
-
+// Redis is optional - tests will use in-memory cache
 import CacheService from '../lib/cache';
 
 describe('CacheService', () => {

@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Try database first, fall back to demo users
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       let foundUser: any = null;
       
       try {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/auth-context';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
@@ -43,14 +43,15 @@ export function ProfilePage() {
   // Use profile data from API or fallback to auth context user
   const profileUser = profileData?.data || user;
   
-  const [profileForm, setProfileForm] = useState({
+  // Form state for editing - initialize with current profile values
+  const [profileForm, setProfileForm] = useState(() => ({
     fullName: profileUser?.fullName || '',
     email: profileUser?.email || '',
     phone: profileUser?.phone || '',
     jobTitle: profileUser?.jobTitle || '',
     department: profileUser?.department || '',
     nationality: profileUser?.nationality || '',
-  });
+  }));
   
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
@@ -58,8 +59,8 @@ export function ProfilePage() {
     confirmPassword: '',
   });
 
-  // Update form when profile data loads
-  useEffect(() => {
+  // Reset form to current profile values when editing is cancelled
+  const resetFormToProfile = useCallback(() => {
     if (profileUser) {
       setProfileForm({
         fullName: profileUser.fullName || '',
@@ -71,6 +72,24 @@ export function ProfilePage() {
       });
     }
   }, [profileUser]);
+  
+  // Update form when profile data changes (after API load)
+  const profileUserId = profileUser?.id;
+  const prevUserIdRef = useRef<string | undefined>(undefined);
+  
+  if (profileUserId !== prevUserIdRef.current) {
+    prevUserIdRef.current = profileUserId;
+    if (profileUser) {
+      setProfileForm({
+        fullName: profileUser.fullName || '',
+        email: profileUser.email || '',
+        phone: profileUser.phone || '',
+        jobTitle: profileUser.jobTitle || '',
+        department: profileUser.department || '',
+        nationality: profileUser.nationality || '',
+      });
+    }
+  }
 
   const handleSaveProfile = async () => {
     try {

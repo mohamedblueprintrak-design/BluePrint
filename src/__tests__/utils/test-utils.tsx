@@ -31,7 +31,7 @@ function customRender(
 export function createMock<T extends (...args: unknown[]) => unknown>(
   implementation?: T
 ): jest.MockedFunction<T> {
-  return jest.fn(implementation) as jest.MockedFunction<T>;
+  return jest.fn(implementation) as unknown as jest.MockedFunction<T>;
 }
 
 /**

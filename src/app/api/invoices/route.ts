@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const where: any = { organizationId: user.organizationId };
       if (status) where.status = status;
 

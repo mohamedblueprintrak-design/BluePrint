@@ -23,7 +23,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   Table,
@@ -248,21 +247,11 @@ export function BOQPage() {
     setShowDeleteDialog(true);
   };
 
-  // Reset form when opening add dialog
-  useEffect(() => {
-    if (showAddDialog) {
-      setFormData({
-        itemNumber: '',
-        description: '',
-        unit: '',
-        quantity: 0,
-        unitPrice: 0,
-        category: '',
-        notes: '',
-        projectId: projectFilter !== 'all' ? projectFilter : '',
-      });
-    }
-  }, [showAddDialog, projectFilter]);
+  // Open add dialog with reset form
+  const openAddDialog = () => {
+    resetFormData();
+    setShowAddDialog(true);
+  };
 
   // Loading state
   if (isLoading) {
@@ -388,12 +377,10 @@ export function BOQPage() {
         </div>
         
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-          <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-              <Plus className="w-4 h-4 me-2" />
-              {language === 'ar' ? 'إضافة بند' : 'Add Item'}
-            </Button>
-          </DialogTrigger>
+          <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={openAddDialog}>
+            <Plus className="w-4 h-4 me-2" />
+            {language === 'ar' ? 'إضافة بند' : 'Add Item'}
+          </Button>
           <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-lg">
             <DialogHeader>
               <DialogTitle>{language === 'ar' ? 'إضافة بند جديد' : 'Add New Item'}</DialogTitle>

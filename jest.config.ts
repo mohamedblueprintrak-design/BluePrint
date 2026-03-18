@@ -40,7 +40,7 @@ const config: Config = {
     '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.json' }],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(next|@next|stripe|uuid)/)',
+    'node_modules/(?!(next|@next|stripe|uuid|jose)/)',
   ],
   verbose: true,
   testTimeout: 15000,

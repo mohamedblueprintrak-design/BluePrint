@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const where: any = {};
       if (userId) where.userId = userId;
       if (startDate) where.date = { gte: new Date(startDate) };

@@ -5,6 +5,62 @@
 
 import '@testing-library/jest-dom';
 
+// Polyfill TextEncoder for Node environment
+import { TextEncoder, TextDecoder } from 'util';
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
+
+// Polyfill Web APIs for Next.js server components testing
+class MockRequest {
+  public method: string;
+  public headers: Headers;
+  public url: string;
+  private _body: unknown;
+
+  constructor(input: string | URL, init?: RequestInit) {
+    this.url = input.toString();
+    this.method = init?.method || 'GET';
+    this.headers = new Headers(init?.headers as Record<string, string>);
+    this._body = init?.body;
+  }
+
+  async json() {
+    return typeof this._body === 'string' ? JSON.parse(this._body) : this._body;
+  }
+
+  async text() {
+    return typeof this._body === 'string' ? this._body : JSON.stringify(this._body);
+  }
+}
+
+class MockResponse {
+  public status: number;
+  public headers: Headers;
+  private _body: unknown;
+
+  constructor(body?: unknown, init?: ResponseInit) {
+    this._body = body;
+    this.status = init?.status || 200;
+    this.headers = new Headers(init?.headers as Record<string, string>);
+  }
+
+  async json() {
+    return this._body;
+  }
+
+  async text() {
+    return typeof this._body === 'string' ? this._body : JSON.stringify(this._body);
+  }
+
+  static json(body: unknown, init?: ResponseInit) {
+    return new MockResponse(body, init);
+  }
+}
+
+// Assign to global
+(global as any).Request = MockRequest;
+(global as any).Response = MockResponse;
+
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
   useRouter: () => ({
@@ -31,6 +87,42 @@ jest.mock('next/headers', () => ({
     get: jest.fn(),
     set: jest.fn(),
   }),
+}));
+
+// Mock next/server
+jest.mock('next/server', () => ({
+  NextRequest: class MockNextRequest {
+    public method: string;
+    public headers: Headers;
+    public url: string;
+    private _body: unknown;
+
+    constructor(input: string | URL, init?: RequestInit) {
+      this.url = input.toString();
+      this.method = init?.method || 'GET';
+      this.headers = new Headers(init?.headers as Record<string, string>);
+      this._body = init?.body;
+    }
+
+    async json() {
+      return typeof this._body === 'string' ? JSON.parse(this._body) : this._body;
+    }
+
+    async text() {
+      return typeof this._body === 'string' ? this._body : JSON.stringify(this._body);
+    }
+  },
+  NextResponse: {
+    json: (data: unknown, init?: ResponseInit) => ({
+      status: init?.status || 200,
+      headers: new Headers(init?.headers as Record<string, string>),
+      json: async () => data,
+    }),
+    redirect: (url: string) => ({
+      status: 302,
+      headers: new Headers({ Location: url }),
+    }),
+  },
 }));
 
 // Mock ResizeObserver

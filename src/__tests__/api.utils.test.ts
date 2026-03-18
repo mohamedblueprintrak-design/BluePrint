@@ -2,7 +2,7 @@
  * API Utility Functions Tests
  */
 
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 // Mock environment variables
 process.env.JWT_SECRET = 'test-secret-key-for-testing-minimum-32-characters';
@@ -24,7 +24,7 @@ function createMockRequest(options: {
 // Import modules
 import { successResponse, errorResponse, unauthorizedResponse } from '../app/api/utils/response';
 import { parsePaginationParams, buildPaginationMeta, calculateSkip } from '../app/api/utils/pagination';
-import { rateLimit, RATE_LIMITS } from '../app/api/utils/rate-limit';
+import { checkRateLimit, getRateLimitConfig } from '../app/api/utils/rate-limit';
 
 describe('API Response Utilities', () => {
   describe('successResponse', () => {
@@ -149,20 +149,28 @@ describe('Rate Limiting', () => {
     // Clear rate limit store between tests
   });
 
-  it('should allow requests within limit', async () => {
+  it('should allow requests within limit', () => {
     const mockRequest = createMockRequest({});
-    const result = await rateLimit(mockRequest, RATE_LIMITS.API_DEFAULT);
+    const result = checkRateLimit(mockRequest);
     
     expect(result.allowed).toBe(true);
     expect(result.remaining).toBeGreaterThan(0);
   });
 
-  it('should include rate limit headers', async () => {
+  it('should include rate limit headers info', () => {
     const mockRequest = createMockRequest({});
-    const result = await rateLimit(mockRequest, RATE_LIMITS.API_DEFAULT);
+    const result = checkRateLimit(mockRequest);
     
-    expect(result.headers).toBeDefined();
-    expect(result.headers['X-RateLimit-Limit']).toBeDefined();
-    expect(result.headers['X-RateLimit-Remaining']).toBeDefined();
+    expect(result.remaining).toBeDefined();
+    expect(result.resetTime).toBeDefined();
+  });
+
+  it('should return rate limit config', () => {
+    const config = getRateLimitConfig();
+    
+    expect(config.maxRequests).toBeDefined();
+    expect(config.windowMs).toBeDefined();
+    expect(config.maxRequests).toBe(100);
+    expect(config.windowMs).toBe(60000);
   });
 });
