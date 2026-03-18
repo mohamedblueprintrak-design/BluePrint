@@ -247,9 +247,10 @@ export async function POST(request: NextRequest) {
       default:
         return errorResponse(`الإجراء "${action}" غير معروف`);
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error('Payroll API Error:', error);
-    return errorResponse(error.message || 'حدث خطأ', 'SERVER_ERROR', 500);
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(errMsg || 'حدث خطأ', 'SERVER_ERROR', 500);
   }
 }
 
@@ -314,7 +315,8 @@ export async function GET(request: NextRequest) {
       currencies: ['AED', 'SAR', 'USD', 'EUR']
     });
 
-  } catch (error: any) {
-    return errorResponse(error.message || 'حدث خطأ', 'SERVER_ERROR', 500);
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(errMsg || 'حدث خطأ', 'SERVER_ERROR', 500);
   }
 }

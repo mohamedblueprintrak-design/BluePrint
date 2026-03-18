@@ -199,9 +199,10 @@ export async function POST(request: NextRequest) {
     }
 
     return errorResponse('إجراء غير معروف');
-  } catch (error: any) {
+  } catch (error) {
     console.error('Auth API Error:', error);
-    return errorResponse(error.message || 'خطأ في الخادم', 'SERVER_ERROR', 500);
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(errMsg || 'خطأ في الخادم', 'SERVER_ERROR', 500);
   }
 }
 

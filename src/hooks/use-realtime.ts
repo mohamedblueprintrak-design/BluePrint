@@ -226,9 +226,10 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
       };
 
       eventSourceRef.current = eventSource;
-    } catch (error: any) {
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : 'Unknown error';
       console.error('خطأ في إنشاء اتصال SSE:', error);
-      setState(prev => ({ ...prev, error: error.message }));
+      setState(prev => ({ ...prev, error: errMsg }));
     }
   }, [token, enabled, isAuthenticated, handleEvent, reconnectInterval, maxReconnectAttempts]);
 

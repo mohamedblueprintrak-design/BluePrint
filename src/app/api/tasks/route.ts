@@ -64,8 +64,9 @@ export async function GET(request: NextRequest) {
       actualHours: t.actualHours,
       createdAt: t.createdAt
     })));
-  } catch (error: any) {
-    return errorResponse(error.message, 'SERVER_ERROR', 500);
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(errMsg, 'SERVER_ERROR', 500);
   }
 }
 
@@ -118,8 +119,9 @@ export async function POST(request: NextRequest) {
     }
 
     return successResponse({ id: task.id, title: task.title });
-  } catch (error: any) {
-    return errorResponse(error.message, 'SERVER_ERROR', 500);
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(errMsg, 'SERVER_ERROR', 500);
   }
 }
 
@@ -162,8 +164,9 @@ export async function PUT(request: NextRequest) {
       data
     });
     return successResponse(task);
-  } catch (error: any) {
-    return errorResponse(error.message, 'SERVER_ERROR', 500);
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(errMsg, 'SERVER_ERROR', 500);
   }
 }
 
@@ -198,7 +201,8 @@ export async function DELETE(request: NextRequest) {
     
     await db.task.delete({ where: { id } });
     return successResponse({ message: 'تم حذف المهمة' });
-  } catch (error: any) {
-    return errorResponse(error.message, 'SERVER_ERROR', 500);
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(errMsg, 'SERVER_ERROR', 500);
   }
 }

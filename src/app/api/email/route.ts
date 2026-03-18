@@ -177,9 +177,10 @@ export async function POST(request: NextRequest) {
       return errorResponse('فشل في إرسال البريد الإلكتروني', 'SEND_ERROR', 500);
     }
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Email API Error:', error);
-    return errorResponse(error.message || 'حدث خطأ في إرسال البريد', 'SERVER_ERROR', 500);
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(errMsg || 'حدث خطأ في إرسال البريد', 'SERVER_ERROR', 500);
   }
 }
 

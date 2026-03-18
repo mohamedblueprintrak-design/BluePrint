@@ -88,8 +88,9 @@ export async function GET(request: NextRequest) {
         message: 'إعدادات الإشعارات (وضع تجريبي)'
       });
     }
-  } catch (error: any) {
-    return errorResponse(error.message, 'SERVER_ERROR', 500);
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(errMsg, 'SERVER_ERROR', 500);
   }
 }
 
@@ -176,8 +177,9 @@ export async function PUT(request: NextRequest) {
         message: 'تم تحديث إعدادات الإشعارات (وضع تجريبي)'
       });
     }
-  } catch (error: any) {
-    return errorResponse(error.message, 'SERVER_ERROR', 500);
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(errMsg, 'SERVER_ERROR', 500);
   }
 }
 
@@ -209,7 +211,8 @@ export async function POST(request: NextRequest) {
         message: 'تم إعادة تعيين إعدادات الإشعارات (وضع تجريبي)'
       });
     }
-  } catch (error: any) {
-    return errorResponse(error.message, 'SERVER_ERROR', 500);
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(errMsg, 'SERVER_ERROR', 500);
   }
 }

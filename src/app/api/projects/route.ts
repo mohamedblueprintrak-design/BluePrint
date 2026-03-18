@@ -101,8 +101,9 @@ export async function GET(request: NextRequest) {
       })),
       { page, limit, total, totalPages: Math.ceil(total / limit) }
     );
-  } catch (error: any) {
-    return errorResponse(error.message, 'SERVER_ERROR', 500);
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(errMsg, 'SERVER_ERROR', 500);
   }
 }
 
@@ -157,7 +158,8 @@ export async function POST(request: NextRequest) {
     });
 
     return successResponse({ id: project.id, projectNumber, name });
-  } catch (error: any) {
-    return errorResponse(error.message, 'SERVER_ERROR', 500);
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(errMsg, 'SERVER_ERROR', 500);
   }
 }

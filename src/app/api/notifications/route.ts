@@ -188,8 +188,9 @@ export async function GET(request: NextRequest) {
       })),
       { unreadCount, typeStats }
     );
-  } catch (error: any) {
-    return errorResponse(error.message, 'SERVER_ERROR', 500);
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(errMsg, 'SERVER_ERROR', 500);
   }
 }
 
@@ -229,8 +230,9 @@ export async function PUT(request: NextRequest) {
     });
 
     return successResponse({ message: 'تم تحديد الإشعار كمقروء' });
-  } catch (error: any) {
-    return errorResponse(error.message, 'SERVER_ERROR', 500);
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(errMsg, 'SERVER_ERROR', 500);
   }
 }
 
@@ -272,8 +274,9 @@ export async function DELETE(request: NextRequest) {
     });
 
     return successResponse({ message: 'تم حذف الإشعار' });
-  } catch (error: any) {
-    return errorResponse(error.message, 'SERVER_ERROR', 500);
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(errMsg, 'SERVER_ERROR', 500);
   }
 }
 
@@ -342,7 +345,8 @@ export async function POST(request: NextRequest) {
       message: 'تم إنشاء الإشعار',
       realtime: true
     });
-  } catch (error: any) {
-    return errorResponse(error.message, 'SERVER_ERROR', 500);
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(errMsg, 'SERVER_ERROR', 500);
   }
 }

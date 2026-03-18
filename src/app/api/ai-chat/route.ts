@@ -437,11 +437,13 @@ export async function POST(request: NextRequest) {
       generatedImage: generatedImage ? true : undefined
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('AI Chat API Error:', error);
     
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    
     // Handle specific errors
-    if (error.message?.includes('rate limit') || error.message?.includes('quota')) {
+    if (errMsg.includes('rate limit') || errMsg.includes('quota')) {
       return errorResponse(
         'تم تجاوز حد الاستخدام للذكاء الاصطناعي. يرجى المحاولة لاحقاً.',
         'RATE_LIMIT_EXCEEDED',
@@ -449,7 +451,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    if (error.message?.includes('timeout')) {
+    if (errMsg.includes('timeout')) {
       return errorResponse(
         'انتهت مهلة الطلب. يرجى المحاولة مرة أخرى.',
         'TIMEOUT',

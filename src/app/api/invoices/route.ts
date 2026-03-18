@@ -104,8 +104,9 @@ export async function GET(request: NextRequest) {
       dueDate: i.dueDate,
       createdAt: i.createdAt
     })));
-  } catch (error: any) {
-    return errorResponse(error.message, 'SERVER_ERROR', 500);
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(errMsg, 'SERVER_ERROR', 500);
   }
 }
 
@@ -182,8 +183,9 @@ export async function POST(request: NextRequest) {
     }
 
     return successResponse({ id: invoice.id, invoiceNumber, total });
-  } catch (error: any) {
-    return errorResponse(error.message, 'SERVER_ERROR', 500);
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(errMsg, 'SERVER_ERROR', 500);
   }
 }
 
@@ -213,8 +215,9 @@ export async function PUT(request: NextRequest) {
       data: updateData
     });
     return successResponse(invoice);
-  } catch (error: any) {
-    return errorResponse(error.message, 'SERVER_ERROR', 500);
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(errMsg, 'SERVER_ERROR', 500);
   }
 }
 
@@ -239,7 +242,8 @@ export async function DELETE(request: NextRequest) {
       where: { id, organizationId: user.organizationId }
     });
     return successResponse({ message: 'تم حذف الفاتورة' });
-  } catch (error: any) {
-    return errorResponse(error.message, 'SERVER_ERROR', 500);
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(errMsg, 'SERVER_ERROR', 500);
   }
 }

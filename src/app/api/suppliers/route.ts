@@ -24,8 +24,9 @@ export async function GET(request: NextRequest) {
     const { db } = await import('@/lib/db');
     const suppliers = await db.supplier.findMany({ where: { organizationId: user.organizationId, isActive: true }, orderBy: { name: 'asc' } });
     return successResponse(suppliers);
-  } catch (error: any) {
-    return errorResponse(error.message, 'SERVER_ERROR', 500);
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(errMsg, 'SERVER_ERROR', 500);
   }
 }
 
@@ -45,8 +46,9 @@ export async function POST(request: NextRequest) {
 
     const supplier = await db.supplier.create({ data: { ...body, organizationId: user.organizationId } });
     return successResponse({ id: supplier.id, name: supplier.name });
-  } catch (error: any) {
-    return errorResponse(error.message, 'SERVER_ERROR', 500);
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(errMsg, 'SERVER_ERROR', 500);
   }
 }
 
@@ -64,8 +66,9 @@ export async function PUT(request: NextRequest) {
     const { id, ...data } = await request.json();
     const supplier = await db.supplier.update({ where: { id, organizationId: user.organizationId }, data });
     return successResponse(supplier);
-  } catch (error: any) {
-    return errorResponse(error.message, 'SERVER_ERROR', 500);
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(errMsg, 'SERVER_ERROR', 500);
   }
 }
 
@@ -86,7 +89,8 @@ export async function DELETE(request: NextRequest) {
     
     await db.supplier.update({ where: { id }, data: { isActive: false } });
     return successResponse({ message: 'تم حذف المورد' });
-  } catch (error: any) {
-    return errorResponse(error.message, 'SERVER_ERROR', 500);
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(errMsg, 'SERVER_ERROR', 500);
   }
 }

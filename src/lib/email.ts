@@ -80,8 +80,9 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
 
     console.log('✅ Email sent successfully:', info.messageId);
     return true;
-  } catch (error: any) {
-    console.error('❌ Failed to send email:', error.message);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('❌ Failed to send email:', message);
     return false;
   }
 }
@@ -130,10 +131,10 @@ export async function testEmailConnection(): Promise<{
       success: true,
       message: 'SMTP connection successful.',
     };
-  } catch (error: any) {
+  } catch (error) {
     return {
       success: false,
-      message: `SMTP connection failed: ${error.message}`,
+      message: `SMTP connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
     };
   }
 }

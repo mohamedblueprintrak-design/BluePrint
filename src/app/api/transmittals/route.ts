@@ -128,9 +128,10 @@ export async function GET(request: NextRequest) {
       ...t,
       statusLabel: STATUS_LABELS[t.status as keyof typeof STATUS_LABELS]
     })));
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching transmittals:', error);
-    return errorResponse(error.message || 'فشل في جلب الإرسالات', 'SERVER_ERROR', 500);
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(errMsg || 'فشل في جلب الإرسالات', 'SERVER_ERROR', 500);
   }
 }
 
@@ -304,9 +305,10 @@ export async function POST(request: NextRequest) {
     }
 
     return errorResponse(`الإجراء "${action}" غير معروف`);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error in transmittal POST:', error);
-    return errorResponse(error.message || 'حدث خطأ', 'SERVER_ERROR', 500);
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(errMsg || 'حدث خطأ', 'SERVER_ERROR', 500);
   }
 }
 
@@ -343,9 +345,10 @@ export async function PUT(request: NextRequest) {
       ...transmittal,
       statusLabel: STATUS_LABELS[transmittal.status as keyof typeof STATUS_LABELS]
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error updating transmittal:', error);
-    return errorResponse(error.message || 'فشل في تحديث الإرسال', 'SERVER_ERROR', 500);
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(errMsg || 'فشل في تحديث الإرسال', 'SERVER_ERROR', 500);
   }
 }
 
@@ -365,8 +368,9 @@ export async function DELETE(request: NextRequest) {
     await db.transmittal.delete({ where: { id } });
 
     return successResponse({ message: 'تم حذف الإرسال بنجاح' });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error deleting transmittal:', error);
-    return errorResponse(error.message || 'فشل في حذف الإرسال', 'SERVER_ERROR', 500);
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(errMsg || 'فشل في حذف الإرسال', 'SERVER_ERROR', 500);
   }
 }

@@ -77,10 +77,11 @@ export async function GET(request: NextRequest) {
         }
       }
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Dashboard API Error:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { success: false, error: { code: 'SERVER_ERROR', message: error.message } },
+      { success: false, error: { code: 'SERVER_ERROR', message } },
       { status: 500 }
     );
   }
