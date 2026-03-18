@@ -73,14 +73,16 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
     onUnreadCountChange,
     enabled = true,
     reconnectInterval = 5000,
-    maxReconnectAttempts = 10
+    maxReconnectAttempts = 3 // Reduced from 10 to prevent rate limiting
   } = options;
 
-  const { token } = useAuth();
+  const { token, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectAttemptsRef = useRef(0);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const intentionalDisconnectRef = useRef(false); // Track intentional disconnects
+  const lastTokenRef = useRef<string | null>(null); // Track token changes
 
   const [state, setState] = useState<RealtimeState>({
     isConnected: false,
@@ -147,7 +149,15 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
   // إنشاء اتصال SSE
   const connect = useCallback(() => {
     // التحقق من بيئة المتصفح
-    if (!isBrowser || !token || !enabled) return;
+    if (!isBrowser || !token || !enabled || !isAuthenticated) {
+      // Don't try to connect if not authenticated
+      intentionalDisconnectRef.current = true;
+      return;
+    }
+    
+    // Reset intentional disconnect flag
+    intentionalDisconnectRef.current = false;
+    lastTokenRef.current = token;
     
     // إغلاق الاتصال السابق إذا كان موجوداً
     if (eventSourceRef.current) {
@@ -175,6 +185,20 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
       eventSource.addEventListener('heartbeat', handleEvent);
 
       eventSource.onerror = () => {
+        // Check if this was an intentional disconnect
+        if (intentionalDisconnectRef.current) {
+          return;
+        }
+        
+        // Check if token changed or user logged out
+        const currentToken = localStorage.getItem('bp_token');
+        if (!currentToken || currentToken !== lastTokenRef.current) {
+          // Token changed or user logged out, don't reconnect
+          console.log('Token changed or user logged out, stopping SSE reconnection');
+          eventSource.close();
+          return;
+        }
+        
         console.error('خطأ في اتصال SSE');
         setState(prev => ({ 
           ...prev, 
@@ -184,14 +208,20 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
         
         eventSource.close();
         
-        // محاولة إعادة الاتصال
-        if (reconnectAttemptsRef.current < maxReconnectAttempts) {
+        // Only reconnect if still authenticated and have valid token
+        if (reconnectAttemptsRef.current < maxReconnectAttempts && token && isAuthenticated) {
           reconnectAttemptsRef.current++;
-          const delay = reconnectInterval * Math.min(reconnectAttemptsRef.current, 5);
+          const delay = reconnectInterval * Math.pow(2, Math.min(reconnectAttemptsRef.current - 1, 4)); // Exponential backoff
           
           console.log(`محاولة إعادة الاتصال ${reconnectAttemptsRef.current}/${maxReconnectAttempts} خلال ${delay}ms`);
           
           reconnectTimeoutRef.current = setTimeout(connect, delay);
+        } else if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
+          console.log('تم الوصول لحد إعادة المحاولة، توقف إعادة الاتصال');
+          setState(prev => ({ 
+            ...prev, 
+            error: 'تعذر الاتصال بنظام الإشعارات بعد عدة محاولات' 
+          }));
         }
       };
 
@@ -200,10 +230,13 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
       console.error('خطأ في إنشاء اتصال SSE:', error);
       setState(prev => ({ ...prev, error: error.message }));
     }
-  }, [token, enabled, handleEvent, reconnectInterval, maxReconnectAttempts]);
+  }, [token, enabled, isAuthenticated, handleEvent, reconnectInterval, maxReconnectAttempts]);
 
   // قطع الاتصال
   const disconnect = useCallback(() => {
+    // Mark as intentional disconnect to prevent reconnection
+    intentionalDisconnectRef.current = true;
+    
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
@@ -214,7 +247,8 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
       reconnectTimeoutRef.current = null;
     }
     
-    setState(prev => ({ ...prev, isConnected: false }));
+    reconnectAttemptsRef.current = 0;
+    setState(prev => ({ ...prev, isConnected: false, error: null }));
   }, []);
 
   // إعادة الاتصال يدوياً
@@ -248,14 +282,27 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
   useEffect(() => {
     if (!isBrowser) return;
     
-    if (token && enabled) {
+    // Only connect if authenticated with valid token
+    if (token && enabled && isAuthenticated) {
+      // Reset reconnection attempts on new connection
+      reconnectAttemptsRef.current = 0;
       connect();
     }
     
     return () => {
       disconnect();
     };
-  }, [token, enabled, connect, disconnect]);
+  }, [token, enabled, isAuthenticated, connect, disconnect]);
+  
+  // Disconnect immediately when user logs out (token becomes null)
+  useEffect(() => {
+    if (!isBrowser) return;
+    
+    if (!token && eventSourceRef.current) {
+      console.log('Token cleared, disconnecting SSE');
+      disconnect();
+    }
+  }, [token, disconnect]);
 
   return {
     ...state,

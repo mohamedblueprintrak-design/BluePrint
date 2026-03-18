@@ -107,13 +107,31 @@ export interface InvoiceReportData {
   language: 'ar' | 'en';
 }
 
-// Dynamic import for server-side only
+// Cache for loaded modules
+let jspdfCache: {
+  jsPDF: any;
+  autoTable: any;
+} | null = null;
+
+// Dynamic import for server-side only with caching
 async function getJsPDF() {
-  // @ts-ignore
-  const { default: jsPDF } = await import('jspdf');
-  // @ts-ignore
-  const { default: autoTable } = await import('jspdf-autotable');
-  return { jsPDF, autoTable };
+  if (jspdfCache) {
+    return jspdfCache;
+  }
+  
+  // Use Function constructor to prevent static analysis
+  // This tells bundlers to not try to analyze this import
+  const dynamicImport = new Function('modulePath', 'return import(modulePath)');
+  
+  const jspdfModule = await dynamicImport('jspdf');
+  const autotableModule = await dynamicImport('jspdf-autotable');
+  
+  jspdfCache = {
+    jsPDF: jspdfModule.default,
+    autoTable: autotableModule.default,
+  };
+  
+  return jspdfCache;
 }
 
 // Format number with thousand separators

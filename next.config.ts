@@ -115,7 +115,7 @@ const nextConfig: NextConfig = {
     },
   },
   
-  // Turbopack configuration (empty to use webpack for build)
+  // Turbopack configuration (empty to acknowledge Turbopack usage)
   turbopack: {},
   
   // Environment variables that should be available on the client
@@ -148,17 +148,6 @@ const nextConfig: NextConfig = {
     fetches: {
       fullUrl: process.env.NODE_ENV === 'development',
     },
-  },
-  
-  // Webpack configuration for fixing issues with certain packages
-  webpack: (config) => {
-    // Handle canvas dependency for jspdf (optional, not needed in browser)
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      'canvas': false,
-    };
-    
-    return config;
   },
 };
 

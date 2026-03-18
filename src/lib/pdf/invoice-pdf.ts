@@ -1,5 +1,9 @@
 // Client-side PDF generation for invoices
 // Uses dynamic imports to handle jspdf
+// IMPORTANT: This file should only be used in client components
+
+// Check if running in browser
+const isBrowser = typeof window !== 'undefined';
 
 // Types
 interface InvoiceItem {
@@ -89,14 +93,49 @@ const getStatusColor = (status: string): [number, number, number] => {
 // Dynamic import type
 type JsPDFType = any;
 
+// Cache for loaded modules
+let jspdfCache: {
+  jsPDF: any;
+  autoTable: any;
+} | null = null;
+
+// Lazy load jspdf modules only when needed in browser
+async function loadJsPDF() {
+  if (!isBrowser) {
+    throw new Error('PDF generation is only available in browser environment');
+  }
+  
+  if (jspdfCache) {
+    return jspdfCache;
+  }
+  
+  // Use Function constructor to prevent static analysis by bundlers
+  // This is necessary because jspdf has dependencies that don't work with bundlers
+  const dynamicImport = new Function('modulePath', 'return import(modulePath)');
+  
+  const jspdfModule = await dynamicImport('jspdf');
+  const autotableModule = await dynamicImport('jspdf-autotable');
+  
+  jspdfCache = {
+    jsPDF: jspdfModule.default,
+    autoTable: autotableModule.default,
+  };
+  
+  return jspdfCache;
+}
+
 export async function generateInvoicePDF(
   invoice: InvoiceData,
   organization?: OrganizationInfo,
   lang: 'ar' | 'en' = 'en'
 ): Promise<JsPDFType> {
+  // Ensure we're in browser
+  if (!isBrowser) {
+    throw new Error('PDF generation is only available in browser environment');
+  }
+
   // Dynamic import for client-side
-  const jsPDF = (await import('jspdf')).default;
-  const autoTable = (await import('jspdf-autotable')).default;
+  const { jsPDF, autoTable } = await loadJsPDF();
 
   const doc = new jsPDF({
     orientation: 'portrait',
