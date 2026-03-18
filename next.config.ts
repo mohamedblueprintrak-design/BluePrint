@@ -114,8 +114,9 @@ const nextConfig: NextConfig = {
     },
   },
   
-  // Turbopack configuration (empty to acknowledge Turbopack usage)
-  turbopack: {},
+  // Turbopack - DISABLED for Netlify compatibility
+  // Netlify's plugin doesn't fully support Turbopack yet
+  // turbopack: {},
   
   // Environment variables that should be available on the client
   env: {
