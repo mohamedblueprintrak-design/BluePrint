@@ -256,3 +256,41 @@
   background-color: rgba(59, 130, 246, 0.3);
   color: inherit;
 }
+
+/* Sidebar ScrollArea Styling */
+[data-slot="scroll-area-scrollbar"] {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+[data-slot="scroll-area"]:hover [data-slot="scroll-area-scrollbar"] {
+  opacity: 1;
+}
+
+[data-slot="scroll-area-thumb"] {
+  background: rgba(148, 163, 184, 0.3) !important;
+  border-radius: 9999px;
+}
+
+[data-slot="scroll-area-thumb"]:hover {
+  background: rgba(148, 163, 184, 0.5) !important;
+}
+
+/* Custom Scrollbar for general use */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}

@@ -182,8 +182,9 @@ function SidebarContent({
       </div>
 
       {/* Navigation */}
-      <ScrollArea className="flex-1 px-2">
-        <nav className="space-y-1">
+      <div className="flex-1 overflow-hidden px-2">
+        <ScrollArea className="h-full">
+          <nav className="space-y-1 pb-2 pr-2">
           {menuItems.map((item) => (
             <TooltipProvider key={item.id} delayDuration={0}>
               <Tooltip>
@@ -255,7 +256,8 @@ function SidebarContent({
             </>
           )}
         </nav>
-      </ScrollArea>
+        </ScrollArea>
+      </div>
 
       {/* User Section */}
       <div className="border-t border-slate-800 p-4">
