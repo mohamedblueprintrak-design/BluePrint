@@ -203,11 +203,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (data: LoginForm): Promise<ApiResponse> => {
     setIsLoading(true);
     try {
+      // Add timeout for login request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+      
       const response = await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'login', ...data })
+        body: JSON.stringify({ action: 'login', ...data }),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
+      
       const result = await response.json();
 
       if (result.success) {
@@ -240,7 +247,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       return { success: false, error: result.error };
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage = error instanceof Error 
+        ? (error.name === 'AbortError' ? 'Request timeout' : error.message)
+        : 'Unknown error';
       return { success: false, error: { code: 'NETWORK_ERROR', message: errorMessage } };
     } finally {
       setIsLoading(false);
@@ -250,6 +259,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (data: RegisterForm): Promise<ApiResponse> => {
     setIsLoading(true);
     try {
+      // Add timeout for register request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+      
       const response = await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -260,12 +273,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           password: data.password,
           fullName: data.fullName,
           organizationName: data.organizationName
-        })
+        }),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
+      
       const result = await response.json();
-      return { success: result.success, error: result.error };
+      return { success: result.success, data: result.data, error: result.error };
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage = error instanceof Error 
+        ? (error.name === 'AbortError' ? 'Request timeout' : error.message)
+        : 'Unknown error';
       return { success: false, error: { code: 'NETWORK_ERROR', message: errorMessage } };
     } finally {
       setIsLoading(false);

@@ -38,19 +38,26 @@ export function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    const result = await login(loginForm);
-    if (result.success) {
-      // Use window.location for reliable redirect after login
-      // This ensures the new page loads with fresh auth state from localStorage
-      window.location.href = '/dashboard';
-    } else {
-      setError(result.error?.message || t.loginError);
+    setSuccess('');
+    
+    try {
+      const result = await login(loginForm);
+      if (result.success) {
+        // Use window.location for reliable redirect after login
+        // This ensures the new page loads with fresh auth state from localStorage
+        window.location.href = '/dashboard';
+      } else {
+        setError(result.error?.message || t.loginError);
+      }
+    } catch (err) {
+      setError(language === 'ar' ? 'حدث خطأ في الاتصال' : 'Connection error occurred');
     }
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     
     if (registerForm.password !== registerForm.confirmPassword) {
       setError(language === 'ar' ? 'كلمات المرور غير متطابقة' : 'Passwords do not match');
@@ -62,12 +69,21 @@ export function LoginPage() {
       return;
     }
 
-    const result = await register(registerForm);
-    if (result.success) {
-      setSuccess(t.registerSuccess);
-      setRegisterForm({ username: '', email: '', password: '', confirmPassword: '', fullName: '' });
-    } else {
-      setError(result.error?.message || (language === 'ar' ? 'خطأ في التسجيل' : 'Registration failed'));
+    try {
+      const result = await register(registerForm);
+      if (result.success) {
+        setSuccess(language === 'ar' ? 'تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول' : 'Account created successfully! You can now login');
+        setRegisterForm({ username: '', email: '', password: '', confirmPassword: '', fullName: '' });
+        // Switch to login tab after successful registration
+        setTimeout(() => {
+          const loginTab = document.querySelector('[value="login"]') as HTMLElement;
+          if (loginTab) loginTab.click();
+        }, 1500);
+      } else {
+        setError(result.error?.message || (language === 'ar' ? 'خطأ في التسجيل' : 'Registration failed'));
+      }
+    } catch (err) {
+      setError(language === 'ar' ? 'حدث خطأ في الاتصال' : 'Connection error occurred');
     }
   };
 

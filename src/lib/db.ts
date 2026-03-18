@@ -5,11 +5,17 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 // Check if DATABASE_URL is available
-const DATABASE_URL = process.env.DATABASE_URL
+// Support both DATABASE_URL and NETLIFY_DATABASE_URL (Netlify Neon integration)
+const DATABASE_URL = process.env.DATABASE_URL || process.env.NETLIFY_DATABASE_URL
 
 // Helper to check if database is available
 export function isDatabaseAvailable(): boolean {
   return !!DATABASE_URL
+}
+
+// Get the actual database URL being used
+export function getDatabaseUrl(): string | undefined {
+  return DATABASE_URL
 }
 
 // Create a proxy that throws a friendly error when db is accessed without a database

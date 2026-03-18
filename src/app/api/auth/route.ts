@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import * as jose from 'jose';
+import { db, isDatabaseAvailable } from '@/lib/db';
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters');
 
@@ -94,19 +95,20 @@ export async function POST(request: NextRequest) {
       }
 
       // Try database first, fall back to demo users
-       
       let foundUser: any = null;
       
-      try {
-        const { db } = await import('@/lib/db');
-        foundUser = await db.user.findFirst({
-          where: {
-            OR: [{ username }, { email: username }]
-          },
-          include: { organization: true }
-        });
-      } catch (_dbError) {
-        console.log('Database not available, using demo mode');
+      // Check if database is available before querying
+      if (isDatabaseAvailable()) {
+        try {
+          foundUser = await db.user.findFirst({
+            where: {
+              OR: [{ username }, { email: username }]
+            },
+            include: { organization: true }
+          });
+        } catch (dbError) {
+          console.log('Database query error:', dbError);
+        }
       }
 
       // If no database user, check demo users
@@ -146,7 +148,7 @@ export async function POST(request: NextRequest) {
       return successResponse({ accessToken: token, tokenType: 'bearer' });
     }
 
-    // Register (demo mode only - creates temporary user)
+    // Register - creates user in database if available
     if (action === 'register') {
       if (!username || !email || !password) {
         return errorResponse('جميع الحقول مطلوبة');
@@ -162,37 +164,38 @@ export async function POST(request: NextRequest) {
         return errorResponse('المستخدم موجود بالفعل');
       }
 
-      // Try database
-      try {
-        const { db } = await import('@/lib/db');
-        const existing = await db.user.findFirst({
-          where: { OR: [{ username }, { email }] }
-        });
-        if (existing) {
-          return errorResponse('المستخدم موجود بالفعل');
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = await db.user.create({
-          data: {
-            username,
-            email,
-            password: hashedPassword,
-            fullName: fullName || username,
-            role,
-            organizationId: organizationId || null
+      // Try database if available
+      if (isDatabaseAvailable()) {
+        try {
+          const existing = await db.user.findFirst({
+            where: { OR: [{ username }, { email }] }
+          });
+          if (existing) {
+            return errorResponse('المستخدم موجود بالفعل');
           }
-        });
 
-        return successResponse({ id: newUser.id, username: newUser.username });
-      } catch (_dbError) {
-        // Demo mode - just return success
-        return successResponse({ 
-          id: `demo-${Date.now()}`, 
-          username,
-          message: 'تم التسجيل بنجاح (وضع تجريبي)'
-        });
+          const hashedPassword = await bcrypt.hash(password, 10);
+          const newUser = await db.user.create({
+            data: {
+              username,
+              email,
+              password: hashedPassword,
+              fullName: fullName || username,
+              role,
+              organizationId: organizationId || null
+            }
+          });
+
+          console.log('User created successfully:', newUser.username);
+          return successResponse({ id: newUser.id, username: newUser.username, message: 'تم إنشاء الحساب بنجاح' });
+        } catch (dbError: any) {
+          console.error('Database error during registration:', dbError);
+          return errorResponse(dbError.message || 'خطأ في قاعدة البيانات', 'DB_ERROR', 500);
+        }
       }
+      
+      // Demo mode - return error because demo users can't login after registration
+      return errorResponse('قاعدة البيانات غير متاحة حالياً. يرجى المحاولة لاحقاً أو استخدام حساب تجريبي: admin / admin123');
     }
 
     return errorResponse('إجراء غير معروف');
@@ -217,10 +220,9 @@ export async function GET(request: NextRequest) {
     // Check demo users first
     let user = DEMO_USERS.find(u => u.id === userId);
 
-    if (!user) {
-      // Try database
+    // Try database if available and user not found in demo
+    if (!user && isDatabaseAvailable()) {
       try {
-        const { db } = await import('@/lib/db');
         const dbUser = await db.user.findUnique({ 
           where: { id: userId },
           include: { organization: true }
@@ -249,8 +251,8 @@ export async function GET(request: NextRequest) {
             }
           };
         }
-      } catch (_dbError) {
-        console.log('Database not available');
+      } catch (dbError) {
+        console.log('Database query error:', dbError);
       }
     }
 
