@@ -2,8 +2,31 @@ import { NextRequest } from 'next/server';
 import * as jose from 'jose';
 import { DemoUser, AuthenticatedUser } from '../types';
 
-// JWT secret - must match across all routes
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters');
+// JWT secret handling - centralized for security
+let _jwtSecretBytes: Uint8Array | null = null;
+
+function getJWTSecretBytes(): Uint8Array {
+  if (_jwtSecretBytes) return _jwtSecretBytes;
+  
+  const secret = process.env.JWT_SECRET;
+  
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      console.error('CRITICAL: JWT_SECRET not set in production!');
+    } else {
+      console.warn('WARNING: Using development JWT secret. Set JWT_SECRET in production!');
+    }
+    // Use a development-only fallback
+    _jwtSecretBytes = new TextEncoder().encode('dev-only-secret-do-not-use-in-production-' + Date.now());
+  } else {
+    _jwtSecretBytes = new TextEncoder().encode(secret);
+  }
+  
+  return _jwtSecretBytes;
+}
+
+// Export for use in JWT verification
+const JWT_SECRET = { get bytes() { return getJWTSecretBytes(); } };
 
 // Demo users for testing without database
 // These users exist only in memory and can be used to test the application
@@ -71,7 +94,7 @@ export async function getUserFromRequest(request: NextRequest): Promise<Authenti
   const token = authHeader.substring(7);
   
   try {
-    const { payload } = await jose.jwtVerify(token, JWT_SECRET);
+    const { payload } = await jose.jwtVerify(token, JWT_SECRET.bytes);
     const userId = payload.userId as string;
     
     // Check demo users first (fast path for demo mode)

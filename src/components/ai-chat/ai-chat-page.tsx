@@ -233,18 +233,28 @@ function CodeBlock({ code, language }: { code: string; language?: string }) {
 // Markdown-like Content Renderer with XSS Protection
 function MessageContent({ content, imageData }: { content: string; imageData?: string }) {
   // SECURITY: Sanitize HTML to prevent XSS attacks
+  // This is a defense-in-depth approach with multiple layers
   const sanitizeHtml = (html: string): string => {
     return html
-      // Remove script tags
+      // Remove script tags and their contents
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-      // Remove event handlers
-      .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
-      // Remove javascript: URLs
-      .replace(/javascript:/gi, '')
-      // Remove data: URLs (can contain malicious content)
-      .replace(/data:(?!image\/)/gi, '')
+      // Remove style tags and their contents
+      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+      // Remove iframe, object, embed, and other dangerous tags
+      .replace(/<\/?(iframe|object|embed|form|input|button|textarea|select|option|link|meta|base|svg|math)\b[^>]*>/gi, '')
+      // Remove all event handlers (onclick, onerror, onload, onmouseover, etc.)
+      .replace(/\s+on\w+\s*=\s*["'][^"']*["']/gi, '')
+      .replace(/\s+on\w+\s*=\s*[^\s>]*/gi, '')
+      // Remove javascript:, vbscript:, and data: URLs (except images)
+      .replace(/javascript\s*:/gi, '')
+      .replace(/vbscript\s*:/gi, '')
+      .replace(/data\s*:(?!image\/)/gi, '')
+      // Remove any HTML comments
+      .replace(/<!--[\s\S]*?-->/g, '')
       // Escape any remaining HTML tags except allowed ones
-      .replace(/<(?!\/?(strong|em|code|br|span)\b)[^>]*>/gi, '');
+      .replace(/<(?!\/?(strong|em|code|br|span|p)\b)[^>]*>/gi, '')
+      // Final safety: escape any < that might be part of an attack
+      .replace(/<(?!(\/?(strong|em|code|br|span|p)\s*>?))/gi, '&lt;');
   };
 
   const renderContent = (text: string) => {

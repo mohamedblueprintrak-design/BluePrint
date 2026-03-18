@@ -71,6 +71,11 @@ const nextConfig: NextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
           },
+          // HTTP Strict Transport Security - Only in production
+          ...(isDev ? [] : [{
+            key: 'Strict-Transport-Security',
+            value: 'max-age=31536000; includeSubDomains; preload',
+          }]),
           // Content Security Policy - Relaxed in dev for HMR
           ...(isDev ? [] : [{
             key: 'Content-Security-Policy',

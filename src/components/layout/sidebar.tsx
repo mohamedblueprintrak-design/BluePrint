@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
@@ -91,7 +91,8 @@ function SidebarContent({
   } = useApp();
   const { t } = useTranslation(language);
 
-  const routes = getRoutes(language);
+  // Memoize routes to prevent unnecessary re-renders
+  const routes = useMemo(() => getRoutes(language), [language]);
 
   const menuItems: SidebarItem[] = [
     { id: 'dashboard', label: t.dashboard, icon: Home, href: '/dashboard' },
@@ -122,7 +123,7 @@ function SidebarContent({
     { id: 'activities', label: t.activities, icon: Zap, href: '/dashboard/activities' },
   ];
 
-  // Sync currentPage with pathname
+  // Sync currentPage with pathname - using memoized routes
   useEffect(() => {
     const pageId = Object.entries(routes).find(([, route]) => pathname === route)?.[0];
     if (pageId && pageId !== currentPage) {
