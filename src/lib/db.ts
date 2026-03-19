@@ -68,6 +68,9 @@ function createPrismaClient(): PrismaClient {
 
 export const db = createPrismaClient()
 
+// Alias for consistency - some files use prisma, others use db
+export const prisma = db
+
 // Export a safe version for use in API routes that need to check first
 export const dbSafe = {
   get client() {

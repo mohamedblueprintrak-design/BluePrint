@@ -1,10 +1,52 @@
-# ===========================================
-# Services Index
-# تصدير الخدمات
-# ===========================================
+/**
+ * Services Index
+ * تصدير الخدمات
+ * 
+ * Centralized exports for all business logic services
+ */
 
 // Audit Service
-export { logAudit, getEntityAuditLogs, getUserAuditLogs, getOrganizationAuditLogs } from './audit.service';
+export { 
+  logAudit, 
+  getEntityAuditLogs, 
+  getUserAuditLogs, 
+  getOrganizationAuditLogs,
+  cleanupOldAuditLogs,
+  type AuditLogData 
+} from './audit.service';
 
 // Project Service
-export { projectService, type ProjectStats, type ProjectFilters, type PaginationParams, type PaginatedResult } from './project.service';
+export { 
+  projectService, 
+  type ProjectStats, 
+  type ProjectFilters, 
+  type PaginationParams, 
+  type PaginatedResult,
+  type CreateProjectInput
+} from './project.service';
+
+// Client Service
+export { 
+  clientService, 
+  type ClientStats, 
+  type ClientWithProjects 
+} from './client.service';
+
+// Task Service
+export { 
+  taskService, 
+  type TaskFilters, 
+  type TaskPaginationParams,
+  type TaskPaginatedResult,
+  type CreateTaskInput
+} from './task.service';
+
+// Invoice Service
+export { 
+  invoiceService, 
+  type InvoiceFilters, 
+  type InvoicePaginationParams,
+  type InvoicePaginatedResult,
+  type CreateInvoiceInput,
+  type InvoiceStats
+} from './invoice.service';

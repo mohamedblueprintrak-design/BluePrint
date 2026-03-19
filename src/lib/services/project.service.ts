@@ -1,13 +1,19 @@
-# ===========================================
-# Project Service
-# خدمة المشاريع
-# ===========================================
+/**
+ * Project Service
+ * خدمة المشاريع
+ * 
+ * Business logic layer for project operations
+ * Follows Clean Architecture principles
+ */
 
 import { prisma } from '@/lib/db';
-import { getProjectRepository, getUserRepository } from '@/lib/repositories';
+import { getProjectRepository } from '@/lib/repositories';
 import { logAudit } from './audit.service';
-import type { Project, ProjectStatus } from '@prisma/client';
+import type { Project } from '@prisma/client';
 
+/**
+ * Project statistics interface
+ */
 export interface ProjectStats {
   total: number;
   active: number;
@@ -18,6 +24,9 @@ export interface ProjectStats {
   averageProgress: number;
 }
 
+/**
+ * Project filtering options
+ */
 export interface ProjectFilters {
   status?: string;
   managerId?: string;
@@ -28,6 +37,9 @@ export interface ProjectFilters {
   dateTo?: Date;
 }
 
+/**
+ * Pagination parameters
+ */
 export interface PaginationParams {
   page?: number;
   limit?: number;
@@ -35,6 +47,9 @@ export interface PaginationParams {
   sortOrder?: 'asc' | 'desc';
 }
 
+/**
+ * Paginated result wrapper
+ */
 export interface PaginatedResult<T> {
   data: T[];
   pagination: {
@@ -45,6 +60,28 @@ export interface PaginatedResult<T> {
   };
 }
 
+/**
+ * Create project input
+ */
+export interface CreateProjectInput {
+  name: string;
+  projectNumber?: string;
+  location?: string;
+  projectType?: string;
+  description?: string;
+  contractValue?: number;
+  contractDate?: Date;
+  expectedStartDate?: Date;
+  expectedEndDate?: Date;
+  managerId?: string;
+  clientId?: string;
+  budget?: number;
+}
+
+/**
+ * Project Service
+ * Handles all business logic related to projects
+ */
 class ProjectService {
   /**
    * Get all projects with pagination and filtering
@@ -58,7 +95,7 @@ class ProjectService {
     const limit = pagination?.limit || 10;
     const skip = (page - 1) * limit;
 
-    const where: any = { organizationId };
+    const where: Record<string, unknown> = { organizationId };
 
     // Apply filters
     if (filters?.status) where.status = filters.status;
@@ -76,8 +113,8 @@ class ProjectService {
 
     if (filters?.dateFrom || filters?.dateTo) {
       where.createdAt = {};
-      if (filters?.dateFrom) where.createdAt.gte = filters.dateFrom;
-      if (filters?.dateTo) where.createdAt.lte = filters.dateTo;
+      if (filters?.dateFrom) (where.createdAt as Record<string, Date>).gte = filters.dateFrom;
+      if (filters?.dateTo) (where.createdAt as Record<string, Date>).lte = filters.dateTo;
     }
 
     const [projects, total] = await Promise.all([
@@ -139,23 +176,10 @@ class ProjectService {
    * Create a new project
    */
   async createProject(
-    data: {
-      name: string;
-      projectNumber?: string;
-      location?: string;
-      projectType?: string;
-      description?: string;
-      contractValue?: number;
-      contractDate?: Date;
-      expectedStartDate?: Date;
-      expectedEndDate?: Date;
-      managerId?: string;
-      clientId?: string;
-      budget?: number;
-    },
+    data: CreateProjectInput,
     organizationId: string,
     userId: string
-  ) {
+  ): Promise<Project> {
     // Generate project number if not provided
     const projectNumber = data.projectNumber || await this.generateProjectNumber(organizationId);
 
@@ -176,7 +200,7 @@ class ProjectService {
       entityId: project.id,
       action: 'create',
       description: `تم إنشاء المشروع: ${project.name}`,
-      newValue: project as any,
+      newValue: project,
     });
 
     return project;
@@ -190,7 +214,7 @@ class ProjectService {
     data: Partial<Project>,
     organizationId: string,
     userId: string
-  ) {
+  ): Promise<Project> {
     const oldProject = await prisma.project.findFirst({
       where: { id, organizationId },
     });
@@ -213,8 +237,8 @@ class ProjectService {
       entityId: project.id,
       action: 'update',
       description: `تم تحديث المشروع: ${project.name}`,
-      oldValue: oldProject as any,
-      newValue: project as any,
+      oldValue: oldProject,
+      newValue: project,
     });
 
     return project;
@@ -223,7 +247,7 @@ class ProjectService {
   /**
    * Delete project
    */
-  async deleteProject(id: string, organizationId: string, userId: string) {
+  async deleteProject(id: string, organizationId: string, userId: string): Promise<void> {
     const project = await prisma.project.findFirst({
       where: { id, organizationId },
     });
@@ -244,12 +268,12 @@ class ProjectService {
       entityId: id,
       action: 'delete',
       description: `تم حذف المشروع: ${project.name}`,
-      oldValue: project as any,
+      oldValue: project,
     });
   }
 
   /**
-   * Get project statistics
+   * Get project statistics for dashboard
    */
   async getProjectStats(organizationId: string): Promise<ProjectStats> {
     const [statusCounts, valueAggregate, progressAggregate] = await Promise.all([
@@ -317,15 +341,15 @@ class ProjectService {
   }
 
   /**
-   * Update project progress
+   * Update project progress based on task completion
    */
-  async updateProgress(id: string, organizationId: string) {
+  async updateProgress(id: string, organizationId: string): Promise<number | null> {
     const tasks = await prisma.task.findMany({
       where: { projectId: id },
       select: { progress: true },
     });
 
-    if (tasks.length === 0) return;
+    if (tasks.length === 0) return null;
 
     const totalProgress = tasks.reduce((sum, task) => sum + (task.progress || 0), 0);
     const averageProgress = Math.round(totalProgress / tasks.length);
@@ -336,6 +360,42 @@ class ProjectService {
     });
 
     return averageProgress;
+  }
+
+  /**
+   * Change project status
+   */
+  async changeStatus(
+    id: string, 
+    status: string, 
+    organizationId: string, 
+    userId: string
+  ): Promise<Project> {
+    const project = await this.updateProject(
+      id, 
+      { status } as Partial<Project>, 
+      organizationId, 
+      userId
+    );
+    
+    return project;
+  }
+
+  /**
+   * Assign manager to project
+   */
+  async assignManager(
+    projectId: string,
+    managerId: string,
+    organizationId: string,
+    userId: string
+  ): Promise<Project> {
+    return this.updateProject(
+      projectId,
+      { managerId } as Partial<Project>,
+      organizationId,
+      userId
+    );
   }
 }
 

@@ -1,23 +1,29 @@
-import { NextRequest, NextResponse } from 'next/server';
+/**
+ * Clients API Route
+ * مسار واجهة برمجة التطبيقات للعملاء
+ * 
+ * Handles CRUD operations for clients
+ */
+
+import { NextRequest } from 'next/server';
 import { getUserFromRequest, isDemoUser, DEMO_DATA } from '../utils/demo-config';
+import { 
+  successResponse, 
+  errorResponse, 
+  unauthorizedResponse, 
+  serverErrorResponse,
+  validationErrorResponse
+} from '../utils/response';
+import { prisma } from '@/lib/db';
 
-function successResponse(data: any, meta?: any) {
-  const response = { success: true, data };
-  if (meta) Object.assign(response, { meta });
-  return NextResponse.json(response);
-}
-
-function errorResponse(message: string, code = 'ERROR', status = 400) {
-  return NextResponse.json(
-    { success: false, error: { code, message } },
-    { status }
-  );
-}
-
-// GET - List clients
+/**
+ * GET - List clients
+ */
 export async function GET(request: NextRequest) {
   const user = await getUserFromRequest(request);
-  if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+  if (!user) {
+    return unauthorizedResponse();
+  }
 
   // Demo mode - return demo data for demo users
   if (isDemoUser(user.id)) {
@@ -32,8 +38,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const { db } = await import('@/lib/db');
-    const clients = await db.client.findMany({
+    const clients = await prisma.client.findMany({
       where: { 
         isActive: true,
         organizationId: user.organizationId 
@@ -58,15 +63,19 @@ export async function GET(request: NextRequest) {
       createdAt: c.createdAt
     })));
   } catch (error) {
-    const errMsg = error instanceof Error ? error.message : "Unknown error";
-    return errorResponse(errMsg, 'SERVER_ERROR', 500);
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    return serverErrorResponse(errMsg);
   }
 }
 
-// POST - Create client
+/**
+ * POST - Create client
+ */
 export async function POST(request: NextRequest) {
   const user = await getUserFromRequest(request);
-  if (!user || !user.organizationId) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+  if (!user || !user.organizationId) {
+    return unauthorizedResponse();
+  }
 
   // Demo mode - cannot create real clients
   if (isDemoUser(user.id)) {
@@ -74,13 +83,14 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { db } = await import('@/lib/db');
     const body = await request.json();
     const { name, email, phone, address, city, country, contactPerson, taxNumber, creditLimit, paymentTerms, notes } = body;
 
-    if (!name) return errorResponse('اسم العميل مطلوب');
+    if (!name) {
+      return validationErrorResponse('اسم العميل مطلوب');
+    }
 
-    const client = await db.client.create({
+    const client = await prisma.client.create({
       data: {
         name,
         email,
@@ -96,17 +106,22 @@ export async function POST(request: NextRequest) {
         organizationId: user.organizationId
       }
     });
+
     return successResponse({ id: client.id, name: client.name });
   } catch (error) {
-    const errMsg = error instanceof Error ? error.message : "Unknown error";
-    return errorResponse(errMsg, 'SERVER_ERROR', 500);
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    return serverErrorResponse(errMsg);
   }
 }
 
-// PUT - Update client
+/**
+ * PUT - Update client
+ */
 export async function PUT(request: NextRequest) {
   const user = await getUserFromRequest(request);
-  if (!user || !user.organizationId) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+  if (!user || !user.organizationId) {
+    return unauthorizedResponse();
+  }
 
   // Demo mode - cannot update clients
   if (isDemoUser(user.id)) {
@@ -114,30 +129,36 @@ export async function PUT(request: NextRequest) {
   }
 
   try {
-    const { db } = await import('@/lib/db');
     const body = await request.json();
     const { id, ...data } = body;
 
-    if (!id) return errorResponse('معرف العميل مطلوب');
+    if (!id) {
+      return validationErrorResponse('معرف العميل مطلوب');
+    }
 
     // Remove fields that don't exist in schema
-    const { clientType, totalInvoiced, totalPaid, website, ...validData } = data as any;
+    const { clientType, totalInvoiced, totalPaid, website, ...validData } = data as Record<string, unknown>;
 
-    const client = await db.client.update({
+    const client = await prisma.client.update({
       where: { id, organizationId: user.organizationId },
       data: validData
     });
+
     return successResponse(client);
   } catch (error) {
-    const errMsg = error instanceof Error ? error.message : "Unknown error";
-    return errorResponse(errMsg, 'SERVER_ERROR', 500);
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    return serverErrorResponse(errMsg);
   }
 }
 
-// DELETE - Delete client
+/**
+ * DELETE - Soft delete client
+ */
 export async function DELETE(request: NextRequest) {
   const user = await getUserFromRequest(request);
-  if (!user || !user.organizationId) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+  if (!user || !user.organizationId) {
+    return unauthorizedResponse();
+  }
 
   // Demo mode - cannot delete clients
   if (isDemoUser(user.id)) {
@@ -145,19 +166,21 @@ export async function DELETE(request: NextRequest) {
   }
 
   try {
-    const { db } = await import('@/lib/db');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
-    if (!id) return errorResponse('معرف العميل مطلوب');
+    if (!id) {
+      return validationErrorResponse('معرف العميل مطلوب');
+    }
 
-    await db.client.update({
+    await prisma.client.update({
       where: { id, organizationId: user.organizationId },
       data: { isActive: false }
     });
+
     return successResponse({ message: 'تم حذف العميل' });
   } catch (error) {
-    const errMsg = error instanceof Error ? error.message : "Unknown error";
-    return errorResponse(errMsg, 'SERVER_ERROR', 500);
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    return serverErrorResponse(errMsg);
   }
 }

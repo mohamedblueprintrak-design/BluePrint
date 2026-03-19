@@ -1,26 +1,29 @@
-import { NextRequest, NextResponse } from 'next/server';
+/**
+ * Projects API Route
+ * مسار واجهة برمجة التطبيقات للمشاريع
+ * 
+ * Handles CRUD operations for projects
+ */
+
+import { NextRequest } from 'next/server';
 import { getUserFromRequest, isDemoUser, DEMO_DATA } from '../utils/demo-config';
+import { successResponse, errorResponse, unauthorizedResponse, serverErrorResponse } from '../utils/response';
+import { projectService } from '@/lib/services';
 
-function successResponse(data: any, meta?: any) {
-  const response = { success: true, data };
-  if (meta) Object.assign(response, { meta });
-  return NextResponse.json(response);
-}
-
-function errorResponse(message: string, code = 'ERROR', status = 400) {
-  return NextResponse.json({ success: false, error: { code, message } }, { status });
-}
-
-// GET - List projects
+/**
+ * GET - List projects with pagination and filtering
+ */
 export async function GET(request: NextRequest) {
   const user = await getUserFromRequest(request);
-  if (!user || !user.organizationId) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+  if (!user || !user.organizationId) {
+    return unauthorizedResponse();
+  }
 
   const { searchParams } = new URL(request.url);
   const page = parseInt(searchParams.get('page') || '1');
   const limit = parseInt(searchParams.get('limit') || '20');
-  const status = searchParams.get('status');
-  const search = searchParams.get('search');
+  const status = searchParams.get('status') || undefined;
+  const search = searchParams.get('search') || undefined;
 
   // Demo mode - return demo data for demo users
   if (isDemoUser(user.id)) {
@@ -60,34 +63,15 @@ export async function GET(request: NextRequest) {
   }
 
   // Real database queries for actual users
-  const orgId = user.organizationId;
-
-  const where: any = { organizationId: orgId };
-  if (status) where.status = status;
-  if (search) {
-    where.OR = [
-      { name: { contains: search, mode: 'insensitive' } },
-      { projectNumber: { contains: search, mode: 'insensitive' } },
-      { location: { contains: search, mode: 'insensitive' } }
-    ];
-  }
-
   try {
-    const { db } = await import('@/lib/db');
-    
-    const [projects, total] = await Promise.all([
-      db.project.findMany({
-        where,
-        include: { client: true },
-        orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * limit,
-        take: limit
-      }),
-      db.project.count({ where })
-    ]);
+    const result = await projectService.getProjects(
+      user.organizationId,
+      { status, search },
+      { page, limit }
+    );
 
     return successResponse(
-      projects.map(p => ({
+      result.data.map(p => ({
         id: p.id,
         name: p.name,
         projectNumber: p.projectNumber,
@@ -95,71 +79,61 @@ export async function GET(request: NextRequest) {
         status: p.status,
         contractValue: p.contractValue,
         clientId: p.clientId,
-        client: p.client?.name,
+        client: (p as any).client?.name,
         progressPercentage: p.progressPercentage,
         createdAt: p.createdAt
       })),
-      { page, limit, total, totalPages: Math.ceil(total / limit) }
+      result.pagination
     );
   } catch (error) {
-    const errMsg = error instanceof Error ? error.message : "Unknown error";
-    return errorResponse(errMsg, 'SERVER_ERROR', 500);
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    return serverErrorResponse(errMsg);
   }
 }
 
-// POST - Create project
+/**
+ * POST - Create a new project
+ */
 export async function POST(request: NextRequest) {
   const user = await getUserFromRequest(request);
-  if (!user || !user.organizationId) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+  if (!user || !user.organizationId) {
+    return unauthorizedResponse();
+  }
 
   // Demo mode - cannot create real projects
   if (isDemoUser(user.id)) {
     return errorResponse('لا يمكن إنشاء مشاريع في الوضع التجريبي', 'DEMO_MODE', 403);
   }
 
-  const orgId = user.organizationId;
-
   try {
-    const { db } = await import('@/lib/db');
     const body = await request.json();
     const { name, location, projectType, clientId, contractValue, description, managerId } = body;
 
-    if (!name) return errorResponse('اسم المشروع مطلوب');
+    if (!name) {
+      return errorResponse('اسم المشروع مطلوب', 'VALIDATION_ERROR', 400);
+    }
 
-    const count = await db.project.count({ where: { organizationId: orgId } });
-    const projectNumber = `PRJ-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
-
-    const project = await db.project.create({
-      data: {
+    const project = await projectService.createProject(
+      {
         name,
-        projectNumber,
-        location: location || '',
+        location,
         projectType,
         clientId,
-        contractValue: contractValue ? parseFloat(contractValue) : 0,
+        contractValue: contractValue ? parseFloat(contractValue) : undefined,
         description,
         managerId,
-        organizationId: orgId
-      }
-    });
+      },
+      user.organizationId,
+      user.id
+    );
 
-    // Create activity log
-    await db.activity.create({
-      data: {
-        userId: user.id,
-        projectId: project.id,
-        entityType: 'project',
-        entityId: project.id,
-        action: 'create',
-        description: `تم إنشاء مشروع جديد: ${project.name}`,
-        newValue: JSON.stringify(project),
-        organizationId: orgId
-      }
+    return successResponse({
+      id: project.id,
+      projectNumber: project.projectNumber,
+      name: project.name
     });
-
-    return successResponse({ id: project.id, projectNumber, name });
   } catch (error) {
-    const errMsg = error instanceof Error ? error.message : "Unknown error";
-    return errorResponse(errMsg, 'SERVER_ERROR', 500);
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    return serverErrorResponse(errMsg);
   }
 }

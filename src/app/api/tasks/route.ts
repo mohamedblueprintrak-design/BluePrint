@@ -1,28 +1,36 @@
-import { NextRequest, NextResponse } from 'next/server';
+/**
+ * Tasks API Route
+ * مسار واجهة برمجة التطبيقات للمهام
+ * 
+ * Handles CRUD operations for tasks
+ */
+
+import { NextRequest } from 'next/server';
 import { getUserFromRequest, isDemoUser, DEMO_DATA } from '../utils/demo-config';
+import { 
+  successResponse, 
+  errorResponse, 
+  unauthorizedResponse, 
+  serverErrorResponse,
+  validationErrorResponse,
+  notFoundResponse
+} from '../utils/response';
+import { taskService } from '@/lib/services';
+import { prisma } from '@/lib/db';
 
-function successResponse(data: any, meta?: any) {
-  const response = { success: true, data };
-  if (meta) Object.assign(response, { meta });
-  return NextResponse.json(response);
-}
-
-function errorResponse(message: string, code = 'ERROR', status = 400) {
-  return NextResponse.json(
-    { success: false, error: { code, message } },
-    { status }
-  );
-}
-
-// GET - List tasks
+/**
+ * GET - List tasks
+ */
 export async function GET(request: NextRequest) {
   const user = await getUserFromRequest(request);
-  if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+  if (!user) {
+    return unauthorizedResponse();
+  }
 
   const { searchParams } = new URL(request.url);
-  const projectId = searchParams.get('projectId');
-  const status = searchParams.get('status');
-  const priority = searchParams.get('priority');
+  const projectId = searchParams.get('projectId') || undefined;
+  const status = searchParams.get('status') || undefined;
+  const priority = searchParams.get('priority') || undefined;
 
   // Demo mode - return demo data for demo users
   if (isDemoUser(user.id)) {
@@ -34,27 +42,18 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const { db } = await import('@/lib/db');
-    
-    const where: any = {
-      project: { organizationId: user.organizationId }
-    };
-    if (projectId) where.projectId = projectId;
-    if (status) where.status = status;
-    if (priority) where.priority = priority;
+    const result = await taskService.getTasks(
+      user.organizationId!,
+      { projectId, status, priority },
+      {}
+    );
 
-    const tasks = await db.task.findMany({
-      where,
-      include: { project: true },
-      orderBy: { createdAt: 'desc' }
-    });
-
-    return successResponse(tasks.map(t => ({
+    return successResponse(result.data.map(t => ({
       id: t.id,
       title: t.title,
       description: t.description,
       projectId: t.projectId,
-      project: t.project?.name,
+      project: (t as any).project?.name,
       assignedTo: t.assignedTo,
       priority: t.priority,
       status: t.status,
@@ -65,15 +64,19 @@ export async function GET(request: NextRequest) {
       createdAt: t.createdAt
     })));
   } catch (error) {
-    const errMsg = error instanceof Error ? error.message : "Unknown error";
-    return errorResponse(errMsg, 'SERVER_ERROR', 500);
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    return serverErrorResponse(errMsg);
   }
 }
 
-// POST - Create task
+/**
+ * POST - Create task
+ */
 export async function POST(request: NextRequest) {
   const user = await getUserFromRequest(request);
-  if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+  if (!user || !user.organizationId) {
+    return unauthorizedResponse();
+  }
 
   // Demo mode - cannot create tasks
   if (isDemoUser(user.id)) {
@@ -81,29 +84,31 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { db } = await import('@/lib/db');
     const body = await request.json();
     const { title, description, projectId, assignedTo, priority, dueDate, estimatedHours } = body;
 
-    if (!title) return errorResponse('عنوان المهمة مطلوب');
+    if (!title) {
+      return validationErrorResponse('عنوان المهمة مطلوب');
+    }
 
-    const task = await db.task.create({
-      data: {
+    const task = await taskService.createTask(
+      {
         title,
         description,
         projectId,
         assignedTo,
         priority: priority || 'medium',
-        dueDate: dueDate ? new Date(dueDate) : null,
+        dueDate: dueDate ? new Date(dueDate) : undefined,
         estimatedHours,
       },
-      include: { project: true }
-    });
+      user.organizationId,
+      user.id
+    );
 
     // Create notification for assignee
     if (assignedTo) {
       try {
-        await db.notification.create({
+        await prisma.notification.create({
           data: {
             userId: assignedTo,
             title: 'مهمة جديدة',
@@ -120,15 +125,19 @@ export async function POST(request: NextRequest) {
 
     return successResponse({ id: task.id, title: task.title });
   } catch (error) {
-    const errMsg = error instanceof Error ? error.message : "Unknown error";
-    return errorResponse(errMsg, 'SERVER_ERROR', 500);
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    return serverErrorResponse(errMsg);
   }
 }
 
-// PUT - Update task
+/**
+ * PUT - Update task
+ */
 export async function PUT(request: NextRequest) {
   const user = await getUserFromRequest(request);
-  if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+  if (!user || !user.organizationId) {
+    return unauthorizedResponse();
+  }
 
   // Demo mode - cannot update tasks
   if (isDemoUser(user.id)) {
@@ -136,44 +145,37 @@ export async function PUT(request: NextRequest) {
   }
 
   try {
-    const { db } = await import('@/lib/db');
     const body = await request.json();
     const { id, ...data } = body;
 
-    if (!id) return errorResponse('معرف المهمة مطلوب');
+    if (!id) {
+      return validationErrorResponse('معرف المهمة مطلوب');
+    }
 
     // Convert dueDate if provided
     if (data.dueDate) {
       data.dueDate = new Date(data.dueDate);
     }
 
-    // SECURITY: Verify task belongs to user's organization before updating
-    const existingTask = await db.task.findFirst({
-      where: { 
-        id,
-        project: { organizationId: user.organizationId }
-      }
-    });
-    
-    if (!existingTask) {
-      return errorResponse('المهمة غير موجودة أو ليس لديك صلاحية لتعديلها', 'NOT_FOUND', 404);
-    }
-    
-    const task = await db.task.update({
-      where: { id },
-      data
-    });
+    const task = await taskService.updateTask(id, data, user.organizationId, user.id);
     return successResponse(task);
   } catch (error) {
-    const errMsg = error instanceof Error ? error.message : "Unknown error";
-    return errorResponse(errMsg, 'SERVER_ERROR', 500);
+    if (error instanceof Error && error.message === 'Task not found') {
+      return notFoundResponse('المهمة غير موجودة أو ليس لديك صلاحية لتعديلها');
+    }
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    return serverErrorResponse(errMsg);
   }
 }
 
-// DELETE - Delete task
+/**
+ * DELETE - Delete task
+ */
 export async function DELETE(request: NextRequest) {
   const user = await getUserFromRequest(request);
-  if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+  if (!user || !user.organizationId) {
+    return unauthorizedResponse();
+  }
 
   // Demo mode - cannot delete tasks
   if (isDemoUser(user.id)) {
@@ -181,28 +183,20 @@ export async function DELETE(request: NextRequest) {
   }
 
   try {
-    const { db } = await import('@/lib/db');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
-    if (!id) return errorResponse('معرف المهمة مطلوب');
-
-    // SECURITY: Verify task belongs to user's organization before deleting
-    const existingTask = await db.task.findFirst({
-      where: { 
-        id,
-        project: { organizationId: user.organizationId }
-      }
-    });
-    
-    if (!existingTask) {
-      return errorResponse('المهمة غير موجودة أو ليس لديك صلاحية لحذفها', 'NOT_FOUND', 404);
+    if (!id) {
+      return validationErrorResponse('معرف المهمة مطلوب');
     }
-    
-    await db.task.delete({ where: { id } });
+
+    await taskService.deleteTask(id, user.organizationId, user.id);
     return successResponse({ message: 'تم حذف المهمة' });
   } catch (error) {
-    const errMsg = error instanceof Error ? error.message : "Unknown error";
-    return errorResponse(errMsg, 'SERVER_ERROR', 500);
+    if (error instanceof Error && error.message === 'Task not found') {
+      return notFoundResponse('المهمة غير موجودة أو ليس لديك صلاحية لحذفها');
+    }
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    return serverErrorResponse(errMsg);
   }
 }

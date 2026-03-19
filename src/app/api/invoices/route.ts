@@ -1,18 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server';
+/**
+ * Invoices API Route
+ * مسار واجهة برمجة التطبيقات للفواتير
+ * 
+ * Handles CRUD operations for invoices
+ */
+
+import { NextRequest } from 'next/server';
 import { getUserFromRequest, isDemoUser } from '../utils/demo-config';
-
-function successResponse(data: any, meta?: any) {
-  const response = { success: true, data };
-  if (meta) Object.assign(response, { meta });
-  return NextResponse.json(response);
-}
-
-function errorResponse(message: string, code = 'ERROR', status = 400) {
-  return NextResponse.json(
-    { success: false, error: { code, message } },
-    { status }
-  );
-}
+import { 
+  successResponse, 
+  errorResponse, 
+  unauthorizedResponse, 
+  serverErrorResponse,
+  validationErrorResponse
+} from '../utils/response';
+import { invoiceService } from '@/lib/services';
+import { prisma } from '@/lib/db';
 
 // Demo invoices
 const DEMO_INVOICES = [
@@ -56,13 +59,17 @@ const DEMO_INVOICES = [
   }
 ];
 
-// GET - List invoices
+/**
+ * GET - List invoices
+ */
 export async function GET(request: NextRequest) {
   const user = await getUserFromRequest(request);
-  if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+  if (!user) {
+    return unauthorizedResponse();
+  }
 
   const { searchParams } = new URL(request.url);
-  const status = searchParams.get('status');
+  const status = searchParams.get('status') || undefined;
 
   // Demo mode - return demo data for demo users
   if (isDemoUser(user.id)) {
@@ -74,22 +81,17 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const { db } = await import('@/lib/db');
-    
-    const where: any = { organizationId: user.organizationId };
-    if (status) where.status = status;
+    const result = await invoiceService.getInvoices(
+      user.organizationId!,
+      { status },
+      {}
+    );
 
-    const invoices = await db.invoice.findMany({
-      where,
-      include: { client: true },
-      orderBy: { createdAt: 'desc' }
-    });
-
-    return successResponse(invoices.map(i => ({
+    return successResponse(result.data.map(i => ({
       id: i.id,
       invoiceNumber: i.invoiceNumber,
       clientId: i.clientId,
-      client: i.client?.name,
+      client: (i as any).client?.name,
       projectId: i.projectId,
       project: null,
       items: [],
@@ -105,15 +107,19 @@ export async function GET(request: NextRequest) {
       createdAt: i.createdAt
     })));
   } catch (error) {
-    const errMsg = error instanceof Error ? error.message : "Unknown error";
-    return errorResponse(errMsg, 'SERVER_ERROR', 500);
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    return serverErrorResponse(errMsg);
   }
 }
 
-// POST - Create invoice
+/**
+ * POST - Create invoice
+ */
 export async function POST(request: NextRequest) {
   const user = await getUserFromRequest(request);
-  if (!user || !user.organizationId) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+  if (!user || !user.organizationId) {
+    return unauthorizedResponse();
+  }
 
   // Demo mode - cannot create invoices
   if (isDemoUser(user.id)) {
@@ -121,78 +127,77 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { db } = await import('@/lib/db');
     const { sendEmail } = await import('@/lib/email');
     const { emailTemplates } = await import('@/lib/email-templates');
     
     const body = await request.json();
     const { clientId, projectId, subtotal, taxRate, dueDate, notes, sendNotification } = body;
 
-    const count = await db.invoice.count({ where: { organizationId: user.organizationId } });
-    const invoiceNumber = `INV-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
-    
-    const calculatedTaxAmount = (subtotal || 0) * (taxRate || 5) / 100;
-    const total = (subtotal || 0) + calculatedTaxAmount;
-
-    const invoice = await db.invoice.create({
-      data: {
-        invoiceNumber,
+    const invoice = await invoiceService.createInvoice(
+      {
         clientId,
         projectId,
         subtotal: subtotal || 0,
         taxRate: taxRate || 5,
-        taxAmount: calculatedTaxAmount,
-        total,
         dueDate: dueDate ? new Date(dueDate) : undefined,
         notes,
-        issueDate: new Date(),
-        organizationId: user.organizationId
       },
-      include: { client: true }
-    });
+      user.organizationId,
+      user.id
+    );
 
     // Send email notification if client has email and sendNotification is true
-    if (sendNotification !== false && invoice.client?.email) {
+    if (sendNotification !== false && clientId) {
       try {
-        const notificationSettings = await (db as any).notificationSettings?.findUnique({
-          where: { userId: user.id }
+        const client = await prisma.client.findUnique({
+          where: { id: clientId },
         });
 
-        if (!notificationSettings || notificationSettings.emailInvoices) {
-          const formattedDueDate = dueDate 
-            ? new Date(dueDate).toLocaleDateString('ar-AE', { year: 'numeric', month: 'long', day: 'numeric' })
-            : undefined;
-
-          const emailTemplate = emailTemplates.invoiceCreated(
-            invoice.client.name,
-            invoiceNumber,
-            total,
-            formattedDueDate
-          );
-
-          await sendEmail({
-            to: invoice.client.email,
-            subject: emailTemplate.subject,
-            html: emailTemplate.html,
-            text: emailTemplate.text
+        if (client?.email) {
+          const notificationSettings = await (prisma as any).notificationSettings?.findUnique({
+            where: { userId: user.id }
           });
+
+          if (!notificationSettings || notificationSettings.emailInvoices) {
+            const formattedDueDate = dueDate 
+              ? new Date(dueDate).toLocaleDateString('ar-AE', { year: 'numeric', month: 'long', day: 'numeric' })
+              : undefined;
+
+            const emailTemplate = emailTemplates.invoiceCreated(
+              client.name,
+              invoice.invoiceNumber,
+              invoice.total,
+              formattedDueDate
+            );
+
+            await sendEmail({
+              to: client.email,
+              subject: emailTemplate.subject,
+              html: emailTemplate.html,
+              text: emailTemplate.text
+            });
+          }
         }
       } catch (emailError) {
         console.error('Failed to send invoice email:', emailError);
       }
     }
 
-    return successResponse({ id: invoice.id, invoiceNumber, total });
+    return successResponse({ id: invoice.id, invoiceNumber: invoice.invoiceNumber, total: invoice.total });
   } catch (error) {
-    const errMsg = error instanceof Error ? error.message : "Unknown error";
-    return errorResponse(errMsg, 'SERVER_ERROR', 500);
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    return serverErrorResponse(errMsg);
   }
 }
 
-// PUT - Update invoice status
+/**
+ * PUT - Update invoice status or record payment
+ */
 export async function PUT(request: NextRequest) {
   const user = await getUserFromRequest(request);
-  if (!user || !user.organizationId) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+  if (!user || !user.organizationId) {
+    return unauthorizedResponse();
+  }
 
   // Demo mode - cannot update invoices
   if (isDemoUser(user.id)) {
@@ -200,31 +205,43 @@ export async function PUT(request: NextRequest) {
   }
 
   try {
-    const { db } = await import('@/lib/db');
     const body = await request.json();
     const { id, status, paidAmount } = body;
 
-    if (!id) return errorResponse('معرف الفاتورة مطلوب');
+    if (!id) {
+      return validationErrorResponse('معرف الفاتورة مطلوب');
+    }
 
-    const updateData: any = {};
-    if (status) updateData.status = status;
-    if (paidAmount !== undefined) updateData.paidAmount = paidAmount;
+    let invoice;
+    
+    if (paidAmount !== undefined) {
+      // Record payment
+      invoice = await invoiceService.recordPayment(id, paidAmount, user.organizationId, user.id);
+    } else {
+      // Update status
+      invoice = await invoiceService.updateInvoice(
+        id,
+        { status },
+        user.organizationId,
+        user.id
+      );
+    }
 
-    const invoice = await db.invoice.update({
-      where: { id, organizationId: user.organizationId },
-      data: updateData
-    });
     return successResponse(invoice);
   } catch (error) {
-    const errMsg = error instanceof Error ? error.message : "Unknown error";
-    return errorResponse(errMsg, 'SERVER_ERROR', 500);
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    return serverErrorResponse(errMsg);
   }
 }
 
-// DELETE - Delete invoice
+/**
+ * DELETE - Delete invoice
+ */
 export async function DELETE(request: NextRequest) {
   const user = await getUserFromRequest(request);
-  if (!user || !user.organizationId) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+  if (!user || !user.organizationId) {
+    return unauthorizedResponse();
+  }
 
   // Demo mode - cannot delete invoices
   if (isDemoUser(user.id)) {
@@ -232,18 +249,17 @@ export async function DELETE(request: NextRequest) {
   }
 
   try {
-    const { db } = await import('@/lib/db');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
-    if (!id) return errorResponse('معرف الفاتورة مطلوب');
+    if (!id) {
+      return validationErrorResponse('معرف الفاتورة مطلوب');
+    }
 
-    await db.invoice.delete({
-      where: { id, organizationId: user.organizationId }
-    });
+    await invoiceService.deleteInvoice(id, user.organizationId, user.id);
     return successResponse({ message: 'تم حذف الفاتورة' });
   } catch (error) {
-    const errMsg = error instanceof Error ? error.message : "Unknown error";
-    return errorResponse(errMsg, 'SERVER_ERROR', 500);
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    return serverErrorResponse(errMsg);
   }
 }
