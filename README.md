@@ -1,303 +1,416 @@
-# BluePrint SaaS Platform
+# BluePrint SaaS - نظام إدارة مكاتب الاستشارات الهندسية
 
-<p align="center">
-  <img src="public/logo.png" alt="BluePrint Logo" width="200"/>
-</p>
-
-<p align="center">
-  <strong>نظام إدارة مكاتب الاستشارات الهندسية - منصة SaaS متكاملة</strong>
-</p>
-
-<p align="center">
-  <a href="https://github.com/mohamedblueprintrak-design/BluePrint/actions">
-    <img src="https://github.com/mohamedblueprintrak-design/BluePrint/workflows/CI/CD%20Pipeline/badge.svg" alt="CI/CD Pipeline"/>
-  </a>
-  <a href="https://github.com/mohamedblueprintrak-design/BluePrint/blob/main/LICENSE">
-    <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"/>
-  </a>
-</p>
+<div align="center">
+  <img src="public/logo.svg" alt="BluePrint Logo" width="120" height="120">
+  
+  <h3>منصة متكاملة لإدارة مشاريع البناء والاستشارات الهندسية</h3>
+  
+  [![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js)](https://nextjs.org/)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+  [![Prisma](https://img.shields.io/badge/Prisma-6-2D3748?style=flat-square&logo=prisma)](https://www.prisma.io/)
+  [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=flat-square&logo=postgresql)](https://www.postgresql.org/)
+  [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+</div>
 
 ---
 
 ## 📋 نظرة عامة
 
-BluePrint هو نظام إدارة متكامل لمكاتب الاستشارات الهندسية، يوفر حلولاً شاملة لإدارة:
+BluePrint SaaS هي منصة شاملة لإدارة مشاريع البناء والاستشارات الهندسية، مصممة خصيصاً لمكاتب الاستشارات الهندسية في منطقة الخليج العربي. توفر المنصة حلاً متكاملاً لإدارة المشاريع والمهام والفواتير والموارد البشرية.
 
-- المشاريع والمهام
-- العملاء والموردين
-- الفواتير والعقود
-- المخازن والمواد
-- الموارد البشرية
-- التقارير والتحليلات
+### المميزات الرئيسية
 
-## ✨ الميزات
+- **🏗️ إدارة المشاريع**: تتبع شامل للمشاريع من البداية حتى التسليم
+- **📋 إدارة المهام**: نظام مهام متكامل مع مخطط جانت
+- **💰 الفواتير والمشاريع**: إنشاء وإدارة الفواتير والعروض
+- **👥 الموارد البشرية**: إدارة الموظفين والحضور والإجازات
+- **📊 التقارير**: تقارير تفصيلية وتحليلات متقدمة
+- **🔒 الأمان**: مصادقة JWT وتحكم في الصلاحيات
+- **🌍 دعم اللغات**: واجهة باللغة العربية والإنجليزية
 
-### 🏢 إدارة المنظمات
-- نظام اشتراكات متكامل (SaaS)
-- عزل البيانات بين المنظمات
-- إدارة الصلاحيات والأدوار
+---
 
-### 📊 لوحة التحكم
-- إحصائيات شاملة
-- رسوم بيانية تفاعلية
-- تنبيهات وإشعارات
+## 🚀 البدء السريع
 
-### 👥 إدارة المستخدمين
-- نظام مصادقة JWT آمن
-- أدوار متعددة (مدير، مستخدم)
-- إدارة الصلاحيات
+### المتطلبات الأساسية
 
-### 📁 المشاريع
-- إدارة المشاريع الكاملة
-- جدول الكميات (BOQ)
-- تقارير الموقع
-- إدارة العيوب
-
-### 💰 المالية
-- الفواتير والعروض
-- العقود والاتفاقيات
-- المصروفات والميزانيات
-- السندات المحاسبية
-
-### 🏭 المخازن
-- إدارة المواد
-- المخزون والحد الأدنى
-- أوامر الشراء
-- الموردين
-
-### 👔 الموارد البشرية
-- الحضور والانصراف
-- طلبات الإجازة
-- شهادات الموظفين
-
-### 🤖 الذكاء الاصطناعي
-- مساعد ذكي للاستفسارات
-- تحليل البيانات
-- اقتراحات مخصصة
-
-## 🚀 التقنيات المستخدمة
-
-- **Frontend**: Next.js 15, React 19, TypeScript
-- **Styling**: Tailwind CSS 4, shadcn/ui
-- **Database**: PostgreSQL, Prisma ORM
-- **Authentication**: JWT (jose), bcryptjs
-- **State Management**: TanStack Query (React Query)
-- **Testing**: Jest, React Testing Library
-- **Monitoring**: Sentry
-- **Deployment**: Vercel
-
-## 📦 التثبيت
-
-### المتطلبات
-
-- Node.js 20+
-- PostgreSQL 14+
+- Node.js 20 أو أحدث
+- PostgreSQL 16 أو أحدث
 - npm أو yarn أو pnpm
 
-### خطوات التثبيت
+### التثبيت
 
 1. **استنساخ المستودع**
-
 ```bash
-git clone https://github.com/mohamedblueprintrak-design/BluePrint.git
+git clone https://github.com/mohomedblueprintrak-design/BluePrint.git
 cd BluePrint
 ```
 
-2. **تثبيت الاعتماديات**
-
+2. **تثبيت التبعيات**
 ```bash
 npm install
 ```
 
 3. **إعداد متغيرات البيئة**
-
 ```bash
 cp .env.example .env
-# قم بتحرير .env وإضافة قيمك
+```
+
+قم بتعديل ملف `.env` بالقيم المناسبة:
+```env
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/blueprint"
+JWT_SECRET="your-super-secret-jwt-key-at-least-32-characters"
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
 ```
 
 4. **إعداد قاعدة البيانات**
-
 ```bash
+# إنشاء المهاجرات
 npx prisma migrate dev
+
+# توليد عميل Prisma
 npx prisma generate
+
+# بيانات البذرة (اختياري)
+npx prisma db seed
 ```
 
-5. **تهيئة البيانات (اختياري)**
-
+5. **تشغيل التطبيق**
 ```bash
-npm run seed
-```
-
-6. **تشغيل التطبيق**
-
-```bash
+# بيئة التطوير
 npm run dev
+
+# بناء الإنتاج
+npm run build
+npm start
 ```
 
 افتح [http://localhost:3000](http://localhost:3000) في المتصفح.
 
-## 🧪 الاختبارات
-
-```bash
-# تشغيل جميع الاختبارات
-npm test
-
-# تشغيل الاختبارات في وضع المراقبة
-npm run test:watch
-
-# توليد تقرير التغطية
-npm run test:coverage
-```
+---
 
 ## 📁 هيكل المشروع
 
 ```
-blueprint/
-├── .github/
-│   └── workflows/        # GitHub Actions CI/CD
-├── prisma/
-│   ├── schema.prisma     # نموذج قاعدة البيانات
-│   └── seed.ts           # بيانات أولية
-├── public/               # الملفات الثابتة
+blueprint-saas/
 ├── src/
-│   ├── app/              # Next.js App Router
-│   │   ├── api/          # API Routes
-│   │   ├── page.tsx      # الصفحة الرئيسية
-│   │   └── layout.tsx    # تخطيط التطبيق
-│   ├── components/       # مكونات React
-│   │   ├── ui/           # مكونات shadcn/ui
-│   │   └── ...           # مكونات المشروع
-│   ├── hooks/            # React Hooks
-│   │   └── queries/      # TanStack Query hooks
-│   ├── lib/              # Utilities
-│   │   ├── db.ts         # Prisma Client
-│   │   ├── env.ts        # Environment validation
-│   │   └── translations.ts # الترجمات
-│   ├── providers/        # React Providers
-│   │   └── query-provider.tsx # TanStack Query Provider
-│   └── types/            # TypeScript types
-├── .env.example          # نموذج متغيرات البيئة
-├── .gitignore           # ملفات Git المستبعدة
-├── jest.config.ts       # إعداد Jest
-├── next.config.ts       # إعداد Next.js
-├── package.json         # اعتماديات المشروع
-├── tailwind.config.ts   # إعداد Tailwind CSS
-└── tsconfig.json        # إعداد TypeScript
+│   ├── app/                    # Next.js App Router
+│   │   ├── api/               # API Routes
+│   │   │   ├── auth/          # المصادقة
+│   │   │   ├── projects/      # المشاريع
+│   │   │   ├── tasks/         # المهام
+│   │   │   ├── clients/       # العملاء
+│   │   │   ├── invoices/      # الفواتير
+│   │   │   └── ...
+│   │   ├── dashboard/         # صفحات لوحة التحكم
+│   │   └── login/             # صفحة تسجيل الدخول
+│   │
+│   ├── components/            # مكونات React
+│   │   ├── ui/               # مكونات UI الأساسية
+│   │   ├── layout/           # التخطيط
+│   │   ├── dashboard/        # لوحة التحكم
+│   │   └── ...
+│   │
+│   ├── lib/                   # المكتبات والأدوات
+│   │   ├── auth/             # المصادقة والتفويض
+│   │   ├── repositories/     # طبقة الوصول للبيانات
+│   │   ├── services/         # منطق الأعمال
+│   │   ├── cache/            # التخزين المؤقت
+│   │   └── validations/      # التحقق من البيانات
+│   │
+│   ├── context/              # React Context
+│   ├── hooks/                # React Hooks
+│   └── types/                # TypeScript Types
+│
+├── prisma/
+│   ├── schema.prisma         # مخطط قاعدة البيانات
+│   ├── migrations/           # ملفات الهجرة
+│   └── seed.ts               # بيانات البذرة
+│
+├── __tests__/               # الاختبارات
+├── e2e/                     # اختبارات E2E
+├── .github/
+│   └── workflows/           # GitHub Actions
+│
+├── Dockerfile               # Docker للإنتاج
+├── docker-compose.yml       # Docker Compose
+└── README.md
 ```
-
-## 🔐 متغيرات البيئة
-
-| المتغير | الوصف | مطلوب |
-|---------|-------|-------|
-| `DATABASE_URL` | رابط قاعدة البيانات | ✅ |
-| `DIRECT_DATABASE_URL` | رابط مباشر لقاعدة البيانات | ✅ |
-| `JWT_SECRET` | مفتاح JWT (32+ حرف) | ✅ |
-| `JWT_EXPIRES_IN` | مدة صلاحية JWT | ❌ |
-| `NEXT_PUBLIC_APP_URL` | رابط التطبيق | ❌ |
-| `SENTRY_DSN` | رابط Sentry | ❌ |
-| `OPENAI_API_KEY` | مفتاح OpenAI | ❌ |
-
-## 🔒 الأمان
-
-- ✅ تشفير كلمات المرور بـ bcryptjs
-- ✅ JWT tokens للمصادقة
-- ✅ GitHub OAuth للمصادقة الاجتماعية
-- ✅ Rate limiting (100 طلب/دقيقة)
-- ✅ Organization isolation
-- ✅ CORS protection
-- ✅ Security headers
-- ✅ CSRF protection للـ OAuth
-
-## 📱 التصميم المتجاوب
-
-- ✅ تصميم متجاوب لجميع الشاشات
-- ✅ قائمة جانبية (Sidebar) تتحول لـ Drawer في الجوال
-- ✅ رأس ثابتة للجوال مع الشعار
-- ✅ زر قائمة للجوال
-- ✅ تباعد و padding مناسب للشاشات الصغيرة
-
-## 🔗 GitHub OAuth
-
-تطبيقك يدعم تسجيل الدخول عبر GitHub! للإعداد:
-
-1. اذهب إلى [GitHub Developer Settings](https://github.com/settings/developers)
-2. أنشئ OAuth App جديد
-3. اضبط:
-   - Homepage URL: `http://localhost:3000`
-   - Callback URL: `http://localhost:3000/api/auth/github/callback`
-4. انسخ Client ID و Client Secret إلى `.env.local`
-
-```bash
-GITHUB_CLIENT_ID="your-client-id"
-GITHUB_CLIENT_SECRET="your-client-secret"
-```
-
-## 🚀 GitHub Actions CI/CD
-
-المشروع يحتوي على GitHub Actions للتجميع المستمر:
-
-### Workflows المتاحة:
-- `ci.yml` - بناء واختبار المشروع
-- `verify.yml` - التحقق من جودة الكود
-- `schema-check.yml` - التحقق من صحة قاعدة البيانات
-
-### الأسرار المطلوبة:
-- `DATABASE_URL` - رابط قاعدة البيانات
-- `JWT_SECRET` - مفتاح JWT
-- `GITHUB_CLIENT_ID` - معرف GitHub OAuth
-- `GITHUB_CLIENT_SECRET` - سر GitHub OAuth
-- `VERCEL_TOKEN` - رمز Vercel للنشر
-
-## 🚢 النشر
-
-### Vercel (موصى به)
-
-1. اربط المستودع بـ Vercel
-2. أضف متغيرات البيئة في إعدادات المشروع
-3. انشر!
-
-```bash
-npm i -g vercel
-vercel --prod
-```
-
-### Docker
-
-```bash
-docker build -t blueprint .
-docker run -p 3000:3000 blueprint
-```
-
-## 🤝 المساهمة
-
-نرحب بمساهماتكم! يرجى اتباع الخطوات التالية:
-
-1. انسخ المستودع (Fork)
-2. أنشئ فرعاً جديداً (`git checkout -b feature/amazing-feature`)
-3. أجرِ تغييراتك (`git commit -m 'Add amazing feature'`)
-4. ادفع الفرع (`git push origin feature/amazing-feature`)
-5. افتح Pull Request
-
-## 📄 الترخيص
-
-هذا المشروع مرخص بموجب [MIT License](LICENSE).
-
-## 👨‍💻 المطور
-
-**Mohamed BluePrint**
-
-- GitHub: [@mohamedblueprintrak-design](https://github.com/mohamedblueprintrak-design)
-
-## 🙏 الشكر
-
-- [Next.js](https://nextjs.org/)
-- [Prisma](https://prisma.io/)
-- [shadcn/ui](https://ui.shadcn.com/)
-- [Tailwind CSS](https://tailwindcss.com/)
 
 ---
 
-<p align="center">
-  Made with ❤️ in UAE
-</p>
+## 🔐 المصادقة والتفويض
+
+### أدوار المستخدمين
+
+| الدور | الوصف | الصلاحيات |
+|------|------|----------|
+| `admin` | مدير النظام | جميع الصلاحيات |
+| `manager` | مدير مشروع | إنشاء وتعديل المشاريع والمهام |
+| `engineer` | مهندس | عرض وتعديل المهام المخصصة |
+| `accountant` | محاسب | إدارة الفواتير والتقارير المالية |
+| `viewer` | مشاهد | عرض البيانات فقط |
+
+### نظام الصلاحيات
+
+```typescript
+enum Permission {
+  // المشاريع
+  PROJECT_CREATE = 'project:create',
+  PROJECT_READ = 'project:read',
+  PROJECT_UPDATE = 'project:update',
+  PROJECT_DELETE = 'project:delete',
+  
+  // المهام
+  TASK_CREATE = 'task:create',
+  TASK_READ = 'task:read',
+  TASK_UPDATE = 'task:update',
+  TASK_DELETE = 'task:delete',
+  
+  // ... المزيد
+}
+```
+
+---
+
+## 📡 API Documentation
+
+### نقاط النهاية الرئيسية
+
+#### المصادقة
+
+```http
+POST /api/auth/login
+POST /api/auth/signup
+POST /api/auth/logout
+POST /api/auth/refresh
+POST /api/auth/forgot-password
+POST /api/auth/reset-password
+```
+
+#### المشاريع
+
+```http
+GET    /api/projects           # قائمة المشاريع
+POST   /api/projects           # إنشاء مشروع
+GET    /api/projects/:id       # تفاصيل مشروع
+PUT    /api/projects/:id       # تحديث مشروع
+DELETE /api/projects/:id       # حذف مشروع
+```
+
+#### المهام
+
+```http
+GET    /api/tasks              # قائمة المهام
+POST   /api/tasks              # إنشاء مهمة
+PUT    /api/tasks/:id          # تحديث مهمة
+DELETE /api/tasks/:id          # حذف مهمة
+```
+
+#### العملاء
+
+```http
+GET    /api/clients            # قائمة العملاء
+POST   /api/clients            # إنشاء عميل
+PUT    /api/clients/:id        # تحديث عميل
+DELETE /api/clients/:id        # حذف عميل
+```
+
+### تنسيق الاستجابة
+
+**نجاح:**
+```json
+{
+  "success": true,
+  "data": { ... },
+  "meta": { "page": 1, "total": 100 }
+}
+```
+
+**خطأ:**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid input data"
+  }
+}
+```
+
+---
+
+## 🧪 الاختبارات
+
+### تشغيل الاختبارات
+
+```bash
+# اختبارات الوحدة
+npm run test
+
+# اختبارات التكامل
+npm run test:integration
+
+# اختبارات E2E
+npm run test:e2e
+
+# تغطية الاختبارات
+npm run test:coverage
+```
+
+### هيكل الاختبارات
+
+```
+__tests__/
+├── auth/              # اختبارات المصادقة
+├── services/          # اختبارات الخدمات
+├── repositories/      # اختبارات المستودعات
+└── api/               # اختبارات API
+
+e2e/
+├── auth/              # اختبارات E2E للمصادقة
+├── dashboard/         # اختبارات لوحة التحكم
+└── pricing/           # اختبارات الأسعار
+```
+
+---
+
+## 🐳 Docker Deployment
+
+### بناء الصورة
+
+```bash
+docker build -t blueprint-saas .
+```
+
+### باستخدام Docker Compose
+
+```bash
+# تشغيل جميع الخدمات
+docker-compose up -d
+
+# عرض السجلات
+docker-compose logs -f
+
+# إيقاف الخدمات
+docker-compose down
+```
+
+### الخدمات المتضمنة
+
+- **app**: تطبيق Next.js
+- **postgres**: قاعدة بيانات PostgreSQL
+- **redis**: تخزين مؤقت Redis
+- **nginx**: خادم عكسي (اختياري)
+
+---
+
+## 🔄 CI/CD Pipeline
+
+يتم استخدام GitHub Actions للتكامل المستمر والنشر المستمر:
+
+1. **Lint & Type Check**: فحص الكود
+2. **Unit Tests**: اختبارات الوحدة
+3. **Integration Tests**: اختبارات التكامل
+4. **E2E Tests**: اختبارات E2E
+5. **Security Scan**: فحص الأمان
+6. **Build Docker Image**: بناء صورة Docker
+7. **Deploy**: النشر التلقائي
+
+---
+
+## 🌍 متغيرات البيئة
+
+| المتغير | الوصف | مطلوب |
+|--------|-------|-------|
+| `DATABASE_URL` | رابط قاعدة البيانات | ✅ |
+| `JWT_SECRET` | مفتاح JWT (32+ حرف) | ✅ |
+| `NEXT_PUBLIC_APP_URL` | رابط التطبيق | ✅ |
+| `SMTP_HOST` | خادم البريد | ❌ |
+| `SMTP_USER` | مستخدم البريد | ❌ |
+| `SMTP_PASS` | كلمة مرور البريد | ❌ |
+| `STRIPE_SECRET_KEY` | مفتاح Stripe | ❌ |
+| `REDIS_URL` | رابط Redis | ❌ |
+
+---
+
+## 📊 مراقبة الأداء
+
+### Health Check Endpoint
+
+```http
+GET /api/health
+```
+
+الاستجابة:
+```json
+{
+  "status": "healthy",
+  "database": "connected",
+  "redis": "connected",
+  "timestamp": "2025-01-20T10:00:00Z"
+}
+```
+
+---
+
+## 🔧 استكشاف الأخطاء
+
+### مشاكل شائعة
+
+**1. خطأ اتصال قاعدة البيانات**
+```bash
+# التحقق من حالة PostgreSQL
+docker-compose ps postgres
+
+# إعادة إنشاء قاعدة البيانات
+npx prisma migrate reset
+```
+
+**2. خطأ JWT_SECRET**
+```bash
+# التأكد من طول المفتاح
+echo -n "your-secret-key" | wc -c  # يجب أن يكون 32+
+```
+
+**3. مشاكل Prisma**
+```bash
+# إعادة توليد العميل
+npx prisma generate
+
+# التحقق من الاتصال
+npx prisma db push
+```
+
+---
+
+## 🤝 المساهمة
+
+نرحب بالمساهمات! يرجى اتباع الخطوات التالية:
+
+1. Fork المشروع
+2. إنشاء فرع جديد (`git checkout -b feature/amazing-feature`)
+3. عمل التغييرات
+4. عمل commit (`git commit -m 'Add amazing feature'`)
+5. رفع التغييرات (`git push origin feature/amazing-feature`)
+6. فتح Pull Request
+
+---
+
+## 📄 الترخيص
+
+هذا المشروع مرخص تحت [MIT License](LICENSE).
+
+---
+
+## 📞 الدعم
+
+- **البريد الإلكتروني**: support@blueprint.dev
+- **GitHub Issues**: [رابط المشاكل](https://github.com/mohomedblueprintrak-design/BluePrint/issues)
+- **التوثيق**: [docs.blueprint.dev](https://docs.blueprint.dev)
+
+---
+
+<div align="center">
+  <p>صنع بـ ❤️ لخدمة مكاتب الاستشارات الهندسية</p>
+</div>

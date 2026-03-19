@@ -1,280 +1,261 @@
-import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import * as jose from 'jose';
-import { db, isDatabaseAvailable } from '@/lib/db';
+/**
+ * Authentication API Route
+ * مسار واجهة برمجة التطبيقات للمصادقة
+ * 
+ * Handles:
+ * - POST /api/auth/login - User login
+ * - POST /api/auth/signup - User registration
+ * - POST /api/auth/logout - User logout
+ * - POST /api/auth/refresh - Refresh token
+ * - POST /api/auth/forgot-password - Request password reset
+ * - POST /api/auth/reset-password - Reset password
+ */
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters');
+import { NextRequest } from 'next/server';
+import { authService } from '@/lib/auth/auth-service';
+import { successResponse, errorResponse, unauthorizedResponse } from '../utils/response';
+import { cookies } from 'next/headers';
 
-function successResponse(data: any) {
-  return NextResponse.json({ success: true, data });
+/**
+ * POST - Handle authentication actions
+ */
+export async function POST(request: NextRequest) {
+  const body = await request.json();
+  const action = body.action || 'login';
+
+  switch (action) {
+    case 'login':
+      return handleLogin(body);
+    case 'signup':
+      return handleSignup(body);
+    case 'logout':
+      return handleLogout(request);
+    case 'refresh':
+      return handleRefreshToken(body);
+    case 'forgot-password':
+      return handleForgotPassword(body);
+    case 'reset-password':
+      return handleResetPassword(body);
+    default:
+      return errorResponse(`Invalid action: ${action}`, 'BAD_REQUEST', 400);
+  }
 }
 
-function errorResponse(message: string, code = 'ERROR', status = 400) {
-  return NextResponse.json(
-    { success: false, error: { code, message } },
-    { status }
-  );
+/**
+ * Handle user login
+ */
+async function handleLogin(data: { email: string; password: string; rememberMe?: boolean }) {
+  if (!data.email || !data.password) {
+    return errorResponse('Email and password are required', 'VALIDATION_ERROR', 400);
+  }
+
+  const result = await authService.login({
+    email: data.email,
+    password: data.password,
+    rememberMe: data.rememberMe,
+  });
+
+  if (!result.success) {
+    return errorResponse(result.error || 'Login failed', result.code || 'LOGIN_FAILED', 401);
+  }
+
+  // Set HTTP-only cookie for refresh token
+  const cookieStore = await cookies();
+  cookieStore.set('refreshToken', result.refreshToken!, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: data.rememberMe ? 60 * 60 * 24 * 30 : 60 * 60 * 24 * 7, // 30 days or 7 days
+    path: '/',
+  });
+
+  return successResponse({
+    user: result.user,
+    token: result.token,
+  });
 }
 
-// Demo users for testing without database
-const DEMO_USERS: Array<{
-  id: string;
-  username: string;
+/**
+ * Handle user signup
+ */
+async function handleSignup(data: {
   email: string;
+  username: string;
   password: string;
   fullName: string;
-  role: string;
-  isActive: boolean;
-  avatar: string | null;
-  language: string;
-  theme: string;
-  organizationId: string;
-  organization: {
-    id: string;
-    name: string;
-    slug: string;
-    currency: string;
-    timezone: string;
-    locale: string;
-  };
-}> = [
-  {
-    id: 'demo-admin-001',
-    username: 'admin',
-    email: 'admin@blueprint.ae',
-    password: '$2b$10$.ELmlEHTPMDITIuJQzJ2IOGo87dOUXo3zE515Lq.WQMyHvDWzAX6.', // admin123
-    fullName: 'مدير النظام',
-    role: 'admin',
-    isActive: true,
-    avatar: null,
-    language: 'ar',
-    theme: 'dark',
-    organizationId: 'demo-org-001',
-    organization: {
-      id: 'demo-org-001',
-      name: 'BluePrint Engineering',
-      slug: 'blueprint-eng',
-      currency: 'AED',
-      timezone: 'Asia/Dubai',
-      locale: 'ar'
-    }
-  },
-  {
-    id: 'demo-user-001',
-    username: 'user',
-    email: 'user@blueprint.ae',
-    password: '$2b$10$.ELmlEHTPMDITIuJQzJ2IOGo87dOUXo3zE515Lq.WQMyHvDWzAX6.', // admin123
-    fullName: 'مستخدم تجريبي',
-    role: 'viewer',
-    isActive: true,
-    avatar: null,
-    language: 'ar',
-    theme: 'dark',
-    organizationId: 'demo-org-001',
-    organization: {
-      id: 'demo-org-001',
-      name: 'BluePrint Engineering',
-      slug: 'blueprint-eng',
-      currency: 'AED',
-      timezone: 'Asia/Dubai',
-      locale: 'ar'
-    }
+  organizationName?: string;
+}) {
+  // Validate required fields
+  if (!data.email || !data.username || !data.password || !data.fullName) {
+    return errorResponse('All required fields must be provided', 'VALIDATION_ERROR', 400);
   }
-];
 
-// POST - Login
-export async function POST(request: NextRequest) {
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(data.email)) {
+    return errorResponse('Invalid email format', 'VALIDATION_ERROR', 400);
+  }
+
+  // Validate username format
+  const usernameRegex = /^[a-zA-Z0-9_-]{3,30}$/;
+  if (!usernameRegex.test(data.username)) {
+    return errorResponse('Username must be 3-30 characters and contain only letters, numbers, underscore, or hyphen', 'VALIDATION_ERROR', 400);
+  }
+
+  const result = await authService.signup({
+    email: data.email,
+    username: data.username,
+    password: data.password,
+    fullName: data.fullName,
+    organizationName: data.organizationName,
+  });
+
+  if (!result.success) {
+    return errorResponse(result.error || 'Signup failed', result.code || 'SIGNUP_FAILED', 400);
+  }
+
+  // Set HTTP-only cookie for refresh token
+  const cookieStore = await cookies();
+  cookieStore.set('refreshToken', result.refreshToken!, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 7, // 7 days
+    path: '/',
+  });
+
+  return successResponse({
+    user: result.user,
+    token: result.token,
+  }, 'Account created successfully');
+}
+
+/**
+ * Handle user logout
+ */
+async function handleLogout(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { action, username, email, password, fullName, role = 'viewer', organizationId } = body;
-
-    // Login
-    if (action === 'login') {
-      if (!username || !password) {
-        return errorResponse('اسم المستخدم وكلمة المرور مطلوبان');
+    // Get user from token
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    
+    if (token) {
+      const payload = await authService.verifyToken(token);
+      if (payload) {
+        await authService.logout(payload.userId);
       }
-
-      // Try database first, fall back to demo users
-      let foundUser: any = null;
-      
-      // Check if database is available before querying
-      if (isDatabaseAvailable()) {
-        try {
-          foundUser = await db.user.findFirst({
-            where: {
-              OR: [{ username }, { email: username }]
-            },
-            include: { organization: true }
-          });
-        } catch (dbError) {
-          console.log('Database query error:', dbError);
-        }
-      }
-
-      // If no database user, check demo users
-      if (!foundUser) {
-        foundUser = DEMO_USERS.find(u => 
-          u.username === username || u.email === username
-        );
-      }
-
-      if (!foundUser) {
-        return errorResponse('بيانات الدخول غير صحيحة');
-      }
-
-      // Verify password
-      let isValid = false;
-      if (foundUser.password) {
-        isValid = await bcrypt.compare(password, foundUser.password);
-      }
-
-      if (!isValid) {
-        return errorResponse('بيانات الدخول غير صحيحة');
-      }
-
-      if (!foundUser.isActive) {
-        return errorResponse('الحساب غير مفعل');
-      }
-
-      const token = await new jose.SignJWT({ 
-        userId: foundUser.id,
-        authProvider: 'credentials'
-      })
-        .setProtectedHeader({ alg: 'HS256' })
-        .setExpirationTime('8h')
-        .setIssuedAt()
-        .sign(JWT_SECRET);
-
-      return successResponse({ accessToken: token, tokenType: 'bearer' });
     }
 
-    // Register - creates user in database if available
-    if (action === 'register') {
-      if (!username || !email || !password) {
-        return errorResponse('جميع الحقول مطلوبة');
-      }
+    // Clear refresh token cookie
+    const cookieStore = await cookies();
+    cookieStore.delete('refreshToken');
 
-      if (password.length < 6) {
-        return errorResponse('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
-      }
-
-      // Check if user exists in demo users
-      const existingDemo = DEMO_USERS.find(u => u.username === username || u.email === email);
-      if (existingDemo) {
-        return errorResponse('المستخدم موجود بالفعل');
-      }
-
-      // Try database if available
-      if (isDatabaseAvailable()) {
-        try {
-          const existing = await db.user.findFirst({
-            where: { OR: [{ username }, { email }] }
-          });
-          if (existing) {
-            return errorResponse('المستخدم موجود بالفعل');
-          }
-
-          const hashedPassword = await bcrypt.hash(password, 10);
-          const newUser = await db.user.create({
-            data: {
-              username,
-              email,
-              password: hashedPassword,
-              fullName: fullName || username,
-              role,
-              organizationId: organizationId || null
-            }
-          });
-
-          console.log('User created successfully:', newUser.username);
-          return successResponse({ id: newUser.id, username: newUser.username, message: 'تم إنشاء الحساب بنجاح' });
-        } catch (dbError) {
-          console.error('Database error during registration:', dbError);
-          const message = dbError instanceof Error ? dbError.message : 'خطأ في قاعدة البيانات';
-          return errorResponse(message, 'DB_ERROR', 500);
-        }
-      }
-      
-      // Demo mode - return error because demo users can't login after registration
-      return errorResponse('قاعدة البيانات غير متاحة حالياً. يرجى المحاولة لاحقاً أو استخدام حساب تجريبي: admin / admin123');
-    }
-
-    return errorResponse('إجراء غير معروف');
+    return successResponse({ message: 'Logged out successfully' });
   } catch (error) {
-    console.error('Auth API Error:', error);
-    const errMsg = error instanceof Error ? error.message : "Unknown error";
-    return errorResponse(errMsg || 'خطأ في الخادم', 'SERVER_ERROR', 500);
+    return successResponse({ message: 'Logged out successfully' });
   }
 }
 
-// GET - Get current user
+/**
+ * Handle token refresh
+ */
+async function handleRefreshToken(data: { refreshToken?: string }) {
+  // Try to get refresh token from body or cookie
+  let refreshToken = data.refreshToken;
+  
+  if (!refreshToken) {
+    const cookieStore = await cookies();
+    refreshToken = cookieStore.get('refreshToken')?.value;
+  }
+
+  if (!refreshToken) {
+    return errorResponse('Refresh token required', 'REFRESH_TOKEN_REQUIRED', 401);
+  }
+
+  const result = await authService.refreshToken(refreshToken);
+
+  if (!result.success) {
+    return errorResponse(result.error || 'Token refresh failed', result.code || 'REFRESH_FAILED', 401);
+  }
+
+  // Update refresh token cookie
+  const cookieStore = await cookies();
+  cookieStore.set('refreshToken', result.refreshToken!, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 7, // 7 days
+    path: '/',
+  });
+
+  return successResponse({
+    user: result.user,
+    token: result.token,
+  });
+}
+
+/**
+ * Handle forgot password request
+ */
+async function handleForgotPassword(data: { email: string }) {
+  if (!data.email) {
+    return errorResponse('Email is required', 'VALIDATION_ERROR', 400);
+  }
+
+  await authService.requestPasswordReset({ email: data.email });
+
+  // Always return success to prevent email enumeration
+  return successResponse({
+    message: 'If an account with that email exists, a password reset link has been sent',
+  });
+}
+
+/**
+ * Handle password reset
+ */
+async function handleResetPassword(data: { token: string; newPassword: string; confirmPassword: string }) {
+  if (!data.token || !data.newPassword || !data.confirmPassword) {
+    return errorResponse('All fields are required', 'VALIDATION_ERROR', 400);
+  }
+
+  const result = await authService.confirmPasswordReset({
+    token: data.token,
+    newPassword: data.newPassword,
+    confirmPassword: data.confirmPassword,
+  });
+
+  if (!result.success) {
+    return errorResponse(result.error || 'Password reset failed', result.code || 'RESET_FAILED', 400);
+  }
+
+  return successResponse({ message: 'Password reset successfully' });
+}
+
+/**
+ * GET - Get current user
+ */
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
-    return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+  const token = authHeader?.replace('Bearer ', '');
+
+  if (!token) {
+    return unauthorizedResponse();
   }
-  
-  const token = authHeader.substring(7);
-  try {
-    const { payload } = await jose.jwtVerify(token, JWT_SECRET);
-    const userId = payload.userId as string;
 
-    // Check demo users first
-    let user = DEMO_USERS.find(u => u.id === userId);
-
-    // Try database if available and user not found in demo
-    if (!user && isDatabaseAvailable()) {
-      try {
-        const dbUser = await db.user.findUnique({ 
-          where: { id: userId },
-          include: { organization: true }
-        });
-
-        if (dbUser) {
-          user = {
-            id: dbUser.id,
-            username: dbUser.username,
-            email: dbUser.email,
-            password: dbUser.password || '',
-            fullName: dbUser.fullName || dbUser.username,
-            role: dbUser.role,
-            isActive: dbUser.isActive,
-            avatar: dbUser.avatar,
-            language: dbUser.language || 'ar',
-            theme: dbUser.theme || 'dark',
-            organizationId: dbUser.organizationId || '',
-            organization: dbUser.organization || {
-              id: '',
-              name: '',
-              slug: '',
-              currency: 'AED',
-              timezone: 'Asia/Dubai',
-              locale: 'ar'
-            }
-          };
-        }
-      } catch (dbError) {
-        console.log('Database query error:', dbError);
-      }
-    }
-
-    if (!user) {
-      return errorResponse('المستخدم غير موجود', 'NOT_FOUND', 404);
-    }
-
-    return successResponse({
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      fullName: user.fullName,
-      role: user.role,
-      avatar: user.avatar,
-      language: user.language || 'ar',
-      theme: user.theme || 'dark',
-      organization: user.organization,
-      organizationId: user.organizationId
-    });
-  } catch {
-    return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+  const payload = await authService.verifyToken(token);
+  if (!payload) {
+    return errorResponse('Invalid or expired token', 'INVALID_TOKEN', 401);
   }
+
+  const user = await authService.getUserById(payload.userId);
+  if (!user) {
+    return errorResponse('User not found', 'USER_NOT_FOUND', 404);
+  }
+
+  return successResponse({
+    user: {
+      ...user,
+      permissions: authService.getRolePermissions(user.role as any),
+    },
+  });
 }
