@@ -1,0 +1,106 @@
+# BluePrint SaaS - Docker Compose
+# Production deployment configuration
+
+version: '3.8'
+
+services:
+  # ===========================================
+  # Application
+  # ===========================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: blueprint-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://blueprint:blueprint123@postgres:5432/blueprint?schema=public
+      - DIRECT_DATABASE_URL=postgresql://blueprint:blueprint123@postgres:5432/blueprint?schema=public
+      - JWT_SECRET=${JWT_SECRET}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - blueprint-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ===========================================
+  # PostgreSQL Database
+  # ===========================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: blueprint-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: blueprint
+      POSTGRES_PASSWORD: blueprint123
+      POSTGRES_DB: blueprint
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - blueprint-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U blueprint -d blueprint"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================
+  # Redis Cache
+  # ===========================================
+  redis:
+    image: redis:7-alpine
+    container_name: blueprint-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - blueprint-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================
+  # Nginx Reverse Proxy (Optional)
+  # ===========================================
+  nginx:
+    image: nginx:alpine
+    container_name: blueprint-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - app
+    networks:
+      - blueprint-network
+
+networks:
+  blueprint-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
