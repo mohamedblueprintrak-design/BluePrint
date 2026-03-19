@@ -129,5 +129,8 @@
   },
   "overrides": {
     "prismjs": "^1.30.0"
+  },
+  "prisma": {
+    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   }
 }
