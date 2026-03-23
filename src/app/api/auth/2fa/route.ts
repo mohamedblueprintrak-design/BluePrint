@@ -3,7 +3,7 @@
  * مسار المصادقة الثنائية
  * 
  * GET /api/auth/2fa - Get 2FA status and setup info
- * POST /api/auth/2fa - Enable 2FA with verification code
+ * POST /api/auth/2fa - Setup or Enable 2FA
  * DELETE /api/auth/2fa - Disable 2FA
  * 
  * Sub-routes:

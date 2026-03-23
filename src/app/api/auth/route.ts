@@ -247,6 +247,18 @@ async function handleSignup(
     );
   }
 
+  // Send verification email
+  try {
+    await authService.sendVerificationEmail(
+      data.email,
+      data.fullName,
+      result.user?.id
+    );
+  } catch (emailError) {
+    console.error('Failed to send verification email:', emailError);
+    // Continue anyway - user can request resend
+  }
+
   // Set HTTP-only cookie for refresh token
   const cookieStore = await cookies();
   cookieStore.set('refreshToken', result.refreshToken!, {
@@ -260,6 +272,8 @@ async function handleSignup(
   return successResponse({
     user: result.user,
     token: result.token,
+    emailVerificationSent: true,
+    message: 'تم إنشاء الحساب بنجاح. يرجى التحقق من بريدك الإلكتروني.',
   }, 'تم إنشاء الحساب بنجاح');
 }
 

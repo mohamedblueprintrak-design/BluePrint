@@ -135,3 +135,77 @@ export function canApproveLeave(user: AuthenticatedUser): boolean {
 export function canApproveExpense(user: AuthenticatedUser): boolean {
   return user.role === 'admin' || user.role === 'accountant';
 }
+
+/**
+ * Check if user's email is verified
+ * Returns true for demo users (they are considered verified)
+ */
+export async function isEmailVerified(user: AuthenticatedUser): Promise<boolean> {
+  // Demo users are considered verified
+  if ('isDemo' in user && (user as any).isDemo) {
+    return true;
+  }
+
+  try {
+    const database = await getDb();
+    if (!database) return true; // If no DB, allow access (demo mode)
+    
+    const dbUser = await database.user.findUnique({
+      where: { id: user.id },
+      select: { emailVerified: true },
+    });
+    
+    return !!dbUser?.emailVerified;
+  } catch {
+    return true; // On error, allow access
+  }
+}
+
+/**
+ * Middleware to require email verification
+ * Use this for sensitive operations like payments, changing password, etc.
+ */
+export async function requireEmailVerified(
+  user: AuthenticatedUser
+): Promise<{ verified: true } | { verified: false; error: ReturnType<typeof import('../utils/response').errorResponse> }> {
+  const verified = await isEmailVerified(user);
+  
+  if (!verified) {
+    const { errorResponse } = await import('../utils/response');
+    return {
+      verified: false,
+      error: errorResponse(
+        'يجب التحقق من بريدك الإلكتروني أولاً',
+        'EMAIL_NOT_VERIFIED',
+        403
+      ),
+    };
+  }
+  
+  return { verified: true };
+}
+
+/**
+ * Combined middleware: require auth + email verified
+ */
+export async function requireAuthAndVerified(
+  request: NextRequest,
+  demoUsers: DemoUser[]
+): Promise<
+  { user: AuthenticatedUser } | 
+  { error: ReturnType<typeof import('../utils/response').unauthorizedResponse> | ReturnType<typeof import('../utils/response').errorResponse> }
+> {
+  const authResult = await requireAuth(request, demoUsers);
+  
+  if ('error' in authResult) {
+    return authResult;
+  }
+  
+  const verifiedResult = await requireEmailVerified(authResult.user);
+  
+  if ('error' in verifiedResult) {
+    return { error: verifiedResult.error };
+  }
+  
+  return { user: authResult.user };
+}

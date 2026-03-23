@@ -75,6 +75,8 @@ import {
   Cloud,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { TwoFactorSetup } from './two-factor-setup';
+import { BillingPage } from './billing-page';
 
 // Types
 interface CompanySettings {
@@ -1075,34 +1077,8 @@ export function SettingsPage() {
             </Card>
 
             {/* Two-Factor Auth */}
-            <Card className="bg-slate-900/50 border-slate-800">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Fingerprint className="w-5 h-5 text-green-400" />
-                  {texts.twoFactorAuth}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between p-4 rounded-lg bg-slate-800/30 border border-slate-700">
-                  <div>
-                    <p className="text-white font-medium">{texts.twoFactorAuth}</p>
-                    <p className="text-sm text-slate-400">{texts.twoFactorDesc}</p>
-                  </div>
-                  <Switch
-                    checked={securitySettings.twoFactorEnabled}
-                    onCheckedChange={handleToggleTwoFactor}
-                  />
-                </div>
-                {securitySettings.twoFactorEnabled && (
-                  <div className="mt-4 p-4 rounded-lg bg-green-500/10 border border-green-500/20">
-                    <div className="flex items-center gap-2 text-green-400">
-                      <CheckCircle className="w-4 h-4" />
-                      <span className="text-sm">{language === 'ar' ? 'المصادقة الثنائية مفعلة' : 'Two-factor authentication is enabled'}</span>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            {/* Two-Factor Authentication */}
+            <TwoFactorSetup />
           </div>
 
           {/* Active Sessions */}
@@ -1274,149 +1250,7 @@ export function SettingsPage() {
 
         {/* Billing Tab */}
         <TabsContent value="billing" className="space-y-6">
-          {renderSectionHeader(
-            texts.billing,
-            language === 'ar' ? 'إدارة اشتراكك ومدفوعاتك' : 'Manage your subscription and payments'
-          )}
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Current Plan */}
-            <Card className="bg-gradient-to-br from-blue-600/20 to-cyan-600/20 border-blue-500/30">
-              <CardHeader>
-                <CardTitle className="text-white">{texts.currentPlan}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-4">
-                  <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center mx-auto mb-4">
-                    <Zap className="w-8 h-8 text-blue-400" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-white">{billingSettings.plan.name}</h3>
-                  <p className="text-3xl font-bold text-white mt-2">
-                    ${billingSettings.plan.price}
-                    <span className="text-sm text-slate-400">/{texts.per}</span>
-                  </p>
-                  <div className="mt-4 space-y-2">
-                    {billingSettings.plan.features.map((feature, index) => (
-                      <div key={index} className="flex items-center gap-2 text-slate-300">
-                        <CheckCircle className="w-4 h-4 text-green-400" />
-                        <span className="text-sm">{feature}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex gap-2 border-t border-blue-500/20 pt-4">
-                <Button variant="outline" className="flex-1 bg-slate-800/50 border-slate-700 hover:bg-slate-700">
-                  {texts.downgradePlan}
-                </Button>
-                <Button className="flex-1 bg-blue-600 hover:bg-blue-700">
-                  {texts.upgradePlan}
-                </Button>
-              </CardFooter>
-            </Card>
-
-            {/* Usage Stats */}
-            <Card className="lg:col-span-2 bg-slate-900/50 border-slate-800">
-              <CardHeader>
-                <CardTitle className="text-white">{texts.usage}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Storage */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <HardDrive className="w-4 h-4 text-blue-400" />
-                      <span className="text-slate-300">{texts.storage}</span>
-                    </div>
-                    <span className="text-sm text-slate-400">
-                      {billingSettings.usage.storage.used} {texts.gb} {texts.of} {billingSettings.usage.storage.total} {texts.gb}
-                    </span>
-                  </div>
-                  <Progress value={(billingSettings.usage.storage.used / billingSettings.usage.storage.total) * 100} className="h-2" />
-                </div>
-
-                {/* Projects */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-green-400" />
-                      <span className="text-slate-300">{texts.projects}</span>
-                    </div>
-                    <span className="text-sm text-slate-400">
-                      {billingSettings.usage.projects.used} {texts.of} {billingSettings.usage.projects.total === 999 ? texts.unlimited : billingSettings.usage.projects.total}
-                    </span>
-                  </div>
-                  <Progress value={(billingSettings.usage.projects.used / billingSettings.usage.projects.total) * 100} className="h-2" />
-                </div>
-
-                {/* Users */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-purple-400" />
-                      <span className="text-slate-300">{texts.users}</span>
-                    </div>
-                    <span className="text-sm text-slate-400">
-                      {billingSettings.usage.users.used} {texts.of} {billingSettings.usage.users.total}
-                    </span>
-                  </div>
-                  <Progress value={(billingSettings.usage.users.used / billingSettings.usage.users.total) * 100} className="h-2" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Payment History */}
-          <Card className="bg-slate-900/50 border-slate-800">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <History className="w-5 h-5 text-cyan-400" />
-                {texts.paymentHistory}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-slate-700">
-                      <th className="text-start py-3 px-4 text-sm font-medium text-slate-400">{language === 'ar' ? 'التاريخ' : 'Date'}</th>
-                      <th className="text-start py-3 px-4 text-sm font-medium text-slate-400">{language === 'ar' ? 'الفاتورة' : 'Invoice'}</th>
-                      <th className="text-start py-3 px-4 text-sm font-medium text-slate-400">{language === 'ar' ? 'المبلغ' : 'Amount'}</th>
-                      <th className="text-start py-3 px-4 text-sm font-medium text-slate-400">{language === 'ar' ? 'الحالة' : 'Status'}</th>
-                      <th className="text-start py-3 px-4 text-sm font-medium text-slate-400">{language === 'ar' ? 'إجراء' : 'Action'}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {billingSettings.history.map((payment) => (
-                      <tr key={payment.id} className="border-b border-slate-800 hover:bg-slate-800/30">
-                        <td className="py-3 px-4 text-slate-300">{payment.date}</td>
-                        <td className="py-3 px-4 text-slate-300">{payment.invoice}</td>
-                        <td className="py-3 px-4 text-white font-medium">${payment.amount}</td>
-                        <td className="py-3 px-4">
-                          <Badge
-                            variant="secondary"
-                            className={
-                              payment.status === 'paid' ? 'bg-green-500/20 text-green-400' :
-                              payment.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                              'bg-red-500/20 text-red-400'
-                            }
-                          >
-                            {payment.status === 'paid' ? texts.paid : payment.status === 'pending' ? texts.pending : texts.failed}
-                          </Badge>
-                        </td>
-                        <td className="py-3 px-4">
-                          <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
-                            <Download className="w-4 h-4 me-2" />
-                            {texts.downloadInvoice}
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
+          <BillingPage />
         </TabsContent>
 
         {/* Integrations Tab */}
