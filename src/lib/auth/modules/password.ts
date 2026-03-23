@@ -1,0 +1,151 @@
+/**
+ * Password Management Module
+ * وحدة إدارة كلمات المرور
+ * 
+ * Handles password hashing, verification, and validation
+ */
+
+import { hash, compare } from 'bcryptjs';
+import { PASSWORD_CONFIG } from '@/lib/config/security';
+
+// ============================================
+// Types
+// ============================================
+
+export interface PasswordValidationResult {
+  valid: boolean;
+  errors: string[];
+  strength: 'weak' | 'medium' | 'strong' | 'very-strong';
+}
+
+// ============================================
+// Password Hashing
+// ============================================
+
+/**
+ * Hash a password using bcrypt
+ * Uses the configured number of rounds (default: 12)
+ */
+export async function hashPassword(password: string): Promise<string> {
+  return hash(password, PASSWORD_CONFIG.bcryptRounds);
+}
+
+/**
+ * Verify a password against a hash
+ */
+export async function verifyPassword(
+  password: string, 
+  hashedPassword: string
+): Promise<boolean> {
+  return compare(password, hashedPassword);
+}
+
+// ============================================
+// Password Validation
+// ============================================
+
+/**
+ * Validate password strength
+ * Checks against configured requirements
+ */
+export function validatePasswordStrength(password: string): PasswordValidationResult {
+  const errors: string[] = [];
+  const checks = {
+    length: false,
+    uppercase: false,
+    lowercase: false,
+    number: false,
+    special: false,
+  };
+  
+  // Length check
+  if (password.length >= PASSWORD_CONFIG.minLength) {
+    checks.length = true;
+  } else {
+    errors.push(`Password must be at least ${PASSWORD_CONFIG.minLength} characters long`);
+  }
+  
+  // Uppercase check
+  if (/[A-Z]/.test(password)) {
+    checks.uppercase = true;
+  } else if (PASSWORD_CONFIG.requireUppercase) {
+    errors.push('Password must contain at least one uppercase letter');
+  }
+  
+  // Lowercase check
+  if (/[a-z]/.test(password)) {
+    checks.lowercase = true;
+  } else if (PASSWORD_CONFIG.requireLowercase) {
+    errors.push('Password must contain at least one lowercase letter');
+  }
+  
+  // Number check
+  if (/[0-9]/.test(password)) {
+    checks.number = true;
+  } else if (PASSWORD_CONFIG.requireNumber) {
+    errors.push('Password must contain at least one number');
+  }
+  
+  // Special character check
+  if (/[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\;'`~]/.test(password)) {
+    checks.special = true;
+  } else if (PASSWORD_CONFIG.requireSpecialChar) {
+    errors.push('Password must contain at least one special character');
+  }
+  
+  // Calculate strength
+  const passedChecks = Object.values(checks).filter(Boolean).length;
+  let strength: PasswordValidationResult['strength'] = 'weak';
+  
+  if (passedChecks >= 5 && password.length >= 12) {
+    strength = 'very-strong';
+  } else if (passedChecks >= 5) {
+    strength = 'strong';
+  } else if (passedChecks >= 4) {
+    strength = 'medium';
+  }
+  
+  return {
+    valid: errors.length === 0,
+    errors,
+    strength,
+  };
+}
+
+/**
+ * Generate a secure random password
+ */
+export function generateSecurePassword(length: number = 16): string {
+  const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+  const numbers = '0123456789';
+  const special = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+  
+  const allChars = uppercase + lowercase + numbers + special;
+  
+  let password = '';
+  
+  // Ensure at least one of each required type
+  password += uppercase[Math.floor(Math.random() * uppercase.length)];
+  password += lowercase[Math.floor(Math.random() * lowercase.length)];
+  password += numbers[Math.floor(Math.random() * numbers.length)];
+  password += special[Math.floor(Math.random() * special.length)];
+  
+  // Fill the rest randomly
+  for (let i = password.length; i < length; i++) {
+    password += allChars[Math.floor(Math.random() * allChars.length)];
+  }
+  
+  // Shuffle the password
+  return password.split('').sort(() => Math.random() - 0.5).join('');
+}
+
+/**
+ * Check if password has been compromised (basic check)
+ * In production, integrate with HaveIBeenPwned API
+ */
+export async function checkPasswordBreached(password: string): Promise<boolean> {
+  // Placeholder - in production, use HaveIBeenPwned API
+  // https://haveibeenpwned.com/API/v3#PwnedPasswords
+  return false;
+}

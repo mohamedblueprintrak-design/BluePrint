@@ -3,23 +3,57 @@ import * as jose from 'jose';
 import { AuthenticatedUser, DemoUser } from '../types';
 import { getDb } from './db';
 
-// Security: JWT secret must come from environment only
-// IMPORTANT: This MUST match the secret used in all API routes
-const JWT_SECRET_FALLBACK = 'blueprint-demo-secret-key-for-development-minimum-32-characters';
+// ============================================
+// Security Configuration
+// ============================================
 
 /**
- * Get JWT secret bytes - lazily initialized to prevent build errors
- * In development: uses a fallback secret with warning
- * In production: throws error only when actually used without JWT_SECRET
+ * Get JWT secret bytes
+ * SECURITY: JWT_SECRET is REQUIRED and must be at least 32 characters
+ * - In production: Throws error if JWT_SECRET is not set
+ * - In development/test: Shows warning but allows a dev secret
  */
 function getJwtSecretBytes(): Uint8Array {
   const jwtSecret = process.env.JWT_SECRET;
+  const nodeEnv = process.env.NODE_ENV;
   
-  if (!jwtSecret) {
-    console.warn('WARNING: Using demo JWT secret. Set JWT_SECRET in production!');
+  // Production: JWT_SECRET is MANDATORY
+  if (nodeEnv === 'production') {
+    if (!jwtSecret) {
+      throw new Error(
+        'FATAL: JWT_SECRET environment variable is required in production. ' +
+        'Set JWT_SECRET to a secure random string of at least 32 characters. ' +
+        'Generate one with: openssl rand -base64 32'
+      );
+    }
+    
+    if (jwtSecret.length < 32) {
+      throw new Error(
+        'FATAL: JWT_SECRET must be at least 32 characters long. ' +
+        `Current length: ${jwtSecret.length} characters. ` +
+        'Generate a secure secret with: openssl rand -base64 32'
+      );
+    }
+    
+    return new TextEncoder().encode(jwtSecret);
   }
   
-  return new TextEncoder().encode(jwtSecret || JWT_SECRET_FALLBACK);
+  // Development/Test: Allow dev secret with strong warning
+  if (!jwtSecret || jwtSecret.length < 32) {
+    console.warn(
+      '\n' + '='.repeat(70) +
+      '\n⚠️  SECURITY WARNING: JWT_SECRET is not properly configured!' +
+      '\n   Using development-only secret. DO NOT use in production!' +
+      '\n   Set JWT_SECRET in your .env file (min 32 characters)' +
+      '\n   Generate with: openssl rand -base64 32' +
+      '\n' + '='.repeat(70) + '\n'
+    );
+    
+    // Use a development-only secret (NOT a real secret, just for dev convenience)
+    return new TextEncoder().encode('dev-only-secret-not-for-production-use-min-32-chars');
+  }
+  
+  return new TextEncoder().encode(jwtSecret);
 }
 
 // Export JWT_SECRET as a function that returns Uint8Array
