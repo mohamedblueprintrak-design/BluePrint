@@ -11,7 +11,7 @@ export interface AuditLogData {
   projectId?: string;
   entityType: string;
   entityId?: string;
-  action: 'create' | 'update' | 'delete' | 'view' | 'approve' | 'reject' | 'sign' | 'login' | 'logout';
+  action: 'create' | 'update' | 'delete' | 'view' | 'approve' | 'reject' | 'sign' | 'login' | 'logout' | 'verify_email' | 'enable_2fa' | 'disable_2fa' | 'regenerate_backup_codes';
   description: string;
   oldValue?: Record<string, any>;
   newValue?: Record<string, any>;

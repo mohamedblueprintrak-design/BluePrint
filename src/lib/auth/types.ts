@@ -55,6 +55,15 @@ export enum Permission {
   // Reports permissions
   REPORTS_READ = 'reports:read',
   REPORTS_EXPORT = 'reports:export',
+  
+  // Budget permissions
+  BUDGET_MANAGE = 'budget:manage',
+  
+  // Document permissions
+  DOCUMENT_CREATE = 'document:create',
+  DOCUMENT_READ = 'document:read',
+  DOCUMENT_UPDATE = 'document:update',
+  DOCUMENT_DELETE = 'document:delete',
 }
 
 /**
@@ -161,7 +170,7 @@ export interface AuthUser {
     id: string;
     name: string;
     slug: string;
-  };
+  } | null;
 }
 
 /**

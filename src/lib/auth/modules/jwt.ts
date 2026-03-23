@@ -65,7 +65,7 @@ export async function generateAccessToken(
     .setIssuedAt()
     .setIssuer(JWT_ISSUER)
     .setAudience(JWT_AUDIENCE)
-    .setExpirationTime(JWT_CONFIG.expiresIn)
+    .setExpirationTime(JWT_CONFIG.expiresIn || '2h')
     .sign(secret);
 }
 
@@ -81,7 +81,7 @@ export async function generateRefreshToken(userId: string): Promise<string> {
     .setIssuedAt()
     .setIssuer(JWT_ISSUER)
     .setAudience(JWT_AUDIENCE)
-    .setExpirationTime(JWT_CONFIG.refreshExpiresIn)
+    .setExpirationTime(JWT_CONFIG.refreshExpiresIn || '7d')
     .sign(secret);
 }
 
