@@ -9,44 +9,127 @@
  * - POST /api/auth/refresh - Refresh token
  * - POST /api/auth/forgot-password - Request password reset
  * - POST /api/auth/reset-password - Reset password
+ * 
+ * SECURITY:
+ * - Rate limiting on all auth endpoints to prevent brute force
+ * - Input validation on all fields
+ * - HTTP-only cookies for refresh tokens
  */
 
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { authService } from '@/lib/auth/auth-service';
 import { successResponse, errorResponse, unauthorizedResponse } from '../utils/response';
+import { 
+  checkRateLimitByType, 
+  getClientIP, 
+  rateLimitError,
+  RateLimitType 
+} from '../utils/rate-limit';
 import { cookies } from 'next/headers';
 
 /**
+ * Helper to check rate limit and return error if exceeded
+ */
+function checkAuthRateLimit(request: NextRequest): { allowed: boolean; response?: NextResponse } {
+  const ip = getClientIP(request);
+  const result = checkRateLimitByType(ip, 'auth' as RateLimitType);
+  
+  if (!result.allowed) {
+    // Detect language from Accept-Language header
+    const acceptLanguage = request.headers.get('accept-language') || '';
+    const language = acceptLanguage.includes('ar') ? 'ar' : 'en';
+    return { 
+      allowed: false, 
+      response: rateLimitError(result.resetTime, 'auth', language) 
+    };
+  }
+  
+  return { allowed: true };
+}
+
+/**
+ * Add rate limit headers to response
+ */
+function addRateLimitHeaders(
+  response: NextResponse, 
+  remaining: number, 
+  resetTime: number
+): NextResponse {
+  response.headers.set('X-RateLimit-Limit', '10');
+  response.headers.set('X-RateLimit-Remaining', remaining.toString());
+  response.headers.set('X-RateLimit-Reset', resetTime.toString());
+  return response;
+}
+
+/**
  * POST - Handle authentication actions
+ * SECURITY: Rate limited to prevent brute force attacks
  */
 export async function POST(request: NextRequest) {
-  const body = await request.json();
+  // Check rate limit before processing
+  const rateCheck = checkAuthRateLimit(request);
+  if (!rateCheck.allowed && rateCheck.response) {
+    return rateCheck.response;
+  }
+  
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return errorResponse('Invalid JSON body', 'INVALID_JSON', 400);
+  }
+  
   const action = body.action || 'login';
 
+  let response: NextResponse;
+  
   switch (action) {
     case 'login':
-      return handleLogin(body);
+      response = await handleLogin(body, request);
+      break;
     case 'signup':
-      return handleSignup(body);
+      response = await handleSignup(body, request);
+      break;
     case 'logout':
-      return handleLogout(request);
+      response = await handleLogout(request);
+      break;
     case 'refresh':
-      return handleRefreshToken(body);
+      response = await handleRefreshToken(body, request);
+      break;
     case 'forgot-password':
-      return handleForgotPassword(body);
+      response = await handleForgotPassword(body, request);
+      break;
     case 'reset-password':
-      return handleResetPassword(body);
+      response = await handleResetPassword(body, request);
+      break;
     default:
-      return errorResponse(`Invalid action: ${action}`, 'BAD_REQUEST', 400);
+      response = errorResponse(`Invalid action: ${action}`, 'BAD_REQUEST', 400);
   }
+  
+  // Add rate limit headers to response
+  const ip = getClientIP(request);
+  const rateResult = checkRateLimitByType(ip, 'auth' as RateLimitType);
+  return addRateLimitHeaders(response, rateResult.remaining, rateResult.resetTime);
 }
 
 /**
  * Handle user login
+ * SECURITY: 
+ * - Rate limited to 10 attempts per minute
+ * - Generic error messages to prevent enumeration
  */
-async function handleLogin(data: { email: string; password: string; rememberMe?: boolean }) {
+async function handleLogin(
+  data: { email: string; password: string; rememberMe?: boolean }, 
+  request: NextRequest
+): Promise<NextResponse> {
   if (!data.email || !data.password) {
-    return errorResponse('Email and password are required', 'VALIDATION_ERROR', 400);
+    return errorResponse('البريد الإلكتروني وكلمة المرور مطلوبان', 'VALIDATION_ERROR', 400);
+  }
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(data.email)) {
+    return errorResponse('صيغة البريد الإلكتروني غير صحيحة', 'VALIDATION_ERROR', 400);
   }
 
   const result = await authService.login({
@@ -56,7 +139,12 @@ async function handleLogin(data: { email: string; password: string; rememberMe?:
   });
 
   if (!result.success) {
-    return errorResponse(result.error || 'Login failed', result.code || 'LOGIN_FAILED', 401);
+    // Generic error to prevent user enumeration
+    return errorResponse(
+      'البريد الإلكتروني أو كلمة المرور غير صحيحة', 
+      'INVALID_CREDENTIALS', 
+      401
+    );
   }
 
   // Set HTTP-only cookie for refresh token
@@ -77,29 +165,49 @@ async function handleLogin(data: { email: string; password: string; rememberMe?:
 
 /**
  * Handle user signup
+ * SECURITY:
+ * - Rate limited to 10 attempts per minute
+ * - Input validation on all fields
  */
-async function handleSignup(data: {
-  email: string;
-  username: string;
-  password: string;
-  fullName: string;
-  organizationName?: string;
-}) {
+async function handleSignup(
+  data: {
+    email: string;
+    username: string;
+    password: string;
+    fullName: string;
+    organizationName?: string;
+  },
+  request: NextRequest
+): Promise<NextResponse> {
   // Validate required fields
   if (!data.email || !data.username || !data.password || !data.fullName) {
-    return errorResponse('All required fields must be provided', 'VALIDATION_ERROR', 400);
+    return errorResponse('جميع الحقول المطلوبة يجب ملؤها', 'VALIDATION_ERROR', 400);
   }
 
   // Validate email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(data.email)) {
-    return errorResponse('Invalid email format', 'VALIDATION_ERROR', 400);
+    return errorResponse('صيغة البريد الإلكتروني غير صحيحة', 'VALIDATION_ERROR', 400);
   }
 
   // Validate username format
   const usernameRegex = /^[a-zA-Z0-9_-]{3,30}$/;
   if (!usernameRegex.test(data.username)) {
-    return errorResponse('Username must be 3-30 characters and contain only letters, numbers, underscore, or hyphen', 'VALIDATION_ERROR', 400);
+    return errorResponse(
+      'اسم المستخدم يجب أن يكون 3-30 حرف ويحتوي فقط على أحرف أو أرقام أو _ أو -',
+      'VALIDATION_ERROR',
+      400
+    );
+  }
+
+  // Validate password length
+  if (data.password.length < 8) {
+    return errorResponse('كلمة المرور يجب أن تكون 8 أحرف على الأقل', 'VALIDATION_ERROR', 400);
+  }
+
+  // Validate full name length
+  if (data.fullName.length < 2 || data.fullName.length > 100) {
+    return errorResponse('الاسم يجب أن يكون بين 2 و 100 حرف', 'VALIDATION_ERROR', 400);
   }
 
   const result = await authService.signup({
@@ -111,7 +219,11 @@ async function handleSignup(data: {
   });
 
   if (!result.success) {
-    return errorResponse(result.error || 'Signup failed', result.code || 'SIGNUP_FAILED', 400);
+    return errorResponse(
+      result.error || 'فشل إنشاء الحساب',
+      result.code || 'SIGNUP_FAILED',
+      400
+    );
   }
 
   // Set HTTP-only cookie for refresh token
@@ -127,13 +239,13 @@ async function handleSignup(data: {
   return successResponse({
     user: result.user,
     token: result.token,
-  }, 'Account created successfully');
+  }, 'تم إنشاء الحساب بنجاح');
 }
 
 /**
  * Handle user logout
  */
-async function handleLogout(request: NextRequest) {
+async function handleLogout(request: NextRequest): Promise<NextResponse> {
   try {
     // Get user from token
     const authHeader = request.headers.get('authorization');
@@ -150,16 +262,19 @@ async function handleLogout(request: NextRequest) {
     const cookieStore = await cookies();
     cookieStore.delete('refreshToken');
 
-    return successResponse({ message: 'Logged out successfully' });
-  } catch (error) {
-    return successResponse({ message: 'Logged out successfully' });
+    return successResponse({ message: 'تم تسجيل الخروج بنجاح' });
+  } catch {
+    return successResponse({ message: 'تم تسجيل الخروج بنجاح' });
   }
 }
 
 /**
  * Handle token refresh
  */
-async function handleRefreshToken(data: { refreshToken?: string }) {
+async function handleRefreshToken(
+  data: { refreshToken?: string },
+  request: NextRequest
+): Promise<NextResponse> {
   // Try to get refresh token from body or cookie
   let refreshToken = data.refreshToken;
   
@@ -169,13 +284,17 @@ async function handleRefreshToken(data: { refreshToken?: string }) {
   }
 
   if (!refreshToken) {
-    return errorResponse('Refresh token required', 'REFRESH_TOKEN_REQUIRED', 401);
+    return errorResponse('رمز التحديث مطلوب', 'REFRESH_TOKEN_REQUIRED', 401);
   }
 
   const result = await authService.refreshToken(refreshToken);
 
   if (!result.success) {
-    return errorResponse(result.error || 'Token refresh failed', result.code || 'REFRESH_FAILED', 401);
+    return errorResponse(
+      result.error || 'فشل تحديث الرمز',
+      result.code || 'REFRESH_FAILED',
+      401
+    );
   }
 
   // Update refresh token cookie
@@ -196,26 +315,54 @@ async function handleRefreshToken(data: { refreshToken?: string }) {
 
 /**
  * Handle forgot password request
+ * SECURITY:
+ * - Rate limited to prevent abuse
+ * - Always returns success to prevent email enumeration
  */
-async function handleForgotPassword(data: { email: string }) {
+async function handleForgotPassword(
+  data: { email: string },
+  request: NextRequest
+): Promise<NextResponse> {
   if (!data.email) {
-    return errorResponse('Email is required', 'VALIDATION_ERROR', 400);
+    return errorResponse('البريد الإلكتروني مطلوب', 'VALIDATION_ERROR', 400);
+  }
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(data.email)) {
+    return errorResponse('صيغة البريد الإلكتروني غير صحيحة', 'VALIDATION_ERROR', 400);
   }
 
   await authService.requestPasswordReset({ email: data.email });
 
   // Always return success to prevent email enumeration
   return successResponse({
-    message: 'If an account with that email exists, a password reset link has been sent',
+    message: 'إذا كان هناك حساب بهذا البريد، سيتم إرسال رابط إعادة تعيين كلمة المرور',
   });
 }
 
 /**
  * Handle password reset
+ * SECURITY:
+ * - Rate limited to prevent token brute force
+ * - Validates token expiry
  */
-async function handleResetPassword(data: { token: string; newPassword: string; confirmPassword: string }) {
+async function handleResetPassword(
+  data: { token: string; newPassword: string; confirmPassword: string },
+  request: NextRequest
+): Promise<NextResponse> {
   if (!data.token || !data.newPassword || !data.confirmPassword) {
-    return errorResponse('All fields are required', 'VALIDATION_ERROR', 400);
+    return errorResponse('جميع الحقول مطلوبة', 'VALIDATION_ERROR', 400);
+  }
+
+  // Validate password match
+  if (data.newPassword !== data.confirmPassword) {
+    return errorResponse('كلمتا المرور غير متطابقتين', 'PASSWORD_MISMATCH', 400);
+  }
+
+  // Validate password strength
+  if (data.newPassword.length < 8) {
+    return errorResponse('كلمة المرور يجب أن تكون 8 أحرف على الأقل', 'WEAK_PASSWORD', 400);
   }
 
   const result = await authService.confirmPasswordReset({
@@ -225,16 +372,31 @@ async function handleResetPassword(data: { token: string; newPassword: string; c
   });
 
   if (!result.success) {
-    return errorResponse(result.error || 'Password reset failed', result.code || 'RESET_FAILED', 400);
+    return errorResponse(
+      result.error || 'فشل إعادة تعيين كلمة المرور',
+      result.code || 'RESET_FAILED',
+      400
+    );
   }
 
-  return successResponse({ message: 'Password reset successfully' });
+  return successResponse({ message: 'تم إعادة تعيين كلمة المرور بنجاح' });
 }
 
 /**
  * GET - Get current user
+ * Uses API rate limit (less strict) since it's just reading data
  */
 export async function GET(request: NextRequest) {
+  // Check API rate limit (less strict for read operations)
+  const ip = getClientIP(request);
+  const rateResult = checkRateLimitByType(ip, 'api' as RateLimitType);
+  
+  if (!rateResult.allowed) {
+    const acceptLanguage = request.headers.get('accept-language') || '';
+    const language = acceptLanguage.includes('ar') ? 'ar' : 'en';
+    return rateLimitError(rateResult.resetTime, 'api', language);
+  }
+  
   const authHeader = request.headers.get('authorization');
   const token = authHeader?.replace('Bearer ', '');
 
@@ -244,18 +406,20 @@ export async function GET(request: NextRequest) {
 
   const payload = await authService.verifyToken(token);
   if (!payload) {
-    return errorResponse('Invalid or expired token', 'INVALID_TOKEN', 401);
+    return errorResponse('رمز غير صالح أو منتهي الصلاحية', 'INVALID_TOKEN', 401);
   }
 
   const user = await authService.getUserById(payload.userId);
   if (!user) {
-    return errorResponse('User not found', 'USER_NOT_FOUND', 404);
+    return errorResponse('المستخدم غير موجود', 'USER_NOT_FOUND', 404);
   }
 
-  return successResponse({
+  const response = successResponse({
     user: {
       ...user,
       permissions: authService.getRolePermissions(user.role as any),
     },
   });
+  
+  return addRateLimitHeaders(response, rateResult.remaining, rateResult.resetTime);
 }

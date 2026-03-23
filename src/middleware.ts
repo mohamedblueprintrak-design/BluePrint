@@ -1,13 +1,143 @@
 /**
- * Authentication Middleware
- * وسيط المصادقة
+ * Authentication & Rate Limiting Middleware
+ * وسيط المصادقة وتحديد معدل الطلبات
  * 
  * Protects routes and validates authentication
+ * Implements rate limiting for API endpoints
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { authService } from '@/lib/auth/auth-service';
 import { Permission, UserRole } from '@/lib/auth/types';
+
+// ============================================
+// Rate Limiting Configuration (Inline)
+// ============================================
+
+type RateLimitType = 'auth' | 'api' | 'public';
+
+interface RateLimitRecord {
+  count: number;
+  resetTime: number;
+}
+
+interface RateLimitResult {
+  allowed: boolean;
+  remaining: number;
+  resetTime: number;
+}
+
+const RATE_LIMIT_CONFIGS = {
+  auth: { maxRequests: 10, windowMs: 60000 },      // 10 req/min for auth
+  api: { maxRequests: 100, windowMs: 60000 },      // 100 req/min for API
+  public: { maxRequests: 200, windowMs: 60000 },   // 200 req/min for public
+};
+
+// In-memory store
+const rateLimitStore = new Map<string, RateLimitRecord>();
+
+// Cleanup every 5 minutes
+if (typeof setInterval !== 'undefined') {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, record] of rateLimitStore.entries()) {
+      if (now > record.resetTime) rateLimitStore.delete(key);
+    }
+  }, 300000);
+}
+
+function getClientIP(request: NextRequest): string {
+  const forwarded = request.headers.get('x-forwarded-for');
+  if (forwarded) return forwarded.split(',')[0].trim();
+  const realIP = request.headers.get('x-real-ip');
+  if (realIP) return realIP;
+  const cfIP = request.headers.get('cf-connecting-ip');
+  if (cfIP) return cfIP;
+  return 'unknown';
+}
+
+function detectRateLimitType(pathname: string): RateLimitType {
+  if (
+    pathname.includes('/api/auth/') ||
+    pathname.includes('/login') ||
+    pathname.includes('/signup') ||
+    pathname.includes('/forgot-password') ||
+    pathname.includes('/reset-password')
+  ) {
+    return 'auth';
+  }
+  if (
+    pathname.includes('/api/health') ||
+    pathname.includes('/api/public') ||
+    pathname.includes('/api/stripe/webhook')
+  ) {
+    return 'public';
+  }
+  return 'api';
+}
+
+function checkRateLimit(ip: string, type: RateLimitType): RateLimitResult {
+  const config = RATE_LIMIT_CONFIGS[type];
+  const key = `${ip}:${type}`;
+  const now = Date.now();
+  const record = rateLimitStore.get(key);
+
+  if (!record || now > record.resetTime) {
+    rateLimitStore.set(key, { count: 1, resetTime: now + config.windowMs });
+    return { allowed: true, remaining: config.maxRequests - 1, resetTime: now + config.windowMs };
+  }
+
+  if (record.count >= config.maxRequests) {
+    return { allowed: false, remaining: 0, resetTime: record.resetTime };
+  }
+
+  record.count++;
+  return { allowed: true, remaining: config.maxRequests - record.count, resetTime: record.resetTime };
+}
+
+function rateLimitResponse(resetTime: number, type: RateLimitType, language: 'ar' | 'en'): NextResponse {
+  const config = RATE_LIMIT_CONFIGS[type];
+  const retryAfter = Math.ceil((resetTime - Date.now()) / 1000);
+  
+  const messages = {
+    auth: {
+      ar: 'عدد محاولات تسجيل الدخول تجاوز الحد المسموح. يرجى المحاولة بعد دقيقة.',
+      en: 'Too many login attempts. Please try again later.',
+    },
+    api: {
+      ar: 'تم تجاوز الحد المسموح من الطلبات. يرجى المحاولة لاحقاً.',
+      en: 'Rate limit exceeded. Please try again later.',
+    },
+    public: {
+      ar: 'تم تجاوز الحد المسموح من الطلبات. يرجى المحاولة لاحقاً.',
+      en: 'Rate limit exceeded. Please try again later.',
+    },
+  };
+
+  return NextResponse.json(
+    {
+      success: false,
+      error: {
+        code: 'RATE_LIMIT_EXCEEDED',
+        message: messages[type][language],
+      },
+    },
+    {
+      status: 429,
+      headers: {
+        'Retry-After': retryAfter.toString(),
+        'X-RateLimit-Limit': config.maxRequests.toString(),
+        'X-RateLimit-Remaining': '0',
+        'X-RateLimit-Reset': resetTime.toString(),
+        'X-RateLimit-Type': type,
+      },
+    }
+  );
+}
+
+// ============================================
+// Authentication Configuration
+// ============================================
 
 /**
  * Public paths that don't require authentication
@@ -24,6 +154,7 @@ const PUBLIC_PATHS = [
   '/api/auth/reset-password',
   '/api/health',
   '/api/stripe/webhook',
+  '/pricing',
 ];
 
 /**
@@ -66,6 +197,10 @@ const API_PERMISSION_MAP: Record<string, { method: string; permission: Permissio
     { method: 'DELETE', permission: Permission.USER_DELETE },
   ],
 };
+
+// ============================================
+// Helper Functions
+// ============================================
 
 /**
  * Extract token from request
@@ -132,6 +267,10 @@ function getRequiredPermission(pathname: string, method: string): Permission | n
   return null;
 }
 
+// ============================================
+// Main Middleware Function
+// ============================================
+
 /**
  * Main middleware function
  */
@@ -141,6 +280,48 @@ export async function middleware(request: NextRequest) {
   // Skip static files
   if (isStaticFile(pathname)) {
     return NextResponse.next();
+  }
+  
+  // ============================================
+  // Rate Limiting for API Endpoints
+  // ============================================
+  if (pathname.startsWith('/api/')) {
+    const ip = getClientIP(request);
+    const rateLimitType = detectRateLimitType(pathname);
+    const rateLimitResult = checkRateLimit(ip, rateLimitType);
+    
+    if (!rateLimitResult.allowed) {
+      // Detect language from Accept-Language header
+      const acceptLanguage = request.headers.get('accept-language') || '';
+      const language: 'ar' | 'en' = acceptLanguage.includes('ar') ? 'ar' : 'en';
+      return rateLimitResponse(rateLimitResult.resetTime, rateLimitType, language);
+    }
+  }
+  
+  // ============================================
+  // Handle CORS Preflight (OPTIONS) Requests
+  // ============================================
+  if (pathname.startsWith('/api/') && request.method === 'OPTIONS') {
+    const origin = request.headers.get('origin') || '*';
+    const isDev = process.env.NODE_ENV === 'development';
+    const allowedOrigins = process.env.CORS_ORIGINS 
+      ? process.env.CORS_ORIGINS.split(',').map(o => o.trim())
+      : ['http://localhost:3000', 'http://127.0.0.1:3000'];
+    
+    // In development, allow all origins
+    // In production, check if origin is allowed
+    const allowOrigin = isDev ? '*' : (allowedOrigins.includes(origin) ? origin : allowedOrigins[0]);
+    
+    return new NextResponse(null, {
+      status: 204,
+      headers: {
+        'Access-Control-Allow-Origin': allowOrigin,
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Authorization, Content-Type, Accept, X-Requested-With, X-HTTP-Method-Override, Cache-Control',
+        'Access-Control-Allow-Credentials': 'true',
+        'Access-Control-Max-Age': '86400',
+      },
+    });
   }
   
   // Skip public paths

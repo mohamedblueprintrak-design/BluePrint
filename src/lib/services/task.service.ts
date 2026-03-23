@@ -3,6 +3,9 @@
  * خدمة المهام
  * 
  * Business logic layer for task operations
+ * 
+ * SECURITY: All methods that access tasks by ID verify organization ownership
+ * to prevent IDOR (Insecure Direct Object Reference) attacks.
  */
 
 import { prisma } from '@/lib/db';
@@ -46,7 +49,7 @@ export interface TaskPaginatedResult<T> {
 }
 
 /**
- * Create task input
+ * Create task input - only fields that can be set by user
  */
 export interface CreateTaskInput {
   title: string;
@@ -65,12 +68,49 @@ export interface CreateTaskInput {
 }
 
 /**
+ * Update task input - only fields that can be modified by user
+ * This prevents Mass Assignment vulnerability
+ */
+export interface UpdateTaskInput {
+  title?: string;
+  description?: string;
+  projectId?: string;
+  parentId?: string;
+  assignedTo?: string;
+  priority?: string;
+  status?: string;
+  startDate?: Date;
+  endDate?: Date;
+  dueDate?: Date;
+  progress?: number;
+  estimatedHours?: number;
+  actualHours?: number;
+  isMilestone?: boolean;
+  color?: string;
+  dependencies?: string;
+  order?: number;
+}
+
+/**
+ * Custom error for task not found or access denied
+ */
+export class TaskAccessError extends Error {
+  constructor(message: string = 'Task not found or access denied') {
+    super(message);
+    this.name = 'TaskAccessError';
+  }
+}
+
+/**
  * Task Service
  * Handles all business logic related to tasks
+ * 
+ * SECURITY: Implements tenant isolation through organizationId validation
  */
 class TaskService {
   /**
    * Get all tasks with pagination and filtering
+   * Automatically filters by organization for tenant isolation
    */
   async getTasks(
     organizationId: string,
@@ -102,10 +142,9 @@ class TaskService {
       if (filters?.dueDateTo) (where.dueDate as Record<string, Date>).lte = filters.dueDateTo;
     }
 
-    // For organization filter, we need to join with project
-    if (organizationId) {
-      where.project = { organizationId };
-    }
+    // SECURITY: Always filter by organization through project relation
+    // This ensures tenant isolation
+    where.project = { organizationId };
 
     const [tasks, total] = await Promise.all([
       prisma.task.findMany({
@@ -117,7 +156,7 @@ class TaskService {
           : { createdAt: 'desc' },
         include: {
           project: {
-            select: { id: true, name: true },
+            select: { id: true, name: true, organizationId: true },
           },
         },
       }),
@@ -136,14 +175,24 @@ class TaskService {
   }
 
   /**
-   * Get task by ID
+   * Get task by ID with organization validation
+   * SECURITY: Verifies task belongs to organization before returning
+   * 
+   * @param id - Task ID
+   * @param organizationId - Organization ID for access control
+   * @returns Task or null if not found or access denied
    */
-  async getTaskById(id: string): Promise<Task | null> {
-    return prisma.task.findUnique({
-      where: { id },
+  async getTaskById(id: string, organizationId: string): Promise<Task | null> {
+    // SECURITY: Use findFirst with organization filter instead of findUnique
+    // This prevents IDOR by ensuring the task belongs to the organization
+    const task = await prisma.task.findFirst({
+      where: {
+        id,
+        project: { organizationId },
+      },
       include: {
         project: {
-          select: { id: true, name: true },
+          select: { id: true, name: true, organizationId: true },
         },
         parent: {
           select: { id: true, title: true },
@@ -154,16 +203,49 @@ class TaskService {
         },
       },
     });
+
+    return task;
   }
 
   /**
    * Create a new task
+   * SECURITY: Validates that the project belongs to the organization
    */
   async createTask(
     data: CreateTaskInput,
     organizationId: string,
     userId: string
   ): Promise<Task> {
+    // SECURITY: Verify project belongs to organization before creating task
+    if (data.projectId) {
+      const project = await prisma.project.findFirst({
+        where: {
+          id: data.projectId,
+          organizationId,
+        },
+        select: { id: true },
+      });
+
+      if (!project) {
+        throw new TaskAccessError('Project not found or access denied');
+      }
+    }
+
+    // SECURITY: Verify parent task belongs to organization if specified
+    if (data.parentId) {
+      const parentTask = await prisma.task.findFirst({
+        where: {
+          id: data.parentId,
+          project: { organizationId },
+        },
+        select: { id: true },
+      });
+
+      if (!parentTask) {
+        throw new TaskAccessError('Parent task not found or access denied');
+      }
+    }
+
     const task = await prisma.task.create({
       data: {
         title: data.title,
@@ -199,25 +281,76 @@ class TaskService {
   }
 
   /**
-   * Update task
+   * Update task with organization validation
+   * SECURITY: 
+   * - Verifies task belongs to organization before updating
+   * - Uses explicit field mapping to prevent Mass Assignment
+   * 
+   * @param id - Task ID
+   * @param data - Update data (only allowed fields)
+   * @param organizationId - Organization ID for access control
+   * @param userId - User performing the update
+   * @returns Updated task
+   * @throws TaskAccessError if task not found or access denied
    */
   async updateTask(
     id: string,
-    data: Partial<Task>,
+    data: UpdateTaskInput,
     organizationId: string,
     userId: string
   ): Promise<Task> {
-    const oldTask = await prisma.task.findUnique({
-      where: { id },
+    // SECURITY: Get existing task with organization validation
+    const oldTask = await prisma.task.findFirst({
+      where: {
+        id,
+        project: { organizationId },
+      },
     });
 
     if (!oldTask) {
-      throw new Error('Task not found');
+      throw new TaskAccessError('Task not found or access denied');
     }
+
+    // SECURITY: If changing project, verify new project belongs to organization
+    if (data.projectId && data.projectId !== oldTask.projectId) {
+      const newProject = await prisma.project.findFirst({
+        where: {
+          id: data.projectId,
+          organizationId,
+        },
+        select: { id: true },
+      });
+
+      if (!newProject) {
+        throw new TaskAccessError('Target project not found or access denied');
+      }
+    }
+
+    // SECURITY: Explicit field mapping to prevent Mass Assignment
+    // Only allow specific fields to be updated
+    const updateData: Partial<Task> = {};
+    
+    if (data.title !== undefined) updateData.title = data.title;
+    if (data.description !== undefined) updateData.description = data.description;
+    if (data.projectId !== undefined) updateData.projectId = data.projectId;
+    if (data.parentId !== undefined) updateData.parentId = data.parentId;
+    if (data.assignedTo !== undefined) updateData.assignedTo = data.assignedTo;
+    if (data.priority !== undefined) updateData.priority = data.priority;
+    if (data.status !== undefined) updateData.status = data.status;
+    if (data.startDate !== undefined) updateData.startDate = data.startDate;
+    if (data.endDate !== undefined) updateData.endDate = data.endDate;
+    if (data.dueDate !== undefined) updateData.dueDate = data.dueDate;
+    if (data.progress !== undefined) updateData.progress = Math.max(0, Math.min(100, data.progress));
+    if (data.estimatedHours !== undefined) updateData.estimatedHours = data.estimatedHours;
+    if (data.actualHours !== undefined) updateData.actualHours = data.actualHours;
+    if (data.isMilestone !== undefined) updateData.isMilestone = data.isMilestone;
+    if (data.color !== undefined) updateData.color = data.color;
+    if (data.dependencies !== undefined) updateData.dependencies = data.dependencies;
+    if (data.order !== undefined) updateData.order = data.order;
 
     const task = await prisma.task.update({
       where: { id },
-      data,
+      data: updateData,
     });
 
     await logAudit({
@@ -236,17 +369,28 @@ class TaskService {
   }
 
   /**
-   * Delete task
+   * Delete task with organization validation
+   * SECURITY: Verifies task belongs to organization before deleting
+   * 
+   * @param id - Task ID
+   * @param organizationId - Organization ID for access control
+   * @param userId - User performing the deletion
+   * @throws TaskAccessError if task not found or access denied
    */
   async deleteTask(id: string, organizationId: string, userId: string): Promise<void> {
-    const task = await prisma.task.findUnique({
-      where: { id },
+    // SECURITY: Get task with organization validation
+    const task = await prisma.task.findFirst({
+      where: {
+        id,
+        project: { organizationId },
+      },
     });
 
     if (!task) {
-      throw new Error('Task not found');
+      throw new TaskAccessError('Task not found or access denied');
     }
 
+    // Delete the task
     await prisma.task.delete({
       where: { id },
     });
@@ -265,13 +409,22 @@ class TaskService {
 
   /**
    * Update task progress
+   * SECURITY: Delegates to updateTask which validates organization
    */
-  async updateProgress(id: string, progress: number, organizationId: string, userId: string): Promise<Task> {
-    return this.updateTask(id, { progress }, organizationId, userId);
+  async updateProgress(
+    id: string,
+    progress: number,
+    organizationId: string,
+    userId: string
+  ): Promise<Task> {
+    // Clamp progress to valid range
+    const clampedProgress = Math.max(0, Math.min(100, progress));
+    return this.updateTask(id, { progress: clampedProgress }, organizationId, userId);
   }
 
   /**
    * Change task status
+   * SECURITY: Delegates to updateTask which validates organization
    */
   async changeStatus(
     id: string,
@@ -279,7 +432,7 @@ class TaskService {
     organizationId: string,
     userId: string
   ): Promise<Task> {
-    const updateData: Partial<Task> = { status };
+    const updateData: UpdateTaskInput = { status };
     
     // If completing the task, set progress to 100%
     if (status === 'done') {
@@ -290,9 +443,28 @@ class TaskService {
   }
 
   /**
-   * Get tasks for Gantt chart
+   * Get tasks for Gantt chart with organization validation
+   * SECURITY: Validates project belongs to organization
+   * 
+   * @param projectId - Project ID
+   * @param organizationId - Organization ID for access control
+   * @returns Array of tasks for the project
+   * @throws TaskAccessError if project not found or access denied
    */
-  async getTasksForGantt(projectId: string): Promise<Task[]> {
+  async getTasksForGantt(projectId: string, organizationId: string): Promise<Task[]> {
+    // SECURITY: Verify project belongs to organization
+    const project = await prisma.project.findFirst({
+      where: {
+        id: projectId,
+        organizationId,
+      },
+      select: { id: true },
+    });
+
+    if (!project) {
+      throw new TaskAccessError('Project not found or access denied');
+    }
+
     return prisma.task.findMany({
       where: { projectId },
       orderBy: [{ order: 'asc' }, { startDate: 'asc' }],
@@ -316,6 +488,7 @@ class TaskService {
 
   /**
    * Get task statistics for dashboard
+   * SECURITY: Filters by organization through project relation
    */
   async getTaskStats(organizationId: string): Promise<{
     total: number;

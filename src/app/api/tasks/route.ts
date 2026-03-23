@@ -3,6 +3,11 @@
  * مسار واجهة برمجة التطبيقات للمهام
  * 
  * Handles CRUD operations for tasks
+ * 
+ * SECURITY:
+ * - All endpoints require authentication
+ * - Organization isolation enforced via taskService
+ * - Input validation to prevent Mass Assignment
  */
 
 import { NextRequest } from 'next/server';
@@ -15,11 +20,12 @@ import {
   validationErrorResponse,
   notFoundResponse
 } from '../utils/response';
-import { taskService } from '@/lib/services';
+import { taskService, TaskAccessError } from '@/lib/services/task.service';
 import { prisma } from '@/lib/db';
 
 /**
  * GET - List tasks
+ * Returns all tasks for the user's organization
  */
 export async function GET(request: NextRequest) {
   const user = await getUserFromRequest(request);
@@ -41,9 +47,14 @@ export async function GET(request: NextRequest) {
     return successResponse(tasks);
   }
 
+  // Require organization for real users
+  if (!user.organizationId) {
+    return errorResponse('المستخدم غير مرتبط بمؤسسة', 'NO_ORGANIZATION', 403);
+  }
+
   try {
     const result = await taskService.getTasks(
-      user.organizationId!,
+      user.organizationId,
       { projectId, status, priority },
       {}
     );
@@ -71,6 +82,7 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST - Create task
+ * SECURITY: Validates input fields explicitly
  */
 export async function POST(request: NextRequest) {
   const user = await getUserFromRequest(request);
@@ -85,21 +97,60 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { title, description, projectId, assignedTo, priority, dueDate, estimatedHours } = body;
+    
+    // SECURITY: Explicit field extraction to prevent Mass Assignment
+    const { 
+      title, 
+      description, 
+      projectId, 
+      parentId,
+      assignedTo, 
+      priority, 
+      status,
+      startDate,
+      endDate,
+      dueDate, 
+      estimatedHours,
+      isMilestone,
+      color
+    } = body;
 
-    if (!title) {
+    // Validate required fields
+    if (!title || typeof title !== 'string' || title.trim().length === 0) {
       return validationErrorResponse('عنوان المهمة مطلوب');
+    }
+
+    if (title.length > 500) {
+      return validationErrorResponse('عنوان المهمة يجب أن يكون أقل من 500 حرف');
+    }
+
+    // Validate priority if provided
+    const validPriorities = ['low', 'medium', 'high', 'critical'];
+    if (priority && !validPriorities.includes(priority)) {
+      return validationErrorResponse('الأولية يجب أن تكون: low, medium, high, أو critical');
+    }
+
+    // Validate status if provided
+    const validStatuses = ['todo', 'in_progress', 'review', 'done', 'cancelled'];
+    if (status && !validStatuses.includes(status)) {
+      return validationErrorResponse('الحالة يجب أن تكون: todo, in_progress, review, done, أو cancelled');
     }
 
     const task = await taskService.createTask(
       {
-        title,
-        description,
+        title: title.trim(),
+        description: description?.trim(),
         projectId,
+        parentId,
         assignedTo,
         priority: priority || 'medium',
+        status: status || 'todo',
+        startDate: startDate ? new Date(startDate) : undefined,
+        endDate: endDate ? new Date(endDate) : undefined,
         dueDate: dueDate ? new Date(dueDate) : undefined,
-        estimatedHours,
+        estimatedHours: estimatedHours ? Number(estimatedHours) : undefined,
+        isMilestone: isMilestone === true,
+        color,
       },
       user.organizationId,
       user.id
@@ -125,6 +176,9 @@ export async function POST(request: NextRequest) {
 
     return successResponse({ id: task.id, title: task.title });
   } catch (error) {
+    if (error instanceof TaskAccessError) {
+      return notFoundResponse(error.message);
+    }
     const errMsg = error instanceof Error ? error.message : 'Unknown error';
     return serverErrorResponse(errMsg);
   }
@@ -132,6 +186,9 @@ export async function POST(request: NextRequest) {
 
 /**
  * PUT - Update task
+ * SECURITY:
+ * - Validates input fields explicitly (prevents Mass Assignment)
+ * - Organization isolation enforced via taskService
  */
 export async function PUT(request: NextRequest) {
   const user = await getUserFromRequest(request);
@@ -146,22 +203,81 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { id, ...data } = body;
+    const { id } = body;
 
     if (!id) {
       return validationErrorResponse('معرف المهمة مطلوب');
     }
 
-    // Convert dueDate if provided
-    if (data.dueDate) {
-      data.dueDate = new Date(data.dueDate);
+    // SECURITY: Explicit field extraction to prevent Mass Assignment
+    // Only allow specific fields to be updated
+    const allowedFields = [
+      'title', 'description', 'projectId', 'parentId', 'assignedTo',
+      'priority', 'status', 'startDate', 'endDate', 'dueDate',
+      'progress', 'estimatedHours', 'actualHours', 'isMilestone',
+      'color', 'dependencies', 'order'
+    ];
+
+    const updateData: Record<string, unknown> = {};
+    
+    for (const field of allowedFields) {
+      if (body[field] !== undefined) {
+        // Convert date fields
+        if (['startDate', 'endDate', 'dueDate'].includes(field) && body[field]) {
+          updateData[field] = new Date(body[field]);
+        }
+        // Convert numeric fields
+        else if (['progress', 'estimatedHours', 'actualHours', 'order'].includes(field)) {
+          updateData[field] = Number(body[field]);
+        }
+        // Convert boolean fields
+        else if (field === 'isMilestone') {
+          updateData[field] = body[field] === true;
+        }
+        // String fields
+        else {
+          updateData[field] = body[field];
+        }
+      }
     }
 
-    const task = await taskService.updateTask(id, data, user.organizationId, user.id);
+    // Validate title if provided
+    if (updateData.title !== undefined) {
+      if (typeof updateData.title !== 'string' || (updateData.title as string).trim().length === 0) {
+        return validationErrorResponse('عنوان المهمة يجب أن يكون نص غير فارغ');
+      }
+      if ((updateData.title as string).length > 500) {
+        return validationErrorResponse('عنوان المهمة يجب أن يكون أقل من 500 حرف');
+      }
+      updateData.title = (updateData.title as string).trim();
+    }
+
+    // Validate priority if provided
+    const validPriorities = ['low', 'medium', 'high', 'critical'];
+    if (updateData.priority && !validPriorities.includes(updateData.priority as string)) {
+      return validationErrorResponse('الأولية يجب أن تكون: low, medium, high, أو critical');
+    }
+
+    // Validate status if provided
+    const validStatuses = ['todo', 'in_progress', 'review', 'done', 'cancelled'];
+    if (updateData.status && !validStatuses.includes(updateData.status as string)) {
+      return validationErrorResponse('الحالة يجب أن تكون: todo, in_progress, review, done, أو cancelled');
+    }
+
+    // Validate progress range
+    if (updateData.progress !== undefined) {
+      const progress = Number(updateData.progress);
+      if (isNaN(progress) || progress < 0 || progress > 100) {
+        return validationErrorResponse('التقدم يجب أن يكون رقم بين 0 و 100');
+      }
+      updateData.progress = progress;
+    }
+
+    const task = await taskService.updateTask(id, updateData, user.organizationId, user.id);
     return successResponse(task);
   } catch (error) {
-    if (error instanceof Error && error.message === 'Task not found') {
-      return notFoundResponse('المهمة غير موجودة أو ليس لديك صلاحية لتعديلها');
+    if (error instanceof TaskAccessError) {
+      return notFoundResponse(error.message);
     }
     const errMsg = error instanceof Error ? error.message : 'Unknown error';
     return serverErrorResponse(errMsg);
@@ -170,6 +286,7 @@ export async function PUT(request: NextRequest) {
 
 /**
  * DELETE - Delete task
+ * SECURITY: Organization isolation enforced via taskService
  */
 export async function DELETE(request: NextRequest) {
   const user = await getUserFromRequest(request);
@@ -193,8 +310,8 @@ export async function DELETE(request: NextRequest) {
     await taskService.deleteTask(id, user.organizationId, user.id);
     return successResponse({ message: 'تم حذف المهمة' });
   } catch (error) {
-    if (error instanceof Error && error.message === 'Task not found') {
-      return notFoundResponse('المهمة غير موجودة أو ليس لديك صلاحية لحذفها');
+    if (error instanceof TaskAccessError) {
+      return notFoundResponse(error.message);
     }
     const errMsg = error instanceof Error ? error.message : 'Unknown error';
     return serverErrorResponse(errMsg);

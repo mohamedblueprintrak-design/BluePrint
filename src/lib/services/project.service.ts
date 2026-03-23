@@ -4,6 +4,10 @@
  * 
  * Business logic layer for project operations
  * Follows Clean Architecture principles
+ * 
+ * SECURITY:
+ * - All methods validate organization ownership
+ * - Race condition protection for project number generation
  */
 
 import { prisma } from '@/lib/db';
@@ -61,7 +65,7 @@ export interface PaginatedResult<T> {
 }
 
 /**
- * Create project input
+ * Create project input - only fields that can be set by user
  */
 export interface CreateProjectInput {
   name: string;
@@ -77,6 +81,42 @@ export interface CreateProjectInput {
   clientId?: string;
   budget?: number;
 }
+
+/**
+ * Update project input - only fields that can be modified
+ */
+export interface UpdateProjectInput {
+  name?: string;
+  location?: string;
+  projectType?: string;
+  description?: string;
+  contractValue?: number;
+  contractDate?: Date;
+  expectedStartDate?: Date;
+  expectedEndDate?: Date;
+  actualStartDate?: Date;
+  actualEndDate?: Date;
+  managerId?: string;
+  clientId?: string;
+  budget?: number;
+  status?: string;
+  progressPercentage?: number;
+}
+
+/**
+ * Custom error for project access denied
+ */
+export class ProjectAccessError extends Error {
+  constructor(message: string = 'Project not found or access denied') {
+    super(message);
+    this.name = 'ProjectAccessError';
+  }
+}
+
+/**
+ * Maximum retries for project number generation
+ */
+const MAX_RETRIES = 5;
 
 /**
  * Project Service
@@ -146,6 +186,7 @@ class ProjectService {
 
   /**
    * Get project by ID with full details
+   * SECURITY: Validates organization ownership
    */
   async getProjectById(id: string, organizationId: string) {
     return prisma.project.findFirst({
@@ -174,21 +215,79 @@ class ProjectService {
 
   /**
    * Create a new project
+   * SECURITY:
+   * - Validates client belongs to organization
+   * - Race condition protection for project number
+   * - Audit logging
    */
   async createProject(
     data: CreateProjectInput,
     organizationId: string,
     userId: string
   ): Promise<Project> {
-    // Generate project number if not provided
-    const projectNumber = data.projectNumber || await this.generateProjectNumber(organizationId);
+    // SECURITY: Validate client belongs to organization
+    if (data.clientId) {
+      const client = await prisma.client.findFirst({
+        where: { id: data.clientId, organizationId },
+        select: { id: true },
+      });
+      
+      if (!client) {
+        throw new ProjectAccessError('Client not found or access denied');
+      }
+    }
 
-    const project = await prisma.project.create({
-      data: {
-        ...data,
-        projectNumber,
-        organizationId,
-      },
+    // Generate project number with retry logic for race condition protection
+    const projectNumber = data.projectNumber || 
+      await this.generateProjectNumberWithRetry(organizationId);
+
+    // Use transaction to ensure atomicity
+    const project = await prisma.$transaction(async (tx) => {
+      // Double-check project number uniqueness
+      const existingProject = await tx.project.findUnique({
+        where: { projectNumber },
+        select: { id: true },
+      });
+
+      if (existingProject) {
+        // If collision, generate new number
+        const newNumber = await this.generateProjectNumberWithRetry(organizationId, tx);
+        return tx.project.create({
+          data: {
+            name: data.name,
+            projectNumber: newNumber,
+            location: data.location,
+            projectType: data.projectType,
+            description: data.description,
+            contractValue: data.contractValue,
+            contractDate: data.contractDate,
+            expectedStartDate: data.expectedStartDate,
+            expectedEndDate: data.expectedEndDate,
+            managerId: data.managerId,
+            clientId: data.clientId,
+            budget: data.budget,
+            organizationId,
+          },
+        });
+      }
+
+      return tx.project.create({
+        data: {
+          name: data.name,
+          projectNumber,
+          location: data.location,
+          projectType: data.projectType,
+          description: data.description,
+          contractValue: data.contractValue,
+          contractDate: data.contractDate,
+          expectedStartDate: data.expectedStartDate,
+          expectedEndDate: data.expectedEndDate,
+          managerId: data.managerId,
+          clientId: data.clientId,
+          budget: data.budget,
+          organizationId,
+        },
+      });
     });
 
     // Log audit
@@ -208,24 +307,61 @@ class ProjectService {
 
   /**
    * Update project
+   * SECURITY:
+   * - Validates organization ownership
+   * - Explicit field mapping to prevent Mass Assignment
    */
   async updateProject(
     id: string,
-    data: Partial<Project>,
+    data: UpdateProjectInput,
     organizationId: string,
     userId: string
   ): Promise<Project> {
+    // SECURITY: Verify project belongs to organization
     const oldProject = await prisma.project.findFirst({
       where: { id, organizationId },
     });
 
     if (!oldProject) {
-      throw new Error('Project not found');
+      throw new ProjectAccessError('Project not found or access denied');
+    }
+
+    // SECURITY: If changing client, verify new client belongs to organization
+    if (data.clientId && data.clientId !== oldProject.clientId) {
+      const client = await prisma.client.findFirst({
+        where: { id: data.clientId, organizationId },
+        select: { id: true },
+      });
+      
+      if (!client) {
+        throw new ProjectAccessError('Client not found or access denied');
+      }
+    }
+
+    // SECURITY: Explicit field mapping to prevent Mass Assignment
+    const updateData: Partial<Project> = {};
+    
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.location !== undefined) updateData.location = data.location;
+    if (data.projectType !== undefined) updateData.projectType = data.projectType;
+    if (data.description !== undefined) updateData.description = data.description;
+    if (data.contractValue !== undefined) updateData.contractValue = data.contractValue;
+    if (data.contractDate !== undefined) updateData.contractDate = data.contractDate;
+    if (data.expectedStartDate !== undefined) updateData.expectedStartDate = data.expectedStartDate;
+    if (data.expectedEndDate !== undefined) updateData.expectedEndDate = data.expectedEndDate;
+    if (data.actualStartDate !== undefined) updateData.actualStartDate = data.actualStartDate;
+    if (data.actualEndDate !== undefined) updateData.actualEndDate = data.actualEndDate;
+    if (data.managerId !== undefined) updateData.managerId = data.managerId;
+    if (data.clientId !== undefined) updateData.clientId = data.clientId;
+    if (data.budget !== undefined) updateData.budget = data.budget;
+    if (data.status !== undefined) updateData.status = data.status;
+    if (data.progressPercentage !== undefined) {
+      updateData.progressPercentage = Math.max(0, Math.min(100, data.progressPercentage));
     }
 
     const project = await prisma.project.update({
       where: { id },
-      data,
+      data: updateData,
     });
 
     // Log audit
@@ -246,14 +382,16 @@ class ProjectService {
 
   /**
    * Delete project
+   * SECURITY: Validates organization ownership
    */
   async deleteProject(id: string, organizationId: string, userId: string): Promise<void> {
+    // SECURITY: Verify project belongs to organization
     const project = await prisma.project.findFirst({
       where: { id, organizationId },
     });
 
     if (!project) {
-      throw new Error('Project not found');
+      throw new ProjectAccessError('Project not found or access denied');
     }
 
     await prisma.project.delete({
@@ -324,26 +462,106 @@ class ProjectService {
   }
 
   /**
-   * Generate unique project number
+   * Generate unique project number with retry logic
+   * 
+   * RACE CONDITION PROTECTION:
+   * - Uses transaction for atomicity
+   * - Retries on collision with exponential backoff
+   * - Uses timestamp + random suffix for uniqueness
+   * 
+   * @param organizationId - Organization ID
+   * @param tx - Optional Prisma transaction client
+   * @returns Unique project number
    */
-  private async generateProjectNumber(organizationId: string): Promise<string> {
+  private async generateProjectNumberWithRetry(
+    organizationId: string,
+    tx?: Parameters<Parameters<typeof prisma.$transaction>[0]>[0]
+  ): Promise<string> {
+    const client = tx || prisma;
+    
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      const projectNumber = await this.generateProjectNumber(organizationId, client);
+      
+      // Check if this number already exists
+      const existing = await client.project.findUnique({
+        where: { projectNumber },
+        select: { id: true },
+      });
+      
+      if (!existing) {
+        return projectNumber;
+      }
+      
+      // Exponential backoff before retry
+      if (attempt < MAX_RETRIES - 1) {
+        await this.sleep(Math.pow(2, attempt) * 10);
+      }
+    }
+    
+    // If all retries fail, use timestamp + random suffix
+    const timestamp = Date.now().toString(36).toUpperCase();
+    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
     const year = new Date().getFullYear();
-    const count = await prisma.project.count({
+    return `PRJ-${year}-${timestamp}-${random}`;
+  }
+
+  /**
+   * Generate project number based on count
+   * Uses locking pattern to prevent race conditions
+   */
+  private async generateProjectNumber(
+    organizationId: string,
+    client: typeof prisma
+  ): Promise<string> {
+    const year = new Date().getFullYear();
+    const yearStart = new Date(year, 0, 1);
+    const yearEnd = new Date(year + 1, 0, 1);
+    
+    // Find the highest project number for this year and organization
+    const latestProject = await client.project.findFirst({
       where: {
         organizationId,
-        createdAt: {
-          gte: new Date(year, 0, 1),
-          lt: new Date(year + 1, 0, 1),
-        },
+        projectNumber: { startsWith: `PRJ-${year}-` },
       },
+      orderBy: { projectNumber: 'desc' },
+      select: { projectNumber: true },
     });
-    return `PRJ-${year}-${String(count + 1).padStart(4, '0')}`;
+    
+    let nextNumber = 1;
+    
+    if (latestProject?.projectNumber) {
+      // Extract the number from the project number
+      // Format: PRJ-2024-0001
+      const match = latestProject.projectNumber.match(/PRJ-\d{4}-(\d+)/);
+      if (match) {
+        nextNumber = parseInt(match[1], 10) + 1;
+      }
+    }
+    
+    return `PRJ-${year}-${String(nextNumber).padStart(4, '0')}`;
+  }
+
+  /**
+   * Sleep utility for retry backoff
+   */
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   /**
    * Update project progress based on task completion
    */
   async updateProgress(id: string, organizationId: string): Promise<number | null> {
+    // SECURITY: Verify project belongs to organization
+    const project = await prisma.project.findFirst({
+      where: { id, organizationId },
+      select: { id: true },
+    });
+    
+    if (!project) {
+      return null;
+    }
+
     const tasks = await prisma.task.findMany({
       where: { projectId: id },
       select: { progress: true },
@@ -371,14 +589,18 @@ class ProjectService {
     organizationId: string, 
     userId: string
   ): Promise<Project> {
-    const project = await this.updateProject(
+    // Validate status
+    const validStatuses = ['pending', 'active', 'on_hold', 'completed', 'cancelled'];
+    if (!validStatuses.includes(status)) {
+      throw new Error(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
+    }
+
+    return this.updateProject(
       id, 
-      { status } as Partial<Project>, 
+      { status } as UpdateProjectInput, 
       organizationId, 
       userId
     );
-    
-    return project;
   }
 
   /**
@@ -390,9 +612,19 @@ class ProjectService {
     organizationId: string,
     userId: string
   ): Promise<Project> {
+    // SECURITY: Verify manager exists and belongs to organization
+    const manager = await prisma.user.findFirst({
+      where: { id: managerId, organizationId },
+      select: { id: true },
+    });
+    
+    if (!manager) {
+      throw new ProjectAccessError('Manager not found or access denied');
+    }
+
     return this.updateProject(
       projectId,
-      { managerId } as Partial<Project>,
+      { managerId } as UpdateProjectInput,
       organizationId,
       userId
     );

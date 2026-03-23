@@ -1,8 +1,40 @@
+/**
+ * Demo Configuration
+ * إعدادات الوضع التجريبي
+ * 
+ * SECURITY:
+ * - Demo mode is DISABLED in production
+ * - Demo passwords are randomly generated on startup
+ * - Credentials are only logged in development mode
+ */
+
 import { NextRequest } from 'next/server';
 import * as jose from 'jose';
 import { DemoUser, AuthenticatedUser } from '../types';
+import { hash } from 'bcryptjs';
 
-// JWT secret handling - centralized for security
+// ============================================
+// Environment Check
+// ============================================
+
+/**
+ * Check if demo mode is allowed
+ * SECURITY: Demo mode is DISABLED in production
+ */
+function isDemoModeAllowed(): boolean {
+  // Explicitly disable demo mode in production
+  if (process.env.NODE_ENV === 'production') {
+    return false;
+  }
+  
+  // Allow demo mode in development if explicitly enabled
+  return process.env.ENABLE_DEMO_MODE === 'true';
+}
+
+// ============================================
+// JWT Secret Handling
+// ============================================
+
 let _jwtSecretBytes: Uint8Array | null = null;
 
 function getJWTSecretBytes(): Uint8Array {
@@ -13,6 +45,7 @@ function getJWTSecretBytes(): Uint8Array {
   if (!secret) {
     if (process.env.NODE_ENV === 'production') {
       console.error('CRITICAL: JWT_SECRET not set in production!');
+      throw new Error('JWT_SECRET must be set in production');
     } else {
       console.warn('WARNING: Using development JWT secret. Set JWT_SECRET in production!');
     }
@@ -28,52 +61,145 @@ function getJWTSecretBytes(): Uint8Array {
 // Export for use in JWT verification
 const JWT_SECRET = { get bytes() { return getJWTSecretBytes(); } };
 
-// Demo users for testing without database
-// These users exist only in memory and can be used to test the application
-export const DEMO_USERS: DemoUser[] = [
-  {
-    id: 'demo-admin-001',
-    username: 'admin',
-    email: 'admin@blueprint.ae',
-    password: '$2b$10$.ELmlEHTPMDITIuJQzJ2IOGo87dOUXo3zE515Lq.WQMyHvDWzAX6.', // admin123
-    fullName: 'مدير النظام',
-    role: 'admin',
-    isActive: true,
-    avatar: null,
-    language: 'ar',
-    theme: 'dark',
-    organizationId: 'demo-org-001',
-    organization: {
-      id: 'demo-org-001',
-      name: 'BluePrint Engineering',
-      currency: 'AED'
-    }
-  },
-  {
-    id: 'demo-user-001',
-    username: 'user',
-    email: 'user@blueprint.ae',
-    password: '$2b$10$.ELmlEHTPMDITIuJQzJ2IOGo87dOUXo3zE515Lq.WQMyHvDWzAX6.', // admin123
-    fullName: 'مستخدم تجريبي',
-    role: 'viewer',
-    isActive: true,
-    avatar: null,
-    language: 'ar',
-    theme: 'dark',
-    organizationId: 'demo-org-001',
-    organization: {
-      id: 'demo-org-001',
-      name: 'BluePrint Engineering',
-      currency: 'AED'
-    }
+// ============================================
+// Demo Users - Generated at Runtime
+// ============================================
+
+let _demoUsers: DemoUser[] = [];
+let _demoCredentialsLogged = false;
+
+/**
+ * Generate demo users with random passwords
+ * SECURITY: Passwords are generated at runtime, not hardcoded
+ */
+async function initializeDemoUsers(): Promise<DemoUser[]> {
+  // SECURITY: Don't create demo users in production
+  if (!isDemoModeAllowed()) {
+    return [];
   }
-];
+
+  // Generate random password for demo users
+  const demoPassword = generateRandomPassword(12);
+  const hashedPassword = await hash(demoPassword, 10);
+  
+  const users: DemoUser[] = [
+    {
+      id: 'demo-admin-001',
+      username: 'demo_admin',
+      email: 'demo-admin@blueprint.local',
+      password: hashedPassword,
+      fullName: 'Demo Administrator',
+      role: 'admin',
+      isActive: true,
+      avatar: null,
+      language: 'ar',
+      theme: 'dark',
+      organizationId: 'demo-org-001',
+      organization: {
+        id: 'demo-org-001',
+        name: 'BluePrint Demo Company',
+        currency: 'AED'
+      }
+    },
+    {
+      id: 'demo-user-001',
+      username: 'demo_user',
+      email: 'demo-user@blueprint.local',
+      password: hashedPassword,
+      fullName: 'Demo User',
+      role: 'viewer',
+      isActive: true,
+      avatar: null,
+      language: 'ar',
+      theme: 'dark',
+      organizationId: 'demo-org-001',
+      organization: {
+        id: 'demo-org-001',
+        name: 'BluePrint Demo Company',
+        currency: 'AED'
+      }
+    }
+  ];
+  
+  // Log credentials ONCE in development mode only
+  if (!_demoCredentialsLogged && process.env.NODE_ENV !== 'production') {
+    console.log('\n' + '='.repeat(60));
+    console.log('🔐 DEMO MODE ENABLED');
+    console.log('='.repeat(60));
+    console.log('Demo credentials (use these to login):');
+    console.log('-'.repeat(60));
+    console.log(`  Admin: demo_admin / ${demoPassword}`);
+    console.log(`  User:  demo_user / ${demoPassword}`);
+    console.log('-'.repeat(60));
+    console.log('⚠️  These credentials are for development only!');
+    console.log('⚠️  They change every time the server restarts.');
+    console.log('='.repeat(60) + '\n');
+    _demoCredentialsLogged = true;
+  }
+  
+  return users;
+}
+
+/**
+ * Generate a random password
+ */
+function generateRandomPassword(length: number): string {
+  const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+  const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const numbers = '0123456789';
+  const symbols = '!@#$%^&*';
+  
+  const allChars = lowercase + uppercase + numbers + symbols;
+  
+  let password = '';
+  // Ensure at least one of each type
+  password += lowercase[Math.floor(Math.random() * lowercase.length)];
+  password += uppercase[Math.floor(Math.random() * uppercase.length)];
+  password += numbers[Math.floor(Math.random() * numbers.length)];
+  password += symbols[Math.floor(Math.random() * symbols.length)];
+  
+  // Fill the rest
+  for (let i = 4; i < length; i++) {
+    password += allChars[Math.floor(Math.random() * allChars.length)];
+  }
+  
+  // Shuffle the password
+  return password.split('').sort(() => Math.random() - 0.5).join('');
+}
+
+/**
+ * Get demo users (lazy initialization)
+ */
+export async function getDemoUsers(): Promise<DemoUser[]> {
+  if (_demoUsers.length === 0 && isDemoModeAllowed()) {
+    _demoUsers = await initializeDemoUsers();
+  }
+  return _demoUsers;
+}
+
+// Legacy synchronous export for backward compatibility
+// This will be empty in production
+export const DEMO_USERS: DemoUser[] = [];
 
 /**
  * Find a demo user by ID
  */
-export function findDemoUser(userId: string): DemoUser | undefined {
-  return DEMO_USERS.find(u => u.id === userId);
+export async function findDemoUser(userId: string): Promise<DemoUser | undefined> {
+  const users = await getDemoUsers();
+  return users.find(u => u.id === userId);
+}
+
+/**
+ * Find demo user by username or email (for login)
+ */
+export async function findDemoUserByCredentials(
+  identifier: string
+): Promise<DemoUser | undefined> {
+  const users = await getDemoUsers();
+  return users.find(u => 
+    u.username.toLowerCase() === identifier.toLowerCase() ||
+    u.email.toLowerCase() === identifier.toLowerCase()
+  );
 }
 
 /**
@@ -97,22 +223,24 @@ export async function getUserFromRequest(request: NextRequest): Promise<Authenti
     const { payload } = await jose.jwtVerify(token, JWT_SECRET.bytes);
     const userId = payload.userId as string;
     
-    // Check demo users first (fast path for demo mode)
-    const demoUser = findDemoUser(userId);
-    if (demoUser) {
-      return {
-        id: demoUser.id,
-        username: demoUser.username,
-        email: demoUser.email,
-        fullName: demoUser.fullName,
-        role: demoUser.role,
-        avatar: demoUser.avatar,
-        language: demoUser.language,
-        theme: demoUser.theme,
-        organizationId: demoUser.organizationId,
-        organization: demoUser.organization,
-        isActive: demoUser.isActive
-      };
+    // Check demo users first (only if demo mode is allowed)
+    if (isDemoModeAllowed()) {
+      const demoUser = await findDemoUser(userId);
+      if (demoUser) {
+        return {
+          id: demoUser.id,
+          username: demoUser.username,
+          email: demoUser.email,
+          fullName: demoUser.fullName,
+          role: demoUser.role,
+          avatar: demoUser.avatar,
+          language: demoUser.language,
+          theme: demoUser.theme,
+          organizationId: demoUser.organizationId,
+          organization: demoUser.organization,
+          isActive: demoUser.isActive
+        };
+      }
     }
     
     // Then try database for real users
@@ -225,6 +353,11 @@ export const DEMO_DATA = {
  * Check if running in demo mode (no database)
  */
 export async function isDemoMode(): Promise<boolean> {
+  // Demo mode requires explicit enable
+  if (!isDemoModeAllowed()) {
+    return false;
+  }
+  
   try {
     const { db } = await import('@/lib/db');
     // Try a simple query to check if database is available
@@ -233,4 +366,13 @@ export async function isDemoMode(): Promise<boolean> {
   } catch {
     return true;
   }
+}
+
+// Initialize demo users on module load (async)
+if (isDemoModeAllowed()) {
+  initializeDemoUsers().then(users => {
+    _demoUsers = users;
+  }).catch(err => {
+    console.error('Failed to initialize demo users:', err);
+  });
 }
