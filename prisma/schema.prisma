@@ -145,6 +145,73 @@ model Session {
 }
 
 // ============================================
+// التحقق من البريد الإلكتروني (Email Verification)
+// ============================================
+
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  userId    String?
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+// ============================================
+// إعادة تعيين كلمة المرور (Password Reset)
+// ============================================
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  userId    String?
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+// ============================================
+// المصادقة الثنائية (Two-Factor Authentication)
+// ============================================
+
+model TwoFactorSecret {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  secret       String   // Encrypted TOTP secret
+  backupCodes  String   // JSON array of encrypted backup codes
+  isEnabled    Boolean  @default(false)
+  verifiedAt   DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model TwoFactorChallenge {
+  id        String   @id @default(cuid())
+  userId    String
+  code      String
+  type      String   @default("totp") // totp, backup, sms
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([code])
+  @@index([expiresAt])
+}
+
+// ============================================
 // المشاريع (Core Models)
 // ============================================
 

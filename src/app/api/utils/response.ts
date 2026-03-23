@@ -23,14 +23,14 @@ export function errorResponse(message: string, code = 'ERROR', status = 400): Ne
 /**
  * Create an unauthorized error response
  */
-export function unauthorizedResponse(message = 'غير مصرح'): NextResponse<ApiErrorResponse> {
+export function unauthorizedResponse(message = 'يرجى تسجيل الدخول'): NextResponse<ApiErrorResponse> {
   return errorResponse(message, 'UNAUTHORIZED', 401);
 }
 
 /**
  * Create a forbidden error response
  */
-export function forbiddenResponse(message = 'غير مصرح'): NextResponse<ApiErrorResponse> {
+export function forbiddenResponse(message = 'غير مصرح لك بالوصول'): NextResponse<ApiErrorResponse> {
   return errorResponse(message, 'FORBIDDEN', 403);
 }
 

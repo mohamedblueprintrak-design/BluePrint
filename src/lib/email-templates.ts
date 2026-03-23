@@ -131,7 +131,7 @@ export const emailTemplates = {
   welcome: (name: string, loginUrl?: string): EmailTemplate => {
     const content = `
       <h2 style="margin-top: 0; color: #1f2937;">مرحباً ${name} 👋</h2>
-      <p>نرحب بك في منصة <strong>BluePrint</strong> ل إدارة مكاتب الاستشارات الهندسية.</p>
+      <p>نرحب بك في منصة <strong>BluePrint</strong> لإدارة مكاتب الاستشارات الهندسية.</p>
       <p>تم إنشاء حسابك بنجاح. يمكنك الآن الوصول إلى جميع خدمات المنصة.</p>
       <div class="info-box">
         <div class="info-row">
@@ -537,6 +537,164 @@ export const emailTemplates = {
       subject: `تذكير: ${taskTitle} ${isOverdue ? '(متأخر)' : ''}`,
       html: wrapEmailTemplate(content, 'تذكير بمهمة'),
       text: `مرحباً ${userName}،\n\n${isOverdue ? 'تنبيه! هذه المهمة متأخرة.' : 'هذا تذكير بموعد تسليم المهمة القادم.'}\n\nعنوان المهمة: ${taskTitle}\nالمشروع: ${projectName}\nتاريخ الاستحقاق: ${dueDate}\n${isOverdue ? `متأخر ${Math.abs(daysRemaining)} يوم` : `متبقي ${daysRemaining} يوم`}\n\nيرجى إعطاء الأولوية لهذه المهمة.\n\nمع أطيب التحيات،\nفريق BluePrint`,
+    };
+  },
+
+  /**
+   * Email verification template
+   */
+  emailVerification: (
+    userName: string,
+    verificationLink: string,
+    expiresInHours: number = 24
+  ): EmailTemplate => {
+    const content = `
+      <h2 style="margin-top: 0; color: #1f2937;">تحقق من بريدك الإلكتروني ✉️</h2>
+      <p>مرحباً ${userName}،</p>
+      <p>شكراً لتسجيلك في منصة <strong>BluePrint</strong>. يرجى التحقق من بريدك الإلكتروني لتفعيل حسابك.</p>
+      <div class="warning">
+        <strong>تنبيه:</strong> ستنتهي صلاحية هذا الرابط خلال ${expiresInHours} ساعة.
+      </div>
+      <p>اضغط على الزر أدناه للتحقق من بريدك الإلكتروني:</p>
+      <a href="${verificationLink}" class="button">التحقق من البريد الإلكتروني</a>
+      <p style="color: #6b7280; font-size: 14px;">إذا لم تعمل الزر، يمكنك نسخ هذا الرابط ولصقه في المتصفح:</p>
+      <p style="word-break: break-all; background: #f3f4f6; padding: 10px; border-radius: 4px; font-size: 12px;">${verificationLink}</p>
+      <p>إذا لم تقم بإنشاء حساب، يمكنك تجاهل هذه الرسالة بأمان.</p>
+      <p>مع أطيب التحيات،<br>فريق BluePrint</p>
+    `;
+
+    return {
+      subject: 'تحقق من بريدك الإلكتروني - BluePrint',
+      html: wrapEmailTemplate(content, 'التحقق من البريد الإلكتروني'),
+      text: `مرحباً ${userName}،\n\nشكراً لتسجيلك في منصة BluePrint.\n\nيرجى التحقق من بريدك الإلكتروني بالضغط على الرابط التالي:\n${verificationLink}\n\nسينتهي هذا الرابط خلال ${expiresInHours} ساعة.\n\nإذا لم تقم بإنشاء حساب، يمكنك تجاهل هذه الرسالة.\n\nمع أطيب التحيات،\nفريق BluePrint`,
+    };
+  },
+
+  /**
+   * Email verification success template
+   */
+  emailVerified: (
+    userName: string,
+    loginUrl?: string
+  ): EmailTemplate => {
+    const content = `
+      <h2 style="margin-top: 0; color: #1f2937;">تم التحقق من بريدك الإلكتروني ✅</h2>
+      <p>مرحباً ${userName}،</p>
+      <div class="success">
+        <strong>تهانينا!</strong> تم التحقق من بريدك الإلكتروني بنجاح.
+      </div>
+      <p>يمكنك الآن الوصول الكامل إلى جميع ميزات منصة BluePrint.</p>
+      ${loginUrl ? `<a href="${loginUrl}" class="button">تسجيل الدخول</a>` : ''}
+      <p>مع أطيب التحيات،<br>فريق BluePrint</p>
+    `;
+
+    return {
+      subject: 'تم التحقق من بريدك الإلكتروني - BluePrint',
+      html: wrapEmailTemplate(content, 'تم التحقق من البريد'),
+      text: `مرحباً ${userName}،\n\nتم التحقق من بريدك الإلكتروني بنجاح.\n\nيمكنك الآن الوصول الكامل إلى جميع ميزات منصة BluePrint.\n\nمع أطيب التحيات،\nفريق BluePrint`,
+    };
+  },
+
+  /**
+   * Two-Factor Authentication enabled template
+   */
+  twoFactorEnabled: (
+    userName: string
+  ): EmailTemplate => {
+    const content = `
+      <h2 style="margin-top: 0; color: #1f2937;">تم تفعيل المصادقة الثنائية 🔐</h2>
+      <p>مرحباً ${userName}،</p>
+      <div class="success">
+        <strong>تم بنجاح!</strong> تم تفعيل المصادقة الثنائية على حسابك.
+      </div>
+      <p>حسابك الآن محمي بطريقة إضافية. عند تسجيل الدخول، ستحتاج إلى إدخال الرمز من تطبيق المصادقة الخاص بك.</p>
+      <div class="info-box">
+        <p style="margin: 0;"><strong>نصائح مهمة:</strong></p>
+        <ul style="margin: 10px 0; padding-right: 20px;">
+          <li>احتفظ برموز الاسترداد في مكان آمن</li>
+          <li>لا تشارك رموز المصادقة مع أي شخص</li>
+          <li>إذا فقدت الوصول، استخدم رموز الاسترداد</li>
+        </ul>
+      </div>
+      <p>إذا لم تقم بتفعيل هذه الميزة، يرجى التواصل مع الدعم فوراً.</p>
+      <p>مع أطيب التحيات،<br>فريق BluePrint</p>
+    `;
+
+    return {
+      subject: 'تم تفعيل المصادقة الثنائية - BluePrint',
+      html: wrapEmailTemplate(content, 'تفعيل المصادقة الثنائية'),
+      text: `مرحباً ${userName}،\n\nتم تفعيل المصادقة الثنائية على حسابك بنجاح.\n\nحسابك الآن محمي بطريقة إضافية.\n\nإذا لم تقم بتفعيل هذه الميزة، يرجى التواصل مع الدعم فوراً.\n\nمع أطيب التحيات،\nفريق BluePrint`,
+    };
+  },
+
+  /**
+   * Two-Factor Authentication code template
+   */
+  twoFactorCode: (
+    userName: string,
+    code: string,
+    expiresInMinutes: number = 5
+  ): EmailTemplate => {
+    const content = `
+      <h2 style="margin-top: 0; color: #1f2937;">رمز التحقق الخاص بك 🔑</h2>
+      <p>مرحباً ${userName}،</p>
+      <p>إليك رمز التحقق الخاص بك:</p>
+      <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 8px; margin: 20px 0;">
+        ${code}
+      </div>
+      <div class="warning">
+        <strong>تنبيه:</strong> سينتهي هذا الرمز خلال ${expiresInMinutes} دقائق.
+      </div>
+      <p>إذا لم تطلب هذا الرمز، يرجى تجاهل هذه الرسالة وتأمين حسابك.</p>
+      <p>مع أطيب التحيات،<br>فريق BluePrint</p>
+    `;
+
+    return {
+      subject: `رمز التحقق: ${code} - BluePrint`,
+      html: wrapEmailTemplate(content, 'رمز التحقق'),
+      text: `مرحباً ${userName}،\n\nرمز التحقق الخاص بك هو: ${code}\n\nسينتهي هذا الرمز خلال ${expiresInMinutes} دقائق.\n\nإذا لم تطلب هذا الرمز، يرجى تجاهل هذه الرسالة.\n\nمع أطيب التحيات،\nفريق BluePrint`,
+    };
+  },
+
+  /**
+   * New login notification
+   */
+  newLoginNotification: (
+    userName: string,
+    device: string,
+    location: string,
+    time: string,
+    securityUrl?: string
+  ): EmailTemplate => {
+    const content = `
+      <h2 style="margin-top: 0; color: #1f2937;">تسجيل دخول جديد 🖥️</h2>
+      <p>مرحباً ${userName}،</p>
+      <p>تم تسجيل الدخول إلى حسابك من جهاز جديد.</p>
+      <div class="info-box">
+        <div class="info-row">
+          <span class="info-label">الجهاز</span>
+          <span class="info-value">${device}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">الموقع</span>
+          <span class="info-value">${location}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">الوقت</span>
+          <span class="info-value">${time}</span>
+        </div>
+      </div>
+      <div class="warning">
+        <strong>إذا لم تكن أنت:</strong> قد يكون هناك شخص آخر يستخدم حسابك.
+      </div>
+      ${securityUrl ? `<a href="${securityUrl}" class="button" style="background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);">تأمين حسابي</a>` : ''}
+      <p>مع أطيب التحيات،<br>فريق BluePrint</p>
+    `;
+
+    return {
+      subject: 'تسجيل دخول جديد - BluePrint',
+      html: wrapEmailTemplate(content, 'تسجيل دخول جديد'),
+      text: `مرحباً ${userName}،\n\nتم تسجيل الدخول إلى حسابك من جهاز جديد.\n\nالجهاز: ${device}\nالموقع: ${location}\nالوقت: ${time}\n\nإذا لم تكن أنت، يرجى تأمين حسابك فوراً.\n\nمع أطيب التحيات،\nفريق BluePrint`,
     };
   },
 };

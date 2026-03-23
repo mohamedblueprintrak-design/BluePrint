@@ -117,9 +117,10 @@ export async function POST(request: NextRequest) {
  * SECURITY: 
  * - Rate limited to 10 attempts per minute
  * - Generic error messages to prevent enumeration
+ * - Supports 2FA verification
  */
 async function handleLogin(
-  data: { email: string; password: string; rememberMe?: boolean }, 
+  data: { email: string; password: string; rememberMe?: boolean; twoFactorCode?: string }, 
   request: NextRequest
 ): Promise<NextResponse> {
   if (!data.email || !data.password) {
@@ -145,6 +146,26 @@ async function handleLogin(
       'INVALID_CREDENTIALS', 
       401
     );
+  }
+
+  // Check if user has 2FA enabled
+  const has2FA = await authService.hasTwoFactorEnabled(result.user!.id);
+
+  if (has2FA) {
+    // If 2FA is enabled but no code provided, require 2FA
+    if (!data.twoFactorCode) {
+      return successResponse({
+        requiresTwoFactor: true,
+        userId: result.user!.id,
+        message: 'مطلوب رمز المصادقة الثنائية',
+      });
+    }
+
+    // Verify 2FA code
+    const isValidCode = await authService.verifyTwoFactorCode(result.user!.id, data.twoFactorCode);
+    if (!isValidCode) {
+      return errorResponse('رمز المصادقة الثنائية غير صحيح', 'INVALID_2FA_CODE', 401);
+    }
   }
 
   // Set HTTP-only cookie for refresh token

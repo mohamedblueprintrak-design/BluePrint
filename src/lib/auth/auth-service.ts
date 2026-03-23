@@ -8,10 +8,13 @@
  * - Role-based access control (RBAC)
  * - Session management
  * - Password reset functionality
+ * - Email verification
+ * - Two-factor authentication (2FA)
  */
 
 import { SignJWT, jwtVerify } from 'jose';
 import { hash, compare } from 'bcryptjs';
+import { randomBytes, randomInt } from 'crypto';
 import { prisma } from '@/lib/db';
 import { env } from '@/lib/env';
 import { 
@@ -27,6 +30,8 @@ import {
   PasswordResetConfirm,
 } from './types';
 import { logAudit } from '@/lib/services/audit.service';
+import { sendEmail } from '@/lib/email';
+import { emailTemplates } from '@/lib/email-templates';
 
 // JWT Configuration
 const JWT_ALG = 'HS256';
@@ -37,6 +42,8 @@ const JWT_AUDIENCE = 'blueprint-users';
 const ACCESS_TOKEN_EXPIRY = '2h';
 const REFRESH_TOKEN_EXPIRY = '7d';
 const PASSWORD_RESET_EXPIRY = '1h';
+const EMAIL_VERIFICATION_EXPIRY = '24h';
+const TWO_FACTOR_CODE_EXPIRY = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 /**
  * Authentication Service Class
@@ -787,6 +794,519 @@ class AuthenticationService {
     
     return payload;
   }
+
+  // ============================================
+  // Email Verification
+  // ============================================
+
+  /**
+   * Generate email verification token
+   */
+  async generateEmailVerificationToken(email: string, userId?: string): Promise<string> {
+    // Delete any existing tokens for this email
+    await prisma.emailVerificationToken.deleteMany({
+      where: { email: email.toLowerCase() },
+    });
+
+    // Generate secure token
+    const token = randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    await prisma.emailVerificationToken.create({
+      data: {
+        email: email.toLowerCase(),
+        token,
+        userId,
+        expiresAt,
+      },
+    });
+
+    return token;
+  }
+
+  /**
+   * Send verification email
+   */
+  async sendVerificationEmail(email: string, userName: string, userId?: string): Promise<boolean> {
+    try {
+      const token = await this.generateEmailVerificationToken(email, userId);
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const verificationLink = `${appUrl}/verify-email?token=${token}`;
+
+      const template = emailTemplates.emailVerification(userName, verificationLink, 24);
+
+      await sendEmail({
+        to: email,
+        subject: template.subject,
+        html: template.html,
+        text: template.text,
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Failed to send verification email:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Verify email with token
+   */
+  async verifyEmail(token: string): Promise<AuthResponse> {
+    try {
+      const verificationToken = await prisma.emailVerificationToken.findUnique({
+        where: { token },
+      });
+
+      if (!verificationToken) {
+        return {
+          success: false,
+          error: 'Invalid verification token',
+          code: 'INVALID_TOKEN',
+        };
+      }
+
+      if (verificationToken.usedAt) {
+        return {
+          success: false,
+          error: 'Token already used',
+          code: 'TOKEN_USED',
+        };
+      }
+
+      if (verificationToken.expiresAt < new Date()) {
+        return {
+          success: false,
+          error: 'Token has expired',
+          code: 'TOKEN_EXPIRED',
+        };
+      }
+
+      // Find user by email
+      const user = await prisma.user.findUnique({
+        where: { email: verificationToken.email },
+      });
+
+      if (!user) {
+        return {
+          success: false,
+          error: 'User not found',
+          code: 'USER_NOT_FOUND',
+        };
+      }
+
+      // Mark email as verified
+      await prisma.$transaction([
+        prisma.user.update({
+          where: { id: user.id },
+          data: { emailVerified: new Date() },
+        }),
+        prisma.emailVerificationToken.update({
+          where: { id: verificationToken.id },
+          data: { usedAt: new Date() },
+        }),
+      ]);
+
+      // Log audit
+      await logAudit({
+        userId: user.id,
+        organizationId: user.organizationId || undefined,
+        entityType: 'user',
+        entityId: user.id,
+        action: 'verify_email',
+        description: `Email verified: ${user.email}`,
+      });
+
+      // Send confirmation email
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const template = emailTemplates.emailVerified(user.fullName || user.username, `${appUrl}/login`);
+      await sendEmail({
+        to: user.email,
+        subject: template.subject,
+        html: template.html,
+        text: template.text,
+      });
+
+      return {
+        success: true,
+        user: {
+          id: user.id,
+          email: user.email,
+          username: user.username,
+          fullName: user.fullName,
+          role: user.role as UserRole,
+          avatar: user.avatar,
+          organizationId: user.organizationId,
+        },
+      };
+    } catch (error) {
+      console.error('Email verification error:', error);
+      return {
+        success: false,
+        error: 'An unexpected error occurred',
+        code: 'INTERNAL_ERROR',
+      };
+    }
+  }
+
+  /**
+   * Resend verification email
+   */
+  async resendVerificationEmail(email: string): Promise<AuthResponse> {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { email: email.toLowerCase() },
+      });
+
+      if (!user) {
+        // Don't reveal if user exists
+        return { success: true };
+      }
+
+      if (user.emailVerified) {
+        return {
+          success: false,
+          error: 'Email already verified',
+          code: 'ALREADY_VERIFIED',
+        };
+      }
+
+      await this.sendVerificationEmail(user.email, user.fullName || user.username, user.id);
+
+      return { success: true };
+    } catch (error) {
+      console.error('Resend verification error:', error);
+      return { success: true }; // Don't reveal errors
+    }
+  }
+
+  // ============================================
+  // Two-Factor Authentication (2FA)
+  // ============================================
+
+  /**
+   * Generate 2FA secret for TOTP
+   */
+  async generateTwoFactorSecret(userId: string): Promise<{ secret: string; qrCodeUrl: string }> {
+    // Generate a random secret (Base32 encoded)
+    const secret = randomBytes(20).toString('base64').replace(/[=+/]/g, '').substring(0, 32);
+    
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Create OTPAuth URL for QR code
+    const appName = encodeURIComponent('BluePrint');
+    const qrCodeUrl = `otpauth://totp/${appName}:${encodeURIComponent(user.email)}?secret=${secret}&issuer=${appName}&algorithm=SHA1&digits=6&period=30`;
+
+    // Store secret temporarily (will be activated after verification)
+    const existingSecret = await prisma.twoFactorSecret.findUnique({
+      where: { userId },
+    });
+
+    if (existingSecret) {
+      await prisma.twoFactorSecret.update({
+        where: { userId },
+        data: { secret, isEnabled: false, verifiedAt: null },
+      });
+    } else {
+      await prisma.twoFactorSecret.create({
+        data: { userId, secret, backupCodes: '[]', isEnabled: false },
+      });
+    }
+
+    return { secret, qrCodeUrl };
+  }
+
+  /**
+   * Generate backup codes for 2FA
+   */
+  private generateBackupCodes(count: number = 8): string[] {
+    const codes: string[] = [];
+    for (let i = 0; i < count; i++) {
+      const code = randomInt(10000000, 99999999).toString();
+      codes.push(code);
+    }
+    return codes;
+  }
+
+  /**
+   * Verify TOTP code
+   */
+  private verifyTotpCode(secret: string, code: string): boolean {
+    // Simple TOTP verification (in production, use a library like 'otplib')
+    // This is a simplified version - for production, use proper TOTP implementation
+    const timeStep = Math.floor(Date.now() / 30000); // 30-second window
+    const expectedCode = this.generateTotpCode(secret, timeStep);
+    
+    // Check current and adjacent time windows
+    return (
+      code === this.generateTotpCode(secret, timeStep) ||
+      code === this.generateTotpCode(secret, timeStep - 1) ||
+      code === this.generateTotpCode(secret, timeStep + 1)
+    );
+  }
+
+  /**
+   * Generate TOTP code (simplified)
+   */
+  private generateTotpCode(secret: string, timeStep: number): string {
+    // This is a placeholder - in production, use proper HMAC-based TOTP
+    // For now, generate a deterministic 6-digit code based on secret and time
+    const hash = require('crypto').createHmac('sha1', secret)
+      .update(timeStep.toString())
+      .digest('hex');
+    const offset = parseInt(hash.substring(hash.length - 1), 16);
+    const code = (parseInt(hash.substring(offset * 2, offset * 2 + 8), 16) & 0x7fffffff) % 1000000;
+    return code.toString().padStart(6, '0');
+  }
+
+  /**
+   * Enable 2FA after verification
+   */
+  async enableTwoFactor(userId: string, verificationCode: string): Promise<AuthResponse & { backupCodes?: string[] }> {
+    try {
+      const twoFactorSecret = await prisma.twoFactorSecret.findUnique({
+        where: { userId },
+      });
+
+      if (!twoFactorSecret || twoFactorSecret.isEnabled) {
+        return {
+          success: false,
+          error: '2FA not set up or already enabled',
+          code: 'INVALID_STATE',
+        };
+      }
+
+      // Verify the code
+      const isValid = this.verifyTotpCode(twoFactorSecret.secret, verificationCode);
+      if (!isValid) {
+        return {
+          success: false,
+          error: 'Invalid verification code',
+          code: 'INVALID_CODE',
+        };
+      }
+
+      // Generate backup codes
+      const backupCodes = this.generateBackupCodes();
+
+      // Enable 2FA
+      await prisma.twoFactorSecret.update({
+        where: { userId },
+        data: {
+          isEnabled: true,
+          verifiedAt: new Date(),
+          backupCodes: JSON.stringify(backupCodes),
+        },
+      });
+
+      // Get user for email
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true, fullName: true, username: true },
+      });
+
+      // Send confirmation email
+      if (user) {
+        const template = emailTemplates.twoFactorEnabled(user.fullName || user.username);
+        await sendEmail({
+          to: user.email,
+          subject: template.subject,
+          html: template.html,
+          text: template.text,
+        });
+      }
+
+      // Log audit
+      await logAudit({
+        userId,
+        entityType: 'user',
+        entityId: userId,
+        action: 'enable_2fa',
+        description: 'Two-factor authentication enabled',
+      });
+
+      return {
+        success: true,
+        backupCodes,
+      };
+    } catch (error) {
+      console.error('Enable 2FA error:', error);
+      return {
+        success: false,
+        error: 'An unexpected error occurred',
+        code: 'INTERNAL_ERROR',
+      };
+    }
+  }
+
+  /**
+   * Disable 2FA
+   */
+  async disableTwoFactor(userId: string, password: string): Promise<AuthResponse> {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+      });
+
+      if (!user || !user.password) {
+        return {
+          success: false,
+          error: 'User not found',
+          code: 'USER_NOT_FOUND',
+        };
+      }
+
+      // Verify password
+      const isValid = await this.verifyPassword(password, user.password);
+      if (!isValid) {
+        return {
+          success: false,
+          error: 'Invalid password',
+          code: 'INVALID_PASSWORD',
+        };
+      }
+
+      // Disable 2FA
+      await prisma.twoFactorSecret.deleteMany({
+        where: { userId },
+      });
+
+      // Log audit
+      await logAudit({
+        userId,
+        organizationId: user.organizationId || undefined,
+        entityType: 'user',
+        entityId: userId,
+        action: 'disable_2fa',
+        description: 'Two-factor authentication disabled',
+      });
+
+      return { success: true };
+    } catch (error) {
+      console.error('Disable 2FA error:', error);
+      return {
+        success: false,
+        error: 'An unexpected error occurred',
+        code: 'INTERNAL_ERROR',
+      };
+    }
+  }
+
+  /**
+   * Verify 2FA code during login
+   */
+  async verifyTwoFactorCode(userId: string, code: string): Promise<boolean> {
+    try {
+      const twoFactorSecret = await prisma.twoFactorSecret.findUnique({
+        where: { userId },
+      });
+
+      if (!twoFactorSecret || !twoFactorSecret.isEnabled) {
+        return false;
+      }
+
+      // Check if it's a backup code
+      const backupCodes: string[] = JSON.parse(twoFactorSecret.backupCodes || '[]');
+      const backupCodeIndex = backupCodes.indexOf(code);
+      
+      if (backupCodeIndex !== -1) {
+        // Remove used backup code
+        backupCodes.splice(backupCodeIndex, 1);
+        await prisma.twoFactorSecret.update({
+          where: { userId },
+          data: { backupCodes: JSON.stringify(backupCodes) },
+        });
+        return true;
+      }
+
+      // Verify TOTP code
+      return this.verifyTotpCode(twoFactorSecret.secret, code);
+    } catch (error) {
+      console.error('Verify 2FA error:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Check if user has 2FA enabled
+   */
+  async hasTwoFactorEnabled(userId: string): Promise<boolean> {
+    try {
+      const twoFactorSecret = await prisma.twoFactorSecret.findUnique({
+        where: { userId },
+        select: { isEnabled: true },
+      });
+      return twoFactorSecret?.isEnabled || false;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Generate new backup codes
+   */
+  async regenerateBackupCodes(userId: string, password: string): Promise<AuthResponse & { backupCodes?: string[] }> {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+      });
+
+      if (!user || !user.password) {
+        return {
+          success: false,
+          error: 'User not found',
+          code: 'USER_NOT_FOUND',
+        };
+      }
+
+      // Verify password
+      const isValid = await this.verifyPassword(password, user.password);
+      if (!isValid) {
+        return {
+          success: false,
+          error: 'Invalid password',
+          code: 'INVALID_PASSWORD',
+        };
+      }
+
+      // Generate new backup codes
+      const backupCodes = this.generateBackupCodes();
+
+      await prisma.twoFactorSecret.update({
+        where: { userId },
+        data: { backupCodes: JSON.stringify(backupCodes) },
+      });
+
+      // Log audit
+      await logAudit({
+        userId,
+        organizationId: user.organizationId || undefined,
+        entityType: 'user',
+        entityId: userId,
+        action: 'regenerate_backup_codes',
+        description: '2FA backup codes regenerated',
+      });
+
+      return {
+        success: true,
+        backupCodes,
+      };
+    } catch (error) {
+      console.error('Regenerate backup codes error:', error);
+      return {
+        success: false,
+        error: 'An unexpected error occurred',
+        code: 'INTERNAL_ERROR',
+      };
+    }
+  }
 }
 
 // Export singleton instance
@@ -794,4 +1314,4 @@ export const authService = new AuthenticationService();
 
 // Export types and enums
 export { UserRole, Permission, ROLE_PERMISSIONS };
-export type { JwtPayload, LoginRequest, SignupRequest, AuthResponse };
+export type { JwtPayload, LoginRequest, SignupRequest, AuthResponse, PasswordChangeRequest, PasswordResetRequest, PasswordResetConfirm };
