@@ -324,6 +324,415 @@ export async function cancelSubscription(
   });
 }
 
+// ============================================
+// Payment Intents (One-time Payments)
+// ============================================
+
+/**
+ * Create a payment intent for one-time payment
+ */
+export async function createPaymentIntent(params: {
+  amount: number;
+  currency: string;
+  customerId?: string;
+  description?: string;
+  metadata?: Record<string, string>;
+}): Promise<Stripe.PaymentIntent | null> {
+  return safeStripeOp(async (s) => {
+    return await s.paymentIntents.create({
+      amount: Math.round(params.amount * 100), // Convert to cents
+      currency: params.currency.toLowerCase(),
+      customer: params.customerId,
+      description: params.description,
+      metadata: params.metadata,
+      automatic_payment_methods: {
+        enabled: true,
+      },
+    });
+  });
+}
+
+/**
+ * Update a payment intent
+ */
+export async function updatePaymentIntent(
+  paymentIntentId: string,
+  params: {
+    amount?: number;
+    metadata?: Record<string, string>;
+  }
+): Promise<Stripe.PaymentIntent | null> {
+  return safeStripeOp(async (s) => {
+    const updateData: Stripe.PaymentIntentUpdateParams = {};
+    if (params.amount) {
+      updateData.amount = Math.round(params.amount * 100);
+    }
+    if (params.metadata) {
+      updateData.metadata = params.metadata;
+    }
+    return await s.paymentIntents.update(paymentIntentId, updateData);
+  });
+}
+
+/**
+ * Retrieve a payment intent
+ */
+export async function retrievePaymentIntent(
+  paymentIntentId: string
+): Promise<Stripe.PaymentIntent | null> {
+  return safeStripeOp(async (s) => {
+    return await s.paymentIntents.retrieve(paymentIntentId);
+  });
+}
+
+// ============================================
+// Customer Management
+// ============================================
+
+/**
+ * Retrieve a customer
+ */
+export async function retrieveCustomer(customerId: string): Promise<Stripe.Customer | null> {
+  return safeStripeOp(async (s) => {
+    return await s.customers.retrieve(customerId) as Stripe.Customer;
+  });
+}
+
+/**
+ * Update a customer
+ */
+export async function updateCustomer(
+  customerId: string,
+  params: {
+    email?: string;
+    name?: string;
+    metadata?: Record<string, string>;
+  }
+): Promise<Stripe.Customer | null> {
+  return safeStripeOp(async (s) => {
+    return await s.customers.update(customerId, params);
+  });
+}
+
+/**
+ * List customer's payment methods
+ */
+export async function listPaymentMethods(
+  customerId: string,
+  type: 'card' | 'bank_account' = 'card'
+): Promise<Stripe.PaymentMethod[] | null> {
+  return safeStripeOp(async (s) => {
+    const methods = await s.paymentMethods.list({
+      customer: customerId,
+      type,
+    });
+    return methods.data;
+  });
+}
+
+/**
+ * Attach a payment method to a customer
+ */
+export async function attachPaymentMethod(
+  paymentMethodId: string,
+  customerId: string
+): Promise<Stripe.PaymentMethod | null> {
+  return safeStripeOp(async (s) => {
+    return await s.paymentMethods.attach(paymentMethodId, {
+      customer: customerId,
+    });
+  });
+}
+
+/**
+ * Detach a payment method
+ */
+export async function detachPaymentMethod(
+  paymentMethodId: string
+): Promise<Stripe.PaymentMethod | null> {
+  return safeStripeOp(async (s) => {
+    return await s.paymentMethods.detach(paymentMethodId);
+  });
+}
+
+/**
+ * Set default payment method for customer
+ */
+export async function setDefaultPaymentMethod(
+  customerId: string,
+  paymentMethodId: string
+): Promise<Stripe.Customer | null> {
+  return safeStripeOp(async (s) => {
+    return await s.customers.update(customerId, {
+      invoice_settings: {
+        default_payment_method: paymentMethodId,
+      },
+    });
+  });
+}
+
+// ============================================
+// Subscription Management
+// ============================================
+
+/**
+ * Create a subscription
+ */
+export async function createSubscription(params: {
+  customerId: string;
+  priceId: string;
+  trialPeriodDays?: number;
+  metadata?: Record<string, string>;
+}): Promise<Stripe.Subscription | null> {
+  return safeStripeOp(async (s) => {
+    return await s.subscriptions.create({
+      customer: params.customerId,
+      items: [{ price: params.priceId }],
+      trial_period_days: params.trialPeriodDays,
+      metadata: params.metadata,
+      payment_behavior: 'default_incomplete',
+      payment_settings: {
+        save_default_payment_method: 'on_subscription',
+      },
+      expand: ['latest_invoice.payment_intent'],
+    });
+  });
+}
+
+/**
+ * Update a subscription (upgrade/downgrade)
+ */
+export async function updateSubscription(
+  subscriptionId: string,
+  params: {
+    newPriceId?: string;
+    prorationBehavior?: 'create_prorations' | 'none' | 'always_invoice';
+    metadata?: Record<string, string>;
+  }
+): Promise<Stripe.Subscription | null> {
+  return safeStripeOp(async (s) => {
+    // Get current subscription to find the item ID
+    const subscription = await s.subscriptions.retrieve(subscriptionId);
+    const itemId = subscription.items.data[0]?.id;
+
+    if (!itemId) {
+      throw new Error('No subscription item found');
+    }
+
+    const updateData: Stripe.SubscriptionUpdateParams = {
+      proration_behavior: params.prorationBehavior || 'create_prorations',
+      metadata: params.metadata,
+    };
+
+    if (params.newPriceId) {
+      updateData.items = [{ id: itemId, price: params.newPriceId }];
+    }
+
+    return await s.subscriptions.update(subscriptionId, updateData);
+  });
+}
+
+/**
+ * Reactivate a canceled subscription
+ */
+export async function reactivateSubscription(
+  subscriptionId: string
+): Promise<Stripe.Subscription | null> {
+  return safeStripeOp(async (s) => {
+    return await s.subscriptions.update(subscriptionId, {
+      cancel_at_period_end: false,
+    });
+  });
+}
+
+// ============================================
+// Invoice Management
+// ============================================
+
+/**
+ * Create an invoice
+ */
+export async function createInvoice(params: {
+  customerId: string;
+  description?: string;
+  metadata?: Record<string, string>;
+}): Promise<Stripe.Invoice | null> {
+  return safeStripeOp(async (s) => {
+    return await s.invoices.create({
+      customer: params.customerId,
+      description: params.description,
+      metadata: params.metadata,
+    });
+  });
+}
+
+/**
+ * Finalize an invoice
+ */
+export async function finalizeInvoice(invoiceId: string): Promise<Stripe.Invoice | null> {
+  return safeStripeOp(async (s) => {
+    return await s.invoices.finalizeInvoice(invoiceId);
+  });
+}
+
+/**
+ * Pay an invoice
+ */
+export async function payInvoice(invoiceId: string): Promise<Stripe.Invoice | null> {
+  return safeStripeOp(async (s) => {
+    return await s.invoices.pay(invoiceId);
+  });
+}
+
+/**
+ * List invoices for a customer
+ */
+export async function listInvoices(
+  customerId: string,
+  limit: number = 10
+): Promise<Stripe.Invoice[] | null> {
+  return safeStripeOp(async (s) => {
+    const invoices = await s.invoices.list({
+      customer: customerId,
+      limit,
+    });
+    return invoices.data;
+  });
+}
+
+/**
+ * Retrieve an invoice
+ */
+export async function retrieveInvoice(invoiceId: string): Promise<Stripe.Invoice | null> {
+  return safeStripeOp(async (s) => {
+    return await s.invoices.retrieve(invoiceId);
+  });
+}
+
+/**
+ * Void an invoice
+ */
+export async function voidInvoice(invoiceId: string): Promise<Stripe.Invoice | null> {
+  return safeStripeOp(async (s) => {
+    return await s.invoices.voidInvoice(invoiceId);
+  });
+}
+
+// ============================================
+// Billing Portal Configuration
+// ============================================
+
+/**
+ * Create or retrieve billing portal configuration
+ */
+export async function getBillingPortalConfiguration(): Promise<Stripe.BillingPortal.Configuration | null> {
+  return safeStripeOp(async (s) => {
+    // List existing configurations
+    const configs = await s.billingPortal.configurations.list({ limit: 1 });
+    
+    if (configs.data.length > 0) {
+      return configs.data[0];
+    }
+
+    // Create a new configuration if none exists
+    return await s.billingPortal.configurations.create({
+      features: {
+        payment_method_update: {
+          enabled: true,
+        },
+        subscription_update: {
+          enabled: true,
+          default_allowed_updates: ['price', 'promotion_code'],
+          products: [], // Will be populated with actual products
+        },
+        subscription_cancel: {
+          enabled: true,
+          mode: 'at_period_end',
+          cancellation_reason: {
+            enabled: true,
+            options: [
+              'too_expensive',
+              'missing_features',
+              'switched_service',
+              'unused',
+              'other',
+            ],
+          },
+        },
+        invoice_history: {
+          enabled: true,
+        },
+      },
+    });
+  });
+}
+
+/**
+ * Create billing portal session with custom configuration
+ */
+export async function createBillingPortalSessionWithConfig(
+  customerId: string,
+  returnUrl: string,
+  configurationId?: string
+): Promise<Stripe.BillingPortal.Session | null> {
+  return safeStripeOp(async (s) => {
+    const sessionParams: Stripe.BillingPortal.SessionCreateParams = {
+      customer: customerId,
+      return_url: returnUrl,
+    };
+
+    if (configurationId) {
+      sessionParams.configuration = configurationId;
+    }
+
+    return await s.billingPortal.sessions.create(sessionParams);
+  });
+}
+
+// ============================================
+// Promo Codes and Coupons
+// ============================================
+
+/**
+ * Validate a promotion code
+ */
+export async function validatePromotionCode(code: string): Promise<{
+  valid: boolean;
+  coupon?: Stripe.Coupon;
+  message?: string;
+}> {
+  return safeStripeOp(async (s) => {
+    try {
+      // Search for the promotion code
+      const promoCodes = await s.promotionCodes.list({
+        code,
+        active: true,
+        limit: 1,
+      });
+
+      if (promoCodes.data.length === 0) {
+        return { valid: false, message: 'رمز الخصم غير صالح' };
+      }
+
+      const promoCode = promoCodes.data[0];
+      
+      // Check if still valid
+      if (promoCode.restrictions?.first_time_transaction) {
+        // Only for first-time customers
+        return { valid: true, coupon: promoCode.coupon as Stripe.Coupon };
+      }
+
+      return { valid: true, coupon: promoCode.coupon as Stripe.Coupon };
+    } catch (error) {
+      return { valid: false, message: 'رمز الخصم غير صالح' };
+    }
+  }) || { valid: false, message: 'فشل التحقق من رمز الخصم' };
+}
+
+// ============================================
+// Webhook
+// ============================================
+
 /**
  * Construct webhook event
  */
@@ -340,4 +749,73 @@ export function constructWebhookEvent(
     console.error('Webhook signature verification failed:', error);
     return null;
   }
+}
+
+// ============================================
+// Utility: Sync Plans with Stripe
+// ============================================
+
+/**
+ * Sync pricing plans with Stripe (creates products and prices if needed)
+ * This should be run once during setup or when plans change
+ */
+export async function syncPlansWithStripe(
+  plans: PricingPlan[]
+): Promise<{ success: boolean; results: Array<{ planId: string; productId?: string; priceId?: string; error?: string }> }> {
+  const results: Array<{ planId: string; productId?: string; priceId?: string; error?: string }> = [];
+
+  if (!isStripeConfigured) {
+    return { success: false, results: plans.map(p => ({ planId: p.id, error: 'Stripe not configured' })) };
+  }
+
+  const stripe = getStripe();
+
+  for (const plan of plans) {
+    try {
+      // Create or update product
+      let product: Stripe.Product;
+      
+      if (plan.stripeProductId) {
+        product = await stripe.products.retrieve(plan.stripeProductId);
+      } else {
+        product = await stripe.products.create({
+          name: plan.name,
+          description: plan.description,
+          metadata: {
+            planId: plan.id,
+            features: plan.features.join(', '),
+          },
+        });
+      }
+
+      // Create price
+      const price = await stripe.prices.create({
+        product: product.id,
+        unit_amount: plan.price * 100, // Convert to cents
+        currency: plan.currency.toLowerCase(),
+        recurring: {
+          interval: plan.interval,
+        },
+        metadata: {
+          planId: plan.id,
+        },
+      });
+
+      results.push({
+        planId: plan.id,
+        productId: product.id,
+        priceId: price.id,
+      });
+    } catch (error) {
+      results.push({
+        planId: plan.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  return {
+    success: results.every(r => !r.error),
+    results,
+  };
 }
