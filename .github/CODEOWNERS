@@ -1,0 +1,36 @@
+# Code Owners
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owners for everything
+* @your-username
+
+# Backend / API
+/src/app/api/ @your-username
+/src/lib/services/ @your-username
+/src/lib/db.ts @your-username
+/prisma/ @your-username
+
+# Frontend / UI
+/src/app/(dashboard)/ @your-username
+/src/components/ @your-username
+/src/app/globals.css @your-username
+
+# Authentication & Security
+/src/lib/auth/ @your-username
+/src/app/api/auth/ @your-username
+/src/lib/config/security.ts @your-username
+
+# Stripe / Payments
+/src/lib/stripe.ts @your-username
+/src/app/api/stripe/ @your-username
+
+# Infrastructure
+/.github/ @your-username
+/docker-compose*.yml @your-username
+/Dockerfile* @your-username
+/nginx.conf @your-username
+
+# Tests
+/src/__tests__/ @your-username
+/playwright.config.ts @your-username
+/jest.config.* @your-username
