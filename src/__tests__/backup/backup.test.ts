@@ -3,41 +3,41 @@
  * اختبارات خدمة النسخ الاحتياطي
  */
 
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+
 
 // Mock child_process
-vi.mock('child_process', () => ({
-  exec: vi.fn(),
+jest.mock('child_process', () => ({
+  exec: jest.fn(),
 }));
 
 // Mock fs/promises
-vi.mock('fs/promises', () => ({
+jest.mock('fs/promises', () => ({
   default: {
-    mkdir: vi.fn(),
-    readdir: vi.fn(),
-    stat: vi.fn(),
-    unlink: vi.fn(),
-    rm: vi.fn(),
+    mkdir: jest.fn(),
+    readdir: jest.fn(),
+    stat: jest.fn(),
+    unlink: jest.fn(),
+    rm: jest.fn(),
   },
-  mkdir: vi.fn(),
-  readdir: vi.fn(),
-  stat: vi.fn(),
-  unlink: vi.fn(),
-  rm: vi.fn(),
+  mkdir: jest.fn(),
+  readdir: jest.fn(),
+  stat: jest.fn(),
+  unlink: jest.fn(),
+  rm: jest.fn(),
 }));
 
 // Mock prisma
-vi.mock('@/lib/db', () => ({
+jest.mock('@/lib/db', () => ({
   prisma: {},
 }));
 
 describe('Backup Service', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   afterEach(() => {
-    vi.resetAllMocks();
+    jest.resetAllMocks();
   });
 
   describe('Backup Types', () => {

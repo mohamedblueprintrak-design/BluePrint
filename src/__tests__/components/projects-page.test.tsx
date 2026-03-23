@@ -3,23 +3,23 @@
  * اختبارات مكون صفحة المشاريع
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+
 import { render, screen, fireEvent, waitFor } from '@/__tests__/utils/db-mock';
 import React from 'react';
 
 // Mock next/navigation
-vi.mock('next/navigation', () => ({
+jest.mock('next/navigation', () => ({
   useRouter: () => ({
-    push: vi.fn(),
-    refresh: vi.fn(),
+    push: jest.fn(),
+    refresh: jest.fn(),
   }),
   useSearchParams: () => ({
-    get: vi.fn(),
+    get: jest.fn(),
   }),
 }));
 
 // Mock next-auth
-vi.mock('next-auth/react', () => ({
+jest.mock('next-auth/react', () => ({
   useSession: () => ({
     data: {
       user: {
@@ -34,7 +34,7 @@ vi.mock('next-auth/react', () => ({
 
 describe('Projects Page Component', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('Rendering', () => {
@@ -197,8 +197,8 @@ describe('Projects Page Component', () => {
     });
 
     it('should confirm before delete', async () => {
-      const confirmDelete = vi.fn();
-      const deleteProject = vi.fn();
+      const confirmDelete = jest.fn();
+      const deleteProject = jest.fn();
 
       // Simulate confirmation flow
       const confirmed = true;

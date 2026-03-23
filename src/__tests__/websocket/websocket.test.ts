@@ -3,38 +3,38 @@
  * اختبارات خدمة WebSocket
  */
 
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+
 
 // Mock Socket.io
-vi.mock('socket.io', () => ({
-  Server: vi.fn().mockImplementation(() => ({
-    use: vi.fn(),
-    on: vi.fn(),
-    to: vi.fn().mockReturnThis(),
-    emit: vi.fn(),
+jest.mock('socket.io', () => ({
+  Server: jest.fn().mockImplementation(() => ({
+    use: jest.fn(),
+    on: jest.fn(),
+    to: jest.fn().mockReturnThis(),
+    emit: jest.fn(),
   })),
 }));
 
 // Mock jsonwebtoken
-vi.mock('jsonwebtoken', () => ({
-  verify: vi.fn(),
+jest.mock('jsonwebtoken', () => ({
+  verify: jest.fn(),
 }));
 
 // Mock prisma
-vi.mock('@/lib/db', () => ({
+jest.mock('@/lib/db', () => ({
   prisma: {
     user: {
-      findUnique: vi.fn(),
+      findUnique: jest.fn(),
     },
     notification: {
-      count: vi.fn(),
-      update: vi.fn(),
+      count: jest.fn(),
+      update: jest.fn(),
     },
   },
 }));
 
 // Mock env
-vi.mock('@/lib/env', () => ({
+jest.mock('@/lib/env', () => ({
   env: {
     JWT_SECRET: 'test-jwt-secret-key',
   },
@@ -42,11 +42,11 @@ vi.mock('@/lib/env', () => ({
 
 describe('WebSocket Service', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   afterEach(() => {
-    vi.resetAllMocks();
+    jest.resetAllMocks();
   });
 
   describe('Connection Management', () => {

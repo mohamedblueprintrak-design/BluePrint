@@ -3,37 +3,37 @@
  * اختبارات خدمة المصادقة
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+
 import { hash, compare } from 'bcryptjs';
 import { SignJWT, jwtVerify } from 'jose';
 
 // Mock dependencies
-vi.mock('bcryptjs', () => ({
-  hash: vi.fn(),
-  compare: vi.fn(),
+jest.mock('bcryptjs', () => ({
+  hash: jest.fn(),
+  compare: jest.fn(),
 }));
 
-vi.mock('jose', () => ({
-  SignJWT: vi.fn().mockImplementation(() => ({
-    setProtectedHeader: vi.fn().mockReturnThis(),
-    setIssuedAt: vi.fn().mockReturnThis(),
-    setIssuer: vi.fn().mockReturnThis(),
-    setAudience: vi.fn().mockReturnThis(),
-    setExpirationTime: vi.fn().mockReturnThis(),
-    sign: vi.fn().mockResolvedValue('mock-token'),
+jest.mock('jose', () => ({
+  SignJWT: jest.fn().mockImplementation(() => ({
+    setProtectedHeader: jest.fn().mockReturnThis(),
+    setIssuedAt: jest.fn().mockReturnThis(),
+    setIssuer: jest.fn().mockReturnThis(),
+    setAudience: jest.fn().mockReturnThis(),
+    setExpirationTime: jest.fn().mockReturnThis(),
+    sign: jest.fn().mockResolvedValue('mock-token'),
   })),
-  jwtVerify: vi.fn(),
+  jwtVerify: jest.fn(),
 }));
 
 describe('Authentication Module', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('Password Hashing', () => {
     it('should hash password correctly', async () => {
       const mockHash = '$2a$12$abcdefghijklmnopqrstuvwxyz';
-      vi.mocked(hash).mockResolvedValue(mockHash);
+      jest.mocked(hash).mockResolvedValue(mockHash);
 
       const password = 'TestPassword@123';
       const result = await hash(password, 12);
@@ -43,7 +43,7 @@ describe('Authentication Module', () => {
     });
 
     it('should verify password correctly', async () => {
-      vi.mocked(compare).mockResolvedValue(true);
+      jest.mocked(compare).mockResolvedValue(true);
 
       const password = 'TestPassword@123';
       const hashedPassword = '$2a$12$abcdefghijklmnopqrstuvwxyz';
@@ -54,7 +54,7 @@ describe('Authentication Module', () => {
     });
 
     it('should return false for wrong password', async () => {
-      vi.mocked(compare).mockResolvedValue(false);
+      jest.mocked(compare).mockResolvedValue(false);
 
       const password = 'WrongPassword@123';
       const hashedPassword = '$2a$12$abcdefghijklmnopqrstuvwxyz';
@@ -138,18 +138,18 @@ describe('Authentication Module', () => {
         role: 'admin',
       };
 
-      const mockSign = vi.fn().mockReturnThis();
-      const mockSetProtectedHeader = vi.fn().mockReturnThis();
-      const mockSetIssuedAt = vi.fn().mockReturnThis();
-      const mockSetExpirationTime = vi.fn().mockReturnThis();
+      const mockSign = jest.fn().mockReturnThis();
+      const mockSetProtectedHeader = jest.fn().mockReturnThis();
+      const mockSetIssuedAt = jest.fn().mockReturnThis();
+      const mockSetExpirationTime = jest.fn().mockReturnThis();
 
-      vi.mocked(SignJWT).mockImplementation(() => ({
+      jest.mocked(SignJWT).mockImplementation(() => ({
         setProtectedHeader: mockSetProtectedHeader,
         setIssuedAt: mockSetIssuedAt,
-        setIssuer: vi.fn().mockReturnThis(),
-        setAudience: vi.fn().mockReturnThis(),
+        setIssuer: jest.fn().mockReturnThis(),
+        setAudience: jest.fn().mockReturnThis(),
         setExpirationTime: mockSetExpirationTime,
-        sign: vi.fn().mockResolvedValue('generated-token'),
+        sign: jest.fn().mockResolvedValue('generated-token'),
       }) as any);
 
       // Token generation test

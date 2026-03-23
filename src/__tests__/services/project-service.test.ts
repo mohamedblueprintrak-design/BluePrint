@@ -3,38 +3,38 @@
  * اختبارات خدمة المشاريع
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+
 
 // Mock Prisma
 const mockPrisma = {
   project: {
-    findMany: vi.fn(),
-    findFirst: vi.fn(),
-    findUnique: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-    count: vi.fn(),
-    aggregate: vi.fn(),
-    groupBy: vi.fn(),
+    findMany: jest.fn(),
+    findFirst: jest.fn(),
+    findUnique: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    count: jest.fn(),
+    aggregate: jest.fn(),
+    groupBy: jest.fn(),
   },
   activity: {
-    create: vi.fn(),
+    create: jest.fn(),
   },
 };
 
-vi.mock('@/lib/db', () => ({
+jest.mock('@/lib/db', () => ({
   prisma: mockPrisma,
 }));
 
 // Mock audit service
-vi.mock('@/lib/services/audit.service', () => ({
-  logAudit: vi.fn(),
+jest.mock('@/lib/services/audit.service', () => ({
+  logAudit: jest.fn(),
 }));
 
 describe('ProjectService', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('getProjects', () => {

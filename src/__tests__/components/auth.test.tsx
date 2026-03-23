@@ -3,24 +3,24 @@
  * اختبارات مكونات المصادقة
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+
 import { render, screen, fireEvent, waitFor } from '@/__tests__/utils/db-mock';
 
 // Mock next/navigation
-vi.mock('next/navigation', () => ({
+jest.mock('next/navigation', () => ({
   useRouter: () => ({
-    push: vi.fn(),
-    replace: vi.fn(),
-    refresh: vi.fn(),
+    push: jest.fn(),
+    replace: jest.fn(),
+    refresh: jest.fn(),
   }),
   useSearchParams: () => ({
-    get: vi.fn(),
+    get: jest.fn(),
   }),
 }));
 
 describe('Auth Components', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('Login Form', () => {

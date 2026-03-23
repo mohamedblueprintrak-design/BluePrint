@@ -3,13 +3,13 @@
  * اختبارات واجهة برمجة التطبيقات للفواتير
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+
 import { NextRequest } from 'next/server';
 
 // Mock dependencies
-vi.mock('@/app/api/utils/demo-config', () => ({
-  getUserFromRequest: vi.fn(),
-  isDemoUser: vi.fn(),
+jest.mock('@/app/api/utils/demo-config', () => ({
+  getUserFromRequest: jest.fn(),
+  isDemoUser: jest.fn(),
   DEMO_DATA: {
     invoices: [
       {
@@ -59,27 +59,27 @@ vi.mock('@/app/api/utils/demo-config', () => ({
   },
 }));
 
-vi.mock('@/lib/services/invoice.service', () => ({
+jest.mock('@/lib/services/invoice.service', () => ({
   invoiceService: {
-    getInvoices: vi.fn(),
-    createInvoice: vi.fn(),
-    updateInvoice: vi.fn(),
-    deleteInvoice: vi.fn(),
-    getInvoiceById: vi.fn(),
-    sendInvoice: vi.fn(),
-    markAsPaid: vi.fn(),
+    getInvoices: jest.fn(),
+    createInvoice: jest.fn(),
+    updateInvoice: jest.fn(),
+    deleteInvoice: jest.fn(),
+    getInvoiceById: jest.fn(),
+    sendInvoice: jest.fn(),
+    markAsPaid: jest.fn(),
   },
 }));
 
 describe('Invoices API', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('GET /api/invoices', () => {
     it('should return 401 for unauthenticated users', async () => {
       const { getUserFromRequest } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue(null);
+      jest.mocked(getUserFromRequest).mockResolvedValue(null);
 
       const request = new NextRequest('http://localhost:3000/api/invoices');
       const user = await getUserFromRequest(request);
@@ -89,12 +89,12 @@ describe('Invoices API', () => {
 
     it('should return invoices for demo users', async () => {
       const { getUserFromRequest, isDemoUser, DEMO_DATA } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue({
+      jest.mocked(getUserFromRequest).mockResolvedValue({
         id: 'demo-user',
         organizationId: 'org-1',
         role: 'admin',
       });
-      vi.mocked(isDemoUser).mockReturnValue(true);
+      jest.mocked(isDemoUser).mockReturnValue(true);
 
       expect(DEMO_DATA.invoices).toHaveLength(3);
     });

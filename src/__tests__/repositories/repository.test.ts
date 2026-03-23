@@ -3,36 +3,36 @@
  * اختبارات المستودعات
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+
 
 // Mock Prisma Client
 const createMockPrisma = () => ({
   user: {
-    findUnique: vi.fn(),
-    findFirst: vi.fn(),
-    findMany: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-    count: vi.fn(),
+    findUnique: jest.fn(),
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    count: jest.fn(),
   },
   project: {
-    findUnique: vi.fn(),
-    findFirst: vi.fn(),
-    findMany: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-    count: vi.fn(),
+    findUnique: jest.fn(),
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    count: jest.fn(),
   },
   client: {
-    findUnique: vi.fn(),
-    findFirst: vi.fn(),
-    findMany: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-    count: vi.fn(),
+    findUnique: jest.fn(),
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    count: jest.fn(),
   },
 });
 
@@ -41,7 +41,7 @@ describe('BaseRepository', () => {
 
   beforeEach(() => {
     mockPrisma = createMockPrisma();
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('findById', () => {
@@ -222,7 +222,7 @@ describe('ProjectRepository', () => {
 
   beforeEach(() => {
     mockPrisma = createMockPrisma();
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('findByIdWithDetails', () => {
@@ -329,7 +329,7 @@ describe('UserRepository', () => {
 
   beforeEach(() => {
     mockPrisma = createMockPrisma();
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('findByEmail', () => {

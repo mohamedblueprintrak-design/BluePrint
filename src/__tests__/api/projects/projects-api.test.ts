@@ -3,13 +3,13 @@
  * اختبارات واجهة برمجة التطبيقات للمشاريع
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+
 import { NextRequest } from 'next/server';
 
 // Mock dependencies
-vi.mock('@/app/api/utils/demo-config', () => ({
-  getUserFromRequest: vi.fn(),
-  isDemoUser: vi.fn(),
+jest.mock('@/app/api/utils/demo-config', () => ({
+  getUserFromRequest: jest.fn(),
+  isDemoUser: jest.fn(),
   DEMO_DATA: {
     projects: [
       {
@@ -40,25 +40,25 @@ vi.mock('@/app/api/utils/demo-config', () => ({
   },
 }));
 
-vi.mock('@/lib/services', () => ({
+jest.mock('@/lib/services', () => ({
   projectService: {
-    getProjects: vi.fn(),
-    createProject: vi.fn(),
-    getProjectById: vi.fn(),
-    updateProject: vi.fn(),
-    deleteProject: vi.fn(),
+    getProjects: jest.fn(),
+    createProject: jest.fn(),
+    getProjectById: jest.fn(),
+    updateProject: jest.fn(),
+    deleteProject: jest.fn(),
   },
 }));
 
 describe('Projects API', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('GET /api/projects', () => {
     it('should return 401 for unauthenticated users', async () => {
       const { getUserFromRequest } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue(null);
+      jest.mocked(getUserFromRequest).mockResolvedValue(null);
 
       const request = new NextRequest('http://localhost:3000/api/projects');
       const { GET } = await import('@/app/api/projects/route');
@@ -69,12 +69,12 @@ describe('Projects API', () => {
 
     it('should return projects for authenticated users', async () => {
       const { getUserFromRequest, isDemoUser } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue({
+      jest.mocked(getUserFromRequest).mockResolvedValue({
         id: 'demo-user',
         organizationId: 'org-1',
         role: 'admin',
       });
-      vi.mocked(isDemoUser).mockReturnValue(true);
+      jest.mocked(isDemoUser).mockReturnValue(true);
 
       const request = new NextRequest('http://localhost:3000/api/projects');
       const { GET } = await import('@/app/api/projects/route');
@@ -88,12 +88,12 @@ describe('Projects API', () => {
 
     it('should filter projects by status', async () => {
       const { getUserFromRequest, isDemoUser } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue({
+      jest.mocked(getUserFromRequest).mockResolvedValue({
         id: 'demo-user',
         organizationId: 'org-1',
         role: 'admin',
       });
-      vi.mocked(isDemoUser).mockReturnValue(true);
+      jest.mocked(isDemoUser).mockReturnValue(true);
 
       const request = new NextRequest('http://localhost:3000/api/projects?status=active');
       const { GET } = await import('@/app/api/projects/route');
@@ -107,12 +107,12 @@ describe('Projects API', () => {
 
     it('should search projects by name', async () => {
       const { getUserFromRequest, isDemoUser } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue({
+      jest.mocked(getUserFromRequest).mockResolvedValue({
         id: 'demo-user',
         organizationId: 'org-1',
         role: 'admin',
       });
-      vi.mocked(isDemoUser).mockReturnValue(true);
+      jest.mocked(isDemoUser).mockReturnValue(true);
 
       const request = new NextRequest('http://localhost:3000/api/projects?search=تجريبي 1');
       const { GET } = await import('@/app/api/projects/route');
@@ -126,12 +126,12 @@ describe('Projects API', () => {
 
     it('should paginate results', async () => {
       const { getUserFromRequest, isDemoUser } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue({
+      jest.mocked(getUserFromRequest).mockResolvedValue({
         id: 'demo-user',
         organizationId: 'org-1',
         role: 'admin',
       });
-      vi.mocked(isDemoUser).mockReturnValue(true);
+      jest.mocked(isDemoUser).mockReturnValue(true);
 
       const request = new NextRequest('http://localhost:3000/api/projects?page=1&limit=1');
       const { GET } = await import('@/app/api/projects/route');
@@ -148,7 +148,7 @@ describe('Projects API', () => {
   describe('POST /api/projects', () => {
     it('should return 401 for unauthenticated users', async () => {
       const { getUserFromRequest } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue(null);
+      jest.mocked(getUserFromRequest).mockResolvedValue(null);
 
       const request = new NextRequest('http://localhost:3000/api/projects', {
         method: 'POST',
@@ -162,12 +162,12 @@ describe('Projects API', () => {
 
     it('should return 403 for demo users', async () => {
       const { getUserFromRequest, isDemoUser } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue({
+      jest.mocked(getUserFromRequest).mockResolvedValue({
         id: 'demo-user',
         organizationId: 'org-1',
         role: 'admin',
       });
-      vi.mocked(isDemoUser).mockReturnValue(true);
+      jest.mocked(isDemoUser).mockReturnValue(true);
 
       const request = new NextRequest('http://localhost:3000/api/projects', {
         method: 'POST',
@@ -181,12 +181,12 @@ describe('Projects API', () => {
 
     it('should validate required fields', async () => {
       const { getUserFromRequest, isDemoUser } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue({
+      jest.mocked(getUserFromRequest).mockResolvedValue({
         id: 'real-user',
         organizationId: 'org-1',
         role: 'admin',
       });
-      vi.mocked(isDemoUser).mockReturnValue(false);
+      jest.mocked(isDemoUser).mockReturnValue(false);
 
       const request = new NextRequest('http://localhost:3000/api/projects', {
         method: 'POST',
@@ -204,14 +204,14 @@ describe('Projects API', () => {
       const { getUserFromRequest, isDemoUser } = await import('@/app/api/utils/demo-config');
       const { projectService } = await import('@/lib/services');
 
-      vi.mocked(getUserFromRequest).mockResolvedValue({
+      jest.mocked(getUserFromRequest).mockResolvedValue({
         id: 'real-user',
         organizationId: 'org-1',
         role: 'admin',
       });
-      vi.mocked(isDemoUser).mockReturnValue(false);
+      jest.mocked(isDemoUser).mockReturnValue(false);
 
-      vi.mocked(projectService.createProject).mockResolvedValue({
+      jest.mocked(projectService.createProject).mockResolvedValue({
         id: 'new-proj',
         projectNumber: 'PRJ-003',
         name: 'مشروع جديد',

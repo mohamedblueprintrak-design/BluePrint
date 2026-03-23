@@ -3,13 +3,12 @@
  * اختبارات واجهة برمجة التطبيقات للعملاء
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
 // Mock dependencies
-vi.mock('@/app/api/utils/demo-config', () => ({
-  getUserFromRequest: vi.fn(),
-  isDemoUser: vi.fn(),
+jest.mock('@/app/api/utils/demo-config', () => ({
+  getUserFromRequest: jest.fn(),
+  isDemoUser: jest.fn(),
   DEMO_DATA: {
     clients: [
       {
@@ -36,25 +35,25 @@ vi.mock('@/app/api/utils/demo-config', () => ({
   },
 }));
 
-vi.mock('@/lib/services/client.service', () => ({
+jest.mock('@/lib/services/client.service', () => ({
   clientService: {
-    getClients: vi.fn(),
-    createClient: vi.fn(),
-    updateClient: vi.fn(),
-    deleteClient: vi.fn(),
-    getClientById: vi.fn(),
+    getClients: jest.fn(),
+    createClient: jest.fn(),
+    updateClient: jest.fn(),
+    deleteClient: jest.fn(),
+    getClientById: jest.fn(),
   },
 }));
 
 describe('Clients API', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('GET /api/clients', () => {
     it('should return 401 for unauthenticated users', async () => {
       const { getUserFromRequest } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue(null);
+      (getUserFromRequest as jest.Mock).mockResolvedValue(null);
 
       const request = new NextRequest('http://localhost:3000/api/clients');
       
@@ -65,12 +64,12 @@ describe('Clients API', () => {
 
     it('should return clients for authenticated demo users', async () => {
       const { getUserFromRequest, isDemoUser, DEMO_DATA } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue({
+      (getUserFromRequest as jest.Mock).mockResolvedValue({
         id: 'demo-user',
         organizationId: 'org-1',
         role: 'admin',
       });
-      vi.mocked(isDemoUser).mockReturnValue(true);
+      (isDemoUser as jest.Mock).mockReturnValue(true);
 
       expect(DEMO_DATA.clients).toHaveLength(2);
       expect(DEMO_DATA.clients[0].name).toBe('عميل تجريبي 1');

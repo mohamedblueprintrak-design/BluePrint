@@ -3,54 +3,54 @@
  * اختبارات تكامل واجهة برمجة التطبيقات
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+
 import { NextRequest } from 'next/server';
 
 // Mock the database and auth
-vi.mock('@/lib/db', () => ({
+jest.mock('@/lib/db', () => ({
   prisma: {
     user: {
-      findUnique: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn(),
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
     },
     project: {
-      findMany: vi.fn(),
-      findFirst: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn(),
-      delete: vi.fn(),
-      count: vi.fn(),
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn(),
     },
     client: {
-      findMany: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn(),
+      findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
     },
     invoice: {
-      findMany: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn(),
+      findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
     },
     task: {
-      findMany: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn(),
-      delete: vi.fn(),
+      findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
     },
     activity: {
-      create: vi.fn(),
+      create: jest.fn(),
     },
     notification: {
-      create: vi.fn(),
+      create: jest.fn(),
     },
   },
 }));
 
-vi.mock('@/lib/auth/auth-service', () => ({
+jest.mock('@/lib/auth/auth-service', () => ({
   authService: {
-    verifyToken: vi.fn(),
-    hasPermission: vi.fn(),
+    verifyToken: jest.fn(),
+    hasPermission: jest.fn(),
   },
 }));
 

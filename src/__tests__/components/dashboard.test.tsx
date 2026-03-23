@@ -3,18 +3,18 @@
  * اختبارات مكون لوحة التحكم
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+
 import { render, screen } from '@/__tests__/utils/db-mock';
 
 // Mock next/navigation
-vi.mock('next/navigation', () => ({
+jest.mock('next/navigation', () => ({
   useRouter: () => ({
-    push: vi.fn(),
+    push: jest.fn(),
   }),
 }));
 
 // Mock next-auth
-vi.mock('next-auth/react', () => ({
+jest.mock('next-auth/react', () => ({
   useSession: () => ({
     data: {
       user: {
@@ -28,7 +28,7 @@ vi.mock('next-auth/react', () => ({
 
 describe('Dashboard Component', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('Statistics Cards', () => {

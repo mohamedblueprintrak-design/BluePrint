@@ -3,30 +3,30 @@
  * اختبارات واجهة برمجة تطبيقات النسخ الاحتياطي
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+
 import { NextRequest } from 'next/server';
 
 // Mock the backup service
-vi.mock('@/lib/backup', () => ({
+jest.mock('@/lib/backup', () => ({
   backupService: {
-    listBackups: vi.fn(),
-    createDatabaseBackup: vi.fn(),
-    createFilesBackup: vi.fn(),
-    createFullBackup: vi.fn(),
-    deleteBackup: vi.fn(),
-    getStats: vi.fn(),
-    getDefaultSchedules: vi.fn(),
+    listBackups: jest.fn(),
+    createDatabaseBackup: jest.fn(),
+    createFilesBackup: jest.fn(),
+    createFullBackup: jest.fn(),
+    deleteBackup: jest.fn(),
+    getStats: jest.fn(),
+    getDefaultSchedules: jest.fn(),
   },
 }));
 
 // Mock demo config
-vi.mock('@/app/api/utils/demo-config', () => ({
-  getUserFromRequest: vi.fn(),
+jest.mock('@/app/api/utils/demo-config', () => ({
+  getUserFromRequest: jest.fn(),
 }));
 
 describe('Backup API', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('GET /api/backup', () => {

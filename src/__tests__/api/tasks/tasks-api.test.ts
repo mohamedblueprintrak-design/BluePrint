@@ -3,13 +3,13 @@
  * اختبارات واجهة برمجة التطبيقات للمهام
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+
 import { NextRequest } from 'next/server';
 
 // Mock dependencies
-vi.mock('@/app/api/utils/demo-config', () => ({
-  getUserFromRequest: vi.fn(),
-  isDemoUser: vi.fn(),
+jest.mock('@/app/api/utils/demo-config', () => ({
+  getUserFromRequest: jest.fn(),
+  isDemoUser: jest.fn(),
   DEMO_DATA: {
     tasks: [
       {
@@ -49,12 +49,12 @@ vi.mock('@/app/api/utils/demo-config', () => ({
   },
 }));
 
-vi.mock('@/lib/services/task.service', () => ({
+jest.mock('@/lib/services/task.service', () => ({
   taskService: {
-    getTasks: vi.fn(),
-    createTask: vi.fn(),
-    updateTask: vi.fn(),
-    deleteTask: vi.fn(),
+    getTasks: jest.fn(),
+    createTask: jest.fn(),
+    updateTask: jest.fn(),
+    deleteTask: jest.fn(),
   },
   TaskAccessError: class TaskAccessError extends Error {
     constructor(message: string) {
@@ -64,23 +64,23 @@ vi.mock('@/lib/services/task.service', () => ({
   },
 }));
 
-vi.mock('@/lib/db', () => ({
+jest.mock('@/lib/db', () => ({
   prisma: {
     notification: {
-      create: vi.fn(),
+      create: jest.fn(),
     },
   },
 }));
 
 describe('Tasks API', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('GET /api/tasks', () => {
     it('should return 401 for unauthenticated users', async () => {
       const { getUserFromRequest } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue(null);
+      jest.mocked(getUserFromRequest).mockResolvedValue(null);
 
       const request = new NextRequest('http://localhost:3000/api/tasks');
       const { GET } = await import('@/app/api/tasks/route');
@@ -91,12 +91,12 @@ describe('Tasks API', () => {
 
     it('should return tasks for demo users', async () => {
       const { getUserFromRequest, isDemoUser } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue({
+      jest.mocked(getUserFromRequest).mockResolvedValue({
         id: 'demo-user',
         organizationId: 'org-1',
         role: 'admin',
       });
-      vi.mocked(isDemoUser).mockReturnValue(true);
+      jest.mocked(isDemoUser).mockReturnValue(true);
 
       const request = new NextRequest('http://localhost:3000/api/tasks');
       const { GET } = await import('@/app/api/tasks/route');
@@ -110,12 +110,12 @@ describe('Tasks API', () => {
 
     it('should filter tasks by project', async () => {
       const { getUserFromRequest, isDemoUser } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue({
+      jest.mocked(getUserFromRequest).mockResolvedValue({
         id: 'demo-user',
         organizationId: 'org-1',
         role: 'admin',
       });
-      vi.mocked(isDemoUser).mockReturnValue(true);
+      jest.mocked(isDemoUser).mockReturnValue(true);
 
       const request = new NextRequest('http://localhost:3000/api/tasks?projectId=proj-1');
       const { GET } = await import('@/app/api/tasks/route');
@@ -128,12 +128,12 @@ describe('Tasks API', () => {
 
     it('should filter tasks by status', async () => {
       const { getUserFromRequest, isDemoUser } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue({
+      jest.mocked(getUserFromRequest).mockResolvedValue({
         id: 'demo-user',
         organizationId: 'org-1',
         role: 'admin',
       });
-      vi.mocked(isDemoUser).mockReturnValue(true);
+      jest.mocked(isDemoUser).mockReturnValue(true);
 
       const request = new NextRequest('http://localhost:3000/api/tasks?status=todo');
       const { GET } = await import('@/app/api/tasks/route');
@@ -147,12 +147,12 @@ describe('Tasks API', () => {
 
     it('should filter tasks by priority', async () => {
       const { getUserFromRequest, isDemoUser } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue({
+      jest.mocked(getUserFromRequest).mockResolvedValue({
         id: 'demo-user',
         organizationId: 'org-1',
         role: 'admin',
       });
-      vi.mocked(isDemoUser).mockReturnValue(true);
+      jest.mocked(isDemoUser).mockReturnValue(true);
 
       const request = new NextRequest('http://localhost:3000/api/tasks?priority=high');
       const { GET } = await import('@/app/api/tasks/route');
@@ -168,7 +168,7 @@ describe('Tasks API', () => {
   describe('POST /api/tasks', () => {
     it('should return 401 for unauthenticated users', async () => {
       const { getUserFromRequest } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue(null);
+      jest.mocked(getUserFromRequest).mockResolvedValue(null);
 
       const request = new NextRequest('http://localhost:3000/api/tasks', {
         method: 'POST',
@@ -182,12 +182,12 @@ describe('Tasks API', () => {
 
     it('should return 403 for demo users', async () => {
       const { getUserFromRequest, isDemoUser } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue({
+      jest.mocked(getUserFromRequest).mockResolvedValue({
         id: 'demo-user',
         organizationId: 'org-1',
         role: 'admin',
       });
-      vi.mocked(isDemoUser).mockReturnValue(true);
+      jest.mocked(isDemoUser).mockReturnValue(true);
 
       const request = new NextRequest('http://localhost:3000/api/tasks', {
         method: 'POST',
@@ -201,12 +201,12 @@ describe('Tasks API', () => {
 
     it('should validate required title', async () => {
       const { getUserFromRequest, isDemoUser } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue({
+      jest.mocked(getUserFromRequest).mockResolvedValue({
         id: 'real-user',
         organizationId: 'org-1',
         role: 'admin',
       });
-      vi.mocked(isDemoUser).mockReturnValue(false);
+      jest.mocked(isDemoUser).mockReturnValue(false);
 
       const request = new NextRequest('http://localhost:3000/api/tasks', {
         method: 'POST',
@@ -220,12 +220,12 @@ describe('Tasks API', () => {
 
     it('should validate title length', async () => {
       const { getUserFromRequest, isDemoUser } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue({
+      jest.mocked(getUserFromRequest).mockResolvedValue({
         id: 'real-user',
         organizationId: 'org-1',
         role: 'admin',
       });
-      vi.mocked(isDemoUser).mockReturnValue(false);
+      jest.mocked(isDemoUser).mockReturnValue(false);
 
       const request = new NextRequest('http://localhost:3000/api/tasks', {
         method: 'POST',
@@ -239,12 +239,12 @@ describe('Tasks API', () => {
 
     it('should validate priority values', async () => {
       const { getUserFromRequest, isDemoUser } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue({
+      jest.mocked(getUserFromRequest).mockResolvedValue({
         id: 'real-user',
         organizationId: 'org-1',
         role: 'admin',
       });
-      vi.mocked(isDemoUser).mockReturnValue(false);
+      jest.mocked(isDemoUser).mockReturnValue(false);
 
       const request = new NextRequest('http://localhost:3000/api/tasks', {
         method: 'POST',
@@ -258,12 +258,12 @@ describe('Tasks API', () => {
 
     it('should validate status values', async () => {
       const { getUserFromRequest, isDemoUser } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue({
+      jest.mocked(getUserFromRequest).mockResolvedValue({
         id: 'real-user',
         organizationId: 'org-1',
         role: 'admin',
       });
-      vi.mocked(isDemoUser).mockReturnValue(false);
+      jest.mocked(isDemoUser).mockReturnValue(false);
 
       const request = new NextRequest('http://localhost:3000/api/tasks', {
         method: 'POST',
@@ -279,14 +279,14 @@ describe('Tasks API', () => {
       const { getUserFromRequest, isDemoUser } = await import('@/app/api/utils/demo-config');
       const { taskService } = await import('@/lib/services/task.service');
 
-      vi.mocked(getUserFromRequest).mockResolvedValue({
+      jest.mocked(getUserFromRequest).mockResolvedValue({
         id: 'real-user',
         organizationId: 'org-1',
         role: 'admin',
       });
-      vi.mocked(isDemoUser).mockReturnValue(false);
+      jest.mocked(isDemoUser).mockReturnValue(false);
 
-      vi.mocked(taskService.createTask).mockResolvedValue({
+      jest.mocked(taskService.createTask).mockResolvedValue({
         id: 'new-task',
         title: 'مهمة جديدة',
       } as any);
@@ -313,7 +313,7 @@ describe('Tasks API', () => {
   describe('PUT /api/tasks', () => {
     it('should return 401 for unauthenticated users', async () => {
       const { getUserFromRequest } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue(null);
+      jest.mocked(getUserFromRequest).mockResolvedValue(null);
 
       const request = new NextRequest('http://localhost:3000/api/tasks', {
         method: 'PUT',
@@ -327,12 +327,12 @@ describe('Tasks API', () => {
 
     it('should return 403 for demo users', async () => {
       const { getUserFromRequest, isDemoUser } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue({
+      jest.mocked(getUserFromRequest).mockResolvedValue({
         id: 'demo-user',
         organizationId: 'org-1',
         role: 'admin',
       });
-      vi.mocked(isDemoUser).mockReturnValue(true);
+      jest.mocked(isDemoUser).mockReturnValue(true);
 
       const request = new NextRequest('http://localhost:3000/api/tasks', {
         method: 'PUT',
@@ -346,12 +346,12 @@ describe('Tasks API', () => {
 
     it('should validate task id is required', async () => {
       const { getUserFromRequest, isDemoUser } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue({
+      jest.mocked(getUserFromRequest).mockResolvedValue({
         id: 'real-user',
         organizationId: 'org-1',
         role: 'admin',
       });
-      vi.mocked(isDemoUser).mockReturnValue(false);
+      jest.mocked(isDemoUser).mockReturnValue(false);
 
       const request = new NextRequest('http://localhost:3000/api/tasks', {
         method: 'PUT',
@@ -365,12 +365,12 @@ describe('Tasks API', () => {
 
     it('should validate progress range', async () => {
       const { getUserFromRequest, isDemoUser } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue({
+      jest.mocked(getUserFromRequest).mockResolvedValue({
         id: 'real-user',
         organizationId: 'org-1',
         role: 'admin',
       });
-      vi.mocked(isDemoUser).mockReturnValue(false);
+      jest.mocked(isDemoUser).mockReturnValue(false);
 
       const request = new NextRequest('http://localhost:3000/api/tasks', {
         method: 'PUT',
@@ -386,7 +386,7 @@ describe('Tasks API', () => {
   describe('DELETE /api/tasks', () => {
     it('should return 401 for unauthenticated users', async () => {
       const { getUserFromRequest } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue(null);
+      jest.mocked(getUserFromRequest).mockResolvedValue(null);
 
       const request = new NextRequest('http://localhost:3000/api/tasks?id=task-1', {
         method: 'DELETE',
@@ -399,12 +399,12 @@ describe('Tasks API', () => {
 
     it('should return 403 for demo users', async () => {
       const { getUserFromRequest, isDemoUser } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue({
+      jest.mocked(getUserFromRequest).mockResolvedValue({
         id: 'demo-user',
         organizationId: 'org-1',
         role: 'admin',
       });
-      vi.mocked(isDemoUser).mockReturnValue(true);
+      jest.mocked(isDemoUser).mockReturnValue(true);
 
       const request = new NextRequest('http://localhost:3000/api/tasks?id=task-1', {
         method: 'DELETE',
@@ -417,12 +417,12 @@ describe('Tasks API', () => {
 
     it('should validate task id is required', async () => {
       const { getUserFromRequest, isDemoUser } = await import('@/app/api/utils/demo-config');
-      vi.mocked(getUserFromRequest).mockResolvedValue({
+      jest.mocked(getUserFromRequest).mockResolvedValue({
         id: 'real-user',
         organizationId: 'org-1',
         role: 'admin',
       });
-      vi.mocked(isDemoUser).mockReturnValue(false);
+      jest.mocked(isDemoUser).mockReturnValue(false);
 
       const request = new NextRequest('http://localhost:3000/api/tasks', {
         method: 'DELETE',
