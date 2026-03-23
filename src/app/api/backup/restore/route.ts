@@ -7,8 +7,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { backupService } from '@/lib/backup';
-import { successResponse, errorResponse, unauthorizedResponse } from '../../../utils/response';
-import { getUserFromRequest } from '../../../utils/demo-config';
+import { successResponse, errorResponse, unauthorizedResponse } from '../../utils/response';
+import { getUserFromRequest } from '../../utils/demo-config';
 
 /**
  * POST - Restore from backup

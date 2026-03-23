@@ -71,10 +71,10 @@ const envSchema = z.object({
   SENTRY_DSN: z.string().optional(),
   
   // Rate Limiting
-  RATE_LIMIT_MAX: z.string().transform(Number).default('100'),
-  RATE_LIMIT_WINDOW_MS: z.string().transform(Number).default('60000'),
-  RATE_LIMIT_AUTH_MAX: z.string().transform(Number).default('10'),
-  RATE_LIMIT_AUTH_WINDOW_MS: z.string().transform(Number).default('60000'),
+  RATE_LIMIT_MAX: z.string().transform(Number).optional(),
+  RATE_LIMIT_WINDOW_MS: z.string().transform(Number).optional(),
+  RATE_LIMIT_AUTH_MAX: z.string().transform(Number).optional(),
+  RATE_LIMIT_AUTH_WINDOW_MS: z.string().transform(Number).optional(),
   
   // CORS
   CORS_ORIGINS: z.string().optional(),
