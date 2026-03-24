@@ -89,16 +89,41 @@ jest.mock('next/headers', () => ({
   }),
 }));
 
+// Mock jose module (ESM module that Jest can't handle)
+jest.mock('jose', () => ({
+  jwtVerify: jest.fn(),
+  SignJWT: jest.fn().mockImplementation(() => ({
+    setProtectedHeader: jest.fn().mockReturnThis(),
+    setIssuedAt: jest.fn().mockReturnThis(),
+    setExpirationTime: jest.fn().mockReturnThis(),
+    sign: jest.fn().mockResolvedValue('mock-jwt-token'),
+  })),
+  jwtDecrypt: jest.fn(),
+  CompactSign: jest.fn(),
+  compactDecrypt: jest.fn(),
+  importPKCS8: jest.fn(),
+  importKey: jest.fn(),
+  generateKeyPair: jest.fn(),
+  EncryptJWT: jest.fn().mockImplementation(() => ({
+    setProtectedHeader: jest.fn().mockReturnThis(),
+    setIssuedAt: jest.fn().mockReturnThis(),
+    setExpirationTime: jest.fn().mockReturnThis(),
+    encrypt: jest.fn().mockResolvedValue('mock-encrypted-token'),
+  })),
+}));
+
 // Mock next/server
 jest.mock('next/server', () => ({
   NextRequest: class MockNextRequest {
     public method: string;
     public headers: Headers;
     public url: string;
+    public nextUrl: URL;
     private _body: unknown;
 
     constructor(input: string | URL, init?: RequestInit) {
       this.url = input.toString();
+      this.nextUrl = new URL(input.toString());
       this.method = init?.method || 'GET';
       this.headers = new Headers(init?.headers as Record<string, string>);
       this._body = init?.body;

@@ -12,11 +12,15 @@ function createMockRequest(options: {
   method?: string;
   headers?: Record<string, string>;
   body?: unknown;
+  url?: string;
 }): NextRequest {
   const headers = new Headers(options.headers || {});
+  const url = options.url || 'http://localhost:3000/api/test';
   return {
     method: options.method || 'GET',
     headers,
+    url,
+    nextUrl: new URL(url),
     json: async () => options.body,
   } as unknown as NextRequest;
 }

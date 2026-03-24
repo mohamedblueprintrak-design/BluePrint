@@ -125,8 +125,8 @@ describe('Projects API', () => {
       expect(response.status).toBe(200);
       const data = await response.json();
       expect(data.data).toHaveLength(1);
-      expect(data.pagination.total).toBe(2);
-      expect(data.pagination.totalPages).toBe(2);
+      expect(data.meta.total).toBe(2);
+      expect(data.meta.totalPages).toBe(2);
     });
   });
 

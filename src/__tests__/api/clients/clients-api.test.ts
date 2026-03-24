@@ -95,13 +95,13 @@ describe('Clients API', () => {
     it('should filter clients by search term', async () => {
       const { DEMO_DATA } = await import('@/app/api/utils/demo-config');
       const demoData = DEMO_DATA as unknown as MockDemoData;
-      const searchTerm = 'عميل 1';
+      const searchTerm = 'تجريبي 1';
       const filtered = demoData.clients.filter(c => 
         c.name.includes(searchTerm) || c.email.includes(searchTerm)
       );
       
       expect(filtered).toHaveLength(1);
-      expect(filtered[0].name).toContain('عميل 1');
+      expect(filtered[0].name).toContain('تجريبي 1');
     });
 
     it('should filter clients by city', async () => {

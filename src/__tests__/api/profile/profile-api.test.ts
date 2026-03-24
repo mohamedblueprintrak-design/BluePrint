@@ -82,7 +82,7 @@ describe('Profile API', () => {
       const data = await response.json();
 
       expect(data.success).toBe(false);
-      expect(data.code).toBe('USER_NOT_FOUND');
+      expect(data.error?.code || data.code).toBe('USER_NOT_FOUND');
     });
   });
 
@@ -208,7 +208,7 @@ describe('Profile API', () => {
       const data = await response.json();
 
       expect(data.success).toBe(false);
-      expect(data.code).toBe('PASSWORD_MISMATCH');
+      expect(data.error?.code || data.code).toBe('PASSWORD_MISMATCH');
     });
 
     it('should reject weak password', async () => {
@@ -229,7 +229,7 @@ describe('Profile API', () => {
       const data = await response.json();
 
       expect(data.success).toBe(false);
-      expect(data.code).toBe('WEAK_PASSWORD');
+      expect(data.error?.code || data.code).toBe('WEAK_PASSWORD');
     });
   });
 

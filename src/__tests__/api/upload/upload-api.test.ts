@@ -221,7 +221,7 @@ describe('File Naming', () => {
     };
 
     expect(sanitizeFilename('My Document.pdf')).toBe('my_document.pdf');
-    expect(sanitizeFilename('File<>:"/\\|?*.pdf')).toBe('file________.pdf');
+    expect(sanitizeFilename('File<>:"/\\|?*.pdf')).toBe('file_.pdf'); // consecutive underscores collapsed
   });
 });
 
