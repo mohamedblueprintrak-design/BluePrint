@@ -13,8 +13,8 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 COPY prisma ./prisma/
 
-# Install dependencies
-RUN npm ci --only=production && \
+# Install ALL dependencies (including devDependencies for build)
+RUN npm ci && \
     npm cache clean --force
 
 # Generate Prisma Client
@@ -33,6 +33,14 @@ COPY . .
 # Set environment variables for build
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
+
+# Build-time environment variables (with placeholder values for build)
+# These will be overridden at runtime
+ENV JWT_SECRET=build-placeholder-jwt-secret-key-32-chars
+ENV DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder
+ENV ENCRYPTION_KEY=0000000000000000000000000000000000000000000000000000000000000000
+ENV DATABASE_PASSWORD=placeholder
+ENV REDIS_PASSWORD=placeholder
 
 # Build the application
 RUN npm run build
