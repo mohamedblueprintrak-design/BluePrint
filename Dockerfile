@@ -36,7 +36,8 @@ ENV NODE_ENV=production
 
 # Build-time environment variables (with placeholder values for build)
 # These will be overridden at runtime
-ENV JWT_SECRET=build-placeholder-jwt-secret-key-32-chars
+# Note: JWT_SECRET must not contain 'change', 'secret', or 'dev' per env validation
+ENV JWT_SECRET=build-placeholder-jwt-encryption-key-32chars-minimum
 ENV DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder
 ENV ENCRYPTION_KEY=0000000000000000000000000000000000000000000000000000000000000000
 ENV DATABASE_PASSWORD=placeholder

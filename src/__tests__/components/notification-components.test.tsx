@@ -228,7 +228,8 @@ describe('NotificationDropdown Component', () => {
     );
 
     expect(screen.getByTestId('unread-count')).toHaveTextContent('0 unread');
-    expect(screen.getAllByRole('listitem')).toHaveLength(0);
+    // When there are no notifications, there are no listitems in the DOM
+    expect(screen.queryAllByRole('listitem')).toHaveLength(0);
   });
 });
 

@@ -5,6 +5,38 @@
 import { NextRequest } from 'next/server';
 import { GET, POST } from '@/app/api/notifications/route';
 import { GET as getSettings, PUT as updateSettings } from '@/app/api/notifications/settings/route';
+import * as jose from 'jose';
+
+// Mock database
+jest.mock('@/lib/db', () => ({
+  db: {
+    user: {
+      findUnique: jest.fn().mockResolvedValue({
+        id: 'user-1',
+        organizationId: 'org-1',
+        role: 'admin',
+        organization: { id: 'org-1', name: 'Test Org' }
+      }),
+    },
+    notificationSettings: {
+      findUnique: jest.fn().mockResolvedValue(null),
+      upsert: jest.fn().mockResolvedValue({
+        id: 'settings-1',
+        userId: 'user-1',
+        emailInvoices: true,
+        emailTasks: true,
+        emailLeaves: true,
+        emailProjects: true,
+        emailPayments: true,
+        pushEnabled: false,
+        pushTasks: true,
+        pushLeaves: true,
+        pushProjects: true,
+        digestEmail: false,
+      }),
+    },
+  },
+}));
 
 // Mock dependencies
 jest.mock('@/app/api/utils/demo-config', () => ({
@@ -29,7 +61,13 @@ jest.mock('@/lib/services', () => ({
 }));
 
 describe('Notifications API', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Configure jose mock for authenticated requests
+    (jose.jwtVerify as jest.Mock).mockResolvedValue({
+      payload: { userId: 'user-1' }
+    });
+  });
 
   describe('GET /api/notifications', () => {
     it('should return 401 for unauthenticated users', async () => {
@@ -105,8 +143,8 @@ describe('Notifications API', () => {
 
   describe('GET /api/notifications/settings', () => {
     it('should return 401 for unauthenticated users', async () => {
-      const { getUserFromRequest } = require('@/app/api/utils/demo-config');
-      (getUserFromRequest as jest.Mock).mockResolvedValue(null);
+      // Mock jose to return null (no valid token)
+      (jose.jwtVerify as jest.Mock).mockRejectedValue(new Error('Invalid token'));
 
       const request = new NextRequest('http://localhost:3000/api/notifications/settings');
       const response = await getSettings(request);
@@ -115,11 +153,14 @@ describe('Notifications API', () => {
     });
 
     it('should return settings for authenticated users', async () => {
-      const { getUserFromRequest, isDemoUser } = require('@/app/api/utils/demo-config');
-      (getUserFromRequest as jest.Mock).mockResolvedValue({ id: 'user-1', organizationId: 'org-1' });
-      (isDemoUser as jest.Mock).mockReturnValue(true);
+      // Mock jose to return valid user
+      (jose.jwtVerify as jest.Mock).mockResolvedValue({
+        payload: { userId: 'user-1' }
+      });
 
-      const request = new NextRequest('http://localhost:3000/api/notifications/settings');
+      const request = new NextRequest('http://localhost:3000/api/notifications/settings', {
+        headers: { 'Authorization': 'Bearer valid-token' }
+      });
       const response = await getSettings(request);
 
       expect(response.status).toBe(200);
@@ -128,8 +169,8 @@ describe('Notifications API', () => {
 
   describe('PUT /api/notifications/settings', () => {
     it('should return 401 for unauthenticated users', async () => {
-      const { getUserFromRequest } = require('@/app/api/utils/demo-config');
-      (getUserFromRequest as jest.Mock).mockResolvedValue(null);
+      // Mock jose to return null (no valid token)
+      (jose.jwtVerify as jest.Mock).mockRejectedValue(new Error('Invalid token'));
 
       const request = new NextRequest('http://localhost:3000/api/notifications/settings', {
         method: 'PUT',

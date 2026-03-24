@@ -4,6 +4,39 @@
 
 import { NextRequest } from 'next/server';
 import { GET } from '@/app/api/reports/route';
+import * as jose from 'jose';
+
+// Mock database
+jest.mock('@/lib/db', () => ({
+  db: {
+    user: {
+      findUnique: jest.fn().mockResolvedValue({
+        id: 'user-1',
+        organizationId: 'org-1',
+        role: 'admin',
+        organization: { id: 'org-1', name: 'Test Org', currency: 'AED' }
+      }),
+    },
+    invoice: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    payment: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    project: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    task: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    client: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    expense: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+  },
+}));
 
 // Mock dependencies
 jest.mock('@/app/api/utils/demo-config', () => ({
@@ -32,12 +65,18 @@ jest.mock('@/lib/services', () => ({
 }));
 
 describe('Reports API', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Configure jose mock for authenticated requests
+    (jose.jwtVerify as jest.Mock).mockResolvedValue({
+      payload: { userId: 'user-1' }
+    });
+  });
 
   describe('GET /api/reports', () => {
     it('should return 401 for unauthenticated users', async () => {
-      const { getUserFromRequest } = require('@/app/api/utils/demo-config');
-      (getUserFromRequest as jest.Mock).mockResolvedValue(null);
+      // Mock jose to return null (no valid token)
+      (jose.jwtVerify as jest.Mock).mockRejectedValue(new Error('Invalid token'));
 
       const request = new NextRequest('http://localhost:3000/api/reports');
       const response = await GET(request);
@@ -46,55 +85,70 @@ describe('Reports API', () => {
     });
 
     it('should return project summary report', async () => {
-      const { getUserFromRequest, isDemoUser } = require('@/app/api/utils/demo-config');
-      (getUserFromRequest as jest.Mock).mockResolvedValue({ id: 'user-1', organizationId: 'org-1' });
-      (isDemoUser as jest.Mock).mockReturnValue(true);
+      // Mock jose to return valid user
+      (jose.jwtVerify as jest.Mock).mockResolvedValue({
+        payload: { userId: 'user-1' }
+      });
 
-      const request = new NextRequest('http://localhost:3000/api/reports?type=project-summary');
+      const request = new NextRequest('http://localhost:3000/api/reports?action=project-status', {
+        headers: { 'Authorization': 'Bearer valid-token' }
+      });
       const response = await GET(request);
 
       expect(response.status).toBe(200);
     });
 
     it('should return financial report', async () => {
-      const { getUserFromRequest, isDemoUser } = require('@/app/api/utils/demo-config');
-      (getUserFromRequest as jest.Mock).mockResolvedValue({ id: 'user-1', organizationId: 'org-1' });
-      (isDemoUser as jest.Mock).mockReturnValue(true);
+      // Mock jose to return valid user
+      (jose.jwtVerify as jest.Mock).mockResolvedValue({
+        payload: { userId: 'user-1' }
+      });
 
-      const request = new NextRequest('http://localhost:3000/api/reports?type=financial');
+      const request = new NextRequest('http://localhost:3000/api/reports?action=financial-summary', {
+        headers: { 'Authorization': 'Bearer valid-token' }
+      });
       const response = await GET(request);
 
       expect(response.status).toBe(200);
     });
 
     it('should return task summary report', async () => {
-      const { getUserFromRequest, isDemoUser } = require('@/app/api/utils/demo-config');
-      (getUserFromRequest as jest.Mock).mockResolvedValue({ id: 'user-1', organizationId: 'org-1' });
-      (isDemoUser as jest.Mock).mockReturnValue(true);
+      // Mock jose to return valid user
+      (jose.jwtVerify as jest.Mock).mockResolvedValue({
+        payload: { userId: 'user-1' }
+      });
 
-      const request = new NextRequest('http://localhost:3000/api/reports?type=tasks');
+      const request = new NextRequest('http://localhost:3000/api/reports?action=task-metrics', {
+        headers: { 'Authorization': 'Bearer valid-token' }
+      });
       const response = await GET(request);
 
       expect(response.status).toBe(200);
     });
 
     it('should support date range filtering', async () => {
-      const { getUserFromRequest, isDemoUser } = require('@/app/api/utils/demo-config');
-      (getUserFromRequest as jest.Mock).mockResolvedValue({ id: 'user-1', organizationId: 'org-1' });
-      (isDemoUser as jest.Mock).mockReturnValue(true);
+      // Mock jose to return valid user
+      (jose.jwtVerify as jest.Mock).mockResolvedValue({
+        payload: { userId: 'user-1' }
+      });
 
-      const request = new NextRequest('http://localhost:3000/api/reports?startDate=2024-01-01&endDate=2024-12-31');
+      const request = new NextRequest('http://localhost:3000/api/reports?action=financial-summary&startDate=2024-01-01&endDate=2024-12-31', {
+        headers: { 'Authorization': 'Bearer valid-token' }
+      });
       const response = await GET(request);
 
       expect(response.status).toBe(200);
     });
 
     it('should support project filtering', async () => {
-      const { getUserFromRequest, isDemoUser } = require('@/app/api/utils/demo-config');
-      (getUserFromRequest as jest.Mock).mockResolvedValue({ id: 'user-1', organizationId: 'org-1' });
-      (isDemoUser as jest.Mock).mockReturnValue(true);
+      // Mock jose to return valid user
+      (jose.jwtVerify as jest.Mock).mockResolvedValue({
+        payload: { userId: 'user-1' }
+      });
 
-      const request = new NextRequest('http://localhost:3000/api/reports?projectId=p1');
+      const request = new NextRequest('http://localhost:3000/api/reports?action=project-status&projectId=p1', {
+        headers: { 'Authorization': 'Bearer valid-token' }
+      });
       const response = await GET(request);
 
       expect(response.status).toBe(200);
