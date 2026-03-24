@@ -369,7 +369,7 @@ export function LoginPage() {
                 {language === 'ar' ? 'بيانات التجربة:' : 'Demo credentials:'}
               </p>
               <p className="text-sm font-medium text-blue-400">
-                admin / admin123
+                admin / Admin@123456
               </p>
             </div>
             <Button
@@ -377,7 +377,7 @@ export function LoginPage() {
               variant="ghost"
               size="sm"
               onClick={() => {
-                setLoginForm({ username: 'admin', password: 'admin123' });
+                setLoginForm({ username: 'admin', password: 'Admin@123456' });
               }}
               className="text-xs text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
             >

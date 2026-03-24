@@ -137,9 +137,11 @@ export interface JwtPayload {
 
 /**
  * Login request data
+ * Supports login with either email or username
  */
 export interface LoginRequest {
-  email: string;
+  email?: string;
+  username?: string;
   password: string;
   rememberMe?: boolean;
 }

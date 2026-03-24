@@ -233,19 +233,31 @@ class AuthenticationService {
   // ============================================
   
   /**
-   * Login user with email and password
+   * Login user with email or username and password
    */
   async login(data: LoginRequest): Promise<AuthResponse> {
     try {
-      // Find user by email
-      const user = await prisma.user.findUnique({
-        where: { email: data.email.toLowerCase() },
-        include: {
-          organization: {
-            select: { id: true, name: true, slug: true },
+      // Find user by email OR username
+      let user;
+      if (data.email) {
+        user = await prisma.user.findUnique({
+          where: { email: data.email.toLowerCase() },
+          include: {
+            organization: {
+              select: { id: true, name: true, slug: true },
+            },
           },
-        },
-      });
+        });
+      } else if (data.username) {
+        user = await prisma.user.findUnique({
+          where: { username: data.username },
+          include: {
+            organization: {
+              select: { id: true, name: true, slug: true },
+            },
+          },
+        });
+      }
       
       if (!user) {
         return {

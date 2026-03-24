@@ -118,23 +118,26 @@ export async function POST(request: NextRequest) {
  * - Rate limited to 10 attempts per minute
  * - Generic error messages to prevent enumeration
  * - Supports 2FA verification
+ * - Supports login with email OR username
  */
 async function handleLogin(
-  data: { email: string; password: string; rememberMe?: boolean; twoFactorCode?: string }, 
+  data: { email?: string; username?: string; password: string; rememberMe?: boolean; twoFactorCode?: string }, 
   request: NextRequest
 ): Promise<NextResponse> {
-  if (!data.email || !data.password) {
-    return errorResponse('البريد الإلكتروني وكلمة المرور مطلوبان', 'VALIDATION_ERROR', 400);
+  // Accept either email or username for login
+  const loginIdentifier = data.email || data.username;
+  
+  if (!loginIdentifier || !data.password) {
+    return errorResponse('البريد الإلكتروني أو اسم المستخدم وكلمة المرور مطلوبان', 'VALIDATION_ERROR', 400);
   }
 
-  // Validate email format
+  // Check if identifier is email or username
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(data.email)) {
-    return errorResponse('صيغة البريد الإلكتروني غير صحيحة', 'VALIDATION_ERROR', 400);
-  }
+  const isEmail = emailRegex.test(loginIdentifier);
 
   const result = await authService.login({
-    email: data.email,
+    email: isEmail ? loginIdentifier : undefined,
+    username: !isEmail ? loginIdentifier : undefined,
     password: data.password,
     rememberMe: data.rememberMe,
   });

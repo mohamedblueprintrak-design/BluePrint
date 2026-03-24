@@ -218,7 +218,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const result = await response.json();
 
       if (result.success) {
-        const newToken = result.data.accessToken;
+        const newToken = result.data.token;
         setToken(newToken);
         localStorage.setItem(AUTH_TOKEN_KEY, newToken);
 
