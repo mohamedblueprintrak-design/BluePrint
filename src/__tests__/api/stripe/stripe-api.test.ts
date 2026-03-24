@@ -347,8 +347,8 @@ describe('Stripe Pricing', () => {
     const annualDiscount = 20;
     const annualPrice = monthlyPrice * 12 * (1 - annualDiscount / 100);
 
-    // Allow for floating point precision
-    expect(annualPrice).toBeCloseTo(4784, 0);
+    // Allow for floating point precision (499 * 12 * 0.8 = 4790.4)
+    expect(Math.round(annualPrice)).toBe(4790);
     expect(annualPrice / 12).toBeLessThan(monthlyPrice);
   });
 

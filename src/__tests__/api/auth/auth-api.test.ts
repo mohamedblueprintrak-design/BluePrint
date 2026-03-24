@@ -267,7 +267,7 @@ describe('Authentication API', () => {
     });
   });
 
-  describe('POST /api/auth/verify-email', () => {
+  describe('GET /api/auth/verify-email', () => {
     it('should return error for missing token', async () => {
       const request = new NextRequest('http://localhost:3000/api/auth/verify-email', {
         method: 'GET',
