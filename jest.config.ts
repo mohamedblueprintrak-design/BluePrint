@@ -39,6 +39,7 @@ const config: Config = {
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest', {
       tsconfig: '<rootDir>/tsconfig.json',
+      jsx: 'react-jsx',
     }],
   },
   transformIgnorePatterns: [
