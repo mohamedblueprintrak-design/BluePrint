@@ -67,14 +67,16 @@ describe('Authentication API', () => {
       expect(data.success).toBe(false);
     });
 
-    it('should return error for invalid email format', async () => {
+    it('should return error for invalid email format (treated as username)', async () => {
       const request = new NextRequest('http://localhost:3000/api/auth', {
         method: 'POST',
         body: JSON.stringify({ action: 'login', email: 'invalid', password: 'pass' }),
         headers: { 'Content-Type': 'application/json' },
       });
       const response = await authHandler(request);
-      expect(response.status).toBe(400);
+      // Invalid email format is treated as username login attempt
+      // Returns 401 (invalid credentials) rather than 400 to prevent user enumeration
+      expect(response.status).toBe(401);
     });
 
     it('should return error for invalid credentials', async () => {

@@ -4,6 +4,10 @@
  */
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
+    // Validate environment configuration
+    const { logEnvironmentStatus } = await import('@/lib/env-validator');
+    logEnvironmentStatus();
+    
     console.log('✅ BluePrint server initialized');
   }
 }

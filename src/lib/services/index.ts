@@ -29,7 +29,11 @@ export {
 export { 
   clientService, 
   type ClientStats, 
-  type ClientWithProjects 
+  type ClientWithProjects,
+  type CreateClientInput,
+  type UpdateClientInput,
+  type ActiveClientDTO,
+  ClientAccessError
 } from './client.service';
 
 // Task Service
