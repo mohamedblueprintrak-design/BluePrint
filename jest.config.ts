@@ -37,7 +37,9 @@ const config: Config = {
     '/dist/',
   ],
   transform: {
-    '^.+\\.(ts|tsx)$': ['babel-jest', {}],
+    '^.+\\.(ts|tsx)$': ['ts-jest', {
+      tsconfig: '<rootDir>/tsconfig.json',
+    }],
   },
   transformIgnorePatterns: [
     'node_modules/(?!(next|@next|stripe|uuid|jose)/)',
