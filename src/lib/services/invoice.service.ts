@@ -144,9 +144,6 @@ class InvoiceService {
       where: { id, organizationId },
       include: {
         client: true,
-        project: {
-          select: { id: true, name: true, projectNumber: true },
-        },
       },
     });
   }

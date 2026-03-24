@@ -27,6 +27,16 @@ export interface ClientWithProjects extends Client {
 }
 
 /**
+ * Active client for dropdowns/selectors (partial data)
+ */
+export interface ActiveClientDTO {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+}
+
+/**
  * Client Service
  * Handles all business logic related to clients
  */
@@ -44,7 +54,7 @@ class ClientService {
   /**
    * Get active clients for dropdowns/selectors
    */
-  async getActiveClients(organizationId: string): Promise<Client[]> {
+  async getActiveClients(organizationId: string): Promise<ActiveClientDTO[]> {
     return prisma.client.findMany({
       where: { organizationId, isActive: true },
       orderBy: { name: 'asc' },

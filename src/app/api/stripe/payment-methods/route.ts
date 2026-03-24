@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const customerId = searchParams.get('customerId');
-    const type = (searchParams.get('type') as 'card' | 'bank_account') || 'card';
+    const type = (searchParams.get('type') as 'card') || 'card';
 
     if (!customerId) {
       return errorResponse('معرف العميل مطلوب', 'MISSING_CUSTOMER_ID', 400);

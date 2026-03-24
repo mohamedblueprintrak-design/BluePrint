@@ -87,7 +87,6 @@ async function getCache(): Promise<MemoryCache | any> {
   if (redisUrl && process.env.NODE_ENV === 'production') {
     try {
       // Dynamic import for Redis (only in production)
-      // @ts-expect-error - Redis is an optional dependency
       const { createClient } = await import('redis');
       
       redisClient = createClient({

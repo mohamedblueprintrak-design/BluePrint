@@ -136,9 +136,10 @@ export class ClientRepository extends BaseRepository<Client> {
   }
 
   /**
-   * Soft delete client
+   * Soft delete client by ID and organization
+   * This is a specialized soft delete that includes organization check for security
    */
-  async softDelete(id: string, organizationId: string): Promise<Client> {
+  async softDeleteByOrganization(id: string, organizationId: string): Promise<Client> {
     return this.delegate.update({
       where: { id, organizationId },
       data: { isActive: false },

@@ -511,7 +511,7 @@ class ProjectService {
    */
   private async generateProjectNumber(
     organizationId: string,
-    client: typeof prisma
+    client: typeof prisma | Omit<typeof prisma, '$on' | '$connect' | '$disconnect' | '$transaction' | '$extends'>
   ): Promise<string> {
     const year = new Date().getFullYear();
     const yearStart = new Date(year, 0, 1);

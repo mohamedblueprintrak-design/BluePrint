@@ -120,7 +120,7 @@ export function formatErrorResponse(error: unknown): {
   // Handle Zod validation errors
   if (error instanceof ZodError) {
     const details: Record<string, string[]> = {}
-    error.errors.forEach(err => {
+    error.issues.forEach(err => {
       const path = err.path.join('.')
       if (!details[path]) {
         details[path] = []

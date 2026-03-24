@@ -3,6 +3,11 @@
  * Mock لقاعدة البيانات للاختبارات
  */
 
+import { AuthenticatedUser } from '@/app/api/types';
+
+// Re-export testing library utilities for convenience
+export { render, screen, fireEvent, waitFor } from '@testing-library/react';
+
 // Mock Prisma Client
 export const mockPrismaClient = {
   // Organization
@@ -191,5 +196,30 @@ export const mockData = {
     updatedAt: new Date(),
   },
 };
+
+/**
+ * Create a complete mock authenticated user
+ * Useful for tests that need a full AuthenticatedUser object
+ */
+export function createMockUser(overrides: Partial<AuthenticatedUser> = {}): AuthenticatedUser {
+  return {
+    id: 'test-user-id',
+    username: 'testuser',
+    email: 'test@example.com',
+    fullName: 'Test User',
+    role: 'admin',
+    avatar: null,
+    language: 'ar',
+    theme: 'dark',
+    organizationId: 'test-org-id',
+    organization: {
+      id: 'test-org-id',
+      name: 'Test Organization',
+      currency: 'AED',
+    },
+    isActive: true,
+    ...overrides,
+  };
+}
 
 export default mockPrismaClient;

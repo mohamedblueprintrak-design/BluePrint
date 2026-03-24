@@ -35,6 +35,22 @@ jest.mock('@/app/api/utils/demo-config', () => ({
   },
 }));
 
+// Type the mock DEMO_DATA
+interface MockClient {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  city: string;
+  country: string;
+  isActive: boolean;
+  createdAt: Date;
+}
+
+interface MockDemoData {
+  clients: MockClient[];
+}
+
 jest.mock('@/lib/services/client.service', () => ({
   clientService: {
     getClients: jest.fn(),
@@ -71,14 +87,16 @@ describe('Clients API', () => {
       });
       (isDemoUser as jest.Mock).mockReturnValue(true);
 
-      expect(DEMO_DATA.clients).toHaveLength(2);
-      expect(DEMO_DATA.clients[0].name).toBe('عميل تجريبي 1');
+      const demoData = DEMO_DATA as unknown as MockDemoData;
+      expect(demoData.clients).toHaveLength(2);
+      expect(demoData.clients[0].name).toBe('عميل تجريبي 1');
     });
 
     it('should filter clients by search term', async () => {
       const { DEMO_DATA } = await import('@/app/api/utils/demo-config');
+      const demoData = DEMO_DATA as unknown as MockDemoData;
       const searchTerm = 'عميل 1';
-      const filtered = DEMO_DATA.clients.filter(c => 
+      const filtered = demoData.clients.filter(c => 
         c.name.includes(searchTerm) || c.email.includes(searchTerm)
       );
       
@@ -88,7 +106,8 @@ describe('Clients API', () => {
 
     it('should filter clients by city', async () => {
       const { DEMO_DATA } = await import('@/app/api/utils/demo-config');
-      const filtered = DEMO_DATA.clients.filter(c => c.city === 'الرياض');
+      const demoData = DEMO_DATA as unknown as MockDemoData;
+      const filtered = demoData.clients.filter(c => c.city === 'الرياض');
       
       expect(filtered).toHaveLength(1);
       expect(filtered[0].city).toBe('الرياض');
@@ -97,7 +116,7 @@ describe('Clients API', () => {
 
   describe('POST /api/clients', () => {
     it('should validate required name field', async () => {
-      const clientData = {
+      const clientData: { email: string; phone: string; name?: string } = {
         email: 'test@example.com',
         phone: '+966501111111',
       };
@@ -124,7 +143,7 @@ describe('Clients API', () => {
 
   describe('PUT /api/clients', () => {
     it('should require client id', async () => {
-      const updateData = {
+      const updateData: { name: string; id?: string } = {
         name: 'عميل محدث',
       };
       
@@ -152,7 +171,7 @@ describe('Clients API', () => {
 
   describe('DELETE /api/clients', () => {
     it('should require client id', async () => {
-      const deleteRequest = {};
+      const deleteRequest: { id?: string } = {};
       
       expect(deleteRequest.id).toBeUndefined();
     });

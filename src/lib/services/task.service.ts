@@ -102,6 +102,25 @@ export class TaskAccessError extends Error {
 }
 
 /**
+ * Gantt task DTO - partial task data for Gantt chart
+ */
+export interface GanttTaskDTO {
+  id: string;
+  title: string;
+  startDate: Date | null;
+  endDate: Date | null;
+  progress: number;
+  status: string;
+  priority: string;
+  parentId: string | null;
+  dependencies: string | null;
+  color: string | null;
+  isMilestone: boolean;
+  order: number;
+  assignedTo: string | null;
+}
+
+/**
  * Task Service
  * Handles all business logic related to tasks
  * 
@@ -451,7 +470,7 @@ class TaskService {
    * @returns Array of tasks for the project
    * @throws TaskAccessError if project not found or access denied
    */
-  async getTasksForGantt(projectId: string, organizationId: string): Promise<Task[]> {
+  async getTasksForGantt(projectId: string, organizationId: string): Promise<GanttTaskDTO[]> {
     // SECURITY: Verify project belongs to organization
     const project = await prisma.project.findFirst({
       where: {

@@ -4,7 +4,7 @@
  */
 
 
-import { render, screen, fireEvent, waitFor } from '@/__tests__/utils/db-mock';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
@@ -159,7 +159,7 @@ describe('Auth Components', () => {
     });
 
     it('should invalidate token after use', async () => {
-      const token = {
+      const token: { id: string; usedAt: Date | null } = {
         id: 'token-1',
         usedAt: null,
       };
@@ -237,7 +237,7 @@ describe('Auth Components', () => {
     });
 
     it('should mark email as verified', async () => {
-      const user = {
+      const user: { id: string; email: string; emailVerified: Date | null } = {
         id: 'user-1',
         email: 'test@example.com',
         emailVerified: null,

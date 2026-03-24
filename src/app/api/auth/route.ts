@@ -274,7 +274,7 @@ async function handleSignup(
     token: result.token,
     emailVerificationSent: true,
     message: 'تم إنشاء الحساب بنجاح. يرجى التحقق من بريدك الإلكتروني.',
-  }, 'تم إنشاء الحساب بنجاح');
+  });
 }
 
 /**

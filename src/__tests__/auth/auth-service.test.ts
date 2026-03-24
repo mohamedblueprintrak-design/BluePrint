@@ -33,7 +33,7 @@ describe('Authentication Module', () => {
   describe('Password Hashing', () => {
     it('should hash password correctly', async () => {
       const mockHash = '$2a$12$abcdefghijklmnopqrstuvwxyz';
-      jest.mocked(hash).mockResolvedValue(mockHash);
+      (hash as jest.Mock).mockResolvedValue(mockHash);
 
       const password = 'TestPassword@123';
       const result = await hash(password, 12);
@@ -43,7 +43,7 @@ describe('Authentication Module', () => {
     });
 
     it('should verify password correctly', async () => {
-      jest.mocked(compare).mockResolvedValue(true);
+      (compare as jest.Mock).mockResolvedValue(true);
 
       const password = 'TestPassword@123';
       const hashedPassword = '$2a$12$abcdefghijklmnopqrstuvwxyz';
@@ -54,7 +54,7 @@ describe('Authentication Module', () => {
     });
 
     it('should return false for wrong password', async () => {
-      jest.mocked(compare).mockResolvedValue(false);
+      (compare as jest.Mock).mockResolvedValue(false);
 
       const password = 'WrongPassword@123';
       const hashedPassword = '$2a$12$abcdefghijklmnopqrstuvwxyz';

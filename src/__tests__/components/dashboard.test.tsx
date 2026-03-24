@@ -4,7 +4,7 @@
  */
 
 
-import { render, screen } from '@/__tests__/utils/db-mock';
+import { render, screen } from '@testing-library/react';
 
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
@@ -249,7 +249,11 @@ describe('Dashboard Component', () => {
 
   describe('Error Handling', () => {
     it('should handle missing data gracefully', async () => {
-      const dashboardData = {
+      const dashboardData: {
+        projects: { id: string }[] | null;
+        tasks: { id: string }[] | undefined;
+        invoices: { id: string }[];
+      } = {
         projects: null,
         tasks: undefined,
         invoices: [],

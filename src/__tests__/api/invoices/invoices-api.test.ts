@@ -5,6 +5,28 @@
 
 
 import { NextRequest } from 'next/server';
+import { createMockUser } from '@/__tests__/utils/db-mock';
+
+// Type for mock invoice
+interface MockInvoice {
+  id: string;
+  invoiceNumber: string;
+  clientId: string;
+  client: { name: string };
+  subtotal: number;
+  taxRate: number;
+  taxAmount: number;
+  total: number;
+  status: string;
+  issueDate: Date;
+  dueDate: Date;
+  paidAmount?: number;
+  createdAt: Date;
+}
+
+interface MockDemoData {
+  invoices: MockInvoice[];
+}
 
 // Mock dependencies
 jest.mock('@/app/api/utils/demo-config', () => ({
@@ -89,19 +111,17 @@ describe('Invoices API', () => {
 
     it('should return invoices for demo users', async () => {
       const { getUserFromRequest, isDemoUser, DEMO_DATA } = await import('@/app/api/utils/demo-config');
-      jest.mocked(getUserFromRequest).mockResolvedValue({
-        id: 'demo-user',
-        organizationId: 'org-1',
-        role: 'admin',
-      });
+      jest.mocked(getUserFromRequest).mockResolvedValue(createMockUser({ id: 'demo-user', organizationId: 'org-1' }));
       jest.mocked(isDemoUser).mockReturnValue(true);
 
-      expect(DEMO_DATA.invoices).toHaveLength(3);
+      const demoData = DEMO_DATA as unknown as MockDemoData;
+      expect(demoData.invoices).toHaveLength(3);
     });
 
     it('should filter invoices by status', async () => {
       const { DEMO_DATA } = await import('@/app/api/utils/demo-config');
-      const filtered = DEMO_DATA.invoices.filter(inv => inv.status === 'paid');
+      const demoData = DEMO_DATA as unknown as MockDemoData;
+      const filtered = demoData.invoices.filter(inv => inv.status === 'paid');
       
       expect(filtered).toHaveLength(1);
       expect(filtered[0].invoiceNumber).toBe('INV-003');
@@ -109,15 +129,17 @@ describe('Invoices API', () => {
 
     it('should filter invoices by client', async () => {
       const { DEMO_DATA } = await import('@/app/api/utils/demo-config');
-      const filtered = DEMO_DATA.invoices.filter(inv => inv.clientId === 'client-1');
+      const demoData = DEMO_DATA as unknown as MockDemoData;
+      const filtered = demoData.invoices.filter(inv => inv.clientId === 'client-1');
       
       expect(filtered).toHaveLength(2);
     });
 
     it('should calculate total amounts correctly', async () => {
       const { DEMO_DATA } = await import('@/app/api/utils/demo-config');
+      const demoData = DEMO_DATA as unknown as MockDemoData;
       
-      DEMO_DATA.invoices.forEach(invoice => {
+      demoData.invoices.forEach(invoice => {
         const expectedTax = invoice.subtotal * (invoice.taxRate / 100);
         const expectedTotal = invoice.subtotal + expectedTax;
         
@@ -173,7 +195,7 @@ describe('Invoices API', () => {
 
   describe('PUT /api/invoices', () => {
     it('should require invoice id', async () => {
-      const updateData = {
+      const updateData: { status: string; id?: string } = {
         status: 'sent',
       };
 
@@ -272,7 +294,8 @@ describe('Invoices API', () => {
   describe('Invoice Reports', () => {
     it('should calculate total revenue', async () => {
       const { DEMO_DATA } = await import('@/app/api/utils/demo-config');
-      const paidInvoices = DEMO_DATA.invoices.filter(inv => inv.status === 'paid');
+      const demoData = DEMO_DATA as unknown as MockDemoData;
+      const paidInvoices = demoData.invoices.filter(inv => inv.status === 'paid');
       const totalRevenue = paidInvoices.reduce((sum, inv) => sum + inv.total, 0);
 
       expect(totalRevenue).toBe(5750);
@@ -280,7 +303,8 @@ describe('Invoices API', () => {
 
     it('should calculate outstanding amount', async () => {
       const { DEMO_DATA } = await import('@/app/api/utils/demo-config');
-      const outstandingInvoices = DEMO_DATA.invoices.filter(
+      const demoData = DEMO_DATA as unknown as MockDemoData;
+      const outstandingInvoices = demoData.invoices.filter(
         inv => inv.status === 'sent' || inv.status === 'partial'
       );
       const outstandingAmount = outstandingInvoices.reduce((sum, inv) => sum + inv.total, 0);

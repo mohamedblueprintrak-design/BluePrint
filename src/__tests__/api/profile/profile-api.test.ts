@@ -5,7 +5,7 @@
 
 import { NextRequest } from 'next/server';
 import { GET as getProfile, PUT as updateProfile } from '@/app/api/profile/route';
-import { POST as changePassword } from '@/app/api/profile/password/route';
+import { PUT as changePassword } from '@/app/api/profile/password/route';
 import { POST as uploadAvatar } from '@/app/api/profile/avatar/route';
 
 // Mock dependencies
@@ -160,7 +160,7 @@ describe('Profile API', () => {
     });
   });
 
-  describe('POST /api/profile/password', () => {
+  describe('PUT /api/profile/password', () => {
     it('should change password successfully', async () => {
       const { prisma } = require('@/lib/db');
       prisma.user.findUnique.mockResolvedValue({

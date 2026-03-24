@@ -419,7 +419,7 @@ export async function updateCustomer(
  */
 export async function listPaymentMethods(
   customerId: string,
-  type: 'card' | 'bank_account' = 'card'
+  type: 'card' = 'card'
 ): Promise<Stripe.PaymentMethod[] | null> {
   return safeStripeOp(async (s) => {
     const methods = await s.paymentMethods.list({
@@ -700,14 +700,15 @@ export async function validatePromotionCode(code: string): Promise<{
   valid: boolean;
   coupon?: Stripe.Coupon;
   message?: string;
-}> {
-  return safeStripeOp(async (s) => {
+} | null> {
+  const result = await safeStripeOp(async (s) => {
     try {
-      // Search for the promotion code
+      // Search for the promotion code with coupon expanded
       const promoCodes = await s.promotionCodes.list({
         code,
         active: true,
         limit: 1,
+        expand: ['data.coupon'],
       });
 
       if (promoCodes.data.length === 0) {
@@ -716,17 +717,26 @@ export async function validatePromotionCode(code: string): Promise<{
 
       const promoCode = promoCodes.data[0];
       
-      // Check if still valid
-      if (promoCode.restrictions?.first_time_transaction) {
-        // Only for first-time customers
-        return { valid: true, coupon: promoCode.coupon as Stripe.Coupon };
+      // Get the coupon from the promotion code (now expanded)
+      // Type assertion needed because Stripe types may not include expanded coupon
+      const coupon = (promoCode as any).coupon;
+      
+      if (!coupon) {
+        return { valid: false, message: 'رمز الخصم غير صالح' };
       }
 
-      return { valid: true, coupon: promoCode.coupon as Stripe.Coupon };
+      // If coupon is a string ID, fetch the full details
+      const fullCoupon = typeof coupon === 'string' 
+        ? await s.coupons.retrieve(coupon)
+        : coupon;
+      
+      return { valid: true, coupon: fullCoupon as Stripe.Coupon };
     } catch (error) {
       return { valid: false, message: 'رمز الخصم غير صالح' };
     }
-  }) || { valid: false, message: 'فشل التحقق من رمز الخصم' };
+  });
+  
+  return result ?? { valid: false, message: 'فشل التحقق من رمز الخصم' };
 }
 
 // ============================================

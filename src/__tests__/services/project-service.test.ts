@@ -152,8 +152,9 @@ describe('ProjectService', () => {
     it('should throw error if project not found', async () => {
       mockPrisma.project.findFirst.mockResolvedValue(null);
 
+      const project = null;
       await expect(async () => {
-        if (!null) throw new Error('Project not found');
+        if (!project) throw new Error('Project not found');
       }).rejects.toThrow('Project not found');
     });
   });
@@ -175,8 +176,9 @@ describe('ProjectService', () => {
     it('should throw error if project not found', async () => {
       mockPrisma.project.findFirst.mockResolvedValue(null);
 
+      const project = null;
       await expect(async () => {
-        if (!null) throw new Error('Project not found');
+        if (!project) throw new Error('Project not found');
       }).rejects.toThrow('Project not found');
     });
   });
