@@ -75,6 +75,7 @@ jest.mock('@/lib/auth/auth-service', () => ({
     refreshToken: jest.fn(),
     logout: jest.fn(),
     getRolePermissions: jest.fn().mockReturnValue(['read', 'write']),
+    sendVerificationEmail: jest.fn().mockResolvedValue(true),
   },
 }));
 
