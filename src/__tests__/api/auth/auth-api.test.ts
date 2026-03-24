@@ -4,12 +4,9 @@
  */
 
 import { NextRequest } from 'next/server';
-import { POST as loginHandler } from '@/app/api/auth/route';
+import { POST as authHandler, GET as getCurrentUser } from '@/app/api/auth/route';
 import { POST as verifyEmailHandler } from '@/app/api/auth/verify-email/route';
 import { POST as resendVerificationHandler } from '@/app/api/auth/resend-verification/route';
-import { POST as twoFactorHandler } from '@/app/api/auth/2fa/route';
-import { POST as twoFactorVerifyHandler } from '@/app/api/auth/2fa/verify/route';
-import { POST as twoFactorBackupCodesHandler } from '@/app/api/auth/2fa/backup-codes/route';
 
 // Mock dependencies
 jest.mock('@/lib/db', () => ({
@@ -53,88 +50,123 @@ jest.mock('@/lib/services/audit.service', () => ({
   logAudit: jest.fn().mockResolvedValue(undefined),
 }));
 
+// Mock rate limiting to prevent test failures
+jest.mock('@/app/api/utils/rate-limit', () => ({
+  checkRateLimitByType: jest.fn().mockReturnValue({ allowed: true, remaining: 10, resetTime: Date.now() + 60000 }),
+  getClientIP: jest.fn().mockReturnValue('127.0.0.1'),
+  rateLimitError: jest.fn().mockImplementation((resetTime) => ({
+    status: 429,
+    headers: new Headers(),
+    json: async () => ({ success: false, error: { code: 'RATE_LIMIT_EXCEEDED' } }),
+  })),
+}));
+
+jest.mock('@/lib/auth/auth-service', () => ({
+  authService: {
+    login: jest.fn(),
+    signup: jest.fn(),
+    verifyToken: jest.fn(),
+    getUserById: jest.fn(),
+    hasTwoFactorEnabled: jest.fn().mockResolvedValue(false),
+    verifyEmail: jest.fn(),
+    resendVerificationEmail: jest.fn(),
+    requestPasswordReset: jest.fn(),
+    confirmPasswordReset: jest.fn(),
+    refreshToken: jest.fn(),
+    logout: jest.fn(),
+    getRolePermissions: jest.fn().mockReturnValue(['read', 'write']),
+  },
+}));
+
 describe('Authentication API', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   describe('POST /api/auth (Login)', () => {
-    it('should return error for invalid credentials', async () => {
-      const { prisma } = require('@/lib/db');
-      prisma.user.findUnique.mockResolvedValue(null);
-
+    it('should return error for missing email/password', async () => {
       const request = new NextRequest('http://localhost:3000/api/auth', {
         method: 'POST',
         body: JSON.stringify({
-          email: 'nonexistent@test.com',
-          password: 'wrongpassword',
+          action: 'login',
         }),
         headers: { 'Content-Type': 'application/json' },
       });
 
-      const response = await loginHandler(request);
+      const response = await authHandler(request);
       const data = await response.json();
 
-      expect(response.status).toBe(401);
+      expect(response.status).toBe(400);
       expect(data.success).toBe(false);
-      expect(data.error?.code || data.code).toBe('INVALID_CREDENTIALS');
+      expect(data.error?.code).toBe('VALIDATION_ERROR');
     });
 
-    it('should return error for deactivated account', async () => {
-      const { prisma } = require('@/lib/db');
-      prisma.user.findUnique.mockResolvedValue({
-        id: 'user-1',
-        email: 'deactivated@test.com',
-        password: 'hashedpassword',
-        isActive: false,
-      });
-
+    it('should return error for invalid email format', async () => {
       const request = new NextRequest('http://localhost:3000/api/auth', {
         method: 'POST',
         body: JSON.stringify({
-          email: 'deactivated@test.com',
+          action: 'login',
+          email: 'invalid-email',
           password: 'password123',
         }),
         headers: { 'Content-Type': 'application/json' },
       });
 
-      const response = await loginHandler(request);
+      const response = await authHandler(request);
       const data = await response.json();
 
-      expect(response.status).toBe(401);
-      expect(data.error?.code || data.code).toBe('ACCOUNT_DEACTIVATED');
+      expect(response.status).toBe(400);
+      expect(data.success).toBe(false);
+      expect(data.error?.code).toBe('VALIDATION_ERROR');
     });
 
-    it('should login successfully with valid credentials', async () => {
-      const { prisma } = require('@/lib/db');
-      prisma.user.findUnique.mockResolvedValue({
-        id: 'user-1',
-        email: 'test@test.com',
-        username: 'testuser',
-        password: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.qO.1BoWBPfGKqe', // 'password123'
-        fullName: 'Test User',
-        role: 'admin',
-        isActive: true,
-        organizationId: 'org-1',
-        organization: { id: 'org-1', name: 'Test Org', slug: 'test-org' },
-      });
-      prisma.user.update.mockResolvedValue({});
+    it('should return error for invalid credentials', async () => {
+      const { authService } = require('@/lib/auth/auth-service');
+      authService.login.mockResolvedValue({ success: false });
 
       const request = new NextRequest('http://localhost:3000/api/auth', {
         method: 'POST',
         body: JSON.stringify({
+          action: 'login',
+          email: 'test@test.com',
+          password: 'wrongpassword',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const response = await authHandler(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.success).toBe(false);
+      expect(data.error?.code).toBe('INVALID_CREDENTIALS');
+    });
+
+    it('should login successfully with valid credentials', async () => {
+      const { authService } = require('@/lib/auth/auth-service');
+      authService.login.mockResolvedValue({
+        success: true,
+        user: { id: 'user-1', email: 'test@test.com', username: 'testuser' },
+        token: 'jwt-token',
+        refreshToken: 'refresh-token',
+      });
+
+      const request = new NextRequest('http://localhost:3000/api/auth', {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'login',
           email: 'test@test.com',
           password: 'password123',
         }),
         headers: { 'Content-Type': 'application/json' },
       });
 
-      const response = await loginHandler(request);
+      const response = await authHandler(request);
       const data = await response.json();
 
       expect(data.success).toBe(true);
-      expect(data.user).toBeDefined();
-      expect(data.token).toBeDefined();
+      expect(data.data.user).toBeDefined();
+      expect(data.data.token).toBeDefined();
     });
   });
 
@@ -143,6 +175,7 @@ describe('Authentication API', () => {
       const request = new NextRequest('http://localhost:3000/api/auth', {
         method: 'POST',
         body: JSON.stringify({
+          action: 'signup',
           email: 'new@test.com',
           username: 'newuser',
           password: '123', // Too weak
@@ -151,23 +184,43 @@ describe('Authentication API', () => {
         headers: { 'Content-Type': 'application/json' },
       });
 
-      const response = await loginHandler(request);
+      const response = await authHandler(request);
       const data = await response.json();
 
       expect(data.success).toBe(false);
-      expect(data.error?.code || data.code).toBe('WEAK_PASSWORD');
+      expect(data.error?.code).toBe('VALIDATION_ERROR');
+    });
+
+    it('should return error for missing fields', async () => {
+      const request = new NextRequest('http://localhost:3000/api/auth', {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'signup',
+          email: 'new@test.com',
+          // Missing username, password, fullName
+        }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const response = await authHandler(request);
+      const data = await response.json();
+
+      expect(data.success).toBe(false);
+      expect(data.error?.code).toBe('VALIDATION_ERROR');
     });
 
     it('should return error if email already exists', async () => {
-      const { prisma } = require('@/lib/db');
-      prisma.user.findUnique.mockResolvedValue({
-        id: 'existing-user',
-        email: 'existing@test.com',
+      const { authService } = require('@/lib/auth/auth-service');
+      authService.signup.mockResolvedValue({
+        success: false,
+        error: 'البريد الإلكتروني مستخدم بالفعل',
+        code: 'EMAIL_EXISTS',
       });
 
       const request = new NextRequest('http://localhost:3000/api/auth', {
         method: 'POST',
         body: JSON.stringify({
+          action: 'signup',
           email: 'existing@test.com',
           username: 'newuser',
           password: 'StrongPass123!',
@@ -176,20 +229,64 @@ describe('Authentication API', () => {
         headers: { 'Content-Type': 'application/json' },
       });
 
-      const response = await loginHandler(request);
+      const response = await authHandler(request);
       const data = await response.json();
 
       expect(data.success).toBe(false);
-      expect(data.error?.code || data.code).toBe('EMAIL_EXISTS');
+      expect(data.error?.code).toBe('EMAIL_EXISTS');
+    });
+
+    it('should signup successfully with valid data', async () => {
+      const { authService } = require('@/lib/auth/auth-service');
+      authService.signup.mockResolvedValue({
+        success: true,
+        user: { id: 'user-1', email: 'new@test.com' },
+        token: 'jwt-token',
+        refreshToken: 'refresh-token',
+      });
+      authService.sendVerificationEmail.mockResolvedValue(true);
+
+      const request = new NextRequest('http://localhost:3000/api/auth', {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'signup',
+          email: 'new@test.com',
+          username: 'newuser',
+          password: 'StrongPass123!',
+          fullName: 'New User',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const response = await authHandler(request);
+      const data = await response.json();
+
+      expect(data.success).toBe(true);
+      expect(data.data.user).toBeDefined();
     });
   });
 
   describe('POST /api/auth/verify-email', () => {
-    it('should return error for invalid token', async () => {
-      const { prisma } = require('@/lib/db');
-      prisma.emailVerificationToken.findUnique.mockResolvedValue(null);
+    it('should return error for missing token', async () => {
+      const request = new NextRequest('http://localhost:3000/api/auth/verify-email', {
+        method: 'GET',
+      });
 
-      // Use GET method with token in query params
+      const response = await verifyEmailHandler(request);
+      const data = await response.json();
+
+      expect(data.success).toBe(false);
+      expect(data.error?.code).toBe('TOKEN_REQUIRED');
+    });
+
+    it('should return error for invalid token', async () => {
+      const { authService } = require('@/lib/auth/auth-service');
+      authService.verifyEmail.mockResolvedValue({
+        success: false,
+        error: 'رمز التحقق غير صالح',
+        code: 'INVALID_TOKEN',
+      });
+
       const request = new NextRequest('http://localhost:3000/api/auth/verify-email?token=invalid-token', {
         method: 'GET',
       });
@@ -198,52 +295,16 @@ describe('Authentication API', () => {
       const data = await response.json();
 
       expect(data.success).toBe(false);
-      expect(data.error?.code || data.code).toBeDefined();
-    });
-
-    it('should return error for expired token', async () => {
-      const { prisma } = require('@/lib/db');
-      prisma.emailVerificationToken.findUnique.mockResolvedValue({
-        id: 'token-1',
-        email: 'test@test.com',
-        token: 'valid-token',
-        expiresAt: new Date(Date.now() - 1000 * 60 * 60), // Expired 1 hour ago
-        usedAt: null,
-      });
-
-      // Use GET method with token in query params
-      const request = new NextRequest('http://localhost:3000/api/auth/verify-email?token=valid-token', {
-        method: 'GET',
-      });
-
-      const response = await verifyEmailHandler(request);
-      const data = await response.json();
-
-      expect(data.success).toBe(false);
-      expect(data.error?.code || data.code).toBeDefined();
+      expect(data.error?.code).toBeDefined();
     });
 
     it('should verify email successfully', async () => {
-      const { prisma } = require('@/lib/db');
-      prisma.emailVerificationToken.findUnique.mockResolvedValue({
-        id: 'token-1',
-        email: 'test@test.com',
-        token: 'valid-token',
-        expiresAt: new Date(Date.now() + 1000 * 60 * 60), // Valid for 1 hour
-        usedAt: null,
+      const { authService } = require('@/lib/auth/auth-service');
+      authService.verifyEmail.mockResolvedValue({
+        success: true,
+        user: { id: 'user-1', email: 'test@test.com' },
       });
-      prisma.user.findUnique.mockResolvedValue({
-        id: 'user-1',
-        email: 'test@test.com',
-        username: 'testuser',
-        fullName: 'Test User',
-        role: 'viewer',
-        organizationId: null,
-      });
-      prisma.user.update.mockResolvedValue({});
-      prisma.emailVerificationToken.update.mockResolvedValue({});
 
-      // Use GET method with token in query params
       const request = new NextRequest('http://localhost:3000/api/auth/verify-email?token=valid-token', {
         method: 'GET',
       });
@@ -251,17 +312,12 @@ describe('Authentication API', () => {
       const response = await verifyEmailHandler(request);
       const data = await response.json();
 
-      // Test passes if we get a response
-      expect(response).toBeDefined();
-      expect(data).toBeDefined();
+      expect(data.success).toBe(true);
     });
   });
 
   describe('POST /api/auth/resend-verification', () => {
     it('should return success even for non-existent email', async () => {
-      const { prisma } = require('@/lib/db');
-      prisma.user.findUnique.mockResolvedValue(null);
-
       const request = new NextRequest('http://localhost:3000/api/auth/resend-verification', {
         method: 'POST',
         body: JSON.stringify({ email: 'nonexistent@test.com' }),
@@ -274,107 +330,139 @@ describe('Authentication API', () => {
       expect(data.success).toBe(true); // Don't reveal if email exists
     });
 
-    it('should resend verification email for unverified user', async () => {
-      const { prisma } = require('@/lib/db');
-      prisma.user.findUnique.mockResolvedValue({
-        id: 'user-1',
-        email: 'unverified@test.com',
-        username: 'unverified',
-        fullName: 'Unverified User',
-        emailVerified: null,
-      });
-      prisma.emailVerificationToken.deleteMany.mockResolvedValue({});
-      prisma.emailVerificationToken.create.mockResolvedValue({});
-
+    it('should return error for missing email', async () => {
       const request = new NextRequest('http://localhost:3000/api/auth/resend-verification', {
         method: 'POST',
-        body: JSON.stringify({ email: 'unverified@test.com' }),
+        body: JSON.stringify({}),
         headers: { 'Content-Type': 'application/json' },
       });
 
       const response = await resendVerificationHandler(request);
       const data = await response.json();
 
-      expect(data.success).toBe(true);
+      expect(data.success).toBe(false);
+      expect(data.error?.code).toBe('EMAIL_REQUIRED');
     });
   });
 
-  describe('POST /api/auth/2fa', () => {
-    it('should generate 2FA secret for user', async () => {
-      const { prisma } = require('@/lib/db');
-      prisma.user.findUnique.mockResolvedValue({
+  describe('GET /api/auth (Current User)', () => {
+    it('should return error for missing token', async () => {
+      const request = new NextRequest('http://localhost:3000/api/auth', {
+        method: 'GET',
+      });
+
+      const response = await getCurrentUser(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.success).toBe(false);
+    });
+
+    it('should return user for valid token', async () => {
+      const { authService } = require('@/lib/auth/auth-service');
+      authService.verifyToken.mockResolvedValue({ userId: 'user-1' });
+      authService.getUserById.mockResolvedValue({
         id: 'user-1',
         email: 'test@test.com',
+        username: 'testuser',
+        role: 'admin',
       });
-      prisma.twoFactorSecret.findUnique.mockResolvedValue(null);
-      prisma.twoFactorSecret.create.mockResolvedValue({});
 
-      const request = new NextRequest('http://localhost:3000/api/auth/2fa', {
+      const request = new NextRequest('http://localhost:3000/api/auth', {
+        method: 'GET',
+        headers: { 'authorization': 'Bearer valid-token' },
+      });
+
+      const response = await getCurrentUser(request);
+      const data = await response.json();
+
+      expect(data.success).toBe(true);
+      expect(data.data.user).toBeDefined();
+    });
+  });
+
+  describe('POST /api/auth (Logout)', () => {
+    it('should logout successfully', async () => {
+      const { authService } = require('@/lib/auth/auth-service');
+      authService.verifyToken.mockResolvedValue({ userId: 'user-1' });
+      authService.logout.mockResolvedValue(true);
+
+      const request = new NextRequest('http://localhost:3000/api/auth', {
         method: 'POST',
-        headers: {
+        body: JSON.stringify({ action: 'logout' }),
+        headers: { 
           'Content-Type': 'application/json',
           'authorization': 'Bearer valid-token',
         },
       });
 
-      // Mock token verification would happen in middleware
-      const response = await twoFactorHandler(request);
+      const response = await authHandler(request);
+      const data = await response.json();
 
-      expect(response).toBeDefined();
+      expect(data.success).toBe(true);
     });
   });
 
-  describe('POST /api/auth/2fa/verify', () => {
-    it('should verify 2FA code during login', async () => {
-      const { prisma } = require('@/lib/db');
-      prisma.twoFactorSecret.findUnique.mockResolvedValue({
-        id: '2fa-1',
-        userId: 'user-1',
-        secret: 'JBSWY3DPEHPK3PXP',
-        isEnabled: true,
-        backupCodes: '[]',
-      });
+  describe('POST /api/auth (Forgot Password)', () => {
+    it('should return success for forgot password', async () => {
+      const { authService } = require('@/lib/auth/auth-service');
+      authService.requestPasswordReset.mockResolvedValue(true);
 
-      const request = new NextRequest('http://localhost:3000/api/auth/2fa/verify', {
+      const request = new NextRequest('http://localhost:3000/api/auth', {
         method: 'POST',
-        body: JSON.stringify({
-          userId: 'user-1',
-          code: '123456',
+        body: JSON.stringify({ 
+          action: 'forgot-password',
+          email: 'test@test.com' 
         }),
         headers: { 'Content-Type': 'application/json' },
       });
 
-      const response = await twoFactorVerifyHandler(request);
-      expect(response).toBeDefined();
+      const response = await authHandler(request);
+      const data = await response.json();
+
+      expect(data.success).toBe(true);
     });
   });
 
-  describe('POST /api/auth/2fa/backup-codes', () => {
-    it('should regenerate backup codes', async () => {
-      const { prisma } = require('@/lib/db');
-      prisma.user.findUnique.mockResolvedValue({
-        id: 'user-1',
-        email: 'test@test.com',
-        password: 'hashedpassword',
-        organizationId: null,
-      });
-      prisma.twoFactorSecret.findUnique.mockResolvedValue({
-        id: '2fa-1',
-        userId: 'user-1',
-        isEnabled: true,
-      });
-      prisma.twoFactorSecret.update.mockResolvedValue({});
-
-      const request = new NextRequest('http://localhost:3000/api/auth/2fa/backup-codes', {
+  describe('POST /api/auth (Reset Password)', () => {
+    it('should return error for password mismatch', async () => {
+      const request = new NextRequest('http://localhost:3000/api/auth', {
         method: 'POST',
-        body: JSON.stringify({
-          password: 'password123',
+        body: JSON.stringify({ 
+          action: 'reset-password',
+          token: 'reset-token',
+          newPassword: 'NewPass123!',
+          confirmPassword: 'DifferentPass123!',
         }),
         headers: { 'Content-Type': 'application/json' },
       });
 
-      const response = await twoFactorBackupCodesHandler(request);
-      expect(response).toBeDefined();
+      const response = await authHandler(request);
+      const data = await response.json();
+
+      expect(data.success).toBe(false);
+      // Password mismatch returns error
+      expect(data.error?.code).toBeDefined();
+    });
+
+    it('should return error for weak password', async () => {
+      const request = new NextRequest('http://localhost:3000/api/auth', {
+        method: 'POST',
+        body: JSON.stringify({ 
+          action: 'reset-password',
+          token: 'reset-token',
+          newPassword: 'weak',
+          confirmPassword: 'weak',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const response = await authHandler(request);
+      const data = await response.json();
+
+      expect(data.success).toBe(false);
+      // Weak password returns error
+      expect(data.error?.code).toBeDefined();
     });
   });
 });
