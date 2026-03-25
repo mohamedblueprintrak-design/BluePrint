@@ -29,6 +29,11 @@ jest.mock('@/app/api/utils/rate-limit', () => ({
   })),
 }));
 
+jest.mock('bcryptjs', () => ({
+  compare: jest.fn().mockResolvedValue(false), // Always return false in tests to skip demo login
+  hash: jest.fn().mockResolvedValue('hashed-password'),
+}));
+
 jest.mock('@/lib/auth/auth-service', () => ({
   authService: {
     login: jest.fn().mockResolvedValue({ success: false }),
