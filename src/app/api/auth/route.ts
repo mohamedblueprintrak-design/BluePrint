@@ -202,10 +202,22 @@ async function handleLogin(
     });
     
     // Set HTTP-only cookie for middleware authentication
+    // SECURITY: Use Strict SameSite for better CSRF protection
+    // In demo mode, also set a shorter expiry for security
     response.cookies.set('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict', // Changed from 'lax' to 'strict' for better security
+      maxAge: 60 * 60 * 2, // 2 hours
+      path: '/',
+    });
+    
+    // Also set a non-httpOnly cookie for client-side auth state check
+    // This allows the client to know if user is logged in without exposing the token
+    response.cookies.set('auth_state', 'authenticated', {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
       maxAge: 60 * 60 * 2, // 2 hours
       path: '/',
     });
@@ -280,7 +292,7 @@ async function handleLogin(
       response.cookies.set('refreshToken', result.refreshToken!, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        sameSite: 'strict', // Changed from 'lax' for better security
         maxAge: data.rememberMe ? 60 * 60 * 24 * 30 : 60 * 60 * 24 * 7, // 30 days or 7 days
         path: '/',
       });
@@ -289,7 +301,16 @@ async function handleLogin(
       response.cookies.set('token', result.token!, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        sameSite: 'strict', // Changed from 'lax' for better security
+        maxAge: 60 * 60 * 2, // 2 hours
+        path: '/',
+      });
+      
+      // Also set a non-httpOnly cookie for client-side auth state check
+      response.cookies.set('auth_state', 'authenticated', {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
         maxAge: 60 * 60 * 2, // 2 hours
         path: '/',
       });
@@ -381,7 +402,7 @@ async function handleSignup(
   cookieStore.set('refreshToken', result.refreshToken!, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    sameSite: 'strict', // Changed from 'lax' for better security
     maxAge: 60 * 60 * 24 * 7, // 7 days
     path: '/',
   });
@@ -421,6 +442,7 @@ async function handleLogout(request: NextRequest): Promise<NextResponse> {
       if (response.cookies && typeof response.cookies.set === 'function') {
         response.cookies.set('refreshToken', '', { maxAge: 0, path: '/' });
         response.cookies.set('token', '', { maxAge: 0, path: '/' });
+        response.cookies.set('auth_state', '', { maxAge: 0, path: '/' });
       }
     } catch {
       // Ignore cookie errors in test environment
@@ -436,6 +458,7 @@ async function handleLogout(request: NextRequest): Promise<NextResponse> {
       if (response.cookies && typeof response.cookies.set === 'function') {
         response.cookies.set('refreshToken', '', { maxAge: 0, path: '/' });
         response.cookies.set('token', '', { maxAge: 0, path: '/' });
+        response.cookies.set('auth_state', '', { maxAge: 0, path: '/' });
       }
     } catch {
       // Ignore cookie errors in test environment
