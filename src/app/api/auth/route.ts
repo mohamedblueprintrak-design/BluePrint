@@ -182,9 +182,27 @@ async function handleLogin(
   if (demoUser) {
     const token = await generateDemoToken(demoUser);
     
+    // Create response with user data
+    const response = NextResponse.json({
+      success: true,
+      data: {
+        user: {
+          id: demoUser.id,
+          email: demoUser.email,
+          username: demoUser.username,
+          fullName: demoUser.fullName,
+          role: demoUser.role,
+          avatar: demoUser.avatar,
+          organizationId: demoUser.organizationId,
+          organization: demoUser.organization,
+        },
+        token,
+        demoMode: true,
+      }
+    });
+    
     // Set HTTP-only cookie for middleware authentication
-    const cookieStore = await cookies();
-    cookieStore.set('token', token, {
+    response.cookies.set('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -192,20 +210,7 @@ async function handleLogin(
       path: '/',
     });
     
-    return successResponse({
-      user: {
-        id: demoUser.id,
-        email: demoUser.email,
-        username: demoUser.username,
-        fullName: demoUser.fullName,
-        role: demoUser.role,
-        avatar: demoUser.avatar,
-        organizationId: demoUser.organizationId,
-        organization: demoUser.organization,
-      },
-      token,
-      demoMode: true,
-    });
+    return response;
   }
 
   // ============================================
@@ -260,9 +265,17 @@ async function handleLogin(
     }
   }
 
+  // Create response and set cookies on it
+  const response = NextResponse.json({
+    success: true,
+    data: {
+      user: result.user,
+      token: result.token,
+    }
+  });
+  
   // Set HTTP-only cookie for refresh token
-  const cookieStore = await cookies();
-  cookieStore.set('refreshToken', result.refreshToken!, {
+  response.cookies.set('refreshToken', result.refreshToken!, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
@@ -271,7 +284,7 @@ async function handleLogin(
   });
   
   // Set token cookie for middleware authentication
-  cookieStore.set('token', result.token!, {
+  response.cookies.set('token', result.token!, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
@@ -279,10 +292,7 @@ async function handleLogin(
     path: '/',
   });
 
-  return successResponse({
-    user: result.user,
-    token: result.token,
-  });
+  return response;
 }
 
 /**
@@ -394,14 +404,24 @@ async function handleLogout(request: NextRequest): Promise<NextResponse> {
       }
     }
 
-    // Clear refresh token cookie
-    const cookieStore = await cookies();
-    cookieStore.delete('refreshToken');
-    cookieStore.delete('token');
+    // Create response and clear cookies on it
+    const response = NextResponse.json({
+      success: true,
+      data: { message: 'تم تسجيل الخروج بنجاح' }
+    });
+    
+    response.cookies.delete('refreshToken');
+    response.cookies.delete('token');
 
-    return successResponse({ message: 'تم تسجيل الخروج بنجاح' });
+    return response;
   } catch {
-    return successResponse({ message: 'تم تسجيل الخروج بنجاح' });
+    const response = NextResponse.json({
+      success: true,
+      data: { message: 'تم تسجيل الخروج بنجاح' }
+    });
+    response.cookies.delete('refreshToken');
+    response.cookies.delete('token');
+    return response;
   }
 }
 

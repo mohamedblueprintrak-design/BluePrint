@@ -152,12 +152,19 @@ const PUBLIC_PATHS = [
   '/signup',
   '/forgot-password',
   '/reset-password',
+  '/api/auth',          // Main auth API (uses action in body)
   '/api/auth/login',
   '/api/auth/signup',
   '/api/auth/forgot-password',
   '/api/auth/reset-password',
+  '/api/auth/2fa',
+  '/api/auth/2fa/verify',
+  '/api/auth/2fa/backup-codes',
+  '/api/auth/resend-verification',
+  '/api/auth/verify-email',
   '/api/health',
   '/api/stripe/webhook',
+  '/api/public',
   '/pricing',
 ];
 
@@ -178,7 +185,7 @@ const ROLE_PROTECTED_PATHS: Record<string, string[]> = {
  * Get JWT secret key
  */
 function getJwtSecret(): Uint8Array {
-  const secret = process.env.JWT_SECRET || 'default-secret-change-in-production';
+  const secret = process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters';
   return new TextEncoder().encode(secret);
 }
 
