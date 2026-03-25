@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
 import { useDashboard, useProjects, useTasks, useInvoices } from '@/hooks/use-data';
+import { WelcomeModal } from '@/components/onboarding/welcome-modal';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -42,6 +43,15 @@ export function DashboardPage() {
   const { t, formatCurrency, formatDate } = useTranslation(language);
   
   const [period, setPeriod] = useState<Period>('30d');
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  
+  // Check if welcome modal should be shown
+  useEffect(() => {
+    const hasSeenModal = localStorage.getItem('blueprint_welcome_modal_seen');
+    if (!hasSeenModal) {
+      setShowWelcomeModal(true);
+    }
+  }, []);
   
   const { data: dashboardData, isLoading: dashboardLoading } = useDashboard();
   const { data: projectsData, isLoading: projectsLoading } = useProjects();
@@ -167,6 +177,12 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+      {/* Welcome Modal */}
+      <WelcomeModal 
+        isOpen={showWelcomeModal} 
+        onClose={() => setShowWelcomeModal(false)} 
+      />
+      
       {/* Welcome Banner */}
       <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 p-6 text-white shadow-lg shadow-blue-500/20">
         <div className="relative z-10">

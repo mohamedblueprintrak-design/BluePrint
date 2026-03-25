@@ -32,9 +32,11 @@ import {
   LogOut, Menu, Search, Moon, Sun, Globe,
   User, Shield, BookOpen, Bot, FileSpreadsheet,
   PanelLeftClose, PanelLeft, Zap, Calculator, ShoppingCart,
-  AlertTriangle, Receipt, X
+  AlertTriangle, Receipt, X, ChevronDown, ChevronUp,
+  FolderOpen, Settings2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface SidebarItem {
   id: string;
@@ -43,6 +45,131 @@ interface SidebarItem {
   badge?: number;
   href: string;
   children?: SidebarItem[];
+}
+
+// Sidebar Section Component - renders a list of items
+function SidebarSection({ 
+  items, 
+  currentPage, 
+  sidebarCollapsed, 
+  isMobile, 
+  isRTL,
+  onItemClick 
+}: { 
+  items: SidebarItem[];
+  currentPage: string;
+  sidebarCollapsed: boolean;
+  isMobile: boolean;
+  isRTL: boolean;
+  onItemClick: (id: string, href: string) => void;
+}) {
+  return (
+    <>
+      {items.map((item) => (
+        <TooltipProvider key={item.id} delayDuration={0}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link
+                href={item.href}
+                onClick={() => onItemClick(item.id, item.href)}
+                className={cn(
+                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
+                  currentPage === item.id 
+                    ? "bg-blue-600/20 text-blue-400 border border-blue-500/30" 
+                    : "text-slate-400 hover:bg-slate-800 hover:text-white",
+                  !isMobile && sidebarCollapsed && "justify-center"
+                )}
+              >
+                <item.icon className="w-5 h-5 shrink-0" />
+                {(!isMobile && sidebarCollapsed ? false : true) && (
+                  <>
+                    <span className="flex-1 text-end">{item.label}</span>
+                    {item.badge && (
+                      <Badge className="bg-red-500 text-white text-xs px-1.5 py-0.5">
+                        {item.badge}
+                      </Badge>
+                    )}
+                  </>
+                )}
+              </Link>
+            </TooltipTrigger>
+            {!isMobile && sidebarCollapsed && (
+              <TooltipContent side={isRTL ? 'left' : 'right'}>
+                {item.label}
+              </TooltipContent>
+            )}
+          </Tooltip>
+        </TooltipProvider>
+      ))}
+    </>
+  );
+}
+
+// Collapsible Section Component - renders a collapsible group of items
+function CollapsibleSection({ 
+  title, 
+  icon: Icon, 
+  items, 
+  currentPage, 
+  sidebarCollapsed, 
+  isMobile, 
+  isRTL,
+  onItemClick,
+  defaultOpen = false 
+}: { 
+  title: string;
+  icon: React.ElementType;
+  items: SidebarItem[];
+  currentPage: string;
+  sidebarCollapsed: boolean;
+  isMobile: boolean;
+  isRTL: boolean;
+  onItemClick: (id: string, href: string) => void;
+  defaultOpen?: boolean;
+}) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  // Don't render collapsible when sidebar is collapsed
+  if (!isMobile && sidebarCollapsed) {
+    return (
+      <SidebarSection 
+        items={items} 
+        currentPage={currentPage}
+        sidebarCollapsed={sidebarCollapsed}
+        isMobile={isMobile}
+        isRTL={isRTL}
+        onItemClick={onItemClick}
+      />
+    );
+  }
+
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
+      <CollapsibleTrigger asChild>
+        <button 
+          className="w-full flex items-center gap-3 px-3 py-2 text-slate-500 hover:text-slate-300 transition-colors"
+        >
+          <Icon className="w-4 h-4 shrink-0" />
+          <span className="flex-1 text-end text-sm font-medium">{title}</span>
+          {isOpen ? (
+            <ChevronUp className="w-4 h-4 shrink-0" />
+          ) : (
+            <ChevronDown className="w-4 h-4 shrink-0" />
+          )}
+        </button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="space-y-1">
+        <SidebarSection 
+          items={items} 
+          currentPage={currentPage}
+          sidebarCollapsed={sidebarCollapsed}
+          isMobile={isMobile}
+          isRTL={isRTL}
+          onItemClick={onItemClick}
+        />
+      </CollapsibleContent>
+    </Collapsible>
+  );
 }
 
 // Route mapping for navigation
@@ -94,27 +221,47 @@ function SidebarContent({
   // Memoize routes to prevent unnecessary re-renders
   const routes = useMemo(() => getRoutes(language), [language]);
 
-  const menuItems: SidebarItem[] = [
+  // Core items - always visible
+  const coreItems: SidebarItem[] = [
     { id: 'dashboard', label: t.dashboard, icon: Home, href: '/dashboard' },
     { id: 'projects', label: t.projects, icon: Building2, href: '/dashboard/projects' },
-    { id: 'clients', label: t.clients, icon: Users, href: '/dashboard/clients' },
-    { id: 'proposals', label: t.proposals, icon: FileText, href: '/dashboard/proposals' },
-    { id: 'contracts', label: t.contracts, icon: FileCheck, href: '/dashboard/contracts' },
-    { id: 'invoices', label: t.invoices, icon: DollarSign, href: '/dashboard/invoices' },
-    { id: 'vouchers', label: language === 'ar' ? 'السندات' : 'Vouchers', icon: Receipt, href: '/dashboard/vouchers' },
-    { id: 'budgets', label: language === 'ar' ? 'الميزانيات' : 'Budgets', icon: Calculator, href: '/dashboard/budgets' },
     { id: 'tasks', label: t.tasks, icon: CheckSquare, badge: 3, href: '/dashboard/tasks' },
-    { id: 'hr', label: t.hr, icon: Users, href: '/dashboard/hr' },
-    { id: 'suppliers', label: t.suppliers, icon: Briefcase, href: '/dashboard/suppliers' },
+    { id: 'clients', label: t.clients, icon: Users, href: '/dashboard/clients' },
+    { id: 'invoices', label: t.invoices, icon: DollarSign, href: '/dashboard/invoices' },
+  ];
+
+  // Finance items - collapsible
+  const financeItems: SidebarItem[] = [
+    { id: 'budgets', label: language === 'ar' ? 'الميزانيات' : 'Budgets', icon: Calculator, href: '/dashboard/budgets' },
+    { id: 'vouchers', label: language === 'ar' ? 'السندات' : 'Vouchers', icon: Receipt, href: '/dashboard/vouchers' },
+    { id: 'contracts', label: t.contracts, icon: FileCheck, href: '/dashboard/contracts' },
+    { id: 'proposals', label: t.proposals, icon: FileText, href: '/dashboard/proposals' },
     { id: 'purchaseOrders', label: language === 'ar' ? 'طلبات الشراء' : 'Purchase Orders', icon: ShoppingCart, href: '/dashboard/purchase-orders' },
+  ];
+
+  // Operations items - collapsible
+  const operationsItems: SidebarItem[] = [
     { id: 'inventory', label: t.inventory, icon: Package, href: '/dashboard/inventory' },
+    { id: 'suppliers', label: t.suppliers, icon: Briefcase, href: '/dashboard/suppliers' },
     { id: 'boq', label: language === 'ar' ? 'جدول الكميات' : 'BOQ', icon: FileSpreadsheet, href: '/dashboard/boq' },
     { id: 'siteDiary', label: t.siteDiary, icon: FileSpreadsheet, href: '/dashboard/site-diary' },
     { id: 'defects', label: language === 'ar' ? 'العيوب والمخالفات' : 'Defects', icon: AlertTriangle, href: '/dashboard/defects' },
+  ];
+
+  // Management items - collapsible
+  const managementItems: SidebarItem[] = [
+    { id: 'reports', label: t.reports, icon: BarChart3, href: '/dashboard/reports' },
     { id: 'documents', label: t.documents, icon: FileText, href: '/dashboard/documents' },
     { id: 'knowledge', label: t.knowledge, icon: BookOpen, href: '/dashboard/knowledge' },
+    { id: 'hr', label: t.hr, icon: Users, href: '/dashboard/hr' },
+  ];
+
+  // AI & Settings
+  const aiItems: SidebarItem[] = [
     { id: 'aiChat', label: t.aiChat, icon: Bot, href: '/dashboard/ai-chat' },
-    { id: 'reports', label: t.reports, icon: BarChart3, href: '/dashboard/reports' },
+  ];
+
+  const settingsItems: SidebarItem[] = [
     { id: 'settings', label: t.settings, icon: Settings, href: '/dashboard/settings' },
   ];
 
@@ -186,77 +333,89 @@ function SidebarContent({
       <div className="flex-1 overflow-hidden px-2">
         <ScrollArea className="h-full">
           <nav className="space-y-1 pb-2 pr-2">
-          {menuItems.map((item) => (
-            <TooltipProvider key={item.id} delayDuration={0}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Link
-                    href={item.href}
-                    onClick={() => handleItemClick(item.id, item.href)}
-                    className={cn(
-                      "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
-                      currentPage === item.id 
-                        ? "bg-blue-600/20 text-blue-400 border border-blue-500/30" 
-                        : "text-slate-400 hover:bg-slate-800 hover:text-white",
-                      !isMobile && sidebarCollapsed && "justify-center"
-                    )}
-                  >
-                    <item.icon className="w-5 h-5 shrink-0" />
-                    {(!isMobile && sidebarCollapsed ? false : true) && (
-                      <>
-                        <span className="flex-1 text-end">{item.label}</span>
-                        {item.badge && (
-                          <Badge className="bg-red-500 text-white text-xs px-1.5 py-0.5">
-                            {item.badge}
-                          </Badge>
-                        )}
-                      </>
-                    )}
-                  </Link>
-                </TooltipTrigger>
-                {!isMobile && sidebarCollapsed && (
-                  <TooltipContent side={isRTL ? 'left' : 'right'}>
-                    {item.label}
-                  </TooltipContent>
-                )}
-              </Tooltip>
-            </TooltipProvider>
-          ))}
+          {/* Core Items */}
+          <SidebarSection 
+            items={coreItems} 
+            currentPage={currentPage}
+            sidebarCollapsed={sidebarCollapsed}
+            isMobile={isMobile}
+            isRTL={isRTL}
+            onItemClick={handleItemClick}
+          />
+
+          {/* Finance Section - Collapsible */}
+          <CollapsibleSection 
+            title={language === 'ar' ? 'المالية' : 'Finance'}
+            icon={DollarSign}
+            items={financeItems}
+            currentPage={currentPage}
+            sidebarCollapsed={sidebarCollapsed}
+            isMobile={isMobile}
+            isRTL={isRTL}
+            onItemClick={handleItemClick}
+            defaultOpen={false}
+          />
+
+          {/* Operations Section - Collapsible */}
+          <CollapsibleSection 
+            title={language === 'ar' ? 'العمليات' : 'Operations'}
+            icon={FolderOpen}
+            items={operationsItems}
+            currentPage={currentPage}
+            sidebarCollapsed={sidebarCollapsed}
+            isMobile={isMobile}
+            isRTL={isRTL}
+            onItemClick={handleItemClick}
+            defaultOpen={false}
+          />
+
+          {/* Management Section - Collapsible */}
+          <CollapsibleSection 
+            title={language === 'ar' ? 'الإدارة' : 'Management'}
+            icon={Settings2}
+            items={managementItems}
+            currentPage={currentPage}
+            sidebarCollapsed={sidebarCollapsed}
+            isMobile={isMobile}
+            isRTL={isRTL}
+            onItemClick={handleItemClick}
+            defaultOpen={false}
+          />
+
+          {/* AI Section */}
+          <Separator className="my-2 bg-slate-800" />
+          <SidebarSection 
+            items={aiItems} 
+            currentPage={currentPage}
+            sidebarCollapsed={sidebarCollapsed}
+            isMobile={isMobile}
+            isRTL={isRTL}
+            onItemClick={handleItemClick}
+          />
+
+          {/* Settings Section */}
+          <SidebarSection 
+            items={settingsItems} 
+            currentPage={currentPage}
+            sidebarCollapsed={sidebarCollapsed}
+            isMobile={isMobile}
+            isRTL={isRTL}
+            onItemClick={handleItemClick}
+          />
 
           {/* Admin Section */}
           {user?.role === 'admin' && (
-            <>
-              <Separator className="my-4 bg-slate-800" />
-              {adminItems.map((item) => (
-                <TooltipProvider key={item.id} delayDuration={0}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Link
-                        href={item.href}
-                        onClick={() => handleItemClick(item.id, item.href)}
-                        className={cn(
-                          "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
-                          currentPage === item.id 
-                            ? "bg-blue-600/20 text-blue-400 border border-blue-500/30" 
-                            : "text-slate-400 hover:bg-slate-800 hover:text-white",
-                          !isMobile && sidebarCollapsed && "justify-center"
-                        )}
-                      >
-                        <item.icon className="w-5 h-5 shrink-0" />
-                        {(!isMobile && sidebarCollapsed ? false : true) && (
-                          <span className="flex-1 text-end">{item.label}</span>
-                        )}
-                      </Link>
-                    </TooltipTrigger>
-                    {!isMobile && sidebarCollapsed && (
-                      <TooltipContent side={isRTL ? 'left' : 'right'}>
-                        {item.label}
-                      </TooltipContent>
-                    )}
-                  </Tooltip>
-                </TooltipProvider>
-              ))}
-            </>
+            <CollapsibleSection 
+              title={language === 'ar' ? 'الإدارة' : 'Admin'}
+              icon={Shield}
+              items={adminItems}
+              currentPage={currentPage}
+              sidebarCollapsed={sidebarCollapsed}
+              isMobile={isMobile}
+              isRTL={isRTL}
+              onItemClick={handleItemClick}
+              defaultOpen={false}
+            />
           )}
         </nav>
         </ScrollArea>
