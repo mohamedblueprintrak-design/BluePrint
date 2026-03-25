@@ -1,11 +1,14 @@
 /**
  * Main API Router
  * Central router that dispatches API requests to appropriate handlers
- * يدعم المستخدمين التجريبيين
+ * يدعم المستخدمين التجريبيين والمستخدمين الحقيقيين
+ * 
+ * FIXED: Now uses real services for authenticated non-demo users
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest, isDemoUser, DEMO_DATA } from './utils/demo-config';
+import { projectService, clientService, taskService, invoiceService } from '@/lib/services';
 
 // Success/Error response helpers
 function successResponse(data: unknown) {
@@ -82,78 +85,117 @@ export async function GET(request: NextRequest) {
   
   // For demo users, return demo data
   const isDemo = !user || isDemoUser(user?.id);
+  const organizationId = user?.organizationId;
 
   try {
     switch (action) {
-      case 'dashboard':
-        return successResponse(isDemo ? generateDemoDashboard() : DEMO_DATA.dashboard || generateDemoDashboard());
+      case 'dashboard': {
+        if (isDemo) {
+          return successResponse(generateDemoDashboard());
+        }
+        // Real user - get stats from services
+        const [projectStats, clientStats, taskStats, invoiceStats] = await Promise.all([
+          projectService.getProjectStats(organizationId!),
+          clientService.getClientStats(organizationId!),
+          taskService.getTaskStats(organizationId!),
+          invoiceService.getInvoiceStats(organizationId!)
+        ]);
+        return successResponse({
+          projects: projectStats,
+          clients: clientStats,
+          financial: invoiceStats,
+          tasks: taskStats,
+          defects: { open: 0, resolved: 0, critical: 0 },
+          employees: { total: 0, presentToday: 0, onLeave: 0 }
+        });
+      }
 
-      case 'projects':
-        return successResponse(isDemo ? generateDemoProjects() : []);
+      case 'projects': {
+        if (isDemo) {
+          return successResponse(generateDemoProjects());
+        }
+        // Real user - get from service
+        const result = await projectService.getProjects(organizationId!, {}, { page: 1, limit: 100 });
+        return successResponse(result.data);
+      }
 
-      case 'project':
-        // Single project - would need database lookup
-        return successResponse(null);
+      case 'project': {
+        const id = searchParams.get('id');
+        if (!id) return errorResponse('Project ID required', 'MISSING_ID', 400);
+        if (isDemo) return successResponse(null);
+        const project = await projectService.getProjectById(id, organizationId!);
+        return successResponse(project);
+      }
 
-      case 'tasks':
-        return successResponse(isDemo ? generateDemoTasks() : []);
+      case 'tasks': {
+        if (isDemo) {
+          return successResponse(generateDemoTasks());
+        }
+        // Real user - get from service
+        const result = await taskService.getTasks(organizationId!, {}, { page: 1, limit: 100 });
+        return successResponse(result.data);
+      }
 
-      case 'task':
-        return successResponse(null);
+      case 'task': {
+        const id = searchParams.get('id');
+        if (!id) return errorResponse('Task ID required', 'MISSING_ID', 400);
+        if (isDemo) return successResponse(null);
+        const task = await taskService.getTaskById(id, organizationId!);
+        return successResponse(task);
+      }
 
-      case 'clients':
-        return successResponse(isDemo ? generateDemoClients() : []);
+      case 'clients': {
+        if (isDemo) {
+          return successResponse(generateDemoClients());
+        }
+        // Real user - get from service
+        const clients = await clientService.getClients(organizationId!);
+        return successResponse(clients);
+      }
 
-      case 'client':
-        return successResponse(null);
+      case 'client': {
+        const id = searchParams.get('id');
+        if (!id) return errorResponse('Client ID required', 'MISSING_ID', 400);
+        if (isDemo) return successResponse(null);
+        const client = await clientService.getClientById(id, organizationId!);
+        return successResponse(client);
+      }
 
-      case 'invoices':
-        return successResponse(isDemo ? generateDemoInvoices() : []);
+      case 'invoices': {
+        if (isDemo) {
+          return successResponse(generateDemoInvoices());
+        }
+        // Real user - get from service
+        const result = await invoiceService.getInvoices(organizationId!, {}, { page: 1, limit: 100 });
+        return successResponse(result.data);
+      }
 
-      case 'invoice':
-        return successResponse(null);
+      case 'invoice': {
+        const id = searchParams.get('id');
+        if (!id) return errorResponse('Invoice ID required', 'MISSING_ID', 400);
+        if (isDemo) return successResponse(null);
+        const invoice = await invoiceService.getInvoiceById(id, organizationId!);
+        return successResponse(invoice);
+      }
 
       case 'suppliers':
-        return successResponse(isDemo ? [] : []);
-
       case 'materials':
-        return successResponse(isDemo ? [] : []);
-
       case 'contracts':
-        return successResponse(isDemo ? [] : []);
-
       case 'proposals':
-        return successResponse(isDemo ? [] : []);
-
       case 'site-reports':
-        return successResponse(isDemo ? [] : []);
-
       case 'documents':
-        return successResponse(isDemo ? [] : []);
-
       case 'notifications':
-        return successResponse(isDemo ? [] : []);
-
       case 'leave-requests':
-        return successResponse(isDemo ? [] : []);
-
       case 'users':
+      case 'vouchers':
+      case 'budgets':
+      case 'expenses':
+      case 'attendances':
+        // These endpoints return empty for now - to be implemented with real services
         return successResponse(isDemo ? [] : []);
 
       case 'profile':
         return successResponse(user);
-
-      case 'vouchers':
-        return successResponse(isDemo ? [] : []);
-
-      case 'budgets':
-        return successResponse(isDemo ? [] : []);
-
-      case 'expenses':
-        return successResponse(isDemo ? [] : []);
-
-      case 'attendances':
-        return successResponse(isDemo ? [] : []);
 
       default:
         return errorResponse(`Unknown action: ${action}`, 'UNKNOWN_ACTION', 400);
@@ -180,15 +222,33 @@ export async function POST(request: NextRequest) {
     return errorResponse('Demo users cannot create resources', 'DEMO_MODE', 403);
   }
 
+  const organizationId = user.organizationId;
+  const userId = user.id;
+
   try {
     const body = await request.json();
 
-    // These would be implemented with actual database operations
     switch (action) {
-      case 'project':
-      case 'task':
-      case 'client':
-      case 'invoice':
+      case 'project': {
+        const project = await projectService.createProject(body, organizationId!, userId);
+        return successResponse(project);
+      }
+
+      case 'task': {
+        const task = await taskService.createTask(body, organizationId!, userId);
+        return successResponse(task);
+      }
+
+      case 'client': {
+        const client = await clientService.createClient(body, organizationId!, userId);
+        return successResponse(client);
+      }
+
+      case 'invoice': {
+        const invoice = await invoiceService.createInvoice(body, organizationId!, userId);
+        return successResponse(invoice);
+      }
+
       case 'supplier':
       case 'material':
       case 'contract':
@@ -201,6 +261,7 @@ export async function POST(request: NextRequest) {
       case 'voucher':
       case 'budget':
       case 'expense':
+        // Placeholder - return created object with ID
         return successResponse({ id: `new-${Date.now()}`, ...body });
 
       default:
@@ -216,6 +277,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action');
+  const id = searchParams.get('id');
 
   const user = await getUserFromRequest(request);
   if (!user) {
@@ -226,9 +288,40 @@ export async function PUT(request: NextRequest) {
     return errorResponse('Demo users cannot update resources', 'DEMO_MODE', 403);
   }
 
+  if (!id) {
+    return errorResponse('Resource ID required', 'MISSING_ID', 400);
+  }
+
+  const organizationId = user.organizationId;
+  const userId = user.id;
+
   try {
     const body = await request.json();
-    return successResponse(body);
+
+    switch (action) {
+      case 'project': {
+        const project = await projectService.updateProject(id, body, organizationId!, userId);
+        return successResponse(project);
+      }
+
+      case 'task': {
+        const task = await taskService.updateTask(id, body, organizationId!, userId);
+        return successResponse(task);
+      }
+
+      case 'client': {
+        const client = await clientService.updateClient(id, body, organizationId!, userId);
+        return successResponse(client);
+      }
+
+      case 'invoice': {
+        const invoice = await invoiceService.updateInvoice(id, body, organizationId!, userId);
+        return successResponse(invoice);
+      }
+
+      default:
+        return successResponse(body);
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     return errorResponse(message, 'SERVER_ERROR', 500);
@@ -239,6 +332,7 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action');
+  const id = searchParams.get('id');
 
   const user = await getUserFromRequest(request);
   if (!user) {
@@ -249,5 +343,40 @@ export async function DELETE(request: NextRequest) {
     return errorResponse('Demo users cannot delete resources', 'DEMO_MODE', 403);
   }
 
-  return successResponse({ deleted: true });
+  if (!id) {
+    return errorResponse('Resource ID required', 'MISSING_ID', 400);
+  }
+
+  const organizationId = user.organizationId;
+  const userId = user.id;
+
+  try {
+    switch (action) {
+      case 'project': {
+        await projectService.deleteProject(id, organizationId!, userId);
+        return successResponse({ deleted: true });
+      }
+
+      case 'task': {
+        await taskService.deleteTask(id, organizationId!, userId);
+        return successResponse({ deleted: true });
+      }
+
+      case 'client': {
+        await clientService.deleteClient(id, organizationId!, userId);
+        return successResponse({ deleted: true });
+      }
+
+      case 'invoice': {
+        await invoiceService.deleteInvoice(id, organizationId!, userId);
+        return successResponse({ deleted: true });
+      }
+
+      default:
+        return successResponse({ deleted: true });
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return errorResponse(message, 'SERVER_ERROR', 500);
+  }
 }
