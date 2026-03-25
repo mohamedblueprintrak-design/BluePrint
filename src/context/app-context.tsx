@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
 
 type Theme = 'dark' | 'light' | 'system';
 type Language = 'ar' | 'en';
@@ -175,38 +175,52 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const setTheme = (newTheme: Theme) => setThemeState(newTheme);
-  const setLanguage = (lang: Language) => setLanguageState(lang);
-  const setCurrency = (curr: Currency) => setCurrencyState(curr);
-  const setSidebarCollapsed = (collapsed: boolean) => setSidebarCollapsedState(collapsed);
+  // Stable callback functions
+  const setTheme = useCallback((newTheme: Theme) => setThemeState(newTheme), []);
+  const setLanguage = useCallback((lang: Language) => setLanguageState(lang), []);
+  const setCurrency = useCallback((curr: Currency) => setCurrencyState(curr), []);
+  const setSidebarCollapsed = useCallback((collapsed: boolean) => setSidebarCollapsedState(collapsed), []);
+  const openQuickAddDialogCb = useCallback((dialog: Exclude<QuickAddDialog, null>) => setQuickAddDialog(dialog), []);
+  const closeQuickAddDialogCb = useCallback(() => setQuickAddDialog(null), []);
+
+  // Memoized context value to prevent unnecessary re-renders
+  const value = useMemo(() => ({
+    theme,
+    setTheme,
+    isDark,
+    language,
+    setLanguage,
+    isRTL,
+    currency,
+    setCurrency,
+    sidebarOpen,
+    setSidebarOpen,
+    sidebarCollapsed,
+    setSidebarCollapsed,
+    currentPage,
+    setCurrentPage,
+    commandPaletteOpen,
+    setCommandPaletteOpen,
+    notificationsPanelOpen,
+    setNotificationsPanelOpen,
+    quickAddDialog,
+    setQuickAddDialog,
+    openQuickAddDialog: openQuickAddDialogCb,
+    closeQuickAddDialog: closeQuickAddDialogCb
+  }), [
+    theme, setTheme, isDark,
+    language, setLanguage, isRTL,
+    currency, setCurrency,
+    sidebarOpen, sidebarCollapsed, setSidebarCollapsed,
+    currentPage,
+    commandPaletteOpen,
+    notificationsPanelOpen,
+    quickAddDialog,
+    openQuickAddDialogCb, closeQuickAddDialogCb
+  ]);
 
   return (
-    <AppContext.Provider
-      value={{
-        theme,
-        setTheme,
-        isDark,
-        language,
-        setLanguage,
-        isRTL,
-        currency,
-        setCurrency,
-        sidebarOpen,
-        setSidebarOpen,
-        sidebarCollapsed,
-        setSidebarCollapsed,
-        currentPage,
-        setCurrentPage,
-        commandPaletteOpen,
-        setCommandPaletteOpen,
-        notificationsPanelOpen,
-        setNotificationsPanelOpen,
-        quickAddDialog,
-        setQuickAddDialog,
-        openQuickAddDialog,
-        closeQuickAddDialog
-      }}
-    >
+    <AppContext.Provider value={value}>
       {children}
     </AppContext.Provider>
   );
