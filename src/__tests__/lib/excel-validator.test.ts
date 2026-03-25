@@ -10,7 +10,7 @@ import {
   sanitizeExcelData,
   ExcelConstants,
 } from '@/lib/excel-validator';
-import * as XLSX from 'xlsx';
+import { Workbook } from 'exceljs';
 
 // ============================================
 // File Extension Validation Tests
@@ -113,49 +113,60 @@ describe('validateFileSize', () => {
 // ============================================
 
 describe('validateAndParseExcel', () => {
-  // Helper to create test Excel buffer
-  function createTestExcelBuffer(data: Record<string, unknown>[]): Buffer {
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
-    return Buffer.from(XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }));
+  // Helper to create test Excel buffer using exceljs
+  async function createTestExcelBuffer(data: Record<string, unknown>[]): Promise<Buffer> {
+    const workbook = new Workbook();
+    const worksheet = workbook.addWorksheet('Sheet1');
+    
+    if (data.length > 0) {
+      // Add headers
+      const headers = Object.keys(data[0]);
+      worksheet.addRow(headers);
+      
+      // Add data rows
+      data.forEach(row => {
+        worksheet.addRow(Object.values(row));
+      });
+    }
+    
+    return await workbook.xlsx.writeBuffer() as Buffer;
   }
 
-  it('should parse valid Excel file', () => {
+  it('should parse valid Excel file', async () => {
     const data = [{ name: 'Test', value: 123 }];
-    const buffer = createTestExcelBuffer(data);
+    const buffer = await createTestExcelBuffer(data);
     
-    const result = validateAndParseExcel(buffer);
+    const result = await validateAndParseExcel(buffer);
     
     expect(result.valid).toBe(true);
     expect(result.data).toHaveLength(1);
     expect(result.data?.[0].name).toBe('Test');
   });
 
-  it('should reject empty buffer', () => {
-    const result = validateAndParseExcel(Buffer.alloc(0));
+  it('should reject empty buffer', async () => {
+    const result = await validateAndParseExcel(Buffer.alloc(0));
     
     expect(result.valid).toBe(false);
     expect(result.errorCode).toBe('EMPTY_FILE');
   });
 
-  it('should reject buffer exceeding size limit', () => {
+  it('should reject buffer exceeding size limit', async () => {
     const data = [{ name: 'Test' }];
-    const buffer = createTestExcelBuffer(data);
+    const buffer = await createTestExcelBuffer(data);
     
-    const result = validateAndParseExcel(buffer, { maxFileSize: 1 }); // 1 byte limit
+    const result = await validateAndParseExcel(buffer, { maxFileSize: 1 }); // 1 byte limit
     
     expect(result.valid).toBe(false);
     expect(result.errorCode).toBe('FILE_TOO_LARGE');
   });
 
-  it('should extract headers from data', () => {
+  it('should extract headers from data', async () => {
     const data = [
       { firstName: 'John', lastName: 'Doe', age: 30 }
     ];
-    const buffer = createTestExcelBuffer(data);
+    const buffer = await createTestExcelBuffer(data);
     
-    const result = validateAndParseExcel(buffer);
+    const result = await validateAndParseExcel(buffer);
     
     expect(result.valid).toBe(true);
     expect(result.headers).toContain('firstName');
@@ -163,11 +174,11 @@ describe('validateAndParseExcel', () => {
     expect(result.headers).toContain('age');
   });
 
-  it('should validate required headers', () => {
+  it('should validate required headers', async () => {
     const data = [{ name: 'Test' }];
-    const buffer = createTestExcelBuffer(data);
+    const buffer = await createTestExcelBuffer(data);
     
-    const result = validateAndParseExcel(buffer, {
+    const result = await validateAndParseExcel(buffer, {
       requiredHeaders: ['name', 'email']
     });
     
@@ -175,25 +186,25 @@ describe('validateAndParseExcel', () => {
     expect(result.errorCode).toBe('MISSING_HEADERS');
   });
 
-  it('should pass when all required headers exist', () => {
+  it('should pass when all required headers exist', async () => {
     const data = [{ name: 'Test', email: 'test@example.com' }];
-    const buffer = createTestExcelBuffer(data);
+    const buffer = await createTestExcelBuffer(data);
     
-    const result = validateAndParseExcel(buffer, {
+    const result = await validateAndParseExcel(buffer, {
       requiredHeaders: ['name', 'email']
     });
     
     expect(result.valid).toBe(true);
   });
 
-  it('should return metadata about the file', () => {
+  it('should return metadata about the file', async () => {
     const data = [
       { a: 1, b: 2 },
       { a: 3, b: 4 }
     ];
-    const buffer = createTestExcelBuffer(data);
+    const buffer = await createTestExcelBuffer(data);
     
-    const result = validateAndParseExcel(buffer);
+    const result = await validateAndParseExcel(buffer);
     
     expect(result.metadata).toBeDefined();
     expect(result.metadata?.totalRows).toBeGreaterThan(0);
@@ -201,38 +212,36 @@ describe('validateAndParseExcel', () => {
     expect(result.metadata?.sheetNames).toContain('Sheet1');
   });
 
-  it('should reject files with too many rows', () => {
+  it('should reject files with too many rows', async () => {
     // Create data with many rows
     const data = Array.from({ length: 100 }, (_, i) => ({ id: i }));
-    const buffer = createTestExcelBuffer(data);
+    const buffer = await createTestExcelBuffer(data);
     
-    const result = validateAndParseExcel(buffer, { maxRows: 50 });
+    const result = await validateAndParseExcel(buffer, { maxRows: 50 });
     
     expect(result.valid).toBe(false);
     expect(result.errorCode).toBe('TOO_MANY_ROWS');
   });
 
-  it('should reject invalid buffer (not Excel)', () => {
-    // xlsx library can parse any text as a single cell, so it returns NO_DATA
-    // For truly malformed Excel files, it would return PARSE_ERROR
+  it('should reject invalid buffer (not Excel)', async () => {
     const buffer = Buffer.from('This is not an Excel file');
     
-    const result = validateAndParseExcel(buffer);
+    const result = await validateAndParseExcel(buffer);
     
-    // The text gets parsed but has no valid data rows
+    // The text gets parsed but has no valid data
     expect(result.valid).toBe(false);
-    expect(['PARSE_ERROR', 'NO_DATA']).toContain(result.errorCode);
+    expect(['PARSE_ERROR', 'NO_DATA', 'EMPTY_SHEET']).toContain(result.errorCode);
   });
 
-  it('should support Arabic error messages', () => {
-    const result = validateAndParseExcel(Buffer.alloc(0), {}, 'ar');
+  it('should support Arabic error messages', async () => {
+    const result = await validateAndParseExcel(Buffer.alloc(0), {}, 'ar');
     
     expect(result.valid).toBe(false);
     expect(result.error).toContain('الملف فارغ');
   });
 
-  it('should support English error messages', () => {
-    const result = validateAndParseExcel(Buffer.alloc(0), {}, 'en');
+  it('should support English error messages', async () => {
+    const result = await validateAndParseExcel(Buffer.alloc(0), {}, 'en');
     
     expect(result.valid).toBe(false);
     expect(result.error).toContain('File is empty');

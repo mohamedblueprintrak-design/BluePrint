@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import { Workbook, Worksheet } from 'exceljs';
 
 // Types for Excel export
 export interface FinancialExcelData {
@@ -220,76 +220,94 @@ function getLabels(language: 'ar' | 'en') {
   };
 }
 
-// Style for header cells
-function _styleHeaderCell(ws: XLSX.WorkSheet, rowIndex: number, colCount: number) {
-  const _range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
-  for (let col = 0; col < colCount; col++) {
-    const cellAddress = XLSX.utils.encode_cell({ r: rowIndex, c: col });
-    if (!ws[cellAddress]) continue;
-    ws[cellAddress].s = {
-      font: { bold: true, color: { rgb: 'FFFFFF' } },
-      fill: { fgColor: { rgb: '3B82F6' } },
-      alignment: { horizontal: 'center', vertical: 'center' },
-    };
+// Header style
+const HEADER_STYLE = {
+  font: { bold: true, color: { argb: 'FFFFFFFF' } },
+  fill: { type: 'pattern' as const, pattern: 'solid' as const, fgColor: { argb: 'FF3B82F6' } },
+  alignment: { horizontal: 'center' as const, vertical: 'middle' as const },
+};
+
+// Apply header style to a row
+function styleHeaderRow(worksheet: Worksheet, rowCount: number) {
+  for (let col = 1; col <= rowCount; col++) {
+    const cell = worksheet.getRow(1).getCell(col);
+    Object.assign(cell, HEADER_STYLE);
   }
 }
 
 // Generate Financial Report Excel
-export function generateFinancialReportExcel(data: FinancialExcelData): Buffer {
-  const wb = XLSX.utils.book_new();
+export async function generateFinancialReportExcel(data: FinancialExcelData): Promise<Buffer> {
+  const workbook = new Workbook();
   const labels = getLabels(data.language);
   
   // Summary sheet
-  const summaryData = [
-    [labels.financialReport],
-    [],
-    [labels.summary],
-    [labels.totalInvoiced, `${data.summary.totalInvoiced} ${data.currency}`],
-    [labels.totalPaid, `${data.summary.totalPaid} ${data.currency}`],
-    [labels.totalPending, `${data.summary.totalPending} ${data.currency}`],
-    [labels.totalOverdue, `${data.summary.totalOverdue} ${data.currency}`],
+  const summarySheet = workbook.addWorksheet(labels.summary);
+  summarySheet.columns = [
+    { width: 25 },
+    { width: 20 },
   ];
-  const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
-  summarySheet['!cols'] = [{ wch: 25 }, { wch: 20 }];
-  XLSX.utils.book_append_sheet(wb, summarySheet, labels.summary);
+  
+  summarySheet.addRow([labels.financialReport]);
+  summarySheet.addRow([]);
+  summarySheet.addRow([labels.summary]);
+  summarySheet.addRow([labels.totalInvoiced, `${data.summary.totalInvoiced} ${data.currency}`]);
+  summarySheet.addRow([labels.totalPaid, `${data.summary.totalPaid} ${data.currency}`]);
+  summarySheet.addRow([labels.totalPending, `${data.summary.totalPending} ${data.currency}`]);
+  summarySheet.addRow([labels.totalOverdue, `${data.summary.totalOverdue} ${data.currency}`]);
   
   // Monthly data sheet
-  const monthlyHeaders = [labels.date, labels.invoiced, labels.paid, labels.pending];
-  const monthlyRows = data.monthlyData.map(row => [
-    row.date,
-    row.invoiced,
-    row.paid,
-    row.pending,
-  ]);
-  const monthlySheet = XLSX.utils.aoa_to_sheet([monthlyHeaders, ...monthlyRows]);
-  monthlySheet['!cols'] = [{ wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
-  XLSX.utils.book_append_sheet(wb, monthlySheet, data.language === 'ar' ? 'البيانات الشهرية' : 'Monthly Data');
+  const monthlySheet = workbook.addWorksheet(data.language === 'ar' ? 'البيانات الشهرية' : 'Monthly Data');
+  monthlySheet.columns = [
+    { key: 'date', width: 15 },
+    { key: 'invoiced', width: 15 },
+    { key: 'paid', width: 15 },
+    { key: 'pending', width: 15 },
+  ];
   
-  return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+  monthlySheet.addRow([labels.date, labels.invoiced, labels.paid, labels.pending]);
+  styleHeaderRow(monthlySheet, 4);
+  
+  data.monthlyData.forEach(row => {
+    monthlySheet.addRow([row.date, row.invoiced, row.paid, row.pending]);
+  });
+  
+  return await workbook.xlsx.writeBuffer() as Buffer;
 }
 
 // Generate Project Report Excel
-export function generateProjectReportExcel(data: ProjectExcelData): Buffer {
-  const wb = XLSX.utils.book_new();
+export async function generateProjectReportExcel(data: ProjectExcelData): Promise<Buffer> {
+  const workbook = new Workbook();
   const labels = getLabels(data.language);
   
   // Summary sheet
-  const summaryData = [
-    [labels.projectReport],
-    [],
-    [labels.summary],
-    [labels.totalProjects, data.summary.total],
-    [labels.active, data.summary.active],
-    [labels.completed, data.summary.completed],
-    [labels.pending, data.summary.pending],
-    [labels.onHold, data.summary.onHold],
+  const summarySheet = workbook.addWorksheet(labels.summary);
+  summarySheet.columns = [
+    { width: 25 },
+    { width: 15 },
   ];
-  const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
-  summarySheet['!cols'] = [{ wch: 25 }, { wch: 15 }];
-  XLSX.utils.book_append_sheet(wb, summarySheet, labels.summary);
+  
+  summarySheet.addRow([labels.projectReport]);
+  summarySheet.addRow([]);
+  summarySheet.addRow([labels.summary]);
+  summarySheet.addRow([labels.totalProjects, data.summary.total]);
+  summarySheet.addRow([labels.active, data.summary.active]);
+  summarySheet.addRow([labels.completed, data.summary.completed]);
+  summarySheet.addRow([labels.pending, data.summary.pending]);
+  summarySheet.addRow([labels.onHold, data.summary.onHold]);
   
   // Projects sheet
-  const projectHeaders = [
+  const projectSheet = workbook.addWorksheet(data.language === 'ar' ? 'المشاريع' : 'Projects');
+  projectSheet.columns = [
+    { key: 'name', width: 30 },
+    { key: 'client', width: 25 },
+    { key: 'status', width: 12 },
+    { key: 'progress', width: 10 },
+    { key: 'budget', width: 15 },
+    { key: 'startDate', width: 12 },
+    { key: 'endDate', width: 12 },
+  ];
+  
+  projectSheet.addRow([
     labels.projectName,
     labels.client,
     labels.status,
@@ -297,153 +315,169 @@ export function generateProjectReportExcel(data: ProjectExcelData): Buffer {
     labels.budget,
     labels.startDate,
     labels.endDate,
-  ];
-  const projectRows = data.projects.map(p => [
-    p.name,
-    p.client,
-    p.status,
-    `${p.progress}%`,
-    p.budget,
-    p.startDate,
-    p.endDate,
   ]);
-  const projectSheet = XLSX.utils.aoa_to_sheet([projectHeaders, ...projectRows]);
-  projectSheet['!cols'] = [
-    { wch: 30 },
-    { wch: 25 },
-    { wch: 12 },
-    { wch: 10 },
-    { wch: 15 },
-    { wch: 12 },
-    { wch: 12 },
-  ];
-  XLSX.utils.book_append_sheet(wb, projectSheet, data.language === 'ar' ? 'المشاريع' : 'Projects');
+  styleHeaderRow(projectSheet, 7);
   
-  return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+  data.projects.forEach(p => {
+    projectSheet.addRow([
+      p.name,
+      p.client,
+      p.status,
+      `${p.progress}%`,
+      p.budget,
+      p.startDate,
+      p.endDate,
+    ]);
+  });
+  
+  return await workbook.xlsx.writeBuffer() as Buffer;
 }
 
 // Generate Task Report Excel
-export function generateTaskReportExcel(data: TaskExcelData): Buffer {
-  const wb = XLSX.utils.book_new();
+export async function generateTaskReportExcel(data: TaskExcelData): Promise<Buffer> {
+  const workbook = new Workbook();
   const labels = getLabels(data.language);
   
   // Summary sheet
-  const summaryData = [
-    [labels.taskReport],
-    [],
-    [labels.summary],
-    [labels.totalTasks, data.summary.total],
-    [labels.todo, data.summary.todo],
-    [labels.inProgress, data.summary.inProgress],
-    [labels.done, data.summary.done],
-    [labels.overdue, data.summary.overdue],
+  const summarySheet = workbook.addWorksheet(labels.summary);
+  summarySheet.columns = [
+    { width: 25 },
+    { width: 15 },
   ];
-  const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
-  summarySheet['!cols'] = [{ wch: 25 }, { wch: 15 }];
-  XLSX.utils.book_append_sheet(wb, summarySheet, labels.summary);
+  
+  summarySheet.addRow([labels.taskReport]);
+  summarySheet.addRow([]);
+  summarySheet.addRow([labels.summary]);
+  summarySheet.addRow([labels.totalTasks, data.summary.total]);
+  summarySheet.addRow([labels.todo, data.summary.todo]);
+  summarySheet.addRow([labels.inProgress, data.summary.inProgress]);
+  summarySheet.addRow([labels.done, data.summary.done]);
+  summarySheet.addRow([labels.overdue, data.summary.overdue]);
   
   // Tasks sheet
-  const taskHeaders = [
+  const taskSheet = workbook.addWorksheet(data.language === 'ar' ? 'المهام' : 'Tasks');
+  taskSheet.columns = [
+    { key: 'title', width: 35 },
+    { key: 'project', width: 25 },
+    { key: 'status', width: 12 },
+    { key: 'priority', width: 10 },
+    { key: 'dueDate', width: 12 },
+    { key: 'assignee', width: 20 },
+  ];
+  
+  taskSheet.addRow([
     labels.taskTitle,
     labels.project,
     labels.status,
     labels.priority,
     labels.dueDate,
     labels.assignee,
-  ];
-  const taskRows = data.tasks.map(t => [
-    t.title,
-    t.project,
-    t.status,
-    t.priority,
-    t.dueDate,
-    t.assignee,
   ]);
-  const taskSheet = XLSX.utils.aoa_to_sheet([taskHeaders, ...taskRows]);
-  taskSheet['!cols'] = [
-    { wch: 35 },
-    { wch: 25 },
-    { wch: 12 },
-    { wch: 10 },
-    { wch: 12 },
-    { wch: 20 },
-  ];
-  XLSX.utils.book_append_sheet(wb, taskSheet, data.language === 'ar' ? 'المهام' : 'Tasks');
+  styleHeaderRow(taskSheet, 6);
   
-  return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+  data.tasks.forEach(t => {
+    taskSheet.addRow([
+      t.title,
+      t.project,
+      t.status,
+      t.priority,
+      t.dueDate,
+      t.assignee || '',
+    ]);
+  });
+  
+  return await workbook.xlsx.writeBuffer() as Buffer;
 }
 
 // Generate Client Report Excel
-export function generateClientReportExcel(data: ClientExcelData): Buffer {
-  const wb = XLSX.utils.book_new();
+export async function generateClientReportExcel(data: ClientExcelData): Promise<Buffer> {
+  const workbook = new Workbook();
   const labels = getLabels(data.language);
   
   // Summary sheet
-  const summaryData = [
-    [labels.clientReport],
-    [],
-    [labels.summary],
-    [labels.totalClients, data.summary.total],
-    [labels.activeClients, data.summary.active],
-    [labels.totalRevenue, `${data.summary.totalRevenue} ${data.currency}`],
+  const summarySheet = workbook.addWorksheet(labels.summary);
+  summarySheet.columns = [
+    { width: 25 },
+    { width: 20 },
   ];
-  const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
-  summarySheet['!cols'] = [{ wch: 25 }, { wch: 20 }];
-  XLSX.utils.book_append_sheet(wb, summarySheet, labels.summary);
+  
+  summarySheet.addRow([labels.clientReport]);
+  summarySheet.addRow([]);
+  summarySheet.addRow([labels.summary]);
+  summarySheet.addRow([labels.totalClients, data.summary.total]);
+  summarySheet.addRow([labels.activeClients, data.summary.active]);
+  summarySheet.addRow([labels.totalRevenue, `${data.summary.totalRevenue} ${data.currency}`]);
   
   // Clients sheet
-  const clientHeaders = [
+  const clientSheet = workbook.addWorksheet(data.language === 'ar' ? 'العملاء' : 'Clients');
+  clientSheet.columns = [
+    { key: 'name', width: 30 },
+    { key: 'email', width: 25 },
+    { key: 'phone', width: 18 },
+    { key: 'contactPerson', width: 20 },
+    { key: 'totalInvoiced', width: 15 },
+    { key: 'totalPaid', width: 15 },
+  ];
+  
+  clientSheet.addRow([
     labels.name,
     labels.email,
     labels.phone,
     labels.contactPerson,
     labels.totalInvoiced,
     labels.totalPaid,
-  ];
-  const clientRows = data.clients.map(c => [
-    c.name,
-    c.email || '-',
-    c.phone || '-',
-    c.contactPerson || '-',
-    c.totalInvoiced,
-    c.totalPaid,
   ]);
-  const clientSheet = XLSX.utils.aoa_to_sheet([clientHeaders, ...clientRows]);
-  clientSheet['!cols'] = [
-    { wch: 30 },
-    { wch: 25 },
-    { wch: 18 },
-    { wch: 20 },
-    { wch: 15 },
-    { wch: 15 },
-  ];
-  XLSX.utils.book_append_sheet(wb, clientSheet, data.language === 'ar' ? 'العملاء' : 'Clients');
+  styleHeaderRow(clientSheet, 6);
   
-  return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+  data.clients.forEach(c => {
+    clientSheet.addRow([
+      c.name,
+      c.email || '-',
+      c.phone || '-',
+      c.contactPerson || '-',
+      c.totalInvoiced,
+      c.totalPaid,
+    ]);
+  });
+  
+  return await workbook.xlsx.writeBuffer() as Buffer;
 }
 
 // Generate Invoice Report Excel
-export function generateInvoiceReportExcel(data: InvoiceExcelData): Buffer {
-  const wb = XLSX.utils.book_new();
+export async function generateInvoiceReportExcel(data: InvoiceExcelData): Promise<Buffer> {
+  const workbook = new Workbook();
   const labels = getLabels(data.language);
   
   // Summary sheet
-  const summaryData = [
-    [labels.invoiceReport],
-    [],
-    [labels.summary],
-    [labels.totalInvoices, data.summary.total],
-    [labels.paid, data.summary.paid],
-    [labels.pending, data.summary.pending],
-    [labels.overdue, data.summary.overdue],
-    [labels.amount, `${data.summary.totalAmount} ${data.currency}`],
+  const summarySheet = workbook.addWorksheet(labels.summary);
+  summarySheet.columns = [
+    { width: 25 },
+    { width: 20 },
   ];
-  const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
-  summarySheet['!cols'] = [{ wch: 25 }, { wch: 20 }];
-  XLSX.utils.book_append_sheet(wb, summarySheet, labels.summary);
+  
+  summarySheet.addRow([labels.invoiceReport]);
+  summarySheet.addRow([]);
+  summarySheet.addRow([labels.summary]);
+  summarySheet.addRow([labels.totalInvoices, data.summary.total]);
+  summarySheet.addRow([labels.paid, data.summary.paid]);
+  summarySheet.addRow([labels.pending, data.summary.pending]);
+  summarySheet.addRow([labels.overdue, data.summary.overdue]);
+  summarySheet.addRow([labels.amount, `${data.summary.totalAmount} ${data.currency}`]);
   
   // Invoices sheet
-  const invoiceHeaders = [
+  const invoiceSheet = workbook.addWorksheet(data.language === 'ar' ? 'الفواتير' : 'Invoices');
+  invoiceSheet.columns = [
+    { key: 'invoiceNumber', width: 18 },
+    { key: 'client', width: 25 },
+    { key: 'project', width: 25 },
+    { key: 'total', width: 12 },
+    { key: 'paidAmount', width: 12 },
+    { key: 'status', width: 12 },
+    { key: 'issueDate', width: 12 },
+    { key: 'dueDate', width: 12 },
+  ];
+  
+  invoiceSheet.addRow([
     labels.invoiceNumber,
     labels.client,
     labels.project,
@@ -452,29 +486,21 @@ export function generateInvoiceReportExcel(data: InvoiceExcelData): Buffer {
     labels.status,
     labels.issueDate,
     labels.dueDate,
-  ];
-  const invoiceRows = data.invoices.map(inv => [
-    inv.invoiceNumber,
-    inv.client,
-    inv.project,
-    inv.total,
-    inv.paidAmount,
-    inv.status,
-    inv.issueDate,
-    inv.dueDate,
   ]);
-  const invoiceSheet = XLSX.utils.aoa_to_sheet([invoiceHeaders, ...invoiceRows]);
-  invoiceSheet['!cols'] = [
-    { wch: 18 },
-    { wch: 25 },
-    { wch: 25 },
-    { wch: 12 },
-    { wch: 12 },
-    { wch: 12 },
-    { wch: 12 },
-    { wch: 12 },
-  ];
-  XLSX.utils.book_append_sheet(wb, invoiceSheet, data.language === 'ar' ? 'الفواتير' : 'Invoices');
+  styleHeaderRow(invoiceSheet, 8);
   
-  return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+  data.invoices.forEach(inv => {
+    invoiceSheet.addRow([
+      inv.invoiceNumber,
+      inv.client,
+      inv.project || '',
+      inv.total,
+      inv.paidAmount,
+      inv.status,
+      inv.issueDate,
+      inv.dueDate,
+    ]);
+  });
+  
+  return await workbook.xlsx.writeBuffer() as Buffer;
 }

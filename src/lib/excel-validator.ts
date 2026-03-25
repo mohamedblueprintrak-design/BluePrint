@@ -9,9 +9,11 @@
  * - Content structure validation
  * - Protection against XXE attacks
  * - Maximum rows/columns limits
+ * 
+ * Uses exceljs instead of xlsx for better security
  */
 
-import * as XLSX from 'xlsx';
+import { Workbook, Worksheet } from 'exceljs';
 
 // ============================================
 // Types
@@ -150,6 +152,52 @@ export function validateFileSize(size: number, maxSize: number = DEFAULT_MAX_FIL
 }
 
 /**
+ * Extract data from worksheet
+ */
+function extractSheetData(worksheet: Worksheet): { headers: string[]; data: Record<string, unknown>[] } {
+  const headers: string[] = [];
+  const data: Record<string, unknown>[] = [];
+  
+  worksheet.eachRow((row, rowNumber) => {
+    const rowData: Record<string, unknown> = {};
+    
+    row.eachCell((cell, colNumber) => {
+      const value = cell.value;
+      
+      // Handle different cell value types
+      let processedValue: unknown;
+      if (value === null || value === undefined) {
+        processedValue = null;
+      } else if (value instanceof Date) {
+        processedValue = value;
+      } else if (typeof value === 'object' && 'result' in value) {
+        // Formula cell - get the result
+        processedValue = (value as { result: unknown }).result;
+      } else if (typeof value === 'object' && 'text' in value) {
+        // Rich text
+        processedValue = (value as { text: string }).text;
+      } else {
+        processedValue = value;
+      }
+      
+      if (rowNumber === 1) {
+        // First row is headers
+        headers[colNumber - 1] = String(processedValue || `Column ${colNumber}`);
+      } else {
+        const headerName = headers[colNumber - 1] || `Column ${colNumber}`;
+        rowData[headerName] = processedValue;
+      }
+    });
+    
+    if (rowNumber > 1 && Object.keys(rowData).length > 0) {
+      data.push(rowData);
+    }
+  });
+  
+  return { headers, data };
+}
+
+/**
  * Parse and validate Excel file buffer
  * 
  * @param buffer - File buffer
@@ -157,11 +205,11 @@ export function validateFileSize(size: number, maxSize: number = DEFAULT_MAX_FIL
  * @param language - Error message language
  * @returns Validation result with parsed data
  */
-export function validateAndParseExcel(
+export async function validateAndParseExcel(
   buffer: Buffer,
   options: ExcelValidationOptions = {},
   language: 'ar' | 'en' = 'ar'
-): ExcelValidationResult {
+): Promise<ExcelValidationResult> {
   const {
     maxFileSize = DEFAULT_MAX_FILE_SIZE,
     maxRows = DEFAULT_MAX_ROWS,
@@ -187,19 +235,13 @@ export function validateAndParseExcel(
     };
   }
 
-  let workbook: XLSX.WorkBook;
+  let workbook: Workbook;
   
   try {
-    // Parse workbook - using type: 'buffer' for security
-    // This prevents XXE attacks by not resolving external entities
-    workbook = XLSX.read(buffer, {
-      type: 'buffer',
-      cellFormula: false, // Disable formula evaluation for security
-      cellHTML: false, // Disable HTML parsing
-      cellStyles: false, // Don't need styles
-      cellDates: true, // Parse dates properly
-      sheetStubs: false, // Don't include empty cells
-    });
+    // Create workbook and load buffer
+    // exceljs has built-in protection against XXE attacks
+    workbook = new Workbook();
+    await workbook.xlsx.load(buffer);
   } catch (error) {
     return {
       valid: false,
@@ -209,7 +251,7 @@ export function validateAndParseExcel(
   }
 
   // Validate sheet existence
-  if (!workbook.SheetNames.length) {
+  if (!workbook.worksheets.length) {
     return {
       valid: false,
       error: getErrorMessage('EMPTY_SHEET', language),
@@ -217,8 +259,7 @@ export function validateAndParseExcel(
     };
   }
 
-  const sheetName = workbook.SheetNames[sheetIndex] || workbook.SheetNames[0];
-  const worksheet = workbook.Sheets[sheetName];
+  const worksheet = workbook.worksheets[sheetIndex] || workbook.worksheets[0];
 
   if (!worksheet) {
     return {
@@ -228,10 +269,9 @@ export function validateAndParseExcel(
     };
   }
 
-  // Get sheet range
-  const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
-  const rowCount = range.e.r - range.s.r + 1;
-  const colCount = range.e.c - range.s.c + 1;
+  // Get row and column counts
+  const rowCount = worksheet.rowCount;
+  const colCount = worksheet.columnCount;
 
   // Validate row count
   if (rowCount > maxRows) {
@@ -251,23 +291,17 @@ export function validateAndParseExcel(
     };
   }
 
-  // Convert to JSON
-  const jsonData = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, {
-    defval: null,
-    raw: false, // Return formatted strings instead of raw values
-  });
+  // Extract data from worksheet
+  const { headers, data } = extractSheetData(worksheet);
 
   // Check for data
-  if (jsonData.length === 0) {
+  if (data.length === 0) {
     return {
       valid: false,
       error: getErrorMessage('NO_DATA', language),
       errorCode: 'NO_DATA'
     };
   }
-
-  // Get headers from first row
-  const headers = Object.keys(jsonData[0]);
 
   // Validate required headers
   if (requiredHeaders.length > 0) {
@@ -284,11 +318,11 @@ export function validateAndParseExcel(
   // Return success with metadata
   return {
     valid: true,
-    data: jsonData,
+    data,
     headers,
     metadata: {
-      sheetCount: workbook.SheetNames.length,
-      sheetNames: workbook.SheetNames,
+      sheetCount: workbook.worksheets.length,
+      sheetNames: workbook.worksheets.map(ws => ws.name),
       totalRows: rowCount,
       totalColumns: colCount,
       fileSize: buffer.length,
