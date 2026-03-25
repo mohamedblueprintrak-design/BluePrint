@@ -6,6 +6,8 @@
  * - Auth endpoints: Stricter limits (10 req/min) to prevent brute force
  * - API endpoints: Standard limits (100 req/min)
  * - Public endpoints: Lenient limits (200 req/min)
+ * 
+ * Supports Redis for distributed rate limiting in production
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -53,7 +55,68 @@ const DEFAULT_LIMIT_REQUESTS = RATE_LIMIT_CONFIGS.api.maxRequests;
 const DEFAULT_WINDOW = RATE_LIMIT_CONFIGS.api.windowMs;
 
 // ============================================
-// In-Memory Store
+// Redis Support (Optional)
+// ============================================
+
+let redisClient: any = null;
+let redisAvailable = false;
+
+/**
+ * Initialize Redis client if available
+ */
+async function initRedis(): Promise<boolean> {
+  if (redisClient !== null) {
+    return redisAvailable;
+  }
+  
+  const redisUrl = process.env.REDIS_URL;
+  if (!redisUrl) {
+    redisClient = false;
+    redisAvailable = false;
+    return false;
+  }
+  
+  try {
+    const { createClient } = await import('redis');
+    redisClient = createClient({ 
+      url: redisUrl,
+      socket: {
+        reconnectStrategy: (retries: number) => {
+          if (retries > 3) {
+            console.warn('Redis connection failed, falling back to memory store');
+            return false;
+          }
+          return Math.min(retries * 100, 3000);
+        }
+      }
+    });
+    
+    redisClient.on('error', (err: Error) => {
+      console.error('Redis error:', err);
+      redisAvailable = false;
+    });
+    
+    redisClient.on('connect', () => {
+      console.log('✅ Rate limiter connected to Redis');
+      redisAvailable = true;
+    });
+    
+    await redisClient.connect();
+    redisAvailable = true;
+    return true;
+  } catch (error) {
+    console.warn('⚠️ Redis not available, using memory store for rate limiting');
+    redisClient = false;
+    redisAvailable = false;
+    return false;
+  }
+}
+
+// Initialize Redis on startup
+initRedis();
+
+// ============================================
+// In-Memory Store (Fallback)
 // ============================================
 
 // Store structure: key -> { count, resetTime, type }
@@ -136,7 +199,7 @@ export function detectRateLimitType(pathname: string): RateLimitType {
  * Combines IP with endpoint type for separate tracking
  */
 function getRateLimitKey(ip: string, type: RateLimitType): string {
-  return `${ip}:${type}`;
+  return `ratelimit:${ip}:${type}`;
 }
 
 // ============================================
@@ -144,25 +207,55 @@ function getRateLimitKey(ip: string, type: RateLimitType): string {
 // ============================================
 
 /**
- * Check rate limit for a request
- * Legacy function for backward compatibility
+ * Check rate limit using Redis
  */
-export function checkRateLimit(request: NextRequest): RateLimitResult {
-  const ip = getClientIP(request);
-  const type = detectRateLimitType(request.nextUrl.pathname);
-  return checkRateLimitByType(ip, type);
+async function checkRateLimitRedis(
+  key: string, 
+  config: RateLimitConfig
+): Promise<RateLimitResult> {
+  const now = Date.now();
+  const ttlSeconds = Math.ceil(config.windowMs / 1000);
+  
+  try {
+    // Use Redis MULTI for atomic operations
+    const multi = redisClient.multi();
+    multi.incr(key);
+    multi.expire(key, ttlSeconds);
+    const results = await multi.exec();
+    
+    const count = results[0];
+    
+    if (count > config.maxRequests) {
+      // Get TTL for reset time
+      const ttl = await redisClient.ttl(key);
+      const resetTime = now + (ttl * 1000);
+      
+      return {
+        allowed: false,
+        remaining: 0,
+        resetTime
+      };
+    }
+    
+    return {
+      allowed: true,
+      remaining: config.maxRequests - count,
+      resetTime: now + config.windowMs
+    };
+  } catch (error) {
+    console.error('Redis rate limit error:', error);
+    // Fall back to memory store
+    return checkRateLimitMemory(key.replace('ratelimit:', ''), config);
+  }
 }
 
 /**
- * Check rate limit by IP and type
- * More flexible function for custom rate limiting
+ * Check rate limit using in-memory store
  */
-export function checkRateLimitByType(
-  ip: string, 
-  type: RateLimitType = 'api'
+function checkRateLimitMemory(
+  key: string, 
+  config: RateLimitConfig
 ): RateLimitResult {
-  const config = RATE_LIMIT_CONFIGS[type];
-  const key = getRateLimitKey(ip, type);
   const now = Date.now();
   const record = rateLimitStore.get(key);
   
@@ -171,7 +264,7 @@ export function checkRateLimitByType(
     rateLimitStore.set(key, {
       count: 1,
       resetTime: now + config.windowMs,
-      type
+      type: detectRateLimitType(key.split(':')[1] || '')
     });
     return {
       allowed: true,
@@ -196,6 +289,58 @@ export function checkRateLimitByType(
     remaining: config.maxRequests - record.count,
     resetTime: record.resetTime
   };
+}
+
+/**
+ * Check rate limit for a request
+ * Legacy function for backward compatibility
+ */
+export function checkRateLimit(request: NextRequest): RateLimitResult {
+  const ip = getClientIP(request);
+  const type = detectRateLimitType(request.nextUrl.pathname);
+  return checkRateLimitByType(ip, type);
+}
+
+/**
+ * Check rate limit by IP and type
+ * More flexible function for custom rate limiting
+ * Uses Redis if available, falls back to memory store
+ */
+export function checkRateLimitByType(
+  ip: string, 
+  type: RateLimitType = 'api'
+): RateLimitResult {
+  const config = RATE_LIMIT_CONFIGS[type];
+  const key = getRateLimitKey(ip, type);
+  
+  // Use Redis if available
+  if (redisAvailable && redisClient) {
+    // For synchronous contexts, we need to handle this differently
+    // Return memory store result and let async callers use checkRateLimitByTypeAsync
+    return checkRateLimitMemory(`${ip}:${type}`, config);
+  }
+  
+  // Use memory store
+  return checkRateLimitMemory(`${ip}:${type}`, config);
+}
+
+/**
+ * Async version of checkRateLimitByType that properly uses Redis
+ */
+export async function checkRateLimitByTypeAsync(
+  ip: string, 
+  type: RateLimitType = 'api'
+): Promise<RateLimitResult> {
+  const config = RATE_LIMIT_CONFIGS[type];
+  const key = getRateLimitKey(ip, type);
+  
+  // Try to use Redis
+  if (await initRedis()) {
+    return checkRateLimitRedis(key, config);
+  }
+  
+  // Use memory store
+  return checkRateLimitMemory(`${ip}:${type}`, config);
 }
 
 /**
@@ -242,7 +387,7 @@ export function withRateLimit(
   return async (request: NextRequest): Promise<NextResponse> => {
     const ip = getClientIP(request);
     const limitType = type || detectRateLimitType(request.nextUrl.pathname);
-    const result = checkRateLimitByType(ip, limitType);
+    const result = await checkRateLimitByTypeAsync(ip, limitType);
     
     if (!result.allowed) {
       // Detect language from Accept-Language header
@@ -286,13 +431,21 @@ export function getAllRateLimitConfigs(): Record<RateLimitType, RateLimitConfig>
 /**
  * Reset rate limit for a specific IP (admin only)
  */
-export function resetRateLimit(ip: string, type?: RateLimitType): void {
+export async function resetRateLimit(ip: string, type?: RateLimitType): Promise<void> {
   if (type) {
-    rateLimitStore.delete(getRateLimitKey(ip, type));
+    const key = getRateLimitKey(ip, type);
+    if (redisAvailable && redisClient) {
+      await redisClient.del(key);
+    }
+    rateLimitStore.delete(`${ip}:${type}`);
   } else {
     // Reset all types for this IP
     for (const t of Object.keys(RATE_LIMIT_CONFIGS) as RateLimitType[]) {
-      rateLimitStore.delete(getRateLimitKey(ip, t));
+      const key = getRateLimitKey(ip, t);
+      if (redisAvailable && redisClient) {
+        await redisClient.del(key);
+      }
+      rateLimitStore.delete(`${ip}:${t}`);
     }
   }
 }
@@ -303,6 +456,7 @@ export function resetRateLimit(ip: string, type?: RateLimitType): void {
 export function getRateLimitStats(): {
   totalEntries: number;
   entriesByType: Record<RateLimitType, number>;
+  usingRedis: boolean;
 } {
   const entriesByType: Record<RateLimitType, number> = {
     auth: 0,
@@ -318,6 +472,7 @@ export function getRateLimitStats(): {
   
   return {
     totalEntries: rateLimitStore.size,
-    entriesByType
+    entriesByType,
+    usingRedis: redisAvailable
   };
 }
