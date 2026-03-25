@@ -271,7 +271,7 @@ export async function generateFinancialReportExcel(data: FinancialExcelData): Pr
     monthlySheet.addRow([row.date, row.invoiced, row.paid, row.pending]);
   });
   
-  return await workbook.xlsx.writeBuffer() as Buffer;
+  return Buffer.from(await workbook.xlsx.writeBuffer());
 }
 
 // Generate Project Report Excel
@@ -330,7 +330,7 @@ export async function generateProjectReportExcel(data: ProjectExcelData): Promis
     ]);
   });
   
-  return await workbook.xlsx.writeBuffer() as Buffer;
+  return Buffer.from(await workbook.xlsx.writeBuffer());
 }
 
 // Generate Task Report Excel
@@ -386,7 +386,7 @@ export async function generateTaskReportExcel(data: TaskExcelData): Promise<Buff
     ]);
   });
   
-  return await workbook.xlsx.writeBuffer() as Buffer;
+  return Buffer.from(await workbook.xlsx.writeBuffer());
 }
 
 // Generate Client Report Excel
@@ -440,7 +440,7 @@ export async function generateClientReportExcel(data: ClientExcelData): Promise<
     ]);
   });
   
-  return await workbook.xlsx.writeBuffer() as Buffer;
+  return Buffer.from(await workbook.xlsx.writeBuffer());
 }
 
 // Generate Invoice Report Excel
@@ -502,5 +502,5 @@ export async function generateInvoiceReportExcel(data: InvoiceExcelData): Promis
     ]);
   });
   
-  return await workbook.xlsx.writeBuffer() as Buffer;
+  return Buffer.from(await workbook.xlsx.writeBuffer());
 }

@@ -241,7 +241,7 @@ export async function validateAndParseExcel(
     // Create workbook and load buffer
     // exceljs has built-in protection against XXE attacks
     workbook = new Workbook();
-    await workbook.xlsx.load(buffer);
+    await workbook.xlsx.load(buffer as unknown as ArrayBuffer);
   } catch (error) {
     return {
       valid: false,

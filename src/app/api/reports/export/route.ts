@@ -323,7 +323,7 @@ export async function GET(request: NextRequest) {
             currency,
             language,
           };
-          buffer = generateFinancialReportExcel(excelData);
+          buffer = await generateFinancialReportExcel(excelData);
           break;
         }
         case 'projects': {
@@ -341,7 +341,7 @@ export async function GET(request: NextRequest) {
             })),
             language,
           };
-          buffer = generateProjectReportExcel(excelData);
+          buffer = await generateProjectReportExcel(excelData);
           break;
         }
         case 'tasks': {
@@ -351,7 +351,7 @@ export async function GET(request: NextRequest) {
             tasks: data.tasks,
             language,
           };
-          buffer = generateTaskReportExcel(excelData);
+          buffer = await generateTaskReportExcel(excelData);
           break;
         }
         case 'clients': {
@@ -362,7 +362,7 @@ export async function GET(request: NextRequest) {
             currency,
             language,
           };
-          buffer = generateClientReportExcel(excelData);
+          buffer = await generateClientReportExcel(excelData);
           break;
         }
         case 'invoices': {
@@ -373,7 +373,7 @@ export async function GET(request: NextRequest) {
             currency,
             language,
           };
-          buffer = generateInvoiceReportExcel(excelData);
+          buffer = await generateInvoiceReportExcel(excelData);
           break;
         }
         default:
