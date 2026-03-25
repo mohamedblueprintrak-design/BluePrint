@@ -45,12 +45,30 @@ export function DashboardPage() {
   const [period, setPeriod] = useState<Period>('30d');
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   
-  // Check if welcome modal should be shown
+  // Check if welcome modal should be shown - only on client side
   useEffect(() => {
-    const hasSeenModal = localStorage.getItem('blueprint_welcome_modal_seen');
-    if (!hasSeenModal) {
-      setShowWelcomeModal(true);
-    }
+    // Use a flag to prevent multiple checks
+    let isMounted = true;
+    
+    const checkWelcomeModal = () => {
+      try {
+        const hasSeenModal = localStorage.getItem('blueprint_welcome_modal_seen');
+        if (!hasSeenModal && isMounted) {
+          setShowWelcomeModal(true);
+        }
+      } catch (e) {
+        // localStorage might not be available
+        console.warn('localStorage not available');
+      }
+    };
+    
+    // Small delay to ensure component is mounted
+    const timer = setTimeout(checkWelcomeModal, 100);
+    
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
   }, []);
   
   const { data: dashboardData, isLoading: dashboardLoading } = useDashboard();
