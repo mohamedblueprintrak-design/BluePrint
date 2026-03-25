@@ -278,12 +278,12 @@ function SidebarContent({
     }
   }, [pathname, setCurrentPage, currentPage, routes]);
 
-  const handleItemClick = (id: string, href: string) => {
+  const handleItemClick = useCallback((id: string, href: string) => {
     setCurrentPage(id);
     if (isMobile && onClose) {
       onClose();
     }
-  };
+  }, [setCurrentPage, isMobile, onClose]);
 
   return (
     <div className="flex flex-col h-full">
