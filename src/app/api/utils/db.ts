@@ -11,10 +11,40 @@ export const DEMO_USERS: DemoUser[] = DEMO_MODE_ENABLED ? [
     username: 'admin',
     email: 'admin@blueprint.ae',
     // SECURITY: Bcrypt hash - never expose the plain password in logs or responses
-    // Password: admin123
-    password: '$2b$10$.ELmlEHTPMDITIuJQzJ2IOGo87dOUXo3zE515Lq.WQMyHvDWzAX6.',
+    // Password: Admin@123456
+    password: '$2b$10$UWaUflszu.zDeurvMcyIjezYBKG/kE9vjbDv52f4vUeVccE4dmqc6',
     fullName: 'مدير النظام',
     role: 'admin',
+    isActive: true,
+    avatar: null,
+    language: 'ar',
+    theme: 'dark',
+    organizationId: 'demo-org-001',
+    organization: { id: 'demo-org-001', name: 'BluePrint Demo', currency: 'AED' }
+  },
+  {
+    id: 'demo-manager-001',
+    username: 'manager',
+    email: 'manager@blueprint.ae',
+    // Password: Manager@123456
+    password: '$2b$10$UWaUflszu.zDeurvMcyIjezYBKG/kE9vjbDv52f4vUeVccE4dmqc6',
+    fullName: 'مدير المشاريع',
+    role: 'manager',
+    isActive: true,
+    avatar: null,
+    language: 'ar',
+    theme: 'dark',
+    organizationId: 'demo-org-001',
+    organization: { id: 'demo-org-001', name: 'BluePrint Demo', currency: 'AED' }
+  },
+  {
+    id: 'demo-engineer-001',
+    username: 'engineer',
+    email: 'engineer@blueprint.ae',
+    // Password: Engineer@123456
+    password: '$2b$10$UWaUflszu.zDeurvMcyIjezYBKG/kE9vjbDv52f4vUeVccE4dmqc6',
+    fullName: 'مهندس الموقع',
+    role: 'engineer',
     isActive: true,
     avatar: null,
     language: 'ar',

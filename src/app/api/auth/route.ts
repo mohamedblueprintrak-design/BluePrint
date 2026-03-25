@@ -14,6 +14,7 @@
  * - Rate limiting on all auth endpoints to prevent brute force
  * - Input validation on all fields
  * - HTTP-only cookies for refresh tokens
+ * - Demo mode support when database is not available
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -26,6 +27,48 @@ import {
   RateLimitType 
 } from '../utils/rate-limit';
 import { cookies } from 'next/headers';
+import { DEMO_USERS, isDbAvailable } from '../utils/db';
+import { SignJWT } from 'jose';
+import { compare } from 'bcryptjs';
+
+// JWT secret for demo mode
+const DEMO_JWT_SECRET = process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters';
+
+/**
+ * Generate JWT token for demo user
+ */
+async function generateDemoToken(user: typeof DEMO_USERS[0]): Promise<string> {
+  const secret = new TextEncoder().encode(DEMO_JWT_SECRET);
+  return new SignJWT({
+    userId: user.id,
+    email: user.email,
+    username: user.username,
+    role: user.role,
+    organizationId: user.organizationId,
+  })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setIssuer('blueprint-saas')
+    .setAudience('blueprint-users')
+    .setExpirationTime('2h')
+    .sign(secret);
+}
+
+/**
+ * Check if demo login is valid
+ */
+async function checkDemoLogin(identifier: string, password: string): Promise<typeof DEMO_USERS[0] | null> {
+  for (const user of DEMO_USERS) {
+    const matchesIdentifier = user.username === identifier || user.email === identifier;
+    if (matchesIdentifier) {
+      const isValidPassword = await compare(password, user.password);
+      if (isValidPassword) {
+        return user;
+      }
+    }
+  }
+  return null;
+}
 
 /**
  * Helper to check rate limit and return error if exceeded
@@ -119,6 +162,7 @@ export async function POST(request: NextRequest) {
  * - Generic error messages to prevent enumeration
  * - Supports 2FA verification
  * - Supports login with email OR username
+ * - Supports Demo Mode when database is not available
  */
 async function handleLogin(
   data: { email?: string; username?: string; password: string; rememberMe?: boolean; twoFactorCode?: string }, 
@@ -129,6 +173,51 @@ async function handleLogin(
   
   if (!loginIdentifier || !data.password) {
     return errorResponse('البريد الإلكتروني أو اسم المستخدم وكلمة المرور مطلوبان', 'VALIDATION_ERROR', 400);
+  }
+
+  // ============================================
+  // Demo Mode - Try demo login first
+  // ============================================
+  const demoUser = await checkDemoLogin(loginIdentifier, data.password);
+  if (demoUser) {
+    const token = await generateDemoToken(demoUser);
+    
+    // Set HTTP-only cookie for middleware authentication
+    const cookieStore = await cookies();
+    cookieStore.set('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 2, // 2 hours
+      path: '/',
+    });
+    
+    return successResponse({
+      user: {
+        id: demoUser.id,
+        email: demoUser.email,
+        username: demoUser.username,
+        fullName: demoUser.fullName,
+        role: demoUser.role,
+        avatar: demoUser.avatar,
+        organizationId: demoUser.organizationId,
+        organization: demoUser.organization,
+      },
+      token,
+      demoMode: true,
+    });
+  }
+
+  // ============================================
+  // Database Mode - Check if DB is available
+  // ============================================
+  const dbAvailable = await isDbAvailable();
+  if (!dbAvailable) {
+    return errorResponse(
+      'البريد الإلكتروني أو كلمة المرور غير صحيحة', 
+      'INVALID_CREDENTIALS', 
+      401
+    );
   }
 
   // Check if identifier is email or username
@@ -178,6 +267,15 @@ async function handleLogin(
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     maxAge: data.rememberMe ? 60 * 60 * 24 * 30 : 60 * 60 * 24 * 7, // 30 days or 7 days
+    path: '/',
+  });
+  
+  // Set token cookie for middleware authentication
+  cookieStore.set('token', result.token!, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 2, // 2 hours
     path: '/',
   });
 
@@ -299,6 +397,7 @@ async function handleLogout(request: NextRequest): Promise<NextResponse> {
     // Clear refresh token cookie
     const cookieStore = await cookies();
     cookieStore.delete('refreshToken');
+    cookieStore.delete('token');
 
     return successResponse({ message: 'تم تسجيل الخروج بنجاح' });
   } catch {
@@ -423,6 +522,7 @@ async function handleResetPassword(
 /**
  * GET - Get current user
  * Uses API rate limit (less strict) since it's just reading data
+ * Supports Demo Mode tokens
  */
 export async function GET(request: NextRequest) {
   // Check API rate limit (less strict for read operations)
@@ -442,6 +542,39 @@ export async function GET(request: NextRequest) {
     return unauthorizedResponse();
   }
 
+  // Try to verify as demo token first
+  try {
+    const { jwtVerify } = await import('jose');
+    const secret = new TextEncoder().encode(DEMO_JWT_SECRET);
+    const { payload } = await jwtVerify(token, secret, {
+      issuer: 'blueprint-saas',
+      audience: 'blueprint-users',
+    });
+    
+    // Check if this is a demo user
+    const demoUser = DEMO_USERS.find(u => u.id === payload.userId);
+    if (demoUser) {
+      return successResponse({
+        user: {
+          id: demoUser.id,
+          email: demoUser.email,
+          username: demoUser.username,
+          fullName: demoUser.fullName,
+          role: demoUser.role,
+          avatar: demoUser.avatar,
+          language: demoUser.language,
+          theme: demoUser.theme,
+          organizationId: demoUser.organizationId,
+          organization: demoUser.organization,
+        },
+        demoMode: true,
+      });
+    }
+  } catch {
+    // Not a demo token, continue with regular auth
+  }
+
+  // Regular database auth
   const payload = await authService.verifyToken(token);
   if (!payload) {
     return errorResponse('رمز غير صالح أو منتهي الصلاحية', 'INVALID_TOKEN', 401);
