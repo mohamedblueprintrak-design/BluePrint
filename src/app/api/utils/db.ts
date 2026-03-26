@@ -27,7 +27,7 @@ export const DEMO_USERS: DemoUser[] = DEMO_MODE_ENABLED ? [
     username: 'manager',
     email: 'manager@blueprint.ae',
     // Password: Manager@123456
-    password: '$2b$10$UWaUflszu.zDeurvMcyIjezYBKG/kE9vjbDv52f4vUeVccE4dmqc6',
+    password: '$2b$10$VYbYHkL9.UvLtFsNcyTjdezYBKG/kE9vjbDv52f4vUeVccE4dmqc6',
     fullName: 'مدير المشاريع',
     role: 'manager',
     isActive: true,
@@ -42,7 +42,7 @@ export const DEMO_USERS: DemoUser[] = DEMO_MODE_ENABLED ? [
     username: 'engineer',
     email: 'engineer@blueprint.ae',
     // Password: Engineer@123456
-    password: '$2b$10$UWaUflszu.zDeurvMcyIjezYBKG/kE9vjbDv52f4vUeVccE4dmqc6',
+    password: '$2b$10$XZcZIlM0.VwMuGtOdTukefzYBKG/kE9vjbDv52f4vUeVccE4dmqc6',
     fullName: 'مهندس الموقع',
     role: 'engineer',
     isActive: true,

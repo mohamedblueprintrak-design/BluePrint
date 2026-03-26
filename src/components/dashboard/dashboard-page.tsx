@@ -6,6 +6,8 @@ import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
 import { useDashboard, useProjects, useTasks, useInvoices } from '@/hooks/use-data';
 import { WelcomeModal } from '@/components/onboarding/welcome-modal';
+import { FloatingAIButton } from '@/components/ai/floating-ai-button';
+import { AIInsightsCard } from '@/components/ai/ai-insights-card';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -512,8 +514,27 @@ export function DashboardPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* AI Insights */}
+          <AIInsightsCard
+            title={language === 'ar' ? 'رؤى ذكية' : 'AI Insights'}
+            context={JSON.stringify({
+              activeProjects: stats?.projects?.active || 0,
+              totalRevenue: stats?.financial?.totalPaid || 0,
+              pendingTasks: stats?.tasks?.pending || 0,
+              openDefects: stats?.defects?.open || 0
+            })}
+            taskType="data-analysis"
+            compact
+          />
         </div>
       </div>
+
+      {/* Floating AI Button */}
+      <FloatingAIButton
+        context={language === 'ar' ? 'لوحة التحكم الرئيسية' : 'Main Dashboard'}
+        entityType="project"
+      />
 
       {/* Bottom Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

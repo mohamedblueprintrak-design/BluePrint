@@ -2,6 +2,7 @@
 
 import { AuthProvider } from "@/context/auth-context";
 import { AppProvider } from "@/context/app-context";
+import { AIProvider } from "@/lib/ai/ai-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 
@@ -19,7 +20,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <AppProvider>
-          {children}
+          <AIProvider>
+            {children}
+          </AIProvider>
         </AppProvider>
       </AuthProvider>
     </QueryClientProvider>

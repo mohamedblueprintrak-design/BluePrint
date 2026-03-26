@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/app-context';
+import { useAI } from '@/lib/ai/ai-context';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -13,44 +14,157 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Bot, Send, Sparkles, Lightbulb, 
   FileText, BarChart3, AlertTriangle, 
-  Loader2, Minimize2, Maximize2
+  Loader2, Minimize2, Maximize2, Copy, Check
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { AITaskType } from '@/lib/ai/model-config';
 
 interface FloatingAIButtonProps {
   context?: string;
   entityId?: string;
-  entityType?: 'project' | 'task' | 'client' | 'invoice' | 'report';
+  entityType?: 'project' | 'task' | 'client' | 'invoice' | 'report' | 'contract' | 'budget';
   position?: 'bottom-right' | 'bottom-left';
+  onResponse?: (response: string) => void;
 }
 
-const QUICK_ACTIONS = {
+const QUICK_ACTIONS: Record<string, Array<{ 
+  id: string; 
+  label: { ar: string; en: string }; 
+  icon: React.ComponentType<{ className?: string }>;
+  task: AITaskType;
+  promptTemplate: string;
+}>> = {
   project: [
-    { id: 'analyze', label: { ar: 'تحليل المشروع', en: 'Analyze Project' }, icon: BarChart3 },
-    { id: 'risks', label: { ar: 'توقع المخاطر', en: 'Predict Risks' }, icon: AlertTriangle },
-    { id: 'report', label: { ar: 'توليد تقرير', en: 'Generate Report' }, icon: FileText },
+    { 
+      id: 'analyze', 
+      label: { ar: 'تحليل المشروع', en: 'Analyze Project' }, 
+      icon: BarChart3,
+      task: 'data-analysis',
+      promptTemplate: 'قم بتحليل هذا المشروع وتقديم رؤى وتوصيات'
+    },
+    { 
+      id: 'risks', 
+      label: { ar: 'توقع المخاطر', en: 'Predict Risks' }, 
+      icon: AlertTriangle,
+      task: 'risk-assessment',
+      promptTemplate: 'ما هي المخاطر المحتملة لهذا المشروع وكيف يمكن تجنبها؟'
+    },
+    { 
+      id: 'report', 
+      label: { ar: 'توليد تقرير', en: 'Generate Report' }, 
+      icon: FileText,
+      task: 'report-generation',
+      promptTemplate: 'قم بإنشاء تقرير شامل عن هذا المشروع'
+    },
   ],
   task: [
-    { id: 'priority', label: { ar: 'تحديد الأولوية', en: 'Set Priority' }, icon: Sparkles },
-    { id: 'breakdown', label: { ar: 'تقسيم المهام', en: 'Break Down Tasks' }, icon: Lightbulb },
+    { 
+      id: 'priority', 
+      label: { ar: 'تحديد الأولوية', en: 'Set Priority' }, 
+      icon: Sparkles,
+      task: 'task-suggestions',
+      promptTemplate: 'ساعدني في تحديد أولوية هذه المهمة'
+    },
+    { 
+      id: 'breakdown', 
+      label: { ar: 'تقسيم المهام', en: 'Break Down Tasks' }, 
+      icon: Lightbulb,
+      task: 'task-suggestions',
+      promptTemplate: 'قسّم هذه المهمة إلى مهام فرعية أصغر'
+    },
   ],
   client: [
-    { id: 'summary', label: { ar: 'ملخص العميل', en: 'Client Summary' }, icon: FileText },
-    { id: 'recommendations', label: { ar: 'توصيات', en: 'Recommendations' }, icon: Lightbulb },
+    { 
+      id: 'summary', 
+      label: { ar: 'ملخص العميل', en: 'Client Summary' }, 
+      icon: FileText,
+      task: 'summarize',
+      promptTemplate: 'قدم ملخصاً شاملاً عن هذا العميل'
+    },
+    { 
+      id: 'recommendations', 
+      label: { ar: 'توصيات', en: 'Recommendations' }, 
+      icon: Lightbulb,
+      task: 'task-suggestions',
+      promptTemplate: 'ما هي التوصيات للتعامل مع هذا العميل؟'
+    },
+  ],
+  contract: [
+    { 
+      id: 'analyze', 
+      label: { ar: 'تحليل العقد', en: 'Analyze Contract' }, 
+      icon: FileText,
+      task: 'contract-analysis',
+      promptTemplate: 'قم بتحليل هذا العقد وتحديد البنود الهامة والمخاطر المحتملة'
+    },
+    { 
+      id: 'summary', 
+      label: { ar: 'ملخص العقد', en: 'Contract Summary' }, 
+      icon: Sparkles,
+      task: 'summarize',
+      promptTemplate: 'قدم ملخصاً موجزاً لهذا العقد'
+    },
   ],
   invoice: [
-    { id: 'review', label: { ar: 'مراجعة الفاتورة', en: 'Review Invoice' }, icon: FileText },
+    { 
+      id: 'review', 
+      label: { ar: 'مراجعة الفاتورة', en: 'Review Invoice' }, 
+      icon: FileText,
+      task: 'document-review',
+      promptTemplate: 'راجع هذه الفاتورة وتحقق من صحتها'
+    },
+  ],
+  budget: [
+    { 
+      id: 'forecast', 
+      label: { ar: 'توقع الميزانية', en: 'Budget Forecast' }, 
+      icon: BarChart3,
+      task: 'financial-forecast',
+      promptTemplate: 'قدم توقعات مالية لهذه الميزانية'
+    },
+    { 
+      id: 'analysis', 
+      label: { ar: 'تحليل الميزانية', en: 'Budget Analysis' }, 
+      icon: BarChart3,
+      task: 'data-analysis',
+      promptTemplate: 'حلل هذه الميزانية وقدم توصيات'
+    },
   ],
   report: [
-    { id: 'summary', label: { ar: 'ملخص ذكي', en: 'AI Summary' }, icon: Sparkles },
-    { id: 'insights', label: { ar: 'رؤى وتحليلات', en: 'Insights' }, icon: BarChart3 },
+    { 
+      id: 'summary', 
+      label: { ar: 'ملخص ذكي', en: 'AI Summary' }, 
+      icon: Sparkles,
+      task: 'summarize',
+      promptTemplate: 'قدم ملخصاً ذكياً لهذا التقرير'
+    },
+    { 
+      id: 'insights', 
+      label: { ar: 'رؤى وتحليلات', en: 'Insights' }, 
+      icon: BarChart3,
+      task: 'data-analysis',
+      promptTemplate: 'استخرج الرؤى والتحليلات من هذا التقرير'
+    },
   ],
   default: [
-    { id: 'help', label: { ar: 'مساعدة', en: 'Help' }, icon: Lightbulb },
-    { id: 'suggest', label: { ar: 'اقتراحات', en: 'Suggestions' }, icon: Sparkles },
+    { 
+      id: 'help', 
+      label: { ar: 'مساعدة', en: 'Help' }, 
+      icon: Lightbulb,
+      task: 'chat',
+      promptTemplate: 'كيف يمكنني مساعدتك؟'
+    },
+    { 
+      id: 'suggest', 
+      label: { ar: 'اقتراحات', en: 'Suggestions' }, 
+      icon: Sparkles,
+      task: 'task-suggestions',
+      promptTemplate: 'قدم لي اقتراحات مفيدة'
+    },
   ],
 };
 
@@ -58,49 +172,76 @@ export function FloatingAIButton({
   context, 
   entityId, 
   entityType = 'project',
-  position = 'bottom-right' 
+  position = 'bottom-right',
+  onResponse
 }: FloatingAIButtonProps) {
   const router = useRouter();
   const { language } = useApp();
+  const { execute, isLoading } = useAI();
   const isRTL = language === 'ar';
   
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [prompt, setPrompt] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [response, setResponse] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const quickActions = QUICK_ACTIONS[entityType] || QUICK_ACTIONS.default;
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (!prompt.trim()) return;
     
-    setIsLoading(true);
-    
     try {
-      // Navigate to AI chat with context
-      const queryParams = new URLSearchParams({
-        q: prompt,
-        context: context || '',
-        entityId: entityId || '',
-        entityType: entityType,
+      const result = await execute({
+        task: 'chat',
+        prompt,
+        context
       });
       
-      router.push(`/dashboard/ai-chat?${queryParams}`);
-      setIsOpen(false);
-      setPrompt('');
+      if (result.success) {
+        setResponse(result.content);
+        onResponse?.(result.content);
+      }
     } catch (error) {
       console.error('Error:', error);
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [prompt, context, execute, onResponse]);
 
-  const handleQuickAction = (actionId: string) => {
+  const handleQuickAction = useCallback(async (actionId: string) => {
     const action = quickActions.find(a => a.id === actionId);
-    if (action) {
-      setPrompt(action.label[isRTL ? 'ar' : 'en']);
+    if (!action) return;
+
+    setPrompt(action.promptTemplate);
+    
+    try {
+      const result = await execute({
+        task: action.task,
+        prompt: action.promptTemplate,
+        context
+      });
+      
+      if (result.success) {
+        setResponse(result.content);
+        onResponse?.(result.content);
+      }
+    } catch (error) {
+      console.error('Error:', error);
     }
-  };
+  }, [quickActions, context, execute, onResponse]);
+
+  const handleCopy = useCallback(() => {
+    if (response) {
+      navigator.clipboard.writeText(response);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }, [response]);
+
+  const handleClose = useCallback(() => {
+    setIsOpen(false);
+    setPrompt('');
+    setResponse(null);
+  }, []);
 
   return (
     <>
@@ -131,7 +272,7 @@ export function FloatingAIButton({
         <DialogContent 
           className={cn(
             "bg-slate-900 border-slate-800 text-white transition-all duration-300",
-            isExpanded ? "sm:max-w-[600px]" : "sm:max-w-[400px]"
+            isExpanded ? "sm:max-w-[700px]" : "sm:max-w-[450px]"
           )}
         >
           <DialogHeader>
@@ -180,6 +321,29 @@ export function FloatingAIButton({
               ))}
             </div>
 
+            {/* Response Area */}
+            {response && (
+              <div className="relative">
+                <ScrollArea className="h-[200px] w-full rounded-lg bg-slate-800/50 p-4">
+                  <div className="prose prose-invert prose-sm max-w-none whitespace-pre-wrap">
+                    {response}
+                  </div>
+                </ScrollArea>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleCopy}
+                  className="absolute top-2 end-2 h-8 w-8 text-slate-400 hover:text-white"
+                >
+                  {copied ? (
+                    <Check className="w-4 h-4 text-green-500" />
+                  ) : (
+                    <Copy className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
+            )}
+
             {/* Input Area */}
             <div className="relative">
               <Textarea
@@ -188,7 +352,7 @@ export function FloatingAIButton({
                 placeholder={isRTL 
                   ? 'اكتب سؤالك هنا...' 
                   : 'Type your question here...'}
-                className="min-h-[100px] bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 resize-none pr-12"
+                className="min-h-[80px] bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 resize-none"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
@@ -223,14 +387,24 @@ export function FloatingAIButton({
             <span className="text-xs text-slate-500">
               {isRTL ? 'مدعوم بـ BluePrint AI' : 'Powered by BluePrint AI'}
             </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => router.push('/dashboard/ai-chat')}
-              className="text-purple-400 hover:text-purple-300 hover:bg-purple-500/10"
-            >
-              {isRTL ? 'فتح المحادثة الكاملة' : 'Open Full Chat'}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClose}
+                className="text-slate-400 hover:text-white"
+              >
+                {isRTL ? 'إغلاق' : 'Close'}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push('/dashboard/ai-chat')}
+                className="text-purple-400 hover:text-purple-300 hover:bg-purple-500/10"
+              >
+                {isRTL ? 'فتح المحادثة الكاملة' : 'Open Full Chat'}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

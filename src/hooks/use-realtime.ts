@@ -3,14 +3,18 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useAuth } from '@/context/auth-context';
 import { useQueryClient } from '@tanstack/react-query';
-import type { Notification as NotificationType, NotificationType as NotifType } from '@/types';
+import type { Notification, NotificationType } from '@/types';
 
 // التحقق من بيئة المتصفح
 const isBrowser = typeof window !== 'undefined';
 
-interface RealtimeNotification extends NotificationType {
+// RealtimeNotification يرث من Notification interface
+interface RealtimeNotification extends Notification {
   timestamp?: string;
 }
+
+// Type alias للسهولة
+type NotifType = NotificationType;
 
 interface UseRealtimeOptions {
   onNotification?: (notification: RealtimeNotification) => void;
@@ -73,16 +77,30 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
     onUnreadCountChange,
     enabled = true,
     reconnectInterval = 5000,
-    maxReconnectAttempts = 3 // Reduced from 10 to prevent rate limiting
+    maxReconnectAttempts = 3
   } = options;
 
   const { token, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
+  
+  // Refs لتتبع الحالة بدون إعادة render
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectAttemptsRef = useRef(0);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const intentionalDisconnectRef = useRef(false); // Track intentional disconnects
-  const lastTokenRef = useRef<string | null>(null); // Track token changes
+  const intentionalDisconnectRef = useRef(false);
+  const lastTokenRef = useRef<string | null>(null);
+  const isConnectingRef = useRef(false);
+  const mountedRef = useRef(false);
+  
+  // Callbacks refs لتجنب dependency issues
+  const onNotificationRef = useRef(onNotification);
+  const onUnreadCountChangeRef = useRef(onUnreadCountChange);
+  
+  // تحديث refs
+  useEffect(() => {
+    onNotificationRef.current = onNotification;
+    onUnreadCountChangeRef.current = onUnreadCountChange;
+  }, [onNotification, onUnreadCountChange]);
 
   const [state, setState] = useState<RealtimeState>({
     isConnected: false,
@@ -91,11 +109,17 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
     error: null
   });
 
-  // معالجة الأحداث الواردة
+  // QueryClient ref لتجنب dependency issues
+  const queryClientRef = useRef(queryClient);
+  useEffect(() => {
+    queryClientRef.current = queryClient;
+  }, [queryClient]);
+
+  // معالجة الأحداث الواردة - بدون dependencies (ثابتة)
   const handleEvent = useCallback((event: MessageEvent) => {
     if (!isBrowser) return;
     
-    const eventType = (event as any).event || 'message';
+    const eventType = (event as MessageEvent & { event?: string }).event || 'message';
     
     try {
       const data = JSON.parse(event.data);
@@ -104,18 +128,17 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
         case 'connected':
           setState(prev => ({ ...prev, isConnected: true, error: null }));
           reconnectAttemptsRef.current = 0;
-          console.log('🔗 متصل بنظام الإشعارات الفورية');
           break;
           
         case 'notification':
           const notification = data as RealtimeNotification;
           
           // تحديث قائمة الإشعارات
-          queryClient.invalidateQueries({ queryKey: ['notifications'] });
+          queryClientRef.current.invalidateQueries({ queryKey: ['notifications'] });
           
           // استدعاء callback إذا كان موجوداً
-          if (onNotification) {
-            onNotification(notification);
+          if (onNotificationRef.current) {
+            onNotificationRef.current(notification);
           }
           
           // عرض إشعار المتصفح إذا كان مسموحاً
@@ -126,8 +149,8 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
           const count = data.count;
           setState(prev => ({ ...prev, unreadCount: count }));
           
-          if (onUnreadCountChange) {
-            onUnreadCountChange(count);
+          if (onUnreadCountChangeRef.current) {
+            onUnreadCountChangeRef.current(count);
           }
           break;
           
@@ -136,106 +159,17 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
           break;
           
         default:
-          // معالجة الأحداث الأخرى
           if (data.count !== undefined) {
             setState(prev => ({ ...prev, unreadCount: data.count }));
           }
       }
-    } catch (err) {
-      console.error('خطأ في معالجة حدث SSE:', err);
+    } catch {
+      // Silent fail for SSE parsing
     }
-  }, [onNotification, onUnreadCountChange, queryClient]);
+  }, []); // فارغة عمداً - نستخدم refs
 
-  // إنشاء اتصال SSE
-  const connect = useCallback(() => {
-    // التحقق من بيئة المتصفح
-    if (!isBrowser || !token || !enabled || !isAuthenticated) {
-      // Don't try to connect if not authenticated
-      intentionalDisconnectRef.current = true;
-      return;
-    }
-    
-    // Reset intentional disconnect flag
-    intentionalDisconnectRef.current = false;
-    lastTokenRef.current = token;
-    
-    // إغلاق الاتصال السابق إذا كان موجوداً
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-    }
-
-    try {
-      // إنشاء اتصال SSE مع التوكن في query parameter
-      const url = `/api/notifications/stream?token=${encodeURIComponent(token)}`;
-      const eventSource = new EventSource(url, {
-        withCredentials: true
-      });
-
-      eventSource.onopen = () => {
-        setState(prev => ({ ...prev, isConnected: true, error: null }));
-        reconnectAttemptsRef.current = 0;
-      };
-
-      eventSource.onmessage = handleEvent;
-
-      // معالجة أنواع الأحداث المختلفة
-      eventSource.addEventListener('connected', handleEvent);
-      eventSource.addEventListener('notification', handleEvent);
-      eventSource.addEventListener('unread_count', handleEvent);
-      eventSource.addEventListener('heartbeat', handleEvent);
-
-      eventSource.onerror = () => {
-        // Check if this was an intentional disconnect
-        if (intentionalDisconnectRef.current) {
-          return;
-        }
-        
-        // Check if token changed or user logged out
-        const currentToken = localStorage.getItem('bp_token');
-        if (!currentToken || currentToken !== lastTokenRef.current) {
-          // Token changed or user logged out, don't reconnect
-          console.log('Token changed or user logged out, stopping SSE reconnection');
-          eventSource.close();
-          return;
-        }
-        
-        console.error('خطأ في اتصال SSE');
-        setState(prev => ({ 
-          ...prev, 
-          isConnected: false, 
-          error: 'فقدان الاتصال بنظام الإشعارات' 
-        }));
-        
-        eventSource.close();
-        
-        // Only reconnect if still authenticated and have valid token
-        if (reconnectAttemptsRef.current < maxReconnectAttempts && token && isAuthenticated) {
-          reconnectAttemptsRef.current++;
-          const delay = reconnectInterval * Math.pow(2, Math.min(reconnectAttemptsRef.current - 1, 4)); // Exponential backoff
-          
-          console.log(`محاولة إعادة الاتصال ${reconnectAttemptsRef.current}/${maxReconnectAttempts} خلال ${delay}ms`);
-          
-          reconnectTimeoutRef.current = setTimeout(connect, delay);
-        } else if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
-          console.log('تم الوصول لحد إعادة المحاولة، توقف إعادة الاتصال');
-          setState(prev => ({ 
-            ...prev, 
-            error: 'تعذر الاتصال بنظام الإشعارات بعد عدة محاولات' 
-          }));
-        }
-      };
-
-      eventSourceRef.current = eventSource;
-    } catch (error) {
-      const errMsg = error instanceof Error ? error.message : 'Unknown error';
-      console.error('خطأ في إنشاء اتصال SSE:', error);
-      setState(prev => ({ ...prev, error: errMsg }));
-    }
-  }, [token, enabled, isAuthenticated, handleEvent, reconnectInterval, maxReconnectAttempts]);
-
-  // قطع الاتصال
+  // قطع الاتصال - بدون dependencies
   const disconnect = useCallback(() => {
-    // Mark as intentional disconnect to prevent reconnection
     intentionalDisconnectRef.current = true;
     
     if (eventSourceRef.current) {
@@ -249,15 +183,145 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
     }
     
     reconnectAttemptsRef.current = 0;
+    isConnectingRef.current = false;
     setState(prev => ({ ...prev, isConnected: false, error: null }));
   }, []);
 
-  // إعادة الاتصال يدوياً
+  // Options refs لتجنب dependency issues
+  const enabledRef = useRef(enabled);
+  const maxReconnectAttemptsRef = useRef(maxReconnectAttempts);
+  const reconnectIntervalRef = useRef(reconnectInterval);
+  
+  useEffect(() => {
+    enabledRef.current = enabled;
+    maxReconnectAttemptsRef.current = maxReconnectAttempts;
+    reconnectIntervalRef.current = reconnectInterval;
+  }, [enabled, maxReconnectAttempts, reconnectInterval]);
+
+  // إنشاء اتصال SSE - بدون dependencies (ثابتة)
+  const createConnection = useCallback((currentToken: string) => {
+    if (!isBrowser || !currentToken || !enabledRef.current || isConnectingRef.current) {
+      return;
+    }
+    
+    // Reset intentional disconnect flag
+    intentionalDisconnectRef.current = false;
+    lastTokenRef.current = currentToken;
+    isConnectingRef.current = true;
+    
+    // إغلاق الاتصال السابق إذا كان موجوداً
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+    }
+
+    try {
+      // إنشاء اتصال SSE مع التوكن في query parameter
+      const url = `/api/notifications/stream?token=${encodeURIComponent(currentToken)}`;
+      const eventSource = new EventSource(url, {
+        withCredentials: true
+      });
+
+      eventSource.onopen = () => {
+        isConnectingRef.current = false;
+        setState(prev => ({ ...prev, isConnected: true, error: null }));
+        reconnectAttemptsRef.current = 0;
+      };
+
+      eventSource.onmessage = handleEvent;
+
+      // معالجة أنواع الأحداث المختلفة
+      eventSource.addEventListener('connected', handleEvent);
+      eventSource.addEventListener('notification', handleEvent);
+      eventSource.addEventListener('unread_count', handleEvent);
+      eventSource.addEventListener('heartbeat', handleEvent);
+
+      eventSource.onerror = () => {
+        isConnectingRef.current = false;
+        
+        // Check if this was an intentional disconnect
+        if (intentionalDisconnectRef.current) {
+          return;
+        }
+        
+        // Check if token changed or user logged out
+        if (isBrowser) {
+          const storedToken = localStorage.getItem('bp_token');
+          if (!storedToken || storedToken !== lastTokenRef.current) {
+            eventSource.close();
+            return;
+          }
+        }
+        
+        setState(prev => ({ 
+          ...prev, 
+          isConnected: false, 
+          error: 'فقدان الاتصال بنظام الإشعارات' 
+        }));
+        
+        eventSource.close();
+        
+        // Only reconnect if still authenticated and have valid token
+        if (reconnectAttemptsRef.current < maxReconnectAttemptsRef.current && lastTokenRef.current) {
+          reconnectAttemptsRef.current++;
+          const delay = reconnectIntervalRef.current * Math.pow(2, Math.min(reconnectAttemptsRef.current - 1, 4));
+          
+          reconnectTimeoutRef.current = setTimeout(() => {
+            if (lastTokenRef.current && !intentionalDisconnectRef.current) {
+              createConnection(lastTokenRef.current);
+            }
+          }, delay);
+        } else if (reconnectAttemptsRef.current >= maxReconnectAttemptsRef.current) {
+          setState(prev => ({ 
+            ...prev, 
+            error: 'تعذر الاتصال بنظام الإشعارات بعد عدة محاولات' 
+          }));
+        }
+      };
+
+      eventSourceRef.current = eventSource;
+    } catch (error) {
+      isConnectingRef.current = false;
+      const errMsg = error instanceof Error ? error.message : 'Unknown error';
+      setState(prev => ({ ...prev, error: errMsg }));
+    }
+  }, [handleEvent]); // handleEvent ثابتة الآن
+
+  // إنشاء اتصال عند تغير token فقط - بدون function dependencies
+  useEffect(() => {
+    if (!isBrowser) return;
+    
+    mountedRef.current = true;
+    
+    // Only connect if authenticated with valid token
+    if (token && enabled && isAuthenticated && token !== lastTokenRef.current) {
+      // Reset reconnection attempts on new connection
+      reconnectAttemptsRef.current = 0;
+      createConnection(token);
+    } else if (!token && lastTokenRef.current) {
+      // Token was cleared, disconnect
+      disconnect();
+    }
+    
+    return () => {
+      mountedRef.current = false;
+      disconnect();
+    };
+  }, [token, enabled, isAuthenticated]); // فقط primitive values
+
+  // Token ref للـ reconnect
+  const tokenRef = useRef(token);
+  useEffect(() => {
+    tokenRef.current = token;
+  }, [token]);
+
+  // إعادة الاتصال يدوياً - بدون dependencies
   const reconnect = useCallback(() => {
     reconnectAttemptsRef.current = 0;
     disconnect();
-    connect();
-  }, [connect, disconnect]);
+    if (tokenRef.current) {
+      createConnection(tokenRef.current);
+    }
+  }, [createConnection, disconnect]);
 
   // طلب إذن الإشعارات
   const requestNotificationPermission = useCallback(async () => {
@@ -278,32 +342,6 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
     
     return false;
   }, []);
-
-  // إنشاء اتصال عند تحميل المكون (فقط في المتصفح)
-  useEffect(() => {
-    if (!isBrowser) return;
-    
-    // Only connect if authenticated with valid token
-    if (token && enabled && isAuthenticated) {
-      // Reset reconnection attempts on new connection
-      reconnectAttemptsRef.current = 0;
-      connect();
-    }
-    
-    return () => {
-      disconnect();
-    };
-  }, [token, enabled, isAuthenticated, connect, disconnect]);
-  
-  // Disconnect immediately when user logs out (token becomes null)
-  useEffect(() => {
-    if (!isBrowser) return;
-    
-    if (!token && eventSourceRef.current) {
-      console.log('Token cleared, disconnecting SSE');
-      disconnect();
-    }
-  }, [token, disconnect]);
 
   return {
     ...state,

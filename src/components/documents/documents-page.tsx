@@ -4,6 +4,7 @@ import { useState, useCallback, useRef } from 'react';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
 import { useDocuments, useUploadFile, useCreateDocument, useDeleteDocument, CreateDocumentData } from '@/hooks/use-data';
+import { FloatingAIButton } from '@/components/ai/floating-ai-button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -1057,6 +1058,20 @@ export function DocumentsPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Floating AI Button */}
+      <FloatingAIButton
+        context={JSON.stringify({
+          totalDocuments: stats.totalDocuments,
+          totalSize: stats.totalSize,
+          recentUploads: stats.recentUploads,
+          categories: filteredDocuments.reduce((acc: Record<string, number>, doc: Document) => {
+            acc[doc.category] = (acc[doc.category] || 0) + 1;
+            return acc;
+          }, {})
+        })}
+        entityType="report"
+      />
     </div>
   );
 }

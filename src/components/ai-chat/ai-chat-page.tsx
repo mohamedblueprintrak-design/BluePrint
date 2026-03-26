@@ -5,6 +5,9 @@ import { useApp } from '@/context/app-context';
 import { useAuth } from '@/context/auth-context';
 import { useTranslation } from '@/lib/translations';
 import { useAIChat } from '@/hooks/use-data';
+import { useAI } from '@/lib/ai/ai-context';
+import { AVAILABLE_MODELS, getModelInfo } from '@/lib/ai/model-config';
+import { QuickModelSwitch } from '@/components/ai/model-selector';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -66,47 +69,6 @@ import {
   Wand2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-// AI Models Configuration
-const AI_MODELS = [
-  // Google Gemini
-  { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', provider: 'Google', type: 'Fast', color: 'bg-blue-500' },
-  { id: 'gemini-2.0-flash-lite', name: 'Gemini 2.0 Flash Lite', provider: 'Google', type: 'Lite', color: 'bg-blue-400' },
-  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', provider: 'Google', type: 'Advanced', color: 'bg-blue-600' },
-  
-  // OpenAI
-  { id: 'gpt-4o', name: 'GPT-4o', provider: 'OpenAI', type: 'Advanced', color: 'bg-green-500' },
-  { id: 'gpt-4o-mini', name: 'GPT-4o Mini', provider: 'OpenAI', type: 'Fast', color: 'bg-green-400' },
-  { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', provider: 'OpenAI', type: 'Lite', color: 'bg-green-300' },
-  
-  // DeepSeek
-  { id: 'deepseek-chat', name: 'DeepSeek Chat', provider: 'DeepSeek', type: 'Standard', color: 'bg-purple-500' },
-  { id: 'deepseek-reasoner', name: 'DeepSeek R1', provider: 'DeepSeek', type: 'Reasoning', color: 'bg-purple-600' },
-  { id: 'deepseek-r1-free', name: 'DeepSeek R1 Free', provider: 'DeepSeek', type: 'Free', color: 'bg-purple-400' },
-  
-  // Mistral
-  { id: 'mistral-small', name: 'Mistral Small', provider: 'Mistral', type: 'Fast', color: 'bg-orange-400' },
-  { id: 'mistral-medium', name: 'Mistral Medium', provider: 'Mistral', type: 'Standard', color: 'bg-orange-500' },
-  { id: 'mistral-large', name: 'Mistral Large', provider: 'Mistral', type: 'Advanced', color: 'bg-orange-600' },
-  
-  // Meta Llama
-  { id: 'llama-3.1-8b', name: 'Llama 3.1 8B', provider: 'Meta', type: 'Lite', color: 'bg-yellow-500' },
-  { id: 'llama-3.1-70b', name: 'Llama 3.1 70B', provider: 'Meta', type: 'Advanced', color: 'bg-yellow-600' },
-  { id: 'llama-3.2-3b', name: 'Llama 3.2 3B', provider: 'Meta', type: 'Fast', color: 'bg-yellow-400' },
-  { id: 'llama-3.2-11b', name: 'Llama 3.2 11B', provider: 'Meta', type: 'Standard', color: 'bg-yellow-500' },
-  
-  // Google Gemma
-  { id: 'gemma-2-9b', name: 'Gemma 2 9B', provider: 'Google', type: 'Standard', color: 'bg-cyan-500' },
-  { id: 'gemma-2-27b', name: 'Gemma 2 27B', provider: 'Google', type: 'Advanced', color: 'bg-cyan-600' },
-  
-  // xAI Grok
-  { id: 'grok-beta', name: 'Grok Beta', provider: 'xAI', type: 'Advanced', color: 'bg-red-500' },
-  { id: 'grok-2', name: 'Grok 2', provider: 'xAI', type: 'Advanced', color: 'bg-red-600' },
-  
-  // Additional
-  { id: 'claude-3-haiku', name: 'Claude 3 Haiku', provider: 'Anthropic', type: 'Fast', color: 'bg-pink-500' },
-  { id: 'claude-3.5-sonnet', name: 'Claude 3.5 Sonnet', provider: 'Anthropic', type: 'Advanced', color: 'bg-pink-600' },
-];
 
 // AI Skills Configuration - FREE SKILLS
 const AI_SKILLS = [

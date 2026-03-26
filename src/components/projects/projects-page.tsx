@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
 import { useProjects, useCreateProject, useDeleteProject, useClients } from '@/hooks/use-data';
+import { FloatingAIButton } from '@/components/ai/floating-ai-button';
+import { AIInsightsBadge } from '@/components/ai/ai-insights-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,7 +33,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import {
   Building2, Plus, Search, Edit, Trash2, 
-  Eye, MapPin, DollarSign, Users
+  Eye, MapPin, DollarSign, Users, Sparkles
 } from 'lucide-react';
 
 const PROJECT_TYPES = [
@@ -455,6 +457,10 @@ export function ProjectsPage() {
                     {formatDate(project.createdAt)}
                   </span>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <AIInsightsBadge
+                      context={`مشروع: ${project.name}، النوع: ${project.projectType}، القيمة: ${project.contractValue}، التقدم: ${project.progressPercentage}%`}
+                      taskType="risk-assessment"
+                    />
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white">
                       <Eye className="w-4 h-4" />
                     </Button>
@@ -479,6 +485,12 @@ export function ProjectsPage() {
           ))}
         </div>
       )}
+
+      {/* Floating AI Button */}
+      <FloatingAIButton
+        context={JSON.stringify(stats)}
+        entityType="project"
+      />
     </div>
   );
 }
