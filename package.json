@@ -149,7 +149,15 @@
     "typescript": "5.9.3"
   },
   "overrides": {
-    "prismjs": "^1.30.0"
+    "prismjs": "^1.30.0",
+    "effect": "^3.20.0",
+    "flatted": "^3.4.2",
+    "minimatch": "^9.0.5",
+    "picomatch": "^4.0.4",
+    "lodash": "^4.17.21",
+    "lodash-es": "^4.17.21",
+    "diff": "^5.2.2",
+    "ajv": "^6.12.6"
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
