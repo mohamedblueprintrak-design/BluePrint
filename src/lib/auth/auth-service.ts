@@ -15,6 +15,7 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { hash, compare } from 'bcryptjs';
 import { randomBytes, randomInt } from 'crypto';
+import { generateSecret, generateURI, verifySync } from 'otplib';
 import { prisma } from '@/lib/db';
 import { env } from '@/lib/env';
 import { 
@@ -998,10 +999,11 @@ class AuthenticationService {
 
   /**
    * Generate 2FA secret for TOTP
+   * Uses otplib for compatibility with Google Authenticator, Authy, etc.
    */
   async generateTwoFactorSecret(userId: string): Promise<{ secret: string; qrCodeUrl: string }> {
-    // Generate a random secret (Base32 encoded)
-    const secret = randomBytes(20).toString('base64').replace(/[=+/]/g, '').substring(0, 32);
+    // Generate a proper Base32 secret compatible with authenticator apps
+    const secret = generateSecret();
     
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -1012,9 +1014,13 @@ class AuthenticationService {
       throw new Error('User not found');
     }
 
-    // Create OTPAuth URL for QR code
-    const appName = encodeURIComponent('BluePrint');
-    const qrCodeUrl = `otpauth://totp/${appName}:${encodeURIComponent(user.email)}?secret=${secret}&issuer=${appName}&algorithm=SHA1&digits=6&period=30`;
+    // Create OTPAuth URL for QR code using otplib
+    const appName = 'BluePrint';
+    const qrCodeUrl = generateURI({
+      issuer: appName,
+      label: user.email,
+      secret: secret,
+    });
 
     // Store secret temporarily (will be activated after verification)
     const existingSecret = await prisma.twoFactorSecret.findUnique({
@@ -1048,34 +1054,22 @@ class AuthenticationService {
   }
 
   /**
-   * Verify TOTP code
+   * Verify TOTP code using otplib
+   * Compatible with Google Authenticator, Authy, Microsoft Authenticator, etc.
    */
   private verifyTotpCode(secret: string, code: string): boolean {
-    // Simple TOTP verification (in production, use a library like 'otplib')
-    // This is a simplified version - for production, use proper TOTP implementation
-    const timeStep = Math.floor(Date.now() / 30000); // 30-second window
-    const expectedCode = this.generateTotpCode(secret, timeStep);
-    
-    // Check current and adjacent time windows
-    return (
-      code === this.generateTotpCode(secret, timeStep) ||
-      code === this.generateTotpCode(secret, timeStep - 1) ||
-      code === this.generateTotpCode(secret, timeStep + 1)
-    );
-  }
-
-  /**
-   * Generate TOTP code (simplified)
-   */
-  private generateTotpCode(secret: string, timeStep: number): string {
-    // This is a placeholder - in production, use proper HMAC-based TOTP
-    // For now, generate a deterministic 6-digit code based on secret and time
-    const hash = require('crypto').createHmac('sha1', secret)
-      .update(timeStep.toString())
-      .digest('hex');
-    const offset = parseInt(hash.substring(hash.length - 1), 16);
-    const code = (parseInt(hash.substring(offset * 2, offset * 2 + 8), 16) & 0x7fffffff) % 1000000;
-    return code.toString().padStart(6, '0');
+    try {
+      // Use otplib's verifySync for proper TOTP verification
+      // It handles time window drift automatically
+      const result = verifySync({
+        secret: secret,
+        token: code,
+      });
+      return result.valid;
+    } catch (error) {
+      console.error('TOTP verification error:', error);
+      return false;
+    }
   }
 
   /**
