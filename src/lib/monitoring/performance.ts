@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { logger } from '@/lib/logger';
+import { log } from '@/lib/logger';
 
 // Performance metrics interface
 interface PerformanceMetrics {
@@ -38,7 +38,7 @@ function recordMetrics(metrics: PerformanceMetrics) {
   
   // Log slow requests
   if (metrics.duration > SLOW_REQUEST_THRESHOLD) {
-    logger.warn('Slow request detected', {
+    log.warn('Slow request detected', {
       path: metrics.path,
       method: metrics.method,
       duration: metrics.duration,

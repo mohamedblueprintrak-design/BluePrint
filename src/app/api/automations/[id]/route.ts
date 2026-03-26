@@ -1,20 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/db';
 
 // PATCH - Update automation status
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const { status } = body;
 
     try {
       const automation = await prisma.automation.update({
-        where: { id: params.id },
+        where: { id },
         data: { status },
       });
 
@@ -23,7 +22,7 @@ export async function PATCH(
       // Demo mode - return success anyway
       return NextResponse.json({
         data: {
-          id: params.id,
+          id,
           status,
           updatedAt: new Date(),
         },
@@ -38,11 +37,13 @@ export async function PATCH(
 // GET - Fetch single automation
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+    
     const automation = await prisma.automation.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!automation) {
@@ -59,12 +60,14 @@ export async function GET(
 // DELETE - Delete automation
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+    
     try {
       await prisma.automation.delete({
-        where: { id: params.id },
+        where: { id },
       });
     } catch (dbError) {
       // Demo mode - ignore database error

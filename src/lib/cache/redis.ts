@@ -4,7 +4,7 @@
  */
 
 import { createClient, RedisClientType } from 'redis';
-import { logger } from '@/lib/logger';
+import logger from '@/lib/logger';
 
 // Redis client instance
 let redisClient: RedisClientType | null = null;
