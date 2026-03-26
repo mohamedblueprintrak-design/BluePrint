@@ -11,6 +11,69 @@ datasource db {
 }
 
 // ============================================
+// Enums
+// ============================================
+
+/// User roles in the system
+enum UserRole {
+  ADMIN     // Full system access
+  MANAGER   // Project management access
+  ENGINEER  // Technical access
+  ACCOUNTANT // Financial access
+  VIEWER    // Read-only access
+}
+
+/// Permission types for fine-grained access control
+enum Permission {
+  // Project permissions
+  PROJECT_CREATE
+  PROJECT_READ
+  PROJECT_UPDATE
+  PROJECT_DELETE
+  
+  // Task permissions
+  TASK_CREATE
+  TASK_READ
+  TASK_UPDATE
+  TASK_DELETE
+  
+  // Client permissions
+  CLIENT_CREATE
+  CLIENT_READ
+  CLIENT_UPDATE
+  CLIENT_DELETE
+  
+  // Invoice permissions
+  INVOICE_CREATE
+  INVOICE_READ
+  INVOICE_UPDATE
+  INVOICE_DELETE
+  
+  // User management permissions
+  USER_CREATE
+  USER_READ
+  USER_UPDATE
+  USER_DELETE
+  
+  // Settings permissions
+  SETTINGS_READ
+  SETTINGS_UPDATE
+  
+  // Reports permissions
+  REPORTS_READ
+  REPORTS_EXPORT
+  
+  // Budget permissions
+  BUDGET_MANAGE
+  
+  // Document permissions
+  DOCUMENT_CREATE
+  DOCUMENT_READ
+  DOCUMENT_UPDATE
+  DOCUMENT_DELETE
+}
+
+// ============================================
 // المنظمة والاشتراكات (SaaS Core)
 // ============================================
 
@@ -29,15 +92,15 @@ model Organization {
   timezone         String    @default("Asia/Dubai")
   locale           String    @default("ar")
   isActive         Boolean   @default(true)
-  planId           String?
-  trialEndsAt      DateTime?
-  subscriptionStatus String  @default("trial")
+  deletedAt        DateTime? // Soft delete
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
   users            User[]
   subscriptions    Subscription[]
   plan             Plan?     @relation(fields: [planId], references: [id])
+
+  @@index([deletedAt])
 }
 
 model Plan {
@@ -104,24 +167,25 @@ model Payment {
 // ============================================
 
 model User {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   organizationId  String?
-  username        String   @unique
-  email           String   @unique
+  username        String    @unique
+  email           String    @unique
   password        String?
   fullName        String?
-  role            String   @default("viewer") // admin, manager, engineer, accountant, viewer
-  isActive        Boolean  @default(true)
+  role            UserRole  @default(VIEWER)
+  isActive        Boolean   @default(true)
   emailVerified   DateTime?
   avatar          String?
-  language        String   @default("ar")
-  theme           String   @default("dark")
+  language        String    @default("ar")
+  theme           String    @default("dark")
   phone           String?
   jobTitle        String?
   department      String?
   lastLoginAt     DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime? // Soft delete
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   organization    Organization?  @relation(fields: [organizationId], references: [id])
   sessions        Session[]
@@ -130,6 +194,7 @@ model User {
 
   @@index([organizationId])
   @@index([email])
+  @@index([deletedAt])
 }
 
 model Session {
@@ -234,6 +299,7 @@ model Project {
   managerId           String?   // Project manager (User ID)
   clientId            String?   // Client reference
   budget              Float?    // Project budget
+  deletedAt           DateTime? // Soft delete
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
@@ -254,6 +320,7 @@ model Project {
 
   @@index([organizationId])
   @@index([status])
+  @@index([deletedAt])
 }
 
 // ============================================
@@ -353,11 +420,14 @@ model Proposal {
   status          String    @default("draft") // draft, sent, accepted, rejected, expired
   notes           String?
   terms           String?
+  deletedAt       DateTime? // Soft delete
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
   project         Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
   items           ProposalItem[]
+
+  @@index([deletedAt])
 }
 
 model ProposalItem {
@@ -394,12 +464,15 @@ model Task {
   order         Int       @default(0) // Sort order for Gantt display
   color         String?   // Color code for Gantt bar
   isMilestone   Boolean   @default(false) // Milestone marker
+  deletedAt     DateTime? // Soft delete
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
   project       Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   parent        Task?     @relation("TaskHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
   subtasks      Task[]    @relation("TaskHierarchy")
+
+  @@index([deletedAt])
 }
 
 // ============================================
@@ -532,6 +605,7 @@ model Client {
   paymentTerms   Int       @default(30) // days
   notes          String?
   isActive       Boolean   @default(true)
+  deletedAt      DateTime? // Soft delete
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -539,6 +613,7 @@ model Client {
   projects       Project[]
 
   @@index([organizationId])
+  @@index([deletedAt])
 }
 
 model Invoice {
@@ -556,10 +631,13 @@ model Invoice {
   paidAmount      Float     @default(0.0)
   status          String    @default("draft")
   notes           String?
+  deletedAt       DateTime? // Soft delete
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
   client          Client?   @relation(fields: [clientId], references: [id])
+
+  @@index([deletedAt])
 }
 
 // ============================================
@@ -774,6 +852,7 @@ model Contract {
   terms             String?   // Contract terms (markdown)
   notes             String?
   createdBy         String?   // User ID
+  deletedAt         DateTime? // Soft delete
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -786,6 +865,7 @@ model Contract {
   @@index([organizationId])
   @@index([status])
   @@index([clientId])
+  @@index([deletedAt])
 }
 
 model ContractSignature {
@@ -853,6 +933,7 @@ model Document {
   approvedAt      DateTime?
   tags            String?   // JSON array
   metadata        String?   // JSON for additional metadata
+  deletedAt       DateTime? // Soft delete
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -862,6 +943,7 @@ model Document {
   @@index([organizationId])
   @@index([projectId])
   @@index([documentType])
+  @@index([deletedAt])
 }
 
 // ============================================
