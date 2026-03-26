@@ -977,3 +977,114 @@ export interface PaginationOptions {
   page: number;
   limit: number;
 }
+
+// ============================================
+// Equipment Types
+// ============================================
+
+export interface Equipment {
+  id: string;
+  organizationId?: string;
+  name: string;
+  equipmentType: string;
+  model?: string;
+  serialNumber?: string;
+  status: EquipmentStatus;
+  projectId?: string;
+  project?: Project;
+  location?: string;
+  condition: EquipmentCondition;
+  purchaseDate?: Date | string;
+  purchaseValue?: number;
+  currentValue?: number;
+  lastMaintenanceDate?: Date | string;
+  nextMaintenanceDate?: Date | string;
+  notes?: string;
+  isActive: boolean;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+export type EquipmentStatus = 'available' | 'in_use' | 'maintenance' | 'retired';
+export type EquipmentCondition = 'excellent' | 'good' | 'fair' | 'poor';
+
+// ============================================
+// Bidding Types
+// ============================================
+
+export interface Bid {
+  id: string;
+  organizationId?: string;
+  title: string;
+  reference: string;
+  clientId?: string;
+  client?: Client;
+  bidType: BidType;
+  status: BidStatus;
+  deadline: Date | string;
+  estimatedValue?: number;
+  submittedValue?: number;
+  location?: string;
+  scope?: string;
+  requirements?: string[];
+  documentsCount: number;
+  submittedAt?: Date | string;
+  resultAt?: Date | string;
+  notes?: string;
+  createdById?: string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+export type BidType = 'tender' | 'rfp' | 'rfq' | 'rfi';
+export type BidStatus = 'open' | 'submitted' | 'won' | 'lost' | 'cancelled';
+
+// ============================================
+// Automation Types
+// ============================================
+
+export interface Automation {
+  id: string;
+  organizationId?: string;
+  name: string;
+  description?: string;
+  triggerType: AutomationTriggerType;
+  triggerConfig?: Record<string, any>;
+  actionType: AutomationActionType;
+  actionConfig?: Record<string, any>;
+  status: AutomationStatus;
+  lastRunAt?: Date | string;
+  runCount: number;
+  createdById?: string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+export type AutomationTriggerType = 'schedule' | 'event' | 'threshold';
+export type AutomationActionType = 'notification' | 'email' | 'webhook' | 'task';
+export type AutomationStatus = 'active' | 'inactive' | 'paused';
+
+// ============================================
+// Calendar Event Types
+// ============================================
+
+export interface CalendarEvent {
+  id: string;
+  organizationId?: string;
+  title: string;
+  description?: string;
+  eventType: CalendarEventType;
+  startDate: Date | string;
+  endDate?: Date | string;
+  allDay: boolean;
+  location?: string;
+  projectId?: string;
+  project?: Project;
+  relatedType?: string;
+  relatedId?: string;
+  color?: string;
+  createdById?: string;
+  createdAt: Date | string;
+}
+
+export type CalendarEventType = 'deadline' | 'milestone' | 'meeting' | 'payment' | 'reminder' | 'other';
