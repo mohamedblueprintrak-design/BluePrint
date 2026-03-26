@@ -12,6 +12,13 @@ const nextConfig: NextConfig = {
     // Only ignore build errors in development
     ignoreBuildErrors: process.env.NODE_ENV === 'development',
   },
+
+  // ESLint configuration - skip during build due to ESM compatibility issues
+  eslint: {
+    // Warning: This allows production builds to complete even if there are ESLint errors
+    // The CI pipeline still runs ESLint separately
+    ignoreDuringBuilds: true,
+  },
   
   // Image optimization configuration
   images: {

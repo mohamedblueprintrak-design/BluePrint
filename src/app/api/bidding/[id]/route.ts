@@ -6,15 +6,16 @@ const prisma = new PrismaClient();
 // PATCH - Update bid status
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const { status } = body;
 
     try {
       const bid = await prisma.bid.update({
-        where: { id: params.id },
+        where: { id },
         data: { status },
         include: {
           client: { select: { id: true, name: true } },
@@ -26,7 +27,7 @@ export async function PATCH(
       // Demo mode - return success anyway
       return NextResponse.json({
         data: {
-          id: params.id,
+          id,
           status,
           updatedAt: new Date(),
         },
@@ -41,11 +42,12 @@ export async function PATCH(
 // GET - Fetch single bid
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const bid = await prisma.bid.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         client: { select: { id: true, name: true } },
       },

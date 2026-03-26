@@ -6,11 +6,12 @@ const prisma = new PrismaClient();
 // GET - Fetch single team member
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await prisma.user.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         email: true,
@@ -38,15 +39,16 @@ export async function GET(
 // PUT - Update team member
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const { fullName, email, role, department, phone, jobTitle } = body;
 
     try {
       const user = await prisma.user.update({
-        where: { id: params.id },
+        where: { id },
         data: {
           fullName,
           email,
@@ -62,7 +64,7 @@ export async function PUT(
       // Demo mode - return success anyway
       return NextResponse.json({
         data: {
-          id: params.id,
+          id,
           ...body,
           updatedAt: new Date(),
         },
@@ -77,12 +79,13 @@ export async function PUT(
 // DELETE - Delete team member
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     try {
       await prisma.user.delete({
-        where: { id: params.id },
+        where: { id },
       });
     } catch (dbError) {
       // Demo mode - ignore database error

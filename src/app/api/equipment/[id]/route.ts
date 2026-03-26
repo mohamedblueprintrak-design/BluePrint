@@ -6,11 +6,12 @@ const prisma = new PrismaClient();
 // GET - Fetch single equipment
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const equipment = await prisma.equipment.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         project: { select: { id: true, name: true } },
       },
@@ -30,14 +31,15 @@ export async function GET(
 // PUT - Update equipment
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
 
     try {
       const equipment = await prisma.equipment.update({
-        where: { id: params.id },
+        where: { id },
         data: {
           name: body.name,
           equipmentType: body.equipmentType,
@@ -60,7 +62,7 @@ export async function PUT(
       // Demo mode - return success anyway
       return NextResponse.json({
         data: {
-          id: params.id,
+          id,
           ...body,
           updatedAt: new Date(),
         },
@@ -75,12 +77,13 @@ export async function PUT(
 // DELETE - Delete equipment
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     try {
       await prisma.equipment.delete({
-        where: { id: params.id },
+        where: { id },
       });
     } catch (dbError) {
       // Demo mode - ignore database error
