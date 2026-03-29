@@ -36,6 +36,19 @@ export interface TemplateTaskData {
   color?: string;
 }
 
+export interface WorkflowPhaseTemplateData {
+  phaseType: string;
+  phaseTypeAr?: string;
+  phaseCategory: string;
+  description?: string;
+  descriptionAr?: string;
+  slaDays: number;
+  slaWarningDays?: number;
+  order: number;
+  dependsOnOrder?: number;
+  color?: string;
+}
+
 // ============================================
 // Predefined Templates for UAE/Gulf Region
 // قوالب محددة مسبقاً لدولة الإمارات والخليج
@@ -477,10 +490,141 @@ export async function getTemplateDetails(templateCode: string): Promise<any | nu
   });
 }
 
+// ============================================
+// Architectural & Contract Workflow Phase Templates
+// قوالب مراحل سير العمل المعمارية والعقود
+// ============================================
+
+/**
+ * Create Architectural Workflow Phase Template
+ * Creates phases for the full architectural design workflow with SLA tracking.
+ *
+ * Phases:
+ * 1. Sketch (مخطط أولي) - 4 days
+ * 2. Client Approval (موافقة العميل) - 3 days
+ * 3. Modification (تعديلات) - 4 days
+ * 4. Preliminary Drawings (مخططات مبدئية) - 6 days
+ * 5. 3D Max (تصميم ثلاثي الأبعاد) - 5 days
+ * 6. Final Drawings (مخططات نهائية) - 7 days
+ */
+export function createArchitecturalTemplate(): WorkflowPhaseTemplateData[] {
+  return [
+    {
+      phaseType: 'ARCHITECTURAL_SKETCH',
+      phaseTypeAr: 'مخطط أولي',
+      phaseCategory: 'ARCHITECTURAL',
+      description: 'Initial architectural sketch and concept design',
+      descriptionAr: 'المخطط المعماري الأولي والتصميم المبدئي',
+      slaDays: 4,
+      slaWarningDays: 3,
+      order: 1,
+      color: '#3B82F6',
+    },
+    {
+      phaseType: 'CLIENT_APPROVAL',
+      phaseTypeAr: 'موافقة العميل',
+      phaseCategory: 'ARCHITECTURAL',
+      description: 'Client review and approval of the architectural sketch',
+      descriptionAr: 'مراجعة العميل والموافقة على المخطط المعماري',
+      slaDays: 3,
+      slaWarningDays: 2,
+      order: 2,
+      dependsOnOrder: 1,
+      color: '#F59E0B',
+    },
+    {
+      phaseType: 'MODIFICATION',
+      phaseTypeAr: 'تعديلات',
+      phaseCategory: 'ARCHITECTURAL',
+      description: 'Modifications based on client feedback',
+      descriptionAr: 'التعديلات بناءً على ملاحظات العميل',
+      slaDays: 4,
+      slaWarningDays: 3,
+      order: 3,
+      dependsOnOrder: 2,
+      color: '#EF4444',
+    },
+    {
+      phaseType: 'PRELIMINARY_DRAWINGS',
+      phaseTypeAr: 'مخططات مبدئية',
+      phaseCategory: 'ARCHITECTURAL',
+      description: 'Preliminary architectural drawings and plans',
+      descriptionAr: 'المخططات والرسومات المعمارية المبدئية',
+      slaDays: 6,
+      slaWarningDays: 4,
+      order: 4,
+      dependsOnOrder: 3,
+      color: '#8B5CF6',
+    },
+    {
+      phaseType: '3D_MAX',
+      phaseTypeAr: 'تصميم ثلاثي الأبعاد',
+      phaseCategory: 'ARCHITECTURAL',
+      description: '3D Max visualization and rendering',
+      descriptionAr: 'تصميم وتصيير ثلاثي الأبعاد',
+      slaDays: 5,
+      slaWarningDays: 4,
+      order: 5,
+      dependsOnOrder: 4,
+      color: '#06B6D4',
+    },
+    {
+      phaseType: 'FINAL_DRAWINGS',
+      phaseTypeAr: 'مخططات نهائية',
+      phaseCategory: 'ARCHITECTURAL',
+      description: 'Final architectural drawings and construction documents',
+      descriptionAr: 'المخططات المعمارية النهائية ومستندات البناء',
+      slaDays: 7,
+      slaWarningDays: 5,
+      order: 6,
+      dependsOnOrder: 5,
+      color: '#10B981',
+    },
+  ];
+}
+
+/**
+ * Create Contract Workflow Phase Template
+ * Creates phases for the contract review and signing workflow.
+ *
+ * Phases:
+ * 1. Contract Review (مراجعة العقد) - 2 days
+ * 2. Contract Signing (توقيع العقد) - 1 day
+ */
+export function createContractTemplate(): WorkflowPhaseTemplateData[] {
+  return [
+    {
+      phaseType: 'CONTRACT_REVIEW',
+      phaseTypeAr: 'مراجعة العقد',
+      phaseCategory: 'CONTRACTING',
+      description: 'Review contract terms, conditions, and legal clauses',
+      descriptionAr: 'مراجعة شروط وأحكام العقد والبنود القانونية',
+      slaDays: 2,
+      slaWarningDays: 1,
+      order: 1,
+      color: '#F59E0B',
+    },
+    {
+      phaseType: 'CONTRACT_SIGNING',
+      phaseTypeAr: 'توقيع العقد',
+      phaseCategory: 'CONTRACTING',
+      description: 'Contract signing by all parties',
+      descriptionAr: 'توقيع العقد من جميع الأطراف',
+      slaDays: 1,
+      slaWarningDays: 1,
+      order: 2,
+      dependsOnOrder: 1,
+      color: '#10B981',
+    },
+  ];
+}
+
 export default {
   initializeTemplates,
   createTasksFromTemplate,
   getAvailableTemplates,
   getTemplateDetails,
   PREDEFINED_TEMPLATES,
+  createArchitecturalTemplate,
+  createContractTemplate,
 };

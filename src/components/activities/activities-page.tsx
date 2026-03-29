@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,22 +18,20 @@ import {
 import {
   Activity, Search, Filter, Calendar, User, Building2, FileText,
   DollarSign, CheckSquare, Package, Settings, Plus, Edit,
-  Trash2, ArrowUpRight, Clock, Users
+  Trash2, ArrowUpRight, Clock, Users, Loader2
 } from 'lucide-react';
 
-// Mock activity data
-const mockActivities = [
-  { id: '1', type: 'project', action: 'create', title: 'إنشاء مشروع جديد', description: 'تم إنشاء مشروع برج دبي', userId: '1', userName: 'أحمد محمد', projectId: 'p1', projectName: 'برج دبي', createdAt: new Date().toISOString() },
-  { id: '2', type: 'invoice', action: 'update', title: 'تحديث فاتورة', description: 'تم تحديث حالة الفاتورة INV-001 إلى مدفوعة', userId: '2', userName: 'سارة أحمد', projectId: 'p2', projectName: 'فيلا المرفأ', createdAt: new Date(Date.now() - 3600000).toISOString() },
-  { id: '3', type: 'task', action: 'complete', title: 'إكمال مهمة', description: 'تم إكمال مهمة مراجعة المخططات', userId: '1', userName: 'أحمد محمد', projectId: 'p1', projectName: 'برج دبي', createdAt: new Date(Date.now() - 7200000).toISOString() },
-  { id: '4', type: 'client', action: 'create', title: 'إضافة عميل جديد', description: 'تم إضافة عميل شركة الإنشاءات المتحدة', userId: '3', userName: 'محمد علي', createdAt: new Date(Date.now() - 14400000).toISOString() },
-  { id: '5', type: 'document', action: 'upload', title: 'رفع مستند', description: 'تم رفع ملف المخططات الهندسية', userId: '1', userName: 'أحمد محمد', projectId: 'p1', projectName: 'برج دبي', createdAt: new Date(Date.now() - 21600000).toISOString() },
-  { id: '6', type: 'user', action: 'login', title: 'تسجيل دخول', description: 'تم تسجيل الدخول من جهاز جديد', userId: '2', userName: 'سارة أحمد', createdAt: new Date(Date.now() - 28800000).toISOString() },
-  { id: '7', type: 'hr', action: 'approve', title: 'موافقة على إجازة', description: 'تم الموافقة على طلب إجازة سنوية', userId: '1', userName: 'أحمد محمد', createdAt: new Date(Date.now() - 43200000).toISOString() },
-  { id: '8', type: 'supplier', action: 'create', title: 'إضافة مورد', description: 'تم إضافة مورد شركة المواد الإنشائية', userId: '3', userName: 'محمد علي', createdAt: new Date(Date.now() - 86400000).toISOString() },
-  { id: '9', type: 'contract', action: 'sign', title: 'توقيع عقد', description: 'تم توقيع عقد مع شركة التوريدات', userId: '1', userName: 'أحمد محمد', projectId: 'p3', projectName: 'مجمع تجاري', createdAt: new Date(Date.now() - 172800000).toISOString() },
-  { id: '10', type: 'settings', action: 'update', title: 'تحديث الإعدادات', description: 'تم تحديث إعدادات الشركة', userId: '1', userName: 'أحمد محمد', createdAt: new Date(Date.now() - 259200000).toISOString() },
-];
+interface ActivityItem {
+  id: string;
+  userId?: string | null;
+  userName: string;
+  userAvatar?: string | null;
+  entityType: string;
+  entityId?: string | null;
+  action: string;
+  description: string;
+  createdAt: string;
+}
 
 const ACTIVITY_TYPES = [
   { value: 'project', label: 'مشروع', labelEn: 'Project', icon: Building2, color: 'bg-blue-500' },
@@ -63,15 +61,36 @@ export function ActivitiesPage() {
   const { language } = useApp();
   const { t, formatDate } = useTranslation(language);
   
+  const [activities, setActivities] = useState<ActivityItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
 
-  const filteredActivities = mockActivities.filter((activity) => {
-    const matchesSearch = activity.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          activity.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          activity.userName?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = typeFilter === 'all' || activity.type === typeFilter;
+  // Fetch activities from API
+  useEffect(() => {
+    fetchActivities();
+  }, []);
+
+  const fetchActivities = async () => {
+    try {
+      const response = await fetch('/api/activities');
+      if (response.ok) {
+        const data = await response.json();
+        setActivities(data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching activities:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredActivities = activities.filter((activity) => {
+    const matchesSearch = activity.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          activity.userName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          activity.entityType.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType = typeFilter === 'all' || activity.entityType === typeFilter;
     
     let matchesDate = true;
     if (dateFilter === 'today') {
@@ -92,13 +111,13 @@ export function ActivitiesPage() {
   });
 
   const stats = {
-    total: mockActivities.length,
-    today: mockActivities.filter(a => {
+    total: activities.length,
+    today: activities.filter(a => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       return new Date(a.createdAt) >= today;
     }).length,
-    thisWeek: mockActivities.filter(a => {
+    thisWeek: activities.filter(a => {
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
       return new Date(a.createdAt) >= weekAgo;
@@ -237,67 +256,70 @@ export function ActivitiesPage() {
           <CardTitle className="text-white">{language === 'ar' ? 'النشاطات الأخيرة' : 'Recent Activities'}</CardTitle>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-[500px]">
-            <div className="relative">
-              {/* Timeline line */}
-              <div className="absolute start-8 top-0 bottom-0 w-px bg-slate-800" />
-              
-              <div className="space-y-6">
-                {filteredActivities.map((activity) => {
-                  const typeInfo = getActivityTypeInfo(activity.type);
-                  const actionInfo = getActionInfo(activity.action);
-                  const TypeIcon = typeInfo.icon;
-                  
-                  return (
-                    <div key={activity.id} className="relative flex gap-4 ps-2 group">
-                      {/* Timeline dot */}
-                      <div className={`relative z-10 w-12 h-12 rounded-full ${typeInfo.color}/20 border-2 border-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                        <TypeIcon className="w-5 h-5 text-white" />
-                      </div>
-                      
-                      {/* Content */}
-                      <div className="flex-1 pb-6">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <Badge variant="outline" className={`border-slate-700 ${actionInfo.color}`}>
-                                {language === 'ar' ? actionInfo.label : actionInfo.labelEn}
-                              </Badge>
-                              <Badge variant="secondary" className="bg-slate-800 text-slate-300">
-                                {language === 'ar' ? typeInfo.label : typeInfo.labelEn}
-                              </Badge>
-                            </div>
-                            <h3 className="text-white font-medium">{activity.title}</h3>
-                            <p className="text-sm text-slate-400 mt-1">{activity.description}</p>
-                          </div>
-                          <span className="text-xs text-slate-500 whitespace-nowrap">
-                            {getTimeAgo(activity.createdAt)}
-                          </span>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+            </div>
+          ) : filteredActivities.length === 0 ? (
+            <div className="text-center py-12 text-slate-400">
+              {language === 'ar' ? 'لا توجد نشاطات' : 'No activities found'}
+            </div>
+          ) : (
+            <ScrollArea className="h-[500px]">
+              <div className="relative">
+                {/* Timeline line */}
+                <div className="absolute start-8 top-0 bottom-0 w-px bg-slate-800" />
+                
+                <div className="space-y-6">
+                  {filteredActivities.map((activity) => {
+                    const typeInfo = getActivityTypeInfo(activity.entityType);
+                    const actionInfo = getActionInfo(activity.action);
+                    const TypeIcon = typeInfo.icon;
+                    
+                    return (
+                      <div key={activity.id} className="relative flex gap-4 ps-2 group">
+                        {/* Timeline dot */}
+                        <div className={`relative z-10 w-12 h-12 rounded-full ${typeInfo.color}/20 border-2 border-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                          <TypeIcon className="w-5 h-5 text-white" />
                         </div>
                         
-                        <div className="flex items-center gap-4 mt-3 text-xs text-slate-500">
-                          <div className="flex items-center gap-1">
-                            <Avatar className="w-5 h-5">
-                              <AvatarFallback className="bg-blue-600 text-white text-[8px]">
-                                {activity.userName?.[0] || 'U'}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span>{activity.userName}</span>
-                          </div>
-                          {activity.projectName && (
-                            <div className="flex items-center gap-1">
-                              <Building2 className="w-3 h-3" />
-                              <span>{activity.projectName}</span>
+                        {/* Content */}
+                        <div className="flex-1 pb-6">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <Badge variant="outline" className={`border-slate-700 ${actionInfo.color}`}>
+                                  {language === 'ar' ? actionInfo.label : actionInfo.labelEn}
+                                </Badge>
+                                <Badge variant="secondary" className="bg-slate-800 text-slate-300">
+                                  {language === 'ar' ? typeInfo.label : typeInfo.labelEn}
+                                </Badge>
+                              </div>
+                              <h3 className="text-white font-medium">{activity.description}</h3>
                             </div>
-                          )}
+                            <span className="text-xs text-slate-500 whitespace-nowrap">
+                              {getTimeAgo(activity.createdAt)}
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center gap-4 mt-3 text-xs text-slate-500">
+                            <div className="flex items-center gap-1">
+                              <Avatar className="w-5 h-5">
+                                <AvatarFallback className="bg-blue-600 text-white text-[8px]">
+                                  {activity.userName?.[0] || 'U'}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span>{activity.userName}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          </ScrollArea>
+            </ScrollArea>
+          )}
         </CardContent>
       </Card>
     </div>

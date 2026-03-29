@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useApp } from '@/context/app-context';
+import { useAuth } from '@/context/auth-context';
 import { useTranslation } from '@/lib/translations';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -58,6 +59,7 @@ import {
   Receipt,
   Landmark,
   Layers,
+  FileSpreadsheet,
 } from 'lucide-react';
 
 // ===== Types =====
@@ -83,6 +85,11 @@ interface ProjectData {
   client?: { id: string; name: string; company?: string } | null;
   manager?: { id: string; name: string; avatar?: string } | null;
   _count?: { invoices: number; tasks: number; defects: number; siteReports: number; boqItems: number };
+  plotNumber?: string | null;
+  projectType?: string | null;
+  visitDate?: string | null;
+  paymentReceived?: number;
+  remainingBalance?: number;
 }
 
 interface WorkflowPhase {
@@ -248,6 +255,17 @@ const defectStatusConfig: Record<string, { color: string; bg: string; labelAr: s
   CLOSED: { color: 'text-slate-400', bg: 'bg-slate-500/15', labelAr: 'مغلق', labelEn: 'Closed' },
 };
 
+// ===== Role-based Tab Access =====
+const ROLE_TABS: Record<string, string[]> = {
+  ADMIN: ['overview', 'architectural', 'structural', 'mep', 'government', 'financial', 'site', 'timeline', 'interactions'],
+  MANAGER: ['overview', 'architectural', 'structural', 'mep', 'government', 'financial', 'site', 'timeline', 'interactions'],
+  PROJECT_MANAGER: ['overview', 'architectural', 'structural', 'mep', 'government', 'financial', 'site', 'timeline'],
+  ENGINEER: ['overview', 'architectural', 'financial'],
+  ACCOUNTANT: ['overview', 'financial'],
+  HR: ['overview'],
+  VIEWER: ['overview', 'timeline'],
+};
+
 // ===== SLA Helper =====
 function calculateSLA(phase: WorkflowPhase, isAr: boolean): { text: string; color: string } {
   if (phase.status !== 'IN_PROGRESS' || !phase.startDate || !phase.slaDays) {
@@ -283,6 +301,7 @@ function calculateSLA(phase: WorkflowPhase, isAr: boolean): { text: string; colo
 // ===== Main Component =====
 export default function ProjectWorkspace({ projectId, onBack }: ProjectWorkspaceProps) {
   const { language } = useApp();
+  const { user } = useAuth();
   const { t, formatCurrency, formatDate, formatDateTime, isRTL } = useTranslation(language);
   const isAr = language === 'ar';
 
@@ -653,6 +672,14 @@ export default function ProjectWorkspace({ projectId, onBack }: ProjectWorkspace
                 <span className="text-xs">{project.location}</span>
               </div>
             )}
+            <div className="flex items-center gap-2 text-slate-400">
+              <FileSpreadsheet className="h-3.5 w-3.5 shrink-0" />
+              <span className="text-xs">{project.plotNumber || '—'}</span>
+            </div>
+            <div className="flex items-center gap-2 text-slate-400">
+              <Building2 className="h-3.5 w-3.5 shrink-0" />
+              <span className="text-xs">{project.projectType || '—'}</span>
+            </div>
             {project.client && (
               <div className="flex items-center gap-2 text-slate-400">
                 <Building2 className="h-3.5 w-3.5 shrink-0" />
@@ -740,17 +767,23 @@ export default function ProjectWorkspace({ projectId, onBack }: ProjectWorkspace
             {/* Tab List */}
             <div className="border-b border-slate-800 bg-slate-900/50 px-4 lg:px-6 overflow-x-auto">
               <TabsList className="bg-transparent h-auto p-0 gap-0">
-                {[
-                  { key: 'overview', label: isAr ? 'نظرة عامة' : 'Overview', icon: <Eye className="h-3.5 w-3.5" /> },
-                  { key: 'architectural', label: isAr ? 'المعماري' : 'Architecture', icon: <Layers className="h-3.5 w-3.5" /> },
-                  { key: 'structural', label: isAr ? 'الإنشائي' : 'Structural', icon: <Building2 className="h-3.5 w-3.5" /> },
-                  { key: 'mep', label: isAr ? 'الخدمات' : 'MEP', icon: <Wrench className="h-3.5 w-3.5" /> },
-                  { key: 'government', label: isAr ? 'الموافقات' : 'Government', icon: <Landmark className="h-3.5 w-3.5" /> },
-                  { key: 'financial', label: isAr ? 'المالية' : 'Financial', icon: <CreditCard className="h-3.5 w-3.5" /> },
-                  { key: 'site', label: isAr ? 'الموقع' : 'Site', icon: <HardHat className="h-3.5 w-3.5" /> },
-                  { key: 'timeline', label: isAr ? 'الجدول' : 'Timeline', icon: <Timer className="h-3.5 w-3.5" /> },
-                  { key: 'interactions', label: isAr ? 'التفاعلات' : 'Interactions', icon: <MessageSquare className="h-3.5 w-3.5" /> },
-                ].map((tab) => (
+                {(() => {
+                  const userRole = user?.role || 'VIEWER';
+                  const allowedTabs = ROLE_TABS[userRole] || ROLE_TABS.VIEWER;
+                  const allTabs = [
+                    { key: 'overview', label: isAr ? 'نظرة عامة' : 'Overview', icon: <Eye className="h-3.5 w-3.5" /> },
+                    { key: 'architectural', label: isAr ? 'المعماري' : 'Architecture', icon: <Layers className="h-3.5 w-3.5" /> },
+                    { key: 'structural', label: isAr ? 'الإنشائي' : 'Structural', icon: <Building2 className="h-3.5 w-3.5" /> },
+                    { key: 'mep', label: isAr ? 'الخدمات' : 'MEP', icon: <Wrench className="h-3.5 w-3.5" /> },
+                    { key: 'government', label: isAr ? 'الموافقات' : 'Government', icon: <Landmark className="h-3.5 w-3.5" /> },
+                    { key: 'financial', label: isAr ? 'المالية' : 'Financial', icon: <CreditCard className="h-3.5 w-3.5" /> },
+                    { key: 'site', label: isAr ? 'الموقع' : 'Site', icon: <HardHat className="h-3.5 w-3.5" /> },
+                    { key: 'timeline', label: isAr ? 'الجدول' : 'Timeline', icon: <Timer className="h-3.5 w-3.5" /> },
+                    { key: 'interactions', label: isAr ? 'التفاعلات' : 'Interactions', icon: <MessageSquare className="h-3.5 w-3.5" /> },
+                  ];
+                  const filteredTabs = allTabs.filter(tab => allowedTabs.includes(tab.key));
+                  return filteredTabs;
+                })().map((tab) => (
                   <TabsTrigger
                     key={tab.key}
                     value={tab.key}
@@ -1015,6 +1048,59 @@ export default function ProjectWorkspace({ projectId, onBack }: ProjectWorkspace
                     </CardContent>
                   </Card>
                 </div>
+
+                {/* Financial Overview for Engineer */}
+                <Card className="bg-gradient-to-br from-blue-500/10 to-slate-900/50 border-blue-500/20">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center gap-2">
+                      <FileSpreadsheet className="h-5 w-5 text-blue-400" />
+                      <CardTitle className="text-base text-white">
+                        {isAr ? 'نظرة مالية للمهندس' : 'Financial Overview for Engineer'}
+                      </CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/30">
+                        <p className="text-xs text-slate-500">{isAr ? 'قيمة العقد' : 'Contract Value'}</p>
+                        <p className="text-lg font-bold text-white mt-1">{formatCurrency(project.budget)}</p>
+                      </div>
+                      <div className="bg-slate-800/50 rounded-lg p-3 border border-emerald-500/20">
+                        <p className="text-xs text-slate-500">{isAr ? 'المدفوعات المستلمة' : 'Payments Received'}</p>
+                        <p className="text-lg font-bold text-emerald-400 mt-1">{formatCurrency(project.paymentReceived ?? totalPaid)}</p>
+                      </div>
+                      <div className="bg-slate-800/50 rounded-lg p-3 border border-amber-500/20">
+                        <p className="text-xs text-slate-500">{isAr ? 'الرصيد المتبقي' : 'Remaining Balance'}</p>
+                        <p className="text-lg font-bold text-amber-400 mt-1">{formatCurrency(project.remainingBalance ?? Math.max(0, project.budget - (project.paymentReceived ?? totalPaid)))}</p>
+                      </div>
+                      {boqItems.length > 0 && (
+                        <div className="bg-slate-800/50 rounded-lg p-3 border border-violet-500/20">
+                          <p className="text-xs text-slate-500">{isAr ? 'بنود قائمة الكميات' : 'BOQ Items'}</p>
+                          <p className="text-lg font-bold text-violet-400 mt-1">{boqItems.length}</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5">{isAr ? 'إجمالي: ' : 'Total: '}{formatCurrency(totalBOQ)}</p>
+                        </div>
+                      )}
+                    </div>
+                    {boqItems.length > 0 && (
+                      <div className="mt-4">
+                        <p className="text-xs text-slate-400 font-medium mb-2">{isAr ? 'ملخص بنود قائمة الكميات (BOQ)' : 'BOQ Items Summary'}</p>
+                        <div className="max-h-48 overflow-y-auto space-y-1">
+                          {boqItems.slice(0, 10).map((item) => (
+                            <div key={item.id} className="flex items-center justify-between bg-slate-800/40 rounded px-3 py-1.5 text-xs">
+                              <span className="text-slate-300 truncate me-3">{item.code} - {item.description}</span>
+                              <span className="text-slate-400 shrink-0">{formatCurrency(item.totalPrice)}</span>
+                            </div>
+                          ))}
+                          {boqItems.length > 10 && (
+                            <p className="text-xs text-slate-500 text-center pt-1">
+                              {isAr ? `+ ${boqItems.length - 10} بنود أخرى` : `+ ${boqItems.length - 10} more items`}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
 
                 {/* Payments Table */}
                 <Card className="bg-slate-900/50 border-slate-800">

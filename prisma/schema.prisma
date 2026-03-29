@@ -81,6 +81,10 @@ enum ProjectStatus {
   ACTIVE
   ON_HOLD
   COMPLETED
+  DESIGN
+  SUBMISSION
+  APPROVAL
+  CONSTRUCTION
   CANCELLED
 }
 
@@ -547,6 +551,10 @@ model Project {
   expectedEndDate     DateTime?
   actualStartDate     DateTime?
   actualEndDate       DateTime?
+  plotNumber           String?        // Plot/Parcel number
+  visitDate            DateTime?      // Initial site visit date
+  paymentReceived      Float          @default(0)  // Total payments received
+  remainingBalance     Float          @default(0)  // Remaining contract balance
   managerId           String?   // Project manager (User ID)
   clientId            String?   // Client reference
   budget              Float?    // Project budget
@@ -597,6 +605,7 @@ model BOQItem {
   updatedAt     DateTime  @updatedAt
 
   project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  siteLogItems   SiteLogItem[]
 
   @@index([projectId])
   @@index([projectId, category])
@@ -626,6 +635,29 @@ model Defect {
   @@index([projectId])
   @@index([projectId, status])
   @@index([projectId, severity])
+}
+
+// ============================================
+// Site Log Items (Site + BOQ Integration)
+// ============================================
+
+model SiteLogItem {
+  id          String     @id @default(cuid())
+  siteReportId String
+  boqItemId   String?
+  description String
+  quantity    Float     @default(0)
+  unitPrice   Float     @default(0)
+  totalPrice  Float     @default(0)
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  siteReport SiteReport @relation(fields: [siteReportId], references: [id], onDelete: Cascade)
+  boqItem    BOQItem?   @relation(fields: [boqItemId], references: [id], onDelete: SetNull)
+
+  @@index([siteReportId])
+  @@index([boqItemId])
 }
 
 // ============================================
@@ -659,6 +691,7 @@ model SiteReport {
   updatedAt         DateTime  @updatedAt
 
   project           Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  logItems          SiteLogItem[]
 }
 
 // ============================================
