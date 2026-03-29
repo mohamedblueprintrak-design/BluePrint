@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -336,8 +336,8 @@ model Plan {
   interval        String    @default("month") // month, year
   stripeProductId String?
   stripePriceId   String?
-  features        Json    @default("{}")
-  limits          Json    @default("{}")
+  features        String    @default("{}")
+  limits          String    @default("{}")
   isActive        Boolean   @default(true)
   sortOrder       Int       @default(0)
   createdAt       DateTime  @default(now())
@@ -418,6 +418,8 @@ model User {
   sessions        Session[]
   managedProjects Project[]      @relation("ProjectManager")
   activities      Activity[]
+  assignedPhases       WorkflowPhase[]     @relation("PhaseAssignee")
+  respondedInteractions ClientInteraction[] @relation("InteractionResponder")
 
   @@index([organizationId])
   @@index([email])
@@ -541,6 +543,8 @@ model Project {
   budgets             Budget[]
   documents           Document[]
   activities          Activity[]
+  workflowPhases      WorkflowPhase[]
+  clientInteractions  ClientInteraction[]
 
   client              Client?   @relation(fields: [clientId], references: [id])
   manager             User?     @relation("ProjectManager", fields: [managerId], references: [id])
@@ -1266,4 +1270,62 @@ model Activity {
   @@index([entityType, entityId])
   @@index([createdAt])
   @@index([userId, entityType])
+}
+
+// ============================================
+// Engineering Workflow Phase (Engineering OS)
+// ============================================
+
+model WorkflowPhase {
+  id              String   @id @default(cuid())
+  projectId       String
+  phaseType       String   // ARCHITECTURAL_SKETCH, ARCHITECTURAL_CONCEPT, CLIENT_APPROVAL, etc.
+  phaseCategory   String   // ARCHITECTURAL, STRUCTURAL, MEP, GOVERNMENT, CONTRACTING
+  status          String   @default("NOT_STARTED")  // NOT_STARTED, IN_PROGRESS, COMPLETED, ON_HOLD, DELAYED, REJECTED
+  startDate       DateTime?
+  endDate         DateTime?
+  slaDays         Int      @default(0)
+  assignedToId    String?
+  notes           String?
+  order           Int      @default(0)
+  dependsOnId     String?
+  rejectionCount  Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  project         Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignedTo      User?           @relation("PhaseAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  dependsOn       WorkflowPhase?  @relation("PhaseDependency", fields: [dependsOnId], references: [id], onDelete: SetNull)
+  dependentPhases WorkflowPhase[] @relation("PhaseDependency")
+  interactions    ClientInteraction[]
+
+  @@index([projectId])
+  @@index([projectId, phaseCategory])
+  @@index([status])
+  @@index([assignedToId])
+}
+
+// ============================================
+// Client Interaction (Engineering OS)
+// ============================================
+
+model ClientInteraction {
+  id              String   @id @default(cuid())
+  projectId       String
+  phaseId         String?
+  interactionType String   @default("COMMENT")  // APPROVE, REJECT, COMMENT
+  content         String
+  respondedById   String?
+  responseContent String?
+  responseDate    DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  project         Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  phase           WorkflowPhase? @relation(fields: [phaseId], references: [id], onDelete: SetNull)
+  respondedBy     User?           @relation("InteractionResponder", fields: [respondedById], references: [id], onDelete: SetNull)
+
+  @@index([projectId])
+  @@index([phaseId])
+  @@index([interactionType])
 }
