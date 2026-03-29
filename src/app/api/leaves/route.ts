@@ -1,8 +1,7 @@
-// @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest, isDemoUser } from '../utils/demo-config';
 
-const success = (data: any) => NextResponse.json({ success: true, data });
+const success = (data: unknown) => NextResponse.json({ success: true, data });
 const error = (message: string, code = "ERROR", status = 400) => NextResponse.json({ success: false, error: { code, message } }, { status });
 
 const DEMO_LEAVES = [
@@ -25,10 +24,10 @@ export async function GET(request: NextRequest) {
 
   try {
     const { db } = await import('@/lib/db');
-    const where: any = { user: { organizationId: user.organizationId } };
+    const where: Record<string, unknown> = { user: { organizationId: user.organizationId } };
     if (status) where.status = status;
     const leaves = await db.leaveRequest.findMany({ where, include: { user: true, approver: true }, orderBy: { createdAt: 'desc' } });
-    return success(leaves.map(l => ({ ...l, user: { id: l.user.id, fullName: l.user.fullName || l.user.username }, approver: l.approver?.fullName })));
+    return success(leaves.map((l: { id: string; user: { id: string; fullName?: string | null; username: string }; approver?: { fullName?: string | null } | null; leaveType: string; startDate: Date; endDate: Date; daysCount: number; status: string }) => ({ ...l, user: { id: l.user.id, fullName: l.user.fullName || l.user.username }, approver: l.approver?.fullName })));
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Unknown error';
     return error(message, 'SERVER_ERROR', 500);
@@ -46,12 +45,23 @@ export async function POST(request: NextRequest) {
 
   try {
     const { db } = await import('@/lib/db');
-    const body = await request.json();
+    const body = await request.json() as Record<string, unknown>;
     if (!body.leaveType || !body.startDate || !body.endDate) return error('نوع الإجازة والتاريخين مطلوبان');
-    const startDate = new Date(body.startDate);
-    const endDate = new Date(body.endDate);
+    const startDate = new Date(body.startDate as string);
+    const endDate = new Date(body.endDate as string);
     const daysCount = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-    const leave = await db.leaveRequest.create({ data: { ...body, userId: user.id, daysCount, startDate, endDate } });
+
+    // SECURITY: Only allow specific fields (prevent mass assignment)
+    const leaveData: Record<string, unknown> = {
+      leaveType: body.leaveType,
+      startDate,
+      endDate,
+      daysCount,
+      userId: user.id,
+      reason: body.reason || null,
+    };
+
+    const leave = await db.leaveRequest.create({ data: leaveData });
     return success({ id: leave.id, daysCount });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Unknown error';
@@ -73,11 +83,16 @@ export async function PUT(request: NextRequest) {
     const { sendEmail } = await import('@/lib/email');
     const { emailTemplates } = await import('@/lib/email-templates');
     
-    const { id, approve, rejectionReason, sendNotification } = await request.json();
+    const body = await request.json() as Record<string, unknown>;
+    const { id, approve, rejectionReason, sendNotification } = body;
     const status = approve ? 'approved' : 'rejected';
     
+    if (!id || typeof id !== 'string') {
+      return error('معرف طلب الإجازة مطلوب', 'VALIDATION_ERROR');
+    }
+    
     const leaveRequest = await db.leaveRequest.findUnique({
-      where: { id },
+      where: { id: id as string },
       include: { user: true }
     });
 
@@ -86,8 +101,8 @@ export async function PUT(request: NextRequest) {
     }
 
     await db.leaveRequest.update({
-      where: { id },
-      data: { status, approvedById: user.id, approvedAt: new Date(), rejectionReason }
+      where: { id: id as string },
+      data: { status, approvedById: user.id, approvedAt: new Date(), rejectionReason: rejectionReason as string | undefined }
     });
 
     try {
@@ -100,7 +115,7 @@ export async function PUT(request: NextRequest) {
             : `تم رفض طلب إجازتك. ${rejectionReason ? `السبب: ${rejectionReason}` : ''}`,
           notificationType: 'leave',
           referenceType: 'leave',
-          referenceId: id
+          referenceId: id as string
         }
       });
     } catch (notifError) {
@@ -109,14 +124,9 @@ export async function PUT(request: NextRequest) {
 
     if (sendNotification !== false && leaveRequest.user?.email) {
       try {
-        let shouldNotify = true;
-        try {
-          const settings = await db.$queryRawUnsafe(
-            'SELECT emailLeaves FROM NotificationSettings WHERE userId = ? LIMIT 1',
-            [leaveRequest.userId]
-          ) as Array<{ emailLeaves: number }>;
-          if (settings.length > 0) shouldNotify = settings[0].emailLeaves === 1;
-        } catch {}
+        // Default to notifying - NotificationSettings table not in Prisma schema
+        // TODO: Add NotificationSettings model to schema when notification preferences are implemented
+        const shouldNotify = true;
 
         if (shouldNotify) {
           const startDate = leaveRequest.startDate.toLocaleDateString('ar-AE', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -137,7 +147,7 @@ export async function PUT(request: NextRequest) {
               leaveRequest.leaveType,
               startDate,
               endDate,
-              rejectionReason
+              rejectionReason as string | undefined
             );
           }
 

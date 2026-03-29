@@ -13,11 +13,11 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: process.env.NODE_ENV === 'development',
   },
 
-  // ESLint configuration - skip during build due to ESM compatibility issues
+  // ESLint configuration - CI pipeline runs ESLint separately
   eslint: {
-    // Warning: This allows production builds to complete even if there are ESLint errors
-    // The CI pipeline still runs ESLint separately
-    ignoreDuringBuilds: true,
+    // In production builds, ESLint errors are caught by CI
+    // Set to true only if you need to bypass ESLint during local builds
+    ignoreDuringBuilds: false,
   },
   
   // Image optimization configuration
@@ -147,7 +147,7 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: https: http:",
+              "img-src 'self' data: blob: https:",
               "font-src 'self' data:",
               "connect-src 'self' https://api.stripe.com https://checkout.stripe.com",
               "frame-src https://js.stripe.com https://hooks.stripe.com",

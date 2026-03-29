@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
+import { getUserFromRequest } from '../utils/demo-config';
 
-const prisma = new PrismaClient();
+function successResponse(data: unknown) { return NextResponse.json({ success: true, data }); }
+function errorResponse(message: string, code = 'ERROR', status = 400) {
+  return NextResponse.json({ success: false, error: { code, message } }, { status });
+}
 
 // GET - Fetch single equipment
 export async function GET(
@@ -9,8 +13,11 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const user = await getUserFromRequest(request);
+    if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+
     const { id } = await params;
-    const equipment = await prisma.equipment.findUnique({
+    const equipment = await db.equipment.findUnique({
       where: { id },
       include: {
         project: { select: { id: true, name: true } },
@@ -18,13 +25,13 @@ export async function GET(
     });
 
     if (!equipment) {
-      return NextResponse.json({ error: 'Equipment not found' }, { status: 404 });
+      return errorResponse('Equipment not found', 'NOT_FOUND', 404);
     }
 
-    return NextResponse.json({ data: equipment });
+    return successResponse(equipment);
   } catch (error) {
     console.error('Error fetching equipment:', error);
-    return NextResponse.json({ error: 'Failed to fetch equipment' }, { status: 500 });
+    return errorResponse('Failed to fetch equipment', 'SERVER_ERROR', 500);
   }
 }
 
@@ -34,64 +41,60 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const user = await getUserFromRequest(request);
+    if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+
     const { id } = await params;
     const body = await request.json();
 
-    try {
-      const equipment = await prisma.equipment.update({
-        where: { id },
-        data: {
-          name: body.name,
-          equipmentType: body.equipmentType,
-          model: body.model,
-          serialNumber: body.serialNumber,
-          status: body.status,
-          projectId: body.projectId || null,
-          location: body.location,
-          condition: body.condition,
-          purchaseValue: body.purchaseValue,
-          notes: body.notes,
-        },
-        include: {
-          project: { select: { id: true, name: true } },
-        },
-      });
+    // SECURITY: Only allow updating specific fields (prevent mass assignment)
+    const updateData: Record<string, unknown> = {};
+    if (body.name !== undefined) updateData.name = body.name;
+    if (body.equipmentType !== undefined) updateData.equipmentType = body.equipmentType;
+    if (body.model !== undefined) updateData.model = body.model;
+    if (body.serialNumber !== undefined) updateData.serialNumber = body.serialNumber;
+    if (body.status !== undefined) updateData.status = body.status;
+    if (body.projectId !== undefined) updateData.projectId = body.projectId || null;
+    if (body.location !== undefined) updateData.location = body.location;
+    if (body.condition !== undefined) updateData.condition = body.condition;
+    if (body.purchaseValue !== undefined) updateData.purchaseValue = body.purchaseValue;
+    if (body.notes !== undefined) updateData.notes = body.notes;
 
-      return NextResponse.json({ data: equipment });
-    } catch (dbError) {
-      // Demo mode - return success anyway
-      return NextResponse.json({
-        data: {
-          id,
-          ...body,
-          updatedAt: new Date(),
-        },
-      });
-    }
+    const equipment = await db.equipment.update({
+      where: { id },
+      data: updateData,
+      include: {
+        project: { select: { id: true, name: true } },
+      },
+    });
+
+    return successResponse(equipment);
   } catch (error) {
     console.error('Error updating equipment:', error);
-    return NextResponse.json({ error: 'Failed to update equipment' }, { status: 500 });
+    return errorResponse('Failed to update equipment', 'SERVER_ERROR', 500);
   }
 }
 
-// DELETE - Delete equipment
+// DELETE - Soft delete equipment (set isActive to false instead of hard delete)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
-    try {
-      await prisma.equipment.delete({
-        where: { id },
-      });
-    } catch (dbError) {
-      // Demo mode - ignore database error
-    }
+    const user = await getUserFromRequest(request);
+    if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
 
-    return NextResponse.json({ success: true });
+    const { id } = await params;
+
+    // SECURITY: Use soft delete instead of hard delete
+    await db.equipment.update({
+      where: { id },
+      data: { isActive: false },
+    });
+
+    return successResponse({ message: 'تم حذف المعدة' });
   } catch (error) {
     console.error('Error deleting equipment:', error);
-    return NextResponse.json({ error: 'Failed to delete equipment' }, { status: 500 });
+    return errorResponse('Failed to delete equipment', 'SERVER_ERROR', 500);
   }
 }

@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
+import { getUserFromRequest } from '../utils/demo-config';
 
-const prisma = new PrismaClient();
+function successResponse(data: unknown) { return NextResponse.json({ success: true, data }); }
+function errorResponse(message: string, code = 'ERROR', status = 400) {
+  return NextResponse.json({ success: false, error: { code, message } }, { status });
+}
 
 // GET - Fetch single team member
 export async function GET(
@@ -9,8 +13,11 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const user = await getUserFromRequest(request);
+    if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+
     const { id } = await params;
-    const user = await prisma.user.findUnique({
+    const member = await db.user.findUnique({
       where: { id },
       select: {
         id: true,
@@ -25,14 +32,14 @@ export async function GET(
       },
     });
 
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    if (!member) {
+      return errorResponse('User not found', 'NOT_FOUND', 404);
     }
 
-    return NextResponse.json({ data: user });
+    return successResponse(member);
   } catch (error) {
     console.error('Error fetching user:', error);
-    return NextResponse.json({ error: 'Failed to fetch user' }, { status: 500 });
+    return errorResponse('Failed to fetch user', 'SERVER_ERROR', 500);
   }
 }
 
@@ -42,58 +49,68 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const user = await getUserFromRequest(request);
+    if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+
+    // SECURITY: Only admins and managers can update team members
+    if (!['admin', 'manager'].includes(user.role)) {
+      return errorResponse('ليس لديك صلاحية تحديث أعضاء الفريق', 'FORBIDDEN', 403);
+    }
+
     const { id } = await params;
     const body = await request.json();
     const { fullName, email, role, department, phone, jobTitle } = body;
 
-    try {
-      const user = await prisma.user.update({
-        where: { id },
-        data: {
-          fullName,
-          email,
-          role,
-          department,
-          phone,
-          jobTitle,
-        },
-      });
+    // SECURITY: Only allow updating specific fields (prevent mass assignment)
+    const updateData: Record<string, unknown> = {};
+    if (fullName !== undefined) updateData.fullName = fullName;
+    if (email !== undefined) updateData.email = email;
+    if (role !== undefined) updateData.role = role;
+    if (department !== undefined) updateData.department = department;
+    if (phone !== undefined) updateData.phone = phone;
+    if (jobTitle !== undefined) updateData.jobTitle = jobTitle;
 
-      return NextResponse.json({ data: user });
-    } catch (dbError) {
-      // Demo mode - return success anyway
-      return NextResponse.json({
-        data: {
-          id,
-          ...body,
-          updatedAt: new Date(),
-        },
-      });
-    }
+    const updatedUser = await db.user.update({
+      where: { id },
+      data: updateData,
+    });
+
+    return successResponse(updatedUser);
   } catch (error) {
     console.error('Error updating user:', error);
-    return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
+    return errorResponse('Failed to update user', 'SERVER_ERROR', 500);
   }
 }
 
-// DELETE - Delete team member
+// DELETE - Soft delete team member (set isActive to false instead of hard delete)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
-    try {
-      await prisma.user.delete({
-        where: { id },
-      });
-    } catch (dbError) {
-      // Demo mode - ignore database error
+    const user = await getUserFromRequest(request);
+    if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+
+    // SECURITY: Only admins can delete team members
+    if (user.role !== 'admin') {
+      return errorResponse('ليس لديك صلاحية حذف أعضاء الفريق', 'FORBIDDEN', 403);
     }
 
-    return NextResponse.json({ success: true });
+    // SECURITY: Prevent self-deletion
+    const { id } = await params;
+    if (id === user.id) {
+      return errorResponse('لا يمكنك حذف حسابك الخاص', 'SELF_DELETE', 400);
+    }
+
+    // SECURITY: Use soft delete (isActive = false) instead of hard delete
+    await db.user.update({
+      where: { id },
+      data: { isActive: false },
+    });
+
+    return successResponse({ message: 'تم حذف عضو الفريق' });
   } catch (error) {
     console.error('Error deleting user:', error);
-    return NextResponse.json({ error: 'Failed to delete user' }, { status: 500 });
+    return errorResponse('Failed to delete user', 'SERVER_ERROR', 500);
   }
 }

@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
+import { getUserFromRequest } from '../utils/demo-config';
 
-const prisma = new PrismaClient();
+function successResponse(data: unknown) { return NextResponse.json({ success: true, data }); }
+function errorResponse(message: string, code = 'ERROR', status = 400) {
+  return NextResponse.json({ success: false, error: { code, message } }, { status });
+}
 
 // GET - Fetch all automations
 export async function GET() {
   try {
-    const automations = await prisma.automation.findMany({
+    const automations = await db.automation.findMany({
       orderBy: { createdAt: 'desc' },
     });
 
@@ -22,7 +26,7 @@ export async function GET() {
           actionType: 'notification',
           actionConfig: { recipients: ['manager', 'admin'], template: 'budget_alert' },
           status: 'active',
-          lastRunAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+          lastRunAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
           runCount: 12,
           createdAt: new Date(),
         },
@@ -35,7 +39,7 @@ export async function GET() {
           actionType: 'email',
           actionConfig: { template: 'task_reminder', includeOverdue: true },
           status: 'active',
-          lastRunAt: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
+          lastRunAt: new Date(Date.now() - 6 * 60 * 60 * 1000),
           runCount: 45,
           createdAt: new Date(),
         },
@@ -44,87 +48,56 @@ export async function GET() {
           name: 'إنشاء تقرير أسبوعي',
           description: 'إنشاء وإرسال تقرير تقدم المشروع أسبوعياً',
           triggerType: 'schedule',
-          triggerConfig: { cron: '0 17 * * 5', timezone: 'Asia/Riyadh' }, // Every Friday 5PM
+          triggerConfig: { cron: '0 17 * * 5', timezone: 'Asia/Riyadh' },
           actionType: 'email',
           actionConfig: { template: 'weekly_report', format: 'pdf' },
           status: 'active',
-          lastRunAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+          lastRunAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
           runCount: 8,
-          createdAt: new Date(),
-        },
-        {
-          id: '4',
-          name: 'نسخ احتياطي تلقائي',
-          description: 'عمل نسخة احتياطية من البيانات يومياً',
-          triggerType: 'schedule',
-          triggerConfig: { cron: '0 2 * * *', timezone: 'Asia/Riyadh' }, // Daily at 2AM
-          actionType: 'webhook',
-          actionConfig: { url: '/api/backup', method: 'POST' },
-          status: 'active',
-          lastRunAt: new Date(Date.now() - 12 * 60 * 60 * 1000), // 12 hours ago
-          runCount: 30,
-          createdAt: new Date(),
-        },
-        {
-          id: '5',
-          name: 'تنبيه انتهاء العقد',
-          description: 'إرسال تنبيه قبل 30 يوم من انتهاء أي عقد',
-          triggerType: 'event',
-          triggerConfig: { event: 'contract_expiring', daysBefore: 30 },
-          actionType: 'notification',
-          actionConfig: { recipients: ['admin', 'legal'], template: 'contract_expiry' },
-          status: 'inactive',
-          lastRunAt: null,
-          runCount: 3,
           createdAt: new Date(),
         },
       ];
 
-      return NextResponse.json({ data: mockAutomations });
+      return successResponse(mockAutomations);
     }
 
-    return NextResponse.json({ data: automations });
+    return successResponse(automations);
   } catch (error) {
     console.error('Error fetching automations:', error);
-    return NextResponse.json({ error: 'Failed to fetch automations' }, { status: 500 });
+    return errorResponse('Failed to fetch automations', 'SERVER_ERROR', 500);
   }
 }
 
 // POST - Create new automation
 export async function POST(request: NextRequest) {
   try {
+    const user = await getUserFromRequest(request);
+    if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+
     const body = await request.json();
-    const { name, description, triggerType, triggerConfig, actionType, actionConfig } = body;
-
-    try {
-      const automation = await prisma.automation.create({
-        data: {
-          name,
-          description,
-          triggerType,
-          triggerConfig,
-          actionType,
-          actionConfig,
-          status: 'inactive',
-          runCount: 0,
-        },
-      });
-
-      return NextResponse.json({ data: automation });
-    } catch (dbError) {
-      // Demo mode - return success anyway
-      return NextResponse.json({
-        data: {
-          id: Date.now().toString(),
-          ...body,
-          status: 'inactive',
-          runCount: 0,
-          createdAt: new Date(),
-        },
-      });
+    if (!body.name || !body.triggerType || !body.actionType) {
+      return errorResponse('الاسم ونوع المشغل ونوع الإجراء مطلوبون', 'VALIDATION_ERROR');
     }
+
+    // SECURITY: Only allow specific fields (prevent mass assignment)
+    const automationData: Record<string, unknown> = {
+      name: body.name,
+      description: body.description || null,
+      triggerType: body.triggerType,
+      triggerConfig: body.triggerConfig || {},
+      actionType: body.actionType,
+      actionConfig: body.actionConfig || {},
+      status: 'inactive',
+      runCount: 0,
+    };
+
+    const automation = await db.automation.create({
+      data: automationData,
+    });
+
+    return successResponse(automation);
   } catch (error) {
     console.error('Error creating automation:', error);
-    return NextResponse.json({ error: 'Failed to create automation' }, { status: 500 });
+    return errorResponse('Failed to create automation', 'SERVER_ERROR', 500);
   }
 }

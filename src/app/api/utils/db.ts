@@ -65,7 +65,7 @@ export async function getDb(): Promise<any> {
       const dbModule = await import('@/lib/db');
       db = dbModule.db;
     } catch (_e) {
-      console.log('Database not available, using demo mode');
+      console.warn('Database not available, using demo mode');
       db = null;
     }
   }
@@ -84,7 +84,7 @@ export async function safeDbOp<T>(
     if (!database) return fallback;
     return await operation(database);
   } catch (_e) {
-    console.log('Database operation failed, using fallback');
+    console.warn('Database operation failed, using fallback');
     return fallback;
   }
 }

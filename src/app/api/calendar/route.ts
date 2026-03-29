@@ -1,17 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
+import { getUserFromRequest } from '../utils/demo-config';
 
-const prisma = new PrismaClient();
+function successResponse(data: unknown) { return NextResponse.json({ success: true, data }); }
+function errorResponse(message: string, code = 'ERROR', status = 400) {
+  return NextResponse.json({ success: false, error: { code, message } }, { status });
+}
 
 // GET - Fetch all calendar events
 export async function GET(request: NextRequest) {
   try {
+    const user = await getUserFromRequest(request);
+    if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
     const type = searchParams.get('type');
 
-    const where: any = {};
+    const where: Record<string, unknown> = {};
+
+    // SECURITY: Filter by organization if available
+    if (user.organizationId) {
+      where.project = { organizationId: user.organizationId };
+    }
 
     if (startDate && endDate) {
       where.startDate = {
@@ -24,7 +36,7 @@ export async function GET(request: NextRequest) {
       where.eventType = type;
     }
 
-    const events = await prisma.calendarEvent.findMany({
+    const events = await db.calendarEvent.findMany({
       where,
       include: {
         project: { select: { id: true, name: true } },
@@ -88,92 +100,52 @@ export async function GET(request: NextRequest) {
           project: { id: '1', name: 'برج الرياض السكني' },
           createdAt: new Date(),
         },
-        {
-          id: '5',
-          title: 'تذكير - تجديد رخصة المقاول',
-          description: 'يجب تجديد رخصة المقاول قبل انتهاء الصلاحية',
-          eventType: 'reminder',
-          startDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 20),
-          endDate: null,
-          allDay: true,
-          location: null,
-          color: '#F97316',
-          project: null,
-          createdAt: new Date(),
-        },
-        {
-          id: '6',
-          title: 'اجتماع فريق التصميم',
-          description: 'مناقشة التصاميم الجديدة للواجهة',
-          eventType: 'meeting',
-          startDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 3, 14, 0),
-          endDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 3, 16, 0),
-          allDay: false,
-          location: 'غرفة التصميم',
-          color: '#EAB308',
-          project: { id: '2', name: 'مجمع جدة الطبي' },
-          createdAt: new Date(),
-        },
       ];
 
-      return NextResponse.json({ data: mockEvents });
+      return successResponse(mockEvents);
     }
 
-    return NextResponse.json({ data: events });
+    return successResponse(events);
   } catch (error) {
     console.error('Error fetching calendar events:', error);
-    return NextResponse.json({ error: 'Failed to fetch events' }, { status: 500 });
+    return errorResponse('Failed to fetch events', 'SERVER_ERROR', 500);
   }
 }
 
 // POST - Create new calendar event
 export async function POST(request: NextRequest) {
   try {
+    const user = await getUserFromRequest(request);
+    if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+
     const body = await request.json();
-    const {
-      title,
-      description,
-      eventType,
-      startDate,
-      endDate,
-      allDay,
-      location,
-      projectId,
-      color,
-    } = body;
-
-    try {
-      const event = await prisma.calendarEvent.create({
-        data: {
-          title,
-          description,
-          eventType: eventType || 'other',
-          startDate: new Date(startDate),
-          endDate: endDate ? new Date(endDate) : null,
-          allDay: allDay ?? true,
-          location,
-          projectId: projectId || null,
-          color,
-        },
-        include: {
-          project: { select: { id: true, name: true } },
-        },
-      });
-
-      return NextResponse.json({ data: event });
-    } catch (dbError) {
-      // Demo mode - return success anyway
-      return NextResponse.json({
-        data: {
-          id: Date.now().toString(),
-          ...body,
-          startDate: new Date(startDate),
-          createdAt: new Date(),
-        },
-      });
+    if (!body.title || !body.startDate) {
+      return errorResponse('العنوان وتاريخ البدء مطلوبان', 'VALIDATION_ERROR');
     }
+
+    // SECURITY: Only allow specific fields (prevent mass assignment)
+    const eventData: Record<string, unknown> = {
+      title: body.title,
+      description: body.description || null,
+      eventType: body.eventType || 'other',
+      startDate: new Date(body.startDate),
+      endDate: body.endDate ? new Date(body.endDate) : null,
+      allDay: body.allDay ?? true,
+      location: body.location || null,
+      projectId: body.projectId || null,
+      color: body.color || null,
+    };
+
+    const event = await db.calendarEvent.create({
+      data: eventData,
+      include: {
+        project: { select: { id: true, name: true } },
+      },
+    });
+
+    return successResponse(event);
   } catch (error) {
     console.error('Error creating calendar event:', error);
-    return NextResponse.json({ error: 'Failed to create event' }, { status: 500 });
+    return errorResponse('Failed to create event', 'SERVER_ERROR', 500);
   }
 }

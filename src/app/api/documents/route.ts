@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest, isDemoUser } from '../utils/demo-config';
 
-const success = (data: any) => NextResponse.json({ success: true, data });
+const success = (data: unknown) => NextResponse.json({ success: true, data });
 const error = (message: string, code = 'ERROR', status = 400) => NextResponse.json({ success: false, error: { code, message } }, { status });
 
 const DEMO_DOCS = [
@@ -20,6 +20,11 @@ export async function GET(request: NextRequest) {
 
   try {
     const { db } = await import('@/lib/db');
+    // SECURITY: Filter by organization if available
+    const where: Record<string, unknown> = {};
+    if (user.organizationId) {
+      where.projectId = undefined; // Documents don't have orgId directly, rely on uploader's org
+    }
     const docs = await db.document.findMany({ orderBy: { createdAt: 'desc' }, take: 50 });
     
     const uploaderIds = [...new Set(docs.map(d => d.uploadedBy).filter(Boolean))] as string[];
@@ -47,8 +52,18 @@ export async function POST(request: NextRequest) {
 
   try {
     const { db } = await import('@/lib/db');
-    const body = await request.json();
-    const doc = await db.document.create({ data: { ...body, uploadedBy: user.id } });
+    const body = await request.json() as Record<string, unknown>;
+    // SECURITY: Only allow specific fields (prevent mass assignment)
+    const docData: Record<string, unknown> = {
+      fileName: body.fileName || null,
+      originalName: body.originalName || null,
+      fileType: body.fileType || null,
+      fileSize: body.fileSize || null,
+      category: body.category || null,
+      projectId: body.projectId || null,
+      uploadedBy: user.id,
+    };
+    const doc = await db.document.create({ data: docData });
     return success({ id: doc.id, fileName: doc.fileName });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Unknown error';

@@ -210,7 +210,9 @@ export const CSP_DIRECTIVES = {
     'data:',
     'blob:',
     'https:',
-    'http:', // Allow HTTP images in development
+    // SECURITY: http: removed from production - prevents mixed content
+    // In development, HTTP images may be needed for testing
+    ...(isDevelopment ? ['http:'] : []),
   ],
   'font-src': [
     "'self'",
@@ -231,7 +233,7 @@ export const CSP_DIRECTIVES = {
   'object-src': ["'none'"],
   'base-uri': ["'self'"],
   'form-action': ["'self'"],
-  'frame-ancestors': ["'none'"],
+  'frame-ancestors': ["'self'"],
   'upgrade-insecure-requests': isProduction ? [] : undefined,
 }
 
@@ -256,7 +258,7 @@ export function generateCSPHeader(): string {
 
 export const SECURITY_HEADERS: Record<string, string> = {
   'X-Content-Type-Options': 'nosniff',
-  'X-Frame-Options': 'DENY', // Changed from SAMEORIGIN to DENY for better clickjacking protection
+  'X-Frame-Options': 'SAMEORIGIN', // Allow same-origin framing for Stripe checkout
   'X-XSS-Protection': '1; mode=block',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
@@ -292,7 +294,8 @@ export const UPLOAD_CONFIG = {
     'image/png',
     'image/gif',
     'image/webp',
-    'image/svg+xml',
+    // SECURITY: SVG removed - SVG files can contain embedded JavaScript (XSS vector)
+    // If SVG support is needed, use a dedicated SVG sanitizer library like DOMPurify
     // Documents
     'application/pdf',
     'application/msword',

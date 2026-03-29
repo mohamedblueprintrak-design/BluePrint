@@ -195,6 +195,8 @@ function CodeBlock({ code, language }: { code: string; language?: string }) {
 // Markdown-like Content Renderer with XSS Protection
 function MessageContent({ content, imageData }: { content: string; imageData?: string }) {
   // SECURITY: Sanitize HTML to prevent XSS attacks
+  // TODO: Replace regex-based sanitizer with DOMPurify (https://github.com/cure53/DOMPurify)
+  // for more robust protection against XSS. Regex-based sanitization can potentially be bypassed.
   // This is a defense-in-depth approach with multiple layers
   const sanitizeHtml = (html: string): string => {
     return html

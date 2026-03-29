@@ -271,7 +271,7 @@ export async function getUserFromRequest(request: NextRequest): Promise<Authenti
         };
       }
     } catch (dbError) {
-      console.log('Database not available for user lookup');
+      console.warn('Database not available for user lookup');
     }
     
     return null;

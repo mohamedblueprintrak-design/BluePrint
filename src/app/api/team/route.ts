@@ -1,16 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
+import { getUserFromRequest } from '../utils/demo-config';
 
-const prisma = new PrismaClient();
+function successResponse(data: unknown) { return NextResponse.json({ success: true, data }); }
+function errorResponse(message: string, code = 'ERROR', status = 400) {
+  return NextResponse.json({ success: false, error: { code, message } }, { status });
+}
 
-// GET - Fetch all team members
+// GET - Fetch team members (scoped to user's organization)
 export async function GET(request: NextRequest) {
   try {
+    const user = await getUserFromRequest(request);
+    if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+
     const { searchParams } = new URL(request.url);
     const role = searchParams.get('role');
     const search = searchParams.get('search');
 
-    const where: any = { isActive: true };
+    // SECURITY: Only fetch users from the same organization
+    const where: Record<string, unknown> = { isActive: true };
+
+    if (user.organizationId) {
+      where.organizationId = user.organizationId;
+    }
 
     if (role && role !== 'all') {
       where.role = role;
@@ -23,7 +35,7 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    const users = await prisma.user.findMany({
+    const users = await db.user.findMany({
       where,
       select: {
         id: true,
@@ -124,21 +136,33 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ data: mockUsers });
     }
 
-    return NextResponse.json({ data: users });
+    return successResponse(users);
   } catch (error) {
     console.error('Error fetching team members:', error);
-    return NextResponse.json({ error: 'Failed to fetch team members' }, { status: 500 });
+    return errorResponse('Failed to fetch team members', 'SERVER_ERROR', 500);
   }
 }
 
-// POST - Create new team member
+// POST - Create new team member (restricted to admins/managers)
 export async function POST(request: NextRequest) {
   try {
+    const user = await getUserFromRequest(request);
+    if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+
+    // SECURITY: Only admins and managers can create team members
+    if (!['admin', 'manager'].includes(user.role)) {
+      return errorResponse('ليس لديك صلاحية إنشاء أعضاء فريق', 'FORBIDDEN', 403);
+    }
+
     const body = await request.json();
     const { fullName, email, role, department, phone, jobTitle } = body;
 
+    if (!email || !fullName) {
+      return errorResponse('البريد الإلكتروني والاسم مطلوبان', 'VALIDATION_ERROR');
+    }
+
     try {
-      const user = await prisma.user.create({
+      const newMember = await db.user.create({
         data: {
           email,
           username: email.split('@')[0],
@@ -153,22 +177,17 @@ export async function POST(request: NextRequest) {
           timezone: 'Asia/Riyadh',
           leaveBalance: 30,
           twoFactorEnabled: false,
+          // SECURITY: Always assign to the same organization as the creator
+          organizationId: user.organizationId || undefined,
         },
       });
 
-      return NextResponse.json({ data: user });
-    } catch (dbError) {
-      // Demo mode - return success anyway
-      return NextResponse.json({
-        data: {
-          id: Date.now().toString(),
-          ...body,
-          createdAt: new Date(),
-        },
-      });
+      return successResponse({ id: newMember.id, email: newMember.email });
+    } catch {
+      return errorResponse('فشل في إنشاء عضو الفريق', 'DB_ERROR', 500);
     }
   } catch (error) {
     console.error('Error creating team member:', error);
-    return NextResponse.json({ error: 'Failed to create team member' }, { status: 500 });
+    return errorResponse('Failed to create team member', 'SERVER_ERROR', 500);
   }
 }

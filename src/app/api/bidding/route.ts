@@ -1,17 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
+import { getUserFromRequest } from '../utils/demo-config';
 
-const prisma = new PrismaClient();
+function successResponse(data: unknown) { return NextResponse.json({ success: true, data }); }
+function errorResponse(message: string, code = 'ERROR', status = 400) {
+  return NextResponse.json({ success: false, error: { code, message } }, { status });
+}
 
 // GET - Fetch all bids
 export async function GET(request: NextRequest) {
   try {
+    const user = await getUserFromRequest(request);
+    if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const type = searchParams.get('type');
     const search = searchParams.get('search');
 
-    const where: any = {};
+    const where: Record<string, unknown> = {};
+
+    // SECURITY: Filter by organization through client if available
+    if (user.organizationId) {
+      where.client = { organizationId: user.organizationId };
+    }
 
     if (status && status !== 'all') {
       where.status = status;
@@ -28,7 +40,7 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    const bids = await prisma.bid.findMany({
+    const bids = await db.bid.findMany({
       where,
       include: {
         client: { select: { id: true, name: true } },
@@ -73,118 +85,54 @@ export async function GET(request: NextRequest) {
           client: { id: '2', name: 'شركة التطوير العقاري' },
           createdAt: new Date(),
         },
-        {
-          id: '3',
-          title: 'إنشاء مستشفى تخصصي',
-          reference: 'TND-2024-022',
-          bidType: 'tender',
-          status: 'won',
-          deadline: '2024-11-01',
-          estimatedValue: 120000000,
-          submittedValue: 115000000,
-          location: 'الدمام',
-          scope: 'إنشاء مستشفى تخصصي بسعة 200 سرير',
-          requirements: [
-            'ترخيص وزارة الصحة',
-            'خبرة في المستشفيات',
-            'التزام بالمواصفات الطبية',
-          ],
-          documentsCount: 8,
-          client: { id: '3', name: 'وزارة الصحة' },
-          createdAt: new Date(),
-        },
-        {
-          id: '4',
-          title: 'صيانة شبكة الطرق',
-          reference: 'RFQ-2024-088',
-          bidType: 'rfq',
-          status: 'lost',
-          deadline: '2024-10-15',
-          estimatedValue: 8000000,
-          location: 'مكة المكرمة',
-          scope: 'صيانة شبكة الطرق الرئيسية',
-          requirements: ['فريق صيانة متخصص', 'معدات حديثة'],
-          documentsCount: 2,
-          client: { id: '4', name: 'أمانة مكة المكرمة' },
-          createdAt: new Date(),
-        },
-        {
-          id: '5',
-          title: 'استشاري هندسي للمشروعات',
-          reference: 'RFI-2024-003',
-          bidType: 'rfi',
-          status: 'open',
-          deadline: '2025-01-15',
-          estimatedValue: 5000000,
-          location: 'الرياض',
-          scope: 'تقديم استشارات هندسية لمشاريع التطوير',
-          requirements: ['مكتب هندسي مرخص', 'خبرة متنوعة'],
-          documentsCount: 1,
-          client: { id: '5', name: 'الهيئة الملكية للرياض' },
-          createdAt: new Date(),
-        },
       ];
 
-      return NextResponse.json({ data: mockBids });
+      return successResponse(mockBids);
     }
 
-    return NextResponse.json({ data: bids });
+    return successResponse(bids);
   } catch (error) {
     console.error('Error fetching bids:', error);
-    return NextResponse.json({ error: 'Failed to fetch bids' }, { status: 500 });
+    return errorResponse('Failed to fetch bids', 'SERVER_ERROR', 500);
   }
 }
 
 // POST - Create new bid
 export async function POST(request: NextRequest) {
   try {
+    const user = await getUserFromRequest(request);
+    if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
+
     const body = await request.json();
-    const {
-      title,
-      reference,
-      clientId,
-      bidType,
-      deadline,
-      estimatedValue,
-      location,
-      scope,
-      requirements,
-    } = body;
-
-    try {
-      const bid = await prisma.bid.create({
-        data: {
-          title,
-          reference,
-          clientId: clientId || null,
-          bidType: bidType || 'tender',
-          status: 'open',
-          deadline: new Date(deadline),
-          estimatedValue,
-          location,
-          scope,
-          requirements: requirements || [],
-          documentsCount: 0,
-        },
-        include: {
-          client: { select: { id: true, name: true } },
-        },
-      });
-
-      return NextResponse.json({ data: bid });
-    } catch (dbError) {
-      // Demo mode - return success anyway
-      return NextResponse.json({
-        data: {
-          id: Date.now().toString(),
-          ...body,
-          status: 'open',
-          createdAt: new Date(),
-        },
-      });
+    if (!body.title || !body.reference) {
+      return errorResponse('العنوان والمرجع مطلوبان', 'VALIDATION_ERROR');
     }
+
+    // SECURITY: Only allow specific fields (prevent mass assignment)
+    const bidData: Record<string, unknown> = {
+      title: body.title,
+      reference: body.reference,
+      clientId: body.clientId || null,
+      bidType: body.bidType || 'tender',
+      status: 'open',
+      deadline: body.deadline ? new Date(body.deadline) : null,
+      estimatedValue: body.estimatedValue || null,
+      location: body.location || null,
+      scope: body.scope || null,
+      requirements: body.requirements || [],
+      documentsCount: 0,
+    };
+
+    const bid = await db.bid.create({
+      data: bidData,
+      include: {
+        client: { select: { id: true, name: true } },
+      },
+    });
+
+    return successResponse(bid);
   } catch (error) {
     console.error('Error creating bid:', error);
-    return NextResponse.json({ error: 'Failed to create bid' }, { status: 500 });
+    return errorResponse('Failed to create bid', 'SERVER_ERROR', 500);
   }
 }

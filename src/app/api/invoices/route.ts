@@ -154,15 +154,9 @@ export async function POST(request: NextRequest) {
         });
 
         if (client?.email) {
-          // Check notification preferences via raw query (NotificationSettings model may not exist)
+          // Default to notifying - NotificationSettings table not in Prisma schema
+          // TODO: Add NotificationSettings model to schema when notification preferences are implemented
           let shouldNotify = true;
-          try {
-            const settings = await db.$queryRawUnsafe(
-              'SELECT emailInvoices FROM NotificationSettings WHERE userId = ? LIMIT 1',
-              [user.id]
-            ) as Array<{ emailInvoices: number }>;
-            if (settings.length > 0) shouldNotify = settings[0].emailInvoices === 1;
-          } catch {}
 
           if (shouldNotify) {
             const formattedDueDate = dueDate 

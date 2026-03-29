@@ -41,7 +41,20 @@ export async function POST(request: NextRequest) {
     const { db } = await import('@/lib/db');
     const body = await request.json();
     if (!body.title || !body.contractNumber) return error('العنوان ورقم العقد مطلوبان');
-    const contract = await db.contract.create({ data: { ...body, organizationId: user.organizationId } });
+    // SECURITY: Only allow specific fields (prevent mass assignment)
+    const contractData: Record<string, unknown> = {
+      title: body.title,
+      contractNumber: body.contractNumber,
+      contractType: body.contractType || null,
+      contractValue: body.contractValue || null,
+      status: body.status || 'pending',
+      startDate: body.startDate ? new Date(body.startDate) : null,
+      endDate: body.endDate ? new Date(body.endDate) : null,
+      description: body.description || null,
+      clientId: body.clientId || null,
+      organizationId: user.organizationId,
+    };
+    const contract = await db.contract.create({ data: contractData });
     return success({ id: contract.id });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Unknown error';
@@ -60,8 +73,20 @@ export async function PUT(request: NextRequest) {
 
   try {
     const { db } = await import('@/lib/db');
-    const { id, ...data } = await request.json();
-    await db.contract.update({ where: { id }, data });
+    const body = await request.json() as Record<string, unknown>;
+    const id = body.id as string;
+    // SECURITY: Only allow updating specific fields (prevent mass assignment)
+    const updateData: Record<string, unknown> = {};
+    if (body.title !== undefined) updateData.title = body.title;
+    if (body.contractNumber !== undefined) updateData.contractNumber = body.contractNumber;
+    if (body.contractType !== undefined) updateData.contractType = body.contractType;
+    if (body.contractValue !== undefined) updateData.contractValue = body.contractValue;
+    if (body.status !== undefined) updateData.status = body.status;
+    if (body.startDate !== undefined) updateData.startDate = body.startDate ? new Date(body.startDate as string) : null;
+    if (body.endDate !== undefined) updateData.endDate = body.endDate ? new Date(body.endDate as string) : null;
+    if (body.description !== undefined) updateData.description = body.description;
+    if (body.clientId !== undefined) updateData.clientId = body.clientId;
+    await db.contract.update({ where: { id }, data: updateData });
     return success({ id });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Unknown error';

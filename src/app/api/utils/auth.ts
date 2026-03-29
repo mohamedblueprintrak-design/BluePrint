@@ -101,7 +101,7 @@ export async function getUserFromToken(request: NextRequest, demoUsers: DemoUser
       });
       return user;
     } catch (_dbError) {
-      console.log('Database not available, using demo mode');
+      console.warn('Database not available, using demo mode');
       return null;
     }
   } catch {

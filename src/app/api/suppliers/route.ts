@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest, isDemoUser } from '../utils/demo-config';
 
-function successResponse(data: any) { return NextResponse.json({ success: true, data }); }
+function successResponse(data: unknown) { return NextResponse.json({ success: true, data }); }
 function errorResponse(message: string, code = 'ERROR', status = 400) {
   return NextResponse.json({ success: false, error: { code, message } }, { status });
 }
@@ -44,7 +44,17 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     if (!body.name) return errorResponse('اسم المورد مطلوب');
 
-    const supplier = await db.supplier.create({ data: { ...body, organizationId: user.organizationId } });
+    // SECURITY: Only allow specific fields (prevent mass assignment)
+    const supplierData: Record<string, unknown> = {
+      name: body.name,
+      email: body.email || null,
+      phone: body.phone || null,
+      contactPerson: body.contactPerson || null,
+      supplierType: body.supplierType || null,
+      rating: body.rating || null,
+      organizationId: user.organizationId,
+    };
+    const supplier = await db.supplier.create({ data: supplierData });
     return successResponse({ id: supplier.id, name: supplier.name });
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : "Unknown error";
@@ -63,8 +73,17 @@ export async function PUT(request: NextRequest) {
 
   try {
     const { db } = await import('@/lib/db');
-    const { id, ...data } = await request.json();
-    const supplier = await db.supplier.update({ where: { id, organizationId: user.organizationId }, data });
+    const body = await request.json() as Record<string, unknown>;
+    const id = body.id as string;
+    // SECURITY: Only allow updating specific fields (prevent mass assignment)
+    const updateData: Record<string, unknown> = {};
+    if (body.name !== undefined) updateData.name = body.name;
+    if (body.email !== undefined) updateData.email = body.email;
+    if (body.phone !== undefined) updateData.phone = body.phone;
+    if (body.contactPerson !== undefined) updateData.contactPerson = body.contactPerson;
+    if (body.supplierType !== undefined) updateData.supplierType = body.supplierType;
+    if (body.rating !== undefined) updateData.rating = body.rating;
+    const supplier = await db.supplier.update({ where: { id, organizationId: user.organizationId }, data: updateData });
     return successResponse(supplier);
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : "Unknown error";

@@ -68,7 +68,7 @@ function checkRateLimit(request: NextRequest, userId?: string): { allowed: boole
 }
 
 // Helper functions
-function successResponse(data: any) {
+function successResponse(data: unknown) {
   return NextResponse.json({ success: true, data });
 }
 
@@ -202,7 +202,7 @@ async function generateImage(prompt: string, size: string = '1024x1024'): Promis
     const zai = await ZAI.create();
     const response = await zai.images.generations.create({
       prompt: prompt,
-      size: size as any
+      size: size as '1024x1024' | '1792x1024' | '1024x1792',
     });
     return response.data?.[0]?.base64 || null;
   } catch (error) {
@@ -418,7 +418,9 @@ export async function POST(request: NextRequest) {
     });
 
     // Extract response
-    let responseContent = (completion as any).choices?.[0]?.message?.content || '';
+    const completionData = completion as Record<string, unknown>;
+    const choices = completionData.choices as Array<Record<string, Record<string, string>>> | undefined;
+    let responseContent = choices?.[0]?.message?.content || '';
     
     // Add image to response if generated
     if (generatedImage) {
@@ -426,7 +428,8 @@ export async function POST(request: NextRequest) {
     }
     
     // Estimate token count (approximate)
-    const tokens = (completion as any).usage?.total_tokens || 
+    const usageData = completionData.usage as Record<string, number> | undefined;
+    const tokens = usageData?.total_tokens || 
       Math.ceil((message.length + responseContent.length) / 4);
 
     return successResponse({
@@ -469,7 +472,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Handle skill-specific requests
-async function handleSkillRequest(skill: string, params: any, user: any): Promise<NextResponse> {
+async function handleSkillRequest(skill: string, params: Record<string, unknown> | undefined, user: { id: string; username: string }): Promise<NextResponse> {
   switch (skill) {
     case 'web_search': {
       const { query, num = 5 } = params || {};

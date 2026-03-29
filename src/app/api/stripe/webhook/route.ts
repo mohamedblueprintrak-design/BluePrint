@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Log the event
+  // Log the event for payment audit trail
   console.log(`Stripe webhook received: ${event.type}`);
 
   try {
@@ -143,8 +143,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
     console.log(`Checkout completed for organization: ${organizationId}`);
   } catch (dbError) {
-    console.log('Database not available, logging event only');
-    console.log('Checkout completed:', { organizationId, planId, sessionId: session.id });
+    console.warn('Database not available, logging event only');
+    console.warn('Checkout completed:', { organizationId, planId, sessionId: session.id });
   }
 }
 
@@ -196,7 +196,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
     console.log(`Subscription updated: ${subscription.id}, status: ${status}`);
   } catch (dbError) {
-    console.log('Database not available, logging event only');
+    console.warn('Database not available, logging event only');
     console.log('Subscription updated:', { subscriptionId: subscription.id, status });
   }
 }
@@ -228,7 +228,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 
     console.log(`Subscription canceled: ${subscription.id}`);
   } catch (dbError) {
-    console.log('Database not available, logging event only');
+    console.warn('Database not available, logging event only');
     console.log('Subscription canceled:', { subscriptionId: subscription.id });
   }
 }
@@ -257,7 +257,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
 
     console.log(`Invoice paid: ${invoice.id}, amount: ${invoice.amount_paid}`);
   } catch (dbError) {
-    console.log('Database not available, logging event only');
+    console.warn('Database not available, logging event only');
     console.log('Invoice paid:', { invoiceId: invoice.id, amount: invoice.amount_paid });
   }
 }
@@ -292,7 +292,7 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
 
     console.log(`Invoice payment failed: ${invoice.id}`);
   } catch (dbError) {
-    console.log('Database not available, logging event only');
+    console.warn('Database not available, logging event only');
     console.log('Invoice payment failed:', { invoiceId: invoice.id });
   }
 }
