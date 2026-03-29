@@ -9,6 +9,7 @@ import { NextRequest } from 'next/server';
 import { getUserFromRequest, isDemoUser, DEMO_DATA } from '../utils/demo-config';
 import { successResponse, errorResponse, unauthorizedResponse, serverErrorResponse } from '../utils/response';
 import { projectService } from '@/lib/services';
+import { cachedQuery, invalidateCache, buildCacheKey, CACHE_TTL } from '@/lib/cache/query-cache';
 
 /**
  * GET - List projects with pagination and filtering
@@ -64,10 +65,15 @@ export async function GET(request: NextRequest) {
 
   // Real database queries for actual users
   try {
-    const result = await projectService.getProjects(
-      user.organizationId,
-      { status, search },
-      { page, limit }
+    const cacheKey = buildCacheKey('projects', 'list', user.organizationId, 'p', String(page), 'l', String(limit), 's', status || '', 'q', search || '');
+    const result = await cachedQuery(
+      cacheKey,
+      () => projectService.getProjects(
+        user.organizationId!,
+        { status, search },
+        { page, limit }
+      ),
+      CACHE_TTL.PROJECTS
     );
 
     return successResponse(
@@ -132,6 +138,9 @@ export async function POST(request: NextRequest) {
       projectNumber: project.projectNumber,
       name: project.name
     });
+
+    // Invalidate project caches on creation
+    await invalidateCache('projects');
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : 'Unknown error';
     return serverErrorResponse(errMsg);

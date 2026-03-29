@@ -22,6 +22,7 @@ import {
 } from '../utils/response';
 import { taskService, TaskAccessError } from '@/lib/services/task.service';
 import { prisma } from '@/lib/db';
+import { cachedQuery, invalidateCache, buildCacheKey, CACHE_TTL } from '@/lib/cache/query-cache';
 
 /**
  * GET - List tasks
@@ -53,10 +54,15 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const result = await taskService.getTasks(
-      user.organizationId,
-      { projectId, status, priority },
-      {}
+    const cacheKey = buildCacheKey('tasks', 'list', user.organizationId || '', 'pid', projectId || '', 's', status || '', 'pr', priority || '');
+    const result = await cachedQuery(
+      cacheKey,
+      () => taskService.getTasks(
+        user.organizationId!,
+        { projectId, status, priority },
+        {}
+      ),
+      CACHE_TTL.TASKS
     );
 
     return successResponse(result.data.map(t => ({
@@ -175,6 +181,9 @@ export async function POST(request: NextRequest) {
     }
 
     return successResponse({ id: task.id, title: task.title });
+
+    // Invalidate task and project caches on creation
+    await invalidateCache('tasks', 'projects');
   } catch (error) {
     if (error instanceof TaskAccessError) {
       return notFoundResponse(error.message);
@@ -274,6 +283,9 @@ export async function PUT(request: NextRequest) {
     }
 
     const task = await taskService.updateTask(id, updateData, user.organizationId, user.id);
+    
+    // Invalidate task and project caches on update
+    await invalidateCache('tasks', 'projects');
     return successResponse(task);
   } catch (error) {
     if (error instanceof TaskAccessError) {
@@ -308,6 +320,9 @@ export async function DELETE(request: NextRequest) {
     }
 
     await taskService.deleteTask(id, user.organizationId, user.id);
+    
+    // Invalidate task and project caches on delete
+    await invalidateCache('tasks', 'projects');
     return successResponse({ message: 'تم حذف المهمة' });
   } catch (error) {
     if (error instanceof TaskAccessError) {

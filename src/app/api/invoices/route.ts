@@ -16,6 +16,7 @@ import {
 } from '../utils/response';
 import { invoiceService } from '@/lib/services';
 import { prisma } from '@/lib/db';
+import { cachedQuery, invalidateCache, buildCacheKey, CACHE_TTL } from '@/lib/cache/query-cache';
 
 // Demo invoices
 const DEMO_INVOICES = [
@@ -81,10 +82,15 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const result = await invoiceService.getInvoices(
-      user.organizationId!,
-      { status },
-      {}
+    const cacheKey = buildCacheKey('invoices', 'list', user.organizationId || '', 's', status || '');
+    const result = await cachedQuery(
+      cacheKey,
+      () => invoiceService.getInvoices(
+        user.organizationId!,
+        { status },
+        {}
+      ),
+      CACHE_TTL.INVOICES
     );
 
     return successResponse(result.data.map(i => ({
@@ -184,6 +190,9 @@ export async function POST(request: NextRequest) {
     }
 
     return successResponse({ id: invoice.id, invoiceNumber: invoice.invoiceNumber, total: invoice.total });
+
+    // Invalidate invoice caches on creation
+    await invalidateCache('invoices', 'projects');
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : 'Unknown error';
     return serverErrorResponse(errMsg);
@@ -228,6 +237,9 @@ export async function PUT(request: NextRequest) {
     }
 
     return successResponse(invoice);
+
+    // Invalidate invoice caches on update
+    await invalidateCache('invoices', 'projects');
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : 'Unknown error';
     return serverErrorResponse(errMsg);
@@ -257,6 +269,9 @@ export async function DELETE(request: NextRequest) {
     }
 
     await invoiceService.deleteInvoice(id, user.organizationId, user.id);
+    
+    // Invalidate invoice caches on delete
+    await invalidateCache('invoices', 'projects');
     return successResponse({ message: 'تم حذف الفاتورة' });
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : 'Unknown error';

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as jose from 'jose'
 import { getJWTSecret } from '@/app/api/utils/auth';;
+import { cachedQuery, invalidateCache, buildCacheKey, CACHE_TTL } from '@/lib/cache/query-cache';
 
 // Dynamic database import to avoid failures when DB is not available
 let db: any = null;
@@ -282,94 +283,103 @@ export async function GET(request: NextRequest) {
           return successResponse(getDemoFinancialSummary(start!, end!));
         }
 
-        // Get all invoices within date range
-        const invoices = await database.invoice.findMany({
-          where: {
-            organizationId: user.organizationId,
-            issueDate: {
-              gte: start,
-              lte: end
-            }
+        const reportCacheKey = buildCacheKey('reports', 'financial', user.organizationId, start!.toISOString(), end!.toISOString());
+        const reportData = await cachedQuery(
+          reportCacheKey,
+          async () => {
+            // Get all invoices within date range
+            const invoices = await database.invoice.findMany({
+              where: {
+                organizationId: user.organizationId,
+                issueDate: {
+                  gte: start,
+                  lte: end
+                }
+              },
+              include: { payments: true }
+            });
+
+            // Get payments within date range
+            const payments = await database.payment.findMany({
+              where: {
+                paymentDate: {
+                  gte: start,
+                  lte: end
+                },
+                invoice: { organizationId: user.organizationId }
+              }
+            });
+
+            // Generate month labels
+            const labels = generateMonthLabels(start!, end!);
+            
+            // Calculate monthly data
+            const invoicedData: number[] = [];
+            const paidData: number[] = [];
+            const pendingData: number[] = [];
+            const overdueData: number[] = [];
+
+            labels.forEach((label, _index) => {
+              const [monthName, year] = label.split(' ');
+              const monthIndex = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(monthName);
+              
+              const monthStart = new Date(parseInt(year), monthIndex, 1);
+              const monthEnd = new Date(parseInt(year), monthIndex + 1, 0, 23, 59, 59, 999);
+
+              // Invoiced this month
+              const monthInvoices = invoices.filter((inv: any) => {
+                const issueDate = new Date(inv.issueDate);
+                return issueDate >= monthStart && issueDate <= monthEnd;
+              });
+              const invoiced = monthInvoices.reduce((sum: number, inv: any) => sum + (inv.total || 0), 0);
+              invoicedData.push(invoiced);
+
+              // Paid this month
+              const monthPayments = payments.filter((p: any) => {
+                const paymentDate = new Date(p.paymentDate);
+                return paymentDate >= monthStart && paymentDate <= monthEnd;
+              });
+              const paid = monthPayments.reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
+              paidData.push(paid);
+
+              // Pending at end of month
+              const pending = invoiced - paid;
+              pendingData.push(Math.max(0, pending));
+
+              // Overdue (invoices past due date with unpaid amount)
+              const overdueInvoices = monthInvoices.filter((inv: any) => {
+                const dueDate = new Date(inv.dueDate);
+                return dueDate < monthEnd && inv.paidAmount < inv.total;
+              });
+              const overdue = overdueInvoices.reduce((sum: number, inv: any) => sum + (inv.total - inv.paidAmount), 0);
+              overdueData.push(overdue);
+            });
+
+            const totalInvoiced = invoicedData.reduce((a, b) => a + b, 0);
+            const totalPaid = paidData.reduce((a, b) => a + b, 0);
+            const totalPending = pendingData.reduce((a, b) => a + b, 0);
+            const totalOverdue = overdueData.reduce((a, b) => a + b, 0);
+
+            return {
+              labels,
+              datasets: [
+                { label: 'Invoiced', data: invoicedData },
+                { label: 'Paid', data: paidData },
+                { label: 'Pending', data: pendingData },
+                { label: 'Overdue', data: overdueData }
+              ],
+              summary: {
+                totalInvoiced,
+                totalPaid,
+                totalPending,
+                totalOverdue
+              }
+            };
           },
-          include: { payments: true }
-        });
+          CACHE_TTL.REPORTS
+        );
 
-        // Get payments within date range
-        const payments = await database.payment.findMany({
-          where: {
-            paymentDate: {
-              gte: start,
-              lte: end
-            },
-            invoice: { organizationId: user.organizationId }
-          }
-        });
-
-        // Generate month labels
-        const labels = generateMonthLabels(start!, end!);
-        
-        // Calculate monthly data
-        const invoicedData: number[] = [];
-        const paidData: number[] = [];
-        const pendingData: number[] = [];
-        const overdueData: number[] = [];
-
-        labels.forEach((label, _index) => {
-          const [monthName, year] = label.split(' ');
-          const monthIndex = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(monthName);
-          
-          const monthStart = new Date(parseInt(year), monthIndex, 1);
-          const monthEnd = new Date(parseInt(year), monthIndex + 1, 0, 23, 59, 59, 999);
-
-          // Invoiced this month
-          const monthInvoices = invoices.filter((inv: any) => {
-            const issueDate = new Date(inv.issueDate);
-            return issueDate >= monthStart && issueDate <= monthEnd;
-          });
-          const invoiced = monthInvoices.reduce((sum: number, inv: any) => sum + (inv.total || 0), 0);
-          invoicedData.push(invoiced);
-
-          // Paid this month
-          const monthPayments = payments.filter((p: any) => {
-            const paymentDate = new Date(p.paymentDate);
-            return paymentDate >= monthStart && paymentDate <= monthEnd;
-          });
-          const paid = monthPayments.reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
-          paidData.push(paid);
-
-          // Pending at end of month
-          const pending = invoiced - paid;
-          pendingData.push(Math.max(0, pending));
-
-          // Overdue (invoices past due date with unpaid amount)
-          const overdueInvoices = monthInvoices.filter((inv: any) => {
-            const dueDate = new Date(inv.dueDate);
-            return dueDate < monthEnd && inv.paidAmount < inv.total;
-          });
-          const overdue = overdueInvoices.reduce((sum: number, inv: any) => sum + (inv.total - inv.paidAmount), 0);
-          overdueData.push(overdue);
-        });
-
-        const totalInvoiced = invoicedData.reduce((a, b) => a + b, 0);
-        const totalPaid = paidData.reduce((a, b) => a + b, 0);
-        const totalPending = pendingData.reduce((a, b) => a + b, 0);
-        const totalOverdue = overdueData.reduce((a, b) => a + b, 0);
-
-        return successResponse({
-          labels,
-          datasets: [
-            { label: 'Invoiced', data: invoicedData },
-            { label: 'Paid', data: paidData },
-            { label: 'Pending', data: pendingData },
-            { label: 'Overdue', data: overdueData }
-          ],
-          summary: {
-            totalInvoiced,
-            totalPaid,
-            totalPending,
-            totalOverdue
-          }
-        });
+        return successResponse(reportData);
       }
 
       case 'project-status': {

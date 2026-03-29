@@ -15,6 +15,7 @@ import {
   validationErrorResponse
 } from '../utils/response';
 import { prisma } from '@/lib/db';
+import { cachedQuery, invalidateCache, buildCacheKey, CACHE_TTL } from '@/lib/cache/query-cache';
 
 /**
  * GET - List clients
@@ -38,13 +39,18 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const clients = await prisma.client.findMany({
-      where: { 
-        isActive: true,
-        organizationId: user.organizationId 
-      },
-      orderBy: { createdAt: 'desc' }
-    });
+    const cacheKey = buildCacheKey('clients', 'list', user.organizationId || '');
+    const clients = await cachedQuery(
+      cacheKey,
+      () => prisma.client.findMany({
+        where: { 
+          isActive: true,
+          organizationId: user.organizationId 
+        },
+        orderBy: { createdAt: 'desc' }
+      }),
+      CACHE_TTL.CLIENTS
+    );
     
     return successResponse(clients.map(c => ({
       id: c.id,
@@ -108,6 +114,9 @@ export async function POST(request: NextRequest) {
     });
 
     return successResponse({ id: client.id, name: client.name });
+
+    // Invalidate client caches on creation
+    await invalidateCache('clients');
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : 'Unknown error';
     return serverErrorResponse(errMsg);
@@ -145,6 +154,9 @@ export async function PUT(request: NextRequest) {
     });
 
     return successResponse(client);
+
+    // Invalidate client caches on update
+    await invalidateCache('clients');
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : 'Unknown error';
     return serverErrorResponse(errMsg);
@@ -179,6 +191,9 @@ export async function DELETE(request: NextRequest) {
     });
 
     return successResponse({ message: 'تم حذف العميل' });
+
+    // Invalidate client caches on delete
+    await invalidateCache('clients');
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : 'Unknown error';
     return serverErrorResponse(errMsg);
