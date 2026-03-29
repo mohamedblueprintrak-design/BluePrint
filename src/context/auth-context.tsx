@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
 import { User, Organization, ApiResponse, LoginForm, RegisterForm, UserRole, Permission, ROLE_PERMISSIONS as CANONICAL_ROLE_PERMISSIONS } from '@/types';
 
 // Legacy permission name mapping (backward compatibility with old-style permissions)
@@ -106,6 +106,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  // Use ref to always have current token value in intervals (fixes stale closure bug)
+  const tokenRef = useRef<string | null>(null);
 
   // Load auth state from localStorage or cookies
   useEffect(() => {
@@ -146,6 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         setToken(storedToken);
+        tokenRef.current = storedToken;
         try {
           const parsedUser = JSON.parse(storedUser);
           setUser(parsedUser);
@@ -174,13 +177,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!token) return;
 
     const refreshInterval = setInterval(async () => {
-      if (isTokenExpiringSoon(token)) {
+      // Use tokenRef.current to get the latest token (fixes stale closure bug)
+      const currentToken = tokenRef.current;
+      if (!currentToken || isTokenExpiringSoon(currentToken)) {
         try {
           const response = await fetch('/api/auth', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
+              'Authorization': `Bearer ${currentToken}`
             },
             body: JSON.stringify({ action: 'refresh' })
           });
@@ -189,6 +194,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (result.success && result.data?.accessToken) {
             const newToken = result.data.accessToken;
             setToken(newToken);
+            tokenRef.current = newToken;
             localStorage.setItem(AUTH_TOKEN_KEY, newToken);
           }
         } catch (error) {
@@ -221,6 +227,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (result.success) {
         const newToken = result.data.token;
         setToken(newToken);
+        tokenRef.current = newToken;
         localStorage.setItem(AUTH_TOKEN_KEY, newToken);
 
         // Fetch user data
@@ -307,6 +314,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setOrganization(null);
       setToken(null);
+      tokenRef.current = null;
       localStorage.removeItem(AUTH_TOKEN_KEY);
       localStorage.removeItem(AUTH_USER_KEY);
       localStorage.removeItem(AUTH_ORG_KEY);

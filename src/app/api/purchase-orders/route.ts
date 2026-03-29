@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import * as jose from 'jose';
+import * as jose from 'jose'
+import { getJWTSecret } from '@/app/api/utils/auth';;
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters');
 
 async function getUser(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
@@ -10,7 +10,7 @@ async function getUser(request: NextRequest) {
   let token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : tokenCookie;
   if (!token) return null;
   try {
-    const { payload } = await jose.jwtVerify(token, JWT_SECRET);
+    const { payload } = await jose.jwtVerify(token, getJWTSecret());
     return await db.user.findUnique({ where: { id: payload.userId as string } });
   } catch { return null; }
 }

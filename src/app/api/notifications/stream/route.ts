@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import * as jose from 'jose';
+import * as jose from 'jose'
+import { getJWTSecret } from '@/app/api/utils/auth';;
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters');
 
 // Check if user is authenticated
 async function getUserFromToken(request: NextRequest) {
@@ -9,7 +9,7 @@ async function getUserFromToken(request: NextRequest) {
   if (!token) return null;
   
   try {
-    const { payload } = await jose.jwtVerify(token, JWT_SECRET);
+    const { payload } = await jose.jwtVerify(token, getJWTSecret());
     return { id: payload.userId as string };
   } catch {
     return null;

@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
       title: t.title,
       description: t.description,
       projectId: t.projectId,
-      project: (t as any).project?.name,
+      project: (t as { project?: { name?: string } }).project?.name,
       assignedTo: t.assignedTo,
       priority: t.priority,
       status: t.status,

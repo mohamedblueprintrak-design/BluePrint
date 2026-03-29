@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import * as jose from 'jose';
+import * as jose from 'jose'
+import { getJWTSecret } from '@/app/api/utils/auth';;
 import { getDb, DEMO_USERS } from '@/app/api/utils/db';
 import { errorResponse } from '@/app/api/utils/response';
 
@@ -31,7 +32,6 @@ import {
 } from '@/lib/excel-generator';
 
 // JWT secret
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters');
 
 // Get user from token
 async function getUserFromToken(request: NextRequest) {
@@ -41,7 +41,7 @@ async function getUserFromToken(request: NextRequest) {
   const token = authHeader.substring(7);
   
   try {
-    const { payload } = await jose.jwtVerify(token, JWT_SECRET);
+    const { payload } = await jose.jwtVerify(token, getJWTSecret());
     const userId = payload.userId as string;
     
     // Check demo users

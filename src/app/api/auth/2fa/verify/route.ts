@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       email: user.email,
       username: user.username,
-      role: user.role as any,
+      role: user.role as string,
       organizationId: user.organizationId || undefined,
     });
 

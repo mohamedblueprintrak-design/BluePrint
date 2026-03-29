@@ -109,11 +109,16 @@ export async function PUT(request: NextRequest) {
 
     if (sendNotification !== false && leaveRequest.user?.email) {
       try {
-        const notificationSettings = await (db as any).notificationSettings?.findUnique({
-          where: { userId: leaveRequest.userId }
-        });
+        let shouldNotify = true;
+        try {
+          const settings = await db.$queryRawUnsafe(
+            'SELECT emailLeaves FROM NotificationSettings WHERE userId = ? LIMIT 1',
+            [leaveRequest.userId]
+          ) as Array<{ emailLeaves: number }>;
+          if (settings.length > 0) shouldNotify = settings[0].emailLeaves === 1;
+        } catch {}
 
-        if (!notificationSettings || notificationSettings.emailLeaves) {
+        if (shouldNotify) {
           const startDate = leaveRequest.startDate.toLocaleDateString('ar-AE', { year: 'numeric', month: 'long', day: 'numeric' });
           const endDate = leaveRequest.endDate.toLocaleDateString('ar-AE', { year: 'numeric', month: 'long', day: 'numeric' });
 

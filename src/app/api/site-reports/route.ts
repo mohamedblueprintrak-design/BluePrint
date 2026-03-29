@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import * as jose from 'jose';
+import * as jose from 'jose'
+import { getJWTSecret } from '@/app/api/utils/auth';;
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters');
 
 async function getUser(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
   if (!authHeader?.startsWith('Bearer ')) return null;
   try {
-    const { payload } = await jose.jwtVerify(authHeader.substring(7), JWT_SECRET);
+    const { payload } = await jose.jwtVerify(authHeader.substring(7), getJWTSecret());
     return await db.user.findUnique({ where: { id: payload.userId as string }, include: { organization: true } });
   } catch { return null; }
 }

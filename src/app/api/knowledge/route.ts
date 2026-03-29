@@ -1,22 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { getJWTSecret } from '@/app/api/utils/auth';
 import * as jose from 'jose';
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters');
+// Helper responses
+const success = (data: unknown) => NextResponse.json({ success: true, data });
+const error = (message: string, code = 'ERROR', status = 400) => NextResponse.json({ success: false, error: { code, message } }, { status });
 
 async function getUser(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
   const tokenCookie = request.cookies.get('bp_token')?.value;
-  let token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : tokenCookie;
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : tokenCookie;
   if (!token) return null;
   try {
-    const { payload } = await jose.jwtVerify(token, JWT_SECRET);
+    const payload = await jose.jwtVerify(token, getJWTSecret());
     return await db.user.findUnique({ where: { id: payload.userId as string } });
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
-
-const success = (data: any) => NextResponse.json({ success: true, data });
-const error = (message: string, code = 'ERROR', status = 400) => NextResponse.json({ success: false, error: { code, message } }, { status });
 
 const DEMO_ARTICLES = [
   { id: 'kb-001', title: 'دليل استخدام النظام', category: 'guide', content: '# دليل استخدام نظام BluePrint\n\n## البداية\n\nهذا الدليل يساعدك على...', isPublished: true, viewCount: 150, helpfulCount: 45, createdAt: new Date().toISOString() },
@@ -33,13 +35,6 @@ export async function GET(request: NextRequest) {
   const id = searchParams.get('id');
   
   try {
-    const whereClause: any = { isPublished: true };
-    if (category) whereClause.category = category;
-    if (search) whereClause.OR = [
-      { title: { contains: search, mode: 'insensitive' } },
-      { content: { contains: search, mode: 'insensitive' } }
-    ];
-    
     if (id) {
       const article = await db.knowledgeArticle.findUnique({ where: { id } });
       if (article) {
@@ -48,6 +43,15 @@ export async function GET(request: NextRequest) {
       }
       const demo = DEMO_ARTICLES.find(a => a.id === id);
       return success(demo || null);
+    }
+
+    const whereClause: Record<string, unknown> = { isPublished: true };
+    if (category) whereClause.category = category;
+    if (search) {
+      (whereClause as Record<string, unknown>).OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { content: { contains: search, mode: 'insensitive' } }
+      ];
     }
     
     const articles = await db.knowledgeArticle.findMany({
@@ -59,8 +63,8 @@ export async function GET(request: NextRequest) {
     });
     
     return success(articles);
-  } catch (e) {
-    console.log('Knowledge base fetch error:', e);
+  } catch (_e) {
+    // Fallback to demo articles when DB is not available
     let filtered = DEMO_ARTICLES.filter(a => a.isPublished);
     if (category) filtered = filtered.filter(a => a.category === category);
     if (search) filtered = filtered.filter(a => 
@@ -94,6 +98,7 @@ export async function POST(request: NextRequest) {
       });
       return success(article);
     } catch (dbError) {
+      // Fallback to demo mode when DB is unavailable
       return success({
         id: `kb-${Date.now()}`,
         title,
@@ -114,7 +119,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   const user = await getUser(request);
-  if (!user) return error('غير مصدق', 'UNAUTHORIZED', 401);
+  if (!user) return error('غير مصرح', 'UNAUTHORIZED', 401);
   
   try {
     const body = await request.json();
@@ -122,7 +127,8 @@ export async function PUT(request: NextRequest) {
     
     if (!id) return error('معرف المقالة مطلوب');
     
-    const updateData: any = {};
+    // Build update data without 'any'
+    const updateData: Record<string, unknown> = {};
     if (title) updateData.title = title;
     if (content) updateData.content = content;
     if (category) updateData.category = category;
@@ -144,7 +150,7 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   const user = await getUser(request);
-  if (!user) return error('غير مصدق', 'UNAUTHORIZED', 401);
+  if (!user) return error('غير مصرح', 'UNAUTHORIZED', 401);
   
   try {
     const { searchParams } = new URL(request.url);

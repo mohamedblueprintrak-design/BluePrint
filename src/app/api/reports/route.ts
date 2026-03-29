@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import * as jose from 'jose';
+import * as jose from 'jose'
+import { getJWTSecret } from '@/app/api/utils/auth';;
 
 // Dynamic database import to avoid failures when DB is not available
 let db: any = null;
@@ -17,7 +18,6 @@ async function getDb() {
 }
 
 // Security: JWT secret must come from environment only
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters');
 
 // Helper functions
 function successResponse(data: any, meta?: any) {
@@ -46,7 +46,7 @@ async function getUserFromToken(request: NextRequest) {
   if (!token) return null;
   
   try {
-    const { payload } = await jose.jwtVerify(token, JWT_SECRET);
+    const { payload } = await jose.jwtVerify(token, getJWTSecret());
     const userId = payload.userId as string;
     
     // Try database

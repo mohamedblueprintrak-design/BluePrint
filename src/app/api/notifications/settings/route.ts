@@ -1,26 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { getJWTSecret } from '@/app/api/utils/auth';
 import * as jose from 'jose';
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters');
+// Type for notification settings
+interface NotificationSettingsData {
+  id?: string;
+  userId: string;
+  emailInvoices: boolean;
+  emailTasks: boolean;
+  emailLeaves: boolean;
+  emailProjects: boolean;
+  emailPayments: boolean;
+  pushEnabled: boolean;
+  pushTasks: boolean;
+  pushLeaves: boolean;
+  pushProjects: boolean;
+  digestEmail: boolean;
+  [key: string]: unknown;
+}
+
+// Whitelist of allowed notification setting column names (prevent SQL column injection)
+const ALLOWED_COLUMNS = new Set([
+  'emailInvoices', 'emailTasks', 'emailLeaves', 'emailProjects',
+  'emailPayments', 'pushEnabled', 'pushTasks', 'pushLeaves',
+  'pushProjects', 'digestEmail'
+]);
 
 async function getUserFromToken(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) return null;
-  
-  const token = authHeader.substring(7);
+  const tokenCookie = request.cookies.get('bp_token')?.value;
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : tokenCookie;
+  if (!token) return null;
   try {
-    const { payload } = await jose.jwtVerify(token, JWT_SECRET);
+    const { payload } = await jose.jwtVerify(token, getJWTSecret());
     return await db.user.findUnique({ 
       where: { id: payload.userId as string },
-      include: { organization: true }
     });
   } catch {
     return null;
   }
 }
 
-function successResponse(data: any) {
+function successResponse(data: unknown) {
   return NextResponse.json({ success: true, data });
 }
 
@@ -45,49 +67,94 @@ const DEFAULT_SETTINGS = {
   digestEmail: false,
 };
 
+// Helper to safely query NotificationSettings model
+async function findNotificationSettings(userId: string): Promise<NotificationSettingsData | null> {
+  try {
+    const result = await db.$queryRawUnsafe(
+      'SELECT * FROM NotificationSettings WHERE userId = ? LIMIT 1',
+      [userId]
+    ) as NotificationSettingsData[];
+    return result?.[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// Helper to safely upsert NotificationSettings
+async function upsertNotificationSettings(
+  userId: string,
+  updateData: Record<string, unknown>,
+  createData: Record<string, unknown>
+): Promise<NotificationSettingsData | null> {
+  try {
+    const existing = await findNotificationSettings(userId);
+    
+    // SECURITY: Filter to only allowed columns to prevent SQL injection
+    const safeUpdate = Object.fromEntries(
+      Object.entries(updateData).filter(([k]) => ALLOWED_COLUMNS.has(k))
+    );
+    const safeCreate = Object.fromEntries(
+      Object.entries(createData).filter(([k]) => ALLOWED_COLUMNS.has(k))
+    );
+    
+    if (existing) {
+      const entries = Object.entries(safeUpdate);
+      if (entries.length > 0) {
+        const fields = entries.map(([k]) => `"${k}" = ?`).join(', ');
+        await db.$executeRawUnsafe(
+          `UPDATE NotificationSettings SET ${fields} WHERE userId = ?`,
+          [...entries.map(([, v]) => v), userId]
+        );
+        return { ...existing, ...safeUpdate } as NotificationSettingsData;
+      }
+      return existing;
+    } else {
+      const entries = Object.entries(safeCreate);
+      if (entries.length > 0) {
+        const cols = entries.map(([k]) => `"${k}"`).join(', ');
+        const placeholders = entries.map(() => '?').join(', ');
+        await db.$executeRawUnsafe(
+          `INSERT INTO NotificationSettings ("userId", ${cols}) VALUES (?, ${placeholders})`,
+          [userId, ...entries.map(([, v]) => v)]
+        );
+      }
+      return { userId, ...safeCreate } as NotificationSettingsData;
+    }
+  } catch {
+    return null;
+  }
+}
+
 // GET - Get user notification settings
 export async function GET(request: NextRequest) {
   const user = await getUserFromToken(request);
   if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
 
   try {
-    try {
-      const settings = await (db as any).notificationSettings?.findUnique({
-        where: { userId: user.id }
-      });
+    const settings = await findNotificationSettings(user.id);
 
-      if (!settings) {
-        // Return default settings if none exist
-        return successResponse({
-          ...DEFAULT_SETTINGS,
-          userId: user.id,
-          isNew: true
-        });
-      }
-
-      return successResponse({
-        id: settings.id,
-        userId: settings.userId,
-        emailInvoices: settings.emailInvoices,
-        emailTasks: settings.emailTasks,
-        emailLeaves: settings.emailLeaves,
-        emailProjects: settings.emailProjects,
-        emailPayments: settings.emailPayments,
-        pushEnabled: settings.pushEnabled,
-        pushTasks: settings.pushTasks,
-        pushLeaves: settings.pushLeaves,
-        pushProjects: settings.pushProjects,
-        digestEmail: settings.digestEmail,
-      });
-    } catch (_dbError) {
-      // Demo mode - return default settings
+    if (!settings) {
       return successResponse({
         ...DEFAULT_SETTINGS,
         userId: user.id,
-        isNew: true,
-        message: 'إعدادات الإشعارات (وضع تجريبي)'
+        isNew: true
       });
     }
+
+    return successResponse({
+      id: settings.id,
+      userId: settings.userId,
+      emailInvoices: settings.emailInvoices,
+      emailTasks: settings.emailTasks,
+      emailLeaves: settings.emailLeaves,
+      emailProjects: settings.emailProjects,
+      emailPayments: settings.emailPayments,
+      pushEnabled: settings.pushEnabled,
+      pushTasks: settings.pushTasks,
+      pushLeaves: settings.pushLeaves,
+      pushProjects: settings.pushProjects,
+      digestEmail: settings.digestEmail,
+    });
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : "Unknown error";
     return errorResponse(errMsg, 'SERVER_ERROR', 500);
@@ -114,69 +181,58 @@ export async function PUT(request: NextRequest) {
       digestEmail,
     } = body;
 
-    try {
-      // Upsert settings
-      const settings = await (db as any).notificationSettings?.upsert({
-        where: { userId: user.id },
-        update: {
-          emailInvoices: emailInvoices ?? undefined,
-          emailTasks: emailTasks ?? undefined,
-          emailLeaves: emailLeaves ?? undefined,
-          emailProjects: emailProjects ?? undefined,
-          emailPayments: emailPayments ?? undefined,
-          pushEnabled: pushEnabled ?? undefined,
-          pushTasks: pushTasks ?? undefined,
-          pushLeaves: pushLeaves ?? undefined,
-          pushProjects: pushProjects ?? undefined,
-          digestEmail: digestEmail ?? undefined,
-        },
-        create: {
-          userId: user.id,
-          emailInvoices: emailInvoices ?? true,
-          emailTasks: emailTasks ?? true,
-          emailLeaves: emailLeaves ?? true,
-          emailProjects: emailProjects ?? true,
-          emailPayments: emailPayments ?? true,
-          pushEnabled: pushEnabled ?? false,
-          pushTasks: pushTasks ?? true,
-          pushLeaves: pushLeaves ?? true,
-          pushProjects: pushProjects ?? true,
-          digestEmail: digestEmail ?? false,
-        }
-      });
+    const updateData: Record<string, unknown> = {
+      emailInvoices: emailInvoices ?? undefined,
+      emailTasks: emailTasks ?? undefined,
+      emailLeaves: emailLeaves ?? undefined,
+      emailProjects: emailProjects ?? undefined,
+      emailPayments: emailPayments ?? undefined,
+      pushEnabled: pushEnabled ?? undefined,
+      pushTasks: pushTasks ?? undefined,
+      pushLeaves: pushLeaves ?? undefined,
+      pushProjects: pushProjects ?? undefined,
+      digestEmail: digestEmail ?? undefined,
+    };
 
-      return successResponse({
-        id: settings.id,
-        userId: settings.userId,
-        emailInvoices: settings.emailInvoices,
-        emailTasks: settings.emailTasks,
-        emailLeaves: settings.emailLeaves,
-        emailProjects: settings.emailProjects,
-        emailPayments: settings.emailPayments,
-        pushEnabled: settings.pushEnabled,
-        pushTasks: settings.pushTasks,
-        pushLeaves: settings.pushLeaves,
-        pushProjects: settings.pushProjects,
-        digestEmail: settings.digestEmail,
-        message: 'تم تحديث إعدادات الإشعارات'
-      });
-    } catch (_dbError) {
-      // Demo mode
+    const createData: Record<string, unknown> = {
+      userId: user.id,
+      emailInvoices: emailInvoices ?? true,
+      emailTasks: emailTasks ?? true,
+      emailLeaves: emailLeaves ?? true,
+      emailProjects: emailProjects ?? true,
+      emailPayments: emailPayments ?? true,
+      pushEnabled: pushEnabled ?? false,
+      pushTasks: pushTasks ?? true,
+      pushLeaves: pushLeaves ?? true,
+      pushProjects: pushProjects ?? true,
+      digestEmail: digestEmail ?? false,
+    };
+
+    const settings = await upsertNotificationSettings(user.id, updateData, createData);
+
+    if (!settings) {
       return successResponse({
         userId: user.id,
-        emailInvoices: emailInvoices ?? DEFAULT_SETTINGS.emailInvoices,
-        emailTasks: emailTasks ?? DEFAULT_SETTINGS.emailTasks,
-        emailLeaves: emailLeaves ?? DEFAULT_SETTINGS.emailLeaves,
-        emailProjects: emailProjects ?? DEFAULT_SETTINGS.emailProjects,
-        emailPayments: emailPayments ?? DEFAULT_SETTINGS.emailPayments,
-        pushEnabled: pushEnabled ?? DEFAULT_SETTINGS.pushEnabled,
-        pushTasks: pushTasks ?? DEFAULT_SETTINGS.pushTasks,
-        pushLeaves: pushLeaves ?? DEFAULT_SETTINGS.pushLeaves,
-        pushProjects: pushProjects ?? DEFAULT_SETTINGS.pushProjects,
-        digestEmail: digestEmail ?? DEFAULT_SETTINGS.digestEmail,
+        ...createData,
         message: 'تم تحديث إعدادات الإشعارات (وضع تجريبي)'
       });
     }
+
+    return successResponse({
+      id: settings.id,
+      userId: settings.userId,
+      emailInvoices: settings.emailInvoices,
+      emailTasks: settings.emailTasks,
+      emailLeaves: settings.emailLeaves,
+      emailProjects: settings.emailProjects,
+      emailPayments: settings.emailPayments,
+      pushEnabled: settings.pushEnabled,
+      pushTasks: settings.pushTasks,
+      pushLeaves: settings.pushLeaves,
+      pushProjects: settings.pushProjects,
+      digestEmail: settings.digestEmail,
+      message: 'تم تحديث إعدادات الإشعارات'
+    });
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : "Unknown error";
     return errorResponse(errMsg, 'SERVER_ERROR', 500);
@@ -189,28 +245,24 @@ export async function POST(request: NextRequest) {
   if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
 
   try {
-    try {
-      const settings = await (db as any).notificationSettings?.upsert({
-        where: { userId: user.id },
-        update: DEFAULT_SETTINGS,
-        create: {
-          userId: user.id,
-          ...DEFAULT_SETTINGS
-        }
-      });
+    const settings = await upsertNotificationSettings(
+      user.id,
+      DEFAULT_SETTINGS,
+      { userId: user.id, ...DEFAULT_SETTINGS }
+    );
 
-      return successResponse({
-        ...settings,
-        message: 'تم إعادة تعيين إعدادات الإشعارات إلى الوضع الافتراضي'
-      });
-    } catch (_dbError) {
-      // Demo mode
+    if (!settings) {
       return successResponse({
         userId: user.id,
         ...DEFAULT_SETTINGS,
-        message: 'تم إعادة تعيين إعدادات الإشعارات (وضع تجريبي)'
+        message: 'تم إعادة تعيين الإعدادات (وضع تجريبي)'
       });
     }
+
+    return successResponse({
+      ...settings,
+      message: 'تم إعادة تعيين إعدادات الإشعارات إلى الوضع الافتراضي'
+    });
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : "Unknown error";
     return errorResponse(errMsg, 'SERVER_ERROR', 500);

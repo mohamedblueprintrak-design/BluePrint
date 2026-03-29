@@ -452,7 +452,7 @@ class BackupService {
    * Delete old backups based on retention policy
    */
   async cleanupOldBackups(): Promise<{ deleted: number; errors: string[] }> {
-    const deleted = 0;
+    let deleted = 0;
     const errors: string[] = [];
 
     try {
@@ -464,6 +464,7 @@ class BackupService {
         if (backup.timestamp < cutoffDate) {
           try {
             await fs.unlink(backup.location);
+            deleted++;  // FIX: Increment counter after successful deletion
           } catch (error) {
             errors.push(`Failed to delete ${backup.id}: ${error}`);
           }

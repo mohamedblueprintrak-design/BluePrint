@@ -31,15 +31,13 @@ import { cookies } from 'next/headers';
 import { DEMO_USERS, isDbAvailable } from '../utils/db';
 import { SignJWT } from 'jose';
 import { compare } from 'bcryptjs';
-
-// JWT secret for demo mode
-const DEMO_JWT_SECRET = process.env.JWT_SECRET || 'blueprint-dev-only-insecure-key-minimum-32-characters';
+import { getJWTSecret } from '../utils/auth';
 
 /**
  * Generate JWT token for demo user
  */
 async function generateDemoToken(user: typeof DEMO_USERS[0]): Promise<string> {
-  const secret = new TextEncoder().encode(DEMO_JWT_SECRET);
+  const secret = getJWTSecret();
   return new SignJWT({
     userId: user.id,
     email: user.email,
@@ -609,7 +607,7 @@ export async function GET(request: NextRequest) {
   // Try to verify as demo token first
   try {
     const { jwtVerify } = await import('jose');
-    const secret = new TextEncoder().encode(DEMO_JWT_SECRET);
+    const secret = getJWTSecret();
     const { payload } = await jwtVerify(token, secret, {
       issuer: 'blueprint-saas',
       audience: 'blueprint-users',

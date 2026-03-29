@@ -176,8 +176,8 @@ export function canApproveExpense(user: AuthenticatedUser): boolean {
  */
 export async function isEmailVerified(user: AuthenticatedUser): Promise<boolean> {
   // Demo users are considered verified
-  if ('isDemo' in user && (user as any).isDemo) {
-    return true;
+  if ('isDemo' in user && typeof (user as Record<string, unknown>).isDemo === 'boolean') {
+    return (user as Record<string, unknown>).isDemo as boolean;
   }
 
   try {
@@ -191,7 +191,13 @@ export async function isEmailVerified(user: AuthenticatedUser): Promise<boolean>
     
     return !!dbUser?.emailVerified;
   } catch {
-    return true; // On error, allow access
+    // SECURITY: Fail closed on DB errors for email verification
+    // In production, always require email verification
+    if (process.env.NODE_ENV === 'production') {
+      return false;
+    }
+    // In development/demo mode, allow access when DB is unavailable
+    return true;
   }
 }
 

@@ -28,6 +28,11 @@ export async function POST(request: NextRequest) {
       return errorResponse('معرف النسخة الاحتياطية مطلوب', 'BACKUP_ID_REQUIRED', 400);
     }
 
+    // SECURITY: Validate targetDir to prevent command injection
+    if (targetDir && !/^[\w./-]+$/.test(targetDir)) {
+      return errorResponse('مسار غير صالح', 'INVALID_PATH', 400);
+    }
+
     // Get backup info
     const backups = await backupService.listBackups();
     const backup = backups.find((b) => b.id === backupId);

@@ -804,7 +804,7 @@ model TransmittalItem {
   revision        String    @default("A")
   copies          Int       @default(1)
   documentType    String?   // drawing, specification, report, calculation, etc.
-  status          String    @default("for_review") // for_review, for_approval, for_information, for_action
+  status          TransmittalItemStatus @default(FOR_REVIEW)
   notes           String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -963,7 +963,7 @@ model MaterialTransaction {
   id              String    @id @default(cuid())
   materialId      String
   projectId       String?
-  transactionType String    // in, out, adjustment
+  transactionType String    @default("in") // in, out, adjustment - TODO: migrate to enum
   quantity        Float     @default(0)
   unitPrice       Float?
   totalValue      Float?

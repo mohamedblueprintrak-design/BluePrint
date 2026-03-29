@@ -208,7 +208,7 @@ export async function POST(request: NextRequest) {
         if (!employee) return errorResponse('الموظف غير موجود');
 
         const yearsOfService = (Date.now() - employee.createdAt.getTime()) / (1000 * 60 * 60 * 24 * 365);
-        const monthlySalary = (employee as any).salary || 10000;
+        const monthlySalary = (employee as Record<string, unknown>).salary as number || 10000;
         const { gratuityAmount, breakdown } = calculateGratuity(monthlySalary, yearsOfService, terminationReason);
 
         return successResponse({
