@@ -294,6 +294,28 @@ enum KnowledgeCategory {
 }
 
 // ============================================
+// NEW: Task Types for Government Approvals
+// أنواع المهام للاعتمادات الحكومية
+// ============================================
+
+/// Task type for categorization
+enum TaskType {
+  STANDARD      // مهمة عادية
+  GOVERNMENTAL  // جهة حكومية
+  MANDATORY     // إلزامية للترخيص
+  CLIENT        // موافقة العميل
+  INTERNAL      // مهمة داخلية
+}
+
+/// SLA breach status for monitoring
+enum SLABreachStatus {
+  WARNING       // تحذير قبل انتهاء SLA
+  BREACHED      // تجاوز SLA
+  CRITICAL      // تجاوز حرج
+  RESOLVED      // تم الحل
+}
+
+// ============================================
 // المنظمة والاشتراكات (SaaS Core)
 // ============================================
 
@@ -690,6 +712,7 @@ model ProposalItem {
 model Task {
   id            String    @id @default(cuid())
   title         String
+  titleAr       String?   // العنوان بالعربية
   description   String?
   projectId     String?
   parentId      String?   // For task hierarchy/subtasks
@@ -700,8 +723,29 @@ model Task {
   endDate       DateTime? // For Gantt chart
   dueDate       DateTime?
   progress      Float     @default(0) // 0-100
-  estimatedHours Float?   // Estimated duration in hours
-  actualHours   Float?    // Actual hours spent
+  
+  // ============================================
+  // NEW: Duration fields (unified in minutes)
+  // وحدات الوقت موحدة (الدقائق كوحدة أساسية)
+  // ============================================
+  estimatedMinutes Int?    // المدة التقديرية بالدقائق
+  actualMinutes    Int?    // المدة الفعلية بالدقائق
+  estimatedHours   Float?  // للتوافق مع الكود القديم
+  actualHours      Float?  // للتوافق مع الكود القديم
+  
+  // ============================================
+  // NEW: SLA fields for government approvals
+  // حقول SLA للاعتمادات الحكومية
+  // ============================================
+  taskType         TaskType @default(STANDARD)
+  slaDays          Int?       // عدد أيام SLA المحددة
+  slaWarningDays   Int?       // أيام التحذير قبل انتهاء SLA
+  slaStartDate     DateTime?  // تاريخ بدء حساب SLA
+  slaBreachedAt    DateTime?  // تاريخ تجاوز SLA
+  isMandatory      Boolean @default(false) // مهمة إلزامية للمشروع
+  workflowTemplate String?    // قالب سير العمل (FEWA, DEFENSE, etc.)
+  governmentEntity String?    // الجهة الحكومية المختصة
+  
   dependencies  Json?
   order         Int       @default(0) // Sort order for Gantt display
   color         String?   // Color code for Gantt bar
@@ -713,11 +757,15 @@ model Task {
   project       Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   parent        Task?     @relation("TaskHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
   subtasks      Task[]    @relation("TaskHierarchy")
+  slaBreaches   SLABreach[]
 
   @@index([deletedAt])
   @@index([projectId])
   @@index([projectId, status])
   @@index([assignedTo])
+  @@index([taskType])
+  @@index([isMandatory])
+  @@index([workflowTemplate])
 }
 
 // ============================================
@@ -1328,4 +1376,110 @@ model ClientInteraction {
   @@index([projectId])
   @@index([phaseId])
   @@index([interactionType])
+}
+
+// ============================================
+// NEW: Project Templates for Government Approvals
+// قوالب المشاريع للاعتمادات الحكومية
+// ============================================
+
+/// Project template for predefined workflows
+model ProjectTemplate {
+  id              String    @id @default(cuid())
+  name            String                      // "FEWA", "Civil Defense", "Municipality"
+  nameAr          String?                     // "هيئة كهرباء"، "دفاع مدني"
+  code            String    @unique           // Short code: "FEWA", "DEFENSE", "MUNICIPALITY"
+  description     String?
+  descriptionAr   String?
+  category        String?                     // "utility", "safety", "municipality", "communications"
+  isActive        Boolean   @default(true)
+  estimatedDays   Int       @default(0)       // Total estimated days
+  sortOrder       Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  tasks           ProjectTemplateTask[]
+
+  @@index([isActive])
+  @@index([category])
+}
+
+/// Template task for project templates
+model ProjectTemplateTask {
+  id                String    @id @default(cuid())
+  templateId        String
+  taskName          String                      // Task name
+  taskNameAr        String?                     // اسم المهمة
+  description       String?
+  descriptionAr     String?
+  taskType          TaskType @default(GOVERNMENTAL)
+  slaDays           Int       @default(7)       // SLA in days
+  slaWarningDays    Int       @default(1)       // Warning days before SLA breach
+  estimatedMinutes  Int?                        // Duration in minutes
+  order             Int       @default(0)       // Execution order
+  dependencies      Json?                       // Array of previous task orders
+  governmentEntity  String?                     // Government entity name
+  governmentEntityAr String?                    // اسم الجهة الحكومية
+  isMandatory       Boolean   @default(true)
+  color             String?                     // Color for Gantt chart
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  template          ProjectTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([templateId])
+  @@index([order])
+}
+
+// ============================================
+// NEW: SLA Breach Tracking
+// تتبع تجاوزات SLA
+// ============================================
+
+/// SLA breach record for monitoring
+model SLABreach {
+  id              String    @id @default(cuid())
+  taskId          String
+  projectId       String?
+  status          SLABreachStatus @default(WARNING)
+  daysElapsed     Int       @default(0)       // Days since SLA start
+  slaDays         Int       @default(0)       // Expected SLA days
+  breachDays      Int       @default(0)       // Days over SLA (negative if not yet breached)
+  notifiedAt      DateTime?                   // When notification was sent
+  notifiedUsers   Json?                       // Array of user IDs notified
+  resolvedAt      DateTime?                   // When breach was resolved
+  resolutionNotes String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  task            Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([projectId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ============================================
+// NEW: Cron Job Execution Log
+// سجل تنفيذ المهام المجدولة
+// ============================================
+
+/// Cron job execution log for monitoring
+model CronJobLog {
+  id              String    @id @default(cuid())
+  jobName         String                      // "sla-monitor", "backup", etc.
+  startedAt       DateTime  @default(now())
+  completedAt     DateTime?
+  status          String    @default("running") // running, completed, failed
+  recordsProcessed Int      @default(0)
+  breachesFound   Int       @default(0)
+  notificationsSent Int     @default(0)
+  error           String?
+  metadata        Json?
+  createdAt       DateTime  @default(now())
+
+  @@index([jobName])
+  @@index([startedAt])
+  @@index([status])
 }

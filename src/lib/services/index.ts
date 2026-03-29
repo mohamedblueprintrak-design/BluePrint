@@ -54,3 +54,29 @@ export {
   type CreateInvoiceInput,
   type InvoiceStats
 } from './invoice.service';
+
+// ============================================
+// NEW: SLA Monitoring Service
+// خدمة مراقبة SLA
+// ============================================
+export {
+  checkSLABreaches,
+  getSLAStatistics,
+  resolveSLABreach,
+  type SLACheckResult,
+  type SLAMonitorReport
+} from './sla-monitor.service';
+
+// ============================================
+// NEW: Project Template Service
+// خدمة قوالب المشاريع
+// ============================================
+export {
+  initializeTemplates,
+  createTasksFromTemplate,
+  getAvailableTemplates,
+  getTemplateDetails,
+  PREDEFINED_TEMPLATES,
+  type CreateProjectFromTemplateInput,
+  type TemplateTaskData
+} from './project-template.service';
