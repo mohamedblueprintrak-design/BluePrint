@@ -1,13 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
@@ -15,10 +24,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import {
   Activity, Search, Filter, Calendar, User, Building2, FileText,
   DollarSign, CheckSquare, Package, Settings, Plus, Edit,
-  Trash2, ArrowUpRight, Clock, Users, Loader2
+  Trash2, ArrowUpRight, Clock, Users, Loader2, Download,
+  X, ChevronLeft, ChevronRight, FileDown
 } from 'lucide-react';
 
 interface ActivityItem {
@@ -31,6 +42,20 @@ interface ActivityItem {
   action: string;
   description: string;
   createdAt: string;
+}
+
+interface TeamMember {
+  id: string;
+  fullName: string;
+  email?: string;
+  role?: string;
+}
+
+interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
 }
 
 const ACTIVITY_TYPES = [
@@ -57,61 +82,122 @@ const ACTION_TYPES = [
   { value: 'sign', label: 'توقيع', labelEn: 'Sign', icon: FileText, color: 'text-teal-400' },
 ];
 
+const ITEMS_PER_PAGE = 20;
+
 export function ActivitiesPage() {
   const { language } = useApp();
   const { t, formatDate } = useTranslation(language);
-  
+
+  // Data state
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pagination, setPagination] = useState<PaginationMeta>({
+    page: 1,
+    limit: ITEMS_PER_PAGE,
+    total: 0,
+    totalPages: 0,
+  });
+
+  // Filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
-  const [dateFilter, setDateFilter] = useState('all');
+  const [actionFilter, setActionFilter] = useState('all');
+  const [userFilter, setUserFilter] = useState('all');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
-  // Fetch activities from API
+  // UI state
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+
+  // Compute active filter count
+  const activeFilterCount = [
+    typeFilter !== 'all',
+    actionFilter !== 'all',
+    userFilter !== 'all',
+    startDate !== '',
+    endDate !== '',
+    searchQuery !== '',
+  ].filter(Boolean).length;
+
+  // Fetch team members for user filter
   useEffect(() => {
-    fetchActivities();
+    async function fetchTeam() {
+      try {
+        const res = await fetch('/api/team');
+        if (res.ok) {
+          const data = await res.json();
+          setTeamMembers(data.data || []);
+        }
+      } catch {
+        // silent fail
+      }
+    }
+    fetchTeam();
   }, []);
 
-  const fetchActivities = async () => {
+  // Build API query params
+  const buildQueryParams = useCallback((page: number) => {
+    const params = new URLSearchParams();
+    params.set('page', String(page));
+    params.set('limit', String(ITEMS_PER_PAGE));
+
+    if (typeFilter !== 'all') params.set('entityType', typeFilter);
+    if (userFilter !== 'all') params.set('userId', userFilter);
+    if (startDate) params.set('startDate', startDate);
+    if (endDate) params.set('endDate', endDate);
+
+    return params.toString();
+  }, [typeFilter, userFilter, startDate, endDate]);
+
+  // Fetch activities
+  const fetchActivities = useCallback(async (page?: number) => {
+    const currentPage = page || pagination.page;
+    setLoading(true);
     try {
-      const response = await fetch('/api/activities');
+      const queryParams = buildQueryParams(currentPage);
+      const response = await fetch(`/api/activities?${queryParams}`);
       if (response.ok) {
         const data = await response.json();
         setActivities(data.data || []);
+        if (data.meta) {
+          setPagination(data.meta);
+        } else {
+          setPagination(prev => ({
+            ...prev,
+            page: currentPage,
+            total: data.data?.length || 0,
+            totalPages: Math.ceil((data.data?.length || 0) / ITEMS_PER_PAGE),
+          }));
+        }
       }
     } catch (error) {
       console.error('Error fetching activities:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [pagination.page, buildQueryParams]);
 
+  // Refetch on filter changes
+  useEffect(() => {
+    fetchActivities(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [typeFilter, userFilter, startDate, endDate]);
+
+  // Client-side filtering for search and action filter (applied on top of server data)
   const filteredActivities = activities.filter((activity) => {
-    const matchesSearch = activity.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          activity.userName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          activity.entityType.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = typeFilter === 'all' || activity.entityType === typeFilter;
-    
-    let matchesDate = true;
-    if (dateFilter === 'today') {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      matchesDate = new Date(activity.createdAt) >= today;
-    } else if (dateFilter === 'week') {
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      matchesDate = new Date(activity.createdAt) >= weekAgo;
-    } else if (dateFilter === 'month') {
-      const monthAgo = new Date();
-      monthAgo.setMonth(monthAgo.getMonth() - 1);
-      matchesDate = new Date(activity.createdAt) >= monthAgo;
-    }
-    
-    return matchesSearch && matchesType && matchesDate;
+    const matchesSearch = !searchQuery ||
+      activity.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      activity.userName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      activity.entityType.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesAction = actionFilter === 'all' || activity.action === actionFilter;
+    return matchesSearch && matchesAction;
   });
 
   const stats = {
-    total: activities.length,
+    total: pagination.total || activities.length,
     today: activities.filter(a => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -124,8 +210,72 @@ export function ActivitiesPage() {
     }).length,
   };
 
+  // Pagination helpers
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= pagination.totalPages) {
+      fetchActivities(page);
+    }
+  };
+
+  const getPageNumbers = () => {
+    const { page, totalPages } = pagination;
+    const pages: (number | string)[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (page > 3) pages.push('...');
+      const start = Math.max(2, page - 1);
+      const end = Math.min(totalPages - 1, page + 1);
+      for (let i = start; i <= end; i++) pages.push(i);
+      if (page < totalPages - 2) pages.push('...');
+      pages.push(totalPages);
+    }
+    return pages;
+  };
+
+  const clearAllFilters = () => {
+    setSearchQuery('');
+    setTypeFilter('all');
+    setActionFilter('all');
+    setUserFilter('all');
+    setStartDate('');
+    setEndDate('');
+  };
+
+  // CSV Export
+  const handleExportCSV = async () => {
+    setExportLoading(true);
+    try {
+      const params = new URLSearchParams();
+      params.set('export', 'csv');
+      if (startDate) params.set('startDate', startDate);
+      if (endDate) params.set('endDate', endDate);
+      if (typeFilter !== 'all') params.set('entityType', typeFilter);
+      if (userFilter !== 'all') params.set('userId', userFilter);
+
+      const response = await fetch(`/api/activities?${params.toString()}`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `audit-log-${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    } catch (error) {
+      console.error('Export failed:', error);
+    } finally {
+      setExportLoading(false);
+      setExportDialogOpen(false);
+    }
+  };
+
   const getActivityTypeInfo = (type: string) => {
-    return ACTIVITY_TYPES.find(t => t.value === type) || ACTIVITY_TYPES[ACTIVITY_TYPES.length - 1];
+    return ACTIVITY_TYPES.find(at => at.value === type) || ACTIVITY_TYPES[ACTIVITY_TYPES.length - 1];
   };
 
   const getActionInfo = (action: string) => {
@@ -139,7 +289,7 @@ export function ActivitiesPage() {
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
-    
+
     if (diffMins < 1) return language === 'ar' ? 'الآن' : 'Now';
     if (diffMins < 60) return language === 'ar' ? `منذ ${diffMins} دقيقة` : `${diffMins}m ago`;
     if (diffHours < 24) return language === 'ar' ? `منذ ${diffHours} ساعة` : `${diffHours}h ago`;
@@ -159,6 +309,31 @@ export function ActivitiesPage() {
           <p className="text-slate-400 mt-1">
             {language === 'ar' ? 'تتبع جميع النشاطات والأحداث في النظام' : 'Track all activities and events in the system'}
           </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+            className="border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700 hover:text-white"
+          >
+            <Filter className="w-4 h-4 me-2" />
+            {language === 'ar' ? 'فلاتر متقدمة' : 'Advanced Filters'}
+            {activeFilterCount > 0 && (
+              <Badge className="ms-2 bg-cyan-500 text-white text-xs px-1.5 py-0.5 min-w-5 text-center">
+                {activeFilterCount}
+              </Badge>
+            )}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setExportDialogOpen(true)}
+            className="border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-emerald-500/20 hover:border-emerald-500 hover:text-emerald-400"
+          >
+            <FileDown className="w-4 h-4 me-2" />
+            {language === 'ar' ? 'تصدير CSV' : 'Export CSV'}
+          </Button>
         </div>
       </div>
 
@@ -208,52 +383,122 @@ export function ActivitiesPage() {
       {/* Filters */}
       <Card className="bg-slate-900/50 border-slate-800">
         <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <Input
-                placeholder={t.search}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="ps-9 bg-slate-800/50 border-slate-700 text-white"
-              />
+          <div className="flex flex-col gap-4">
+            {/* Main filter row */}
+            <div className="flex flex-col md:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Input
+                  placeholder={t.search}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="ps-9 bg-slate-800/50 border-slate-700 text-white"
+                />
+              </div>
+
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-[160px] bg-slate-800/50 border-slate-700 text-white">
+                  <Filter className="w-4 h-4 me-2 text-slate-400" />
+                  <SelectValue placeholder={t.type} />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-900 border-slate-800">
+                  <SelectItem value="all">{t.all}</SelectItem>
+                  {ACTIVITY_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {language === 'ar' ? type.label : type.labelEn}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={actionFilter} onValueChange={setActionFilter}>
+                <SelectTrigger className="w-[160px] bg-slate-800/50 border-slate-700 text-white">
+                  <SelectValue placeholder={language === 'ar' ? 'الإجراء' : 'Action'} />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-900 border-slate-800">
+                  <SelectItem value="all">{t.all}</SelectItem>
+                  {ACTION_TYPES.map((action) => (
+                    <SelectItem key={action.value} value={action.value}>
+                      {language === 'ar' ? action.label : action.labelEn}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-[160px] bg-slate-800/50 border-slate-700 text-white">
-                <Filter className="w-4 h-4 me-2 text-slate-400" />
-                <SelectValue placeholder={t.type} />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-900 border-slate-800">
-                <SelectItem value="all">{t.all}</SelectItem>
-                {ACTIVITY_TYPES.map((type) => (
-                  <SelectItem key={type.value} value={type.value}>
-                    {language === 'ar' ? type.label : type.labelEn}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            <Select value={dateFilter} onValueChange={setDateFilter}>
-              <SelectTrigger className="w-[160px] bg-slate-800/50 border-slate-700 text-white">
-                <Calendar className="w-4 h-4 me-2 text-slate-400" />
-                <SelectValue placeholder={t.date} />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-900 border-slate-800">
-                <SelectItem value="all">{t.all}</SelectItem>
-                <SelectItem value="today">{t.today}</SelectItem>
-                <SelectItem value="week">{t.thisWeek}</SelectItem>
-                <SelectItem value="month">{t.thisMonth}</SelectItem>
-              </SelectContent>
-            </Select>
+
+            {/* Advanced filters */}
+            {showAdvancedFilters && (
+              <div className="flex flex-col md:flex-row gap-3 pt-2 border-t border-slate-800">
+                <div className="flex-1">
+                  <Label className="text-xs text-slate-400 mb-1.5 block">
+                    {language === 'ar' ? 'من تاريخ' : 'Start Date'}
+                  </Label>
+                  <Input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="bg-slate-800/50 border-slate-700 text-white"
+                  />
+                </div>
+                <div className="flex-1">
+                  <Label className="text-xs text-slate-400 mb-1.5 block">
+                    {language === 'ar' ? 'إلى تاريخ' : 'End Date'}
+                  </Label>
+                  <Input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="bg-slate-800/50 border-slate-700 text-white"
+                  />
+                </div>
+                <div className="flex-1">
+                  <Label className="text-xs text-slate-400 mb-1.5 block">
+                    {language === 'ar' ? 'المستخدم' : 'User'}
+                  </Label>
+                  <Select value={userFilter} onValueChange={setUserFilter}>
+                    <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                      <SelectValue placeholder={language === 'ar' ? 'جميع المستخدمين' : 'All Users'} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-900 border-slate-800">
+                      <SelectItem value="all">{language === 'ar' ? 'جميع المستخدمين' : 'All Users'}</SelectItem>
+                      {teamMembers.map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {member.fullName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {activeFilterCount > 0 && (
+                  <div className="flex items-end">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearAllFilters}
+                      className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                    >
+                      <X className="w-4 h-4 me-1" />
+                      {language === 'ar' ? 'مسح الكل' : 'Clear All'}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
 
       {/* Activity Timeline */}
       <Card className="bg-slate-900/50 border-slate-800">
-        <CardHeader>
-          <CardTitle className="text-white">{language === 'ar' ? 'النشاطات الأخيرة' : 'Recent Activities'}</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-white">{language === 'ar' ? 'النشاطات الأخيرة' : 'Recent Activities'}</CardTitle>
+            <p className="text-sm text-slate-400 mt-1">
+              {language === 'ar'
+                ? `عرض ${filteredActivities.length} من ${pagination.total} نشاط`
+                : `Showing ${filteredActivities.length} of ${pagination.total} activities`}
+            </p>
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -262,66 +507,219 @@ export function ActivitiesPage() {
             </div>
           ) : filteredActivities.length === 0 ? (
             <div className="text-center py-12 text-slate-400">
-              {language === 'ar' ? 'لا توجد نشاطات' : 'No activities found'}
+              <Activity className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>{language === 'ar' ? 'لا توجد نشاطات' : 'No activities found'}</p>
             </div>
           ) : (
-            <ScrollArea className="h-[500px]">
-              <div className="relative">
-                {/* Timeline line */}
-                <div className="absolute start-8 top-0 bottom-0 w-px bg-slate-800" />
-                
-                <div className="space-y-6">
-                  {filteredActivities.map((activity) => {
-                    const typeInfo = getActivityTypeInfo(activity.entityType);
-                    const actionInfo = getActionInfo(activity.action);
-                    const TypeIcon = typeInfo.icon;
-                    
-                    return (
-                      <div key={activity.id} className="relative flex gap-4 ps-2 group">
-                        {/* Timeline dot */}
-                        <div className={`relative z-10 w-12 h-12 rounded-full ${typeInfo.color}/20 border-2 border-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                          <TypeIcon className="w-5 h-5 text-white" />
-                        </div>
-                        
-                        {/* Content */}
-                        <div className="flex-1 pb-6">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <div className="flex items-center gap-2 mb-1">
-                                <Badge variant="outline" className={`border-slate-700 ${actionInfo.color}`}>
-                                  {language === 'ar' ? actionInfo.label : actionInfo.labelEn}
-                                </Badge>
-                                <Badge variant="secondary" className="bg-slate-800 text-slate-300">
-                                  {language === 'ar' ? typeInfo.label : typeInfo.labelEn}
-                                </Badge>
+            <>
+              <ScrollArea className="h-[500px]">
+                <div className="relative">
+                  <div className="absolute start-8 top-0 bottom-0 w-px bg-slate-800" />
+                  <div className="space-y-6">
+                    {filteredActivities.map((activity) => {
+                      const typeInfo = getActivityTypeInfo(activity.entityType);
+                      const actionInfo = getActionInfo(activity.action);
+                      const TypeIcon = typeInfo.icon;
+
+                      return (
+                        <div key={activity.id} className="relative flex gap-4 ps-2 group">
+                          <div className={`relative z-10 w-12 h-12 rounded-full ${typeInfo.color}/20 border-2 border-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                            <TypeIcon className="w-5 h-5 text-white" />
+                          </div>
+                          <div className="flex-1 pb-6">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <Badge variant="outline" className={`border-slate-700 ${actionInfo.color}`}>
+                                    {language === 'ar' ? actionInfo.label : actionInfo.labelEn}
+                                  </Badge>
+                                  <Badge variant="secondary" className="bg-slate-800 text-slate-300">
+                                    {language === 'ar' ? typeInfo.label : typeInfo.labelEn}
+                                  </Badge>
+                                </div>
+                                <h3 className="text-white font-medium">{activity.description}</h3>
                               </div>
-                              <h3 className="text-white font-medium">{activity.description}</h3>
+                              <span className="text-xs text-slate-500 whitespace-nowrap">
+                                {getTimeAgo(activity.createdAt)}
+                              </span>
                             </div>
-                            <span className="text-xs text-slate-500 whitespace-nowrap">
-                              {getTimeAgo(activity.createdAt)}
-                            </span>
-                          </div>
-                          
-                          <div className="flex items-center gap-4 mt-3 text-xs text-slate-500">
-                            <div className="flex items-center gap-1">
-                              <Avatar className="w-5 h-5">
-                                <AvatarFallback className="bg-blue-600 text-white text-[8px]">
-                                  {activity.userName?.[0] || 'U'}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span>{activity.userName}</span>
+                            <div className="flex items-center gap-4 mt-3 text-xs text-slate-500">
+                              <div className="flex items-center gap-1">
+                                <Avatar className="w-5 h-5">
+                                  <AvatarFallback className="bg-blue-600 text-white text-[8px]">
+                                    {activity.userName?.[0] || 'U'}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span>{activity.userName}</span>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            </ScrollArea>
+              </ScrollArea>
+
+              {/* Pagination */}
+              {pagination.totalPages > 1 && (
+                <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-800">
+                  <p className="text-sm text-slate-400">
+                    {language === 'ar'
+                      ? `صفحة ${pagination.page} من ${pagination.totalPages}`
+                      : `Page ${pagination.page} of ${pagination.totalPages}`}
+                  </p>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => goToPage(pagination.page - 1)}
+                      disabled={pagination.page <= 1}
+                      className="border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700 disabled:opacity-50"
+                    >
+                      {language === 'rtl' ? (
+                        <ChevronRight className="w-4 h-4" />
+                      ) : (
+                        <ChevronLeft className="w-4 h-4" />
+                      )}
+                    </Button>
+                    {getPageNumbers().map((pageNum, idx) =>
+                      typeof pageNum === 'string' ? (
+                        <span key={`dots-${idx}`} className="px-2 text-slate-500">...</span>
+                      ) : (
+                        <Button
+                          key={pageNum}
+                          variant={pageNum === pagination.page ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => goToPage(pageNum)}
+                          className={
+                            pageNum === pagination.page
+                              ? 'bg-cyan-500 text-white hover:bg-cyan-600'
+                              : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700'
+                          }
+                        >
+                          {pageNum}
+                        </Button>
+                      )
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => goToPage(pagination.page + 1)}
+                      disabled={pagination.page >= pagination.totalPages}
+                      className="border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700 disabled:opacity-50"
+                    >
+                      {language === 'rtl' ? (
+                        <ChevronLeft className="w-4 h-4" />
+                      ) : (
+                        <ChevronRight className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
+
+      {/* CSV Export Dialog */}
+      <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileDown className="w-5 h-5 text-emerald-400" />
+              {language === 'ar' ? 'تصدير سجل النشاطات' : 'Export Activity Log'}
+            </DialogTitle>
+            <DialogDescription className="text-slate-400">
+              {language === 'ar'
+                ? 'اختر الفلاتر المطلوبة لتصدير البيانات كملف CSV'
+                : 'Choose filters to export data as a CSV file'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className="text-sm text-slate-300">
+                {language === 'ar' ? 'من تاريخ' : 'Start Date'}
+              </Label>
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="bg-slate-800/50 border-slate-700 text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm text-slate-300">
+                {language === 'ar' ? 'إلى تاريخ' : 'End Date'}
+              </Label>
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="bg-slate-800/50 border-slate-700 text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm text-slate-300">
+                {language === 'ar' ? 'نوع الكيان' : 'Entity Type'}
+              </Label>
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-900 border-slate-800">
+                  <SelectItem value="all">{t.all}</SelectItem>
+                  {ACTIVITY_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {language === 'ar' ? type.label : type.labelEn}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm text-slate-300">
+                {language === 'ar' ? 'المستخدم' : 'User'}
+              </Label>
+              <Select value={userFilter} onValueChange={setUserFilter}>
+                <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-900 border-slate-800">
+                  <SelectItem value="all">{language === 'ar' ? 'جميع المستخدمين' : 'All Users'}</SelectItem>
+                  {teamMembers.map((member) => (
+                    <SelectItem key={member.id} value={member.id}>
+                      {member.fullName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setExportDialogOpen(false)}
+              className="border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700"
+            >
+              {t.cancel}
+            </Button>
+            <Button
+              onClick={handleExportCSV}
+              disabled={exportLoading}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              {exportLoading ? (
+                <Loader2 className="w-4 h-4 me-2 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4 me-2" />
+              )}
+              {language === 'ar' ? 'تحميل CSV' : 'Download CSV'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

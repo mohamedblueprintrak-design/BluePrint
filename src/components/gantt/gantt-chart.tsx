@@ -1,20 +1,19 @@
 'use client';
 
 /**
- * Gantt Chart Component with Drag & Drop
- * مخطط جانت للمهام والمشاريع مع السحب والإفلات
+ * Gantt Chart Component with Phase Groups, SLA Color Coding, Milestones, Today Line
+ * مخطط جانت مع تجميع المراحل وتلوين SLA ومعالم اليوم
  */
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { 
-  ChevronLeft, ChevronRight, ZoomIn, ZoomOut, 
-  Plus, Edit2, Trash2, Calendar, Clock, 
-  CheckCircle, AlertCircle, Play, Pause, GripHorizontal
+  ChevronLeft, ChevronRight,
+  Plus, Trash2, Clock, 
+  CheckCircle, AlertCircle, Play, Pause, GripHorizontal,
+  Diamond, Layers
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import {
   Dialog,
   DialogContent,
@@ -26,6 +25,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
 
 // Types
 interface GanttTask {
@@ -47,6 +47,13 @@ interface GanttTask {
   order: number;
   color?: string;
   isMilestone: boolean;
+  isMandatory?: boolean;
+  phaseCategory?: string;
+  slaDays?: number;
+  slaStartDate?: string;
+  slaBreachedAt?: string;
+  taskType?: string;
+  governmentEntity?: string;
   subtasks?: GanttTask[];
 }
 
@@ -58,16 +65,32 @@ interface GanttChartProps {
   onTaskDelete?: (taskId: string) => void;
 }
 
-// Color palette for tasks
-const TASK_COLORS = [
-  '#3b82f6', // blue
-  '#10b981', // green
-  '#f59e0b', // amber
-  '#ef4444', // red
-  '#8b5cf6', // purple
-  '#ec4899', // pink
-  '#06b6d4', // cyan
-  '#84cc16', // lime
+// 2A: Phase category colors
+const PHASE_CATEGORY_COLORS: Record<string, { bg: string; text: string; bar: string }> = {
+  ARCHITECTURAL: { bg: 'bg-blue-500/20', text: 'text-blue-400', bar: '#3b82f6' },
+  STRUCTURAL: { bg: 'bg-orange-500/20', text: 'text-orange-400', bar: '#f59e0b' },
+  MEP: { bg: 'bg-green-500/20', text: 'text-green-400', bar: '#10b981' },
+  GOVERNMENT: { bg: 'bg-purple-500/20', text: 'text-purple-400', bar: '#8b5cf6' },
+  CONTRACTING: { bg: 'bg-amber-500/20', text: 'text-amber-400', bar: '#d97706' },
+};
+
+const PHASE_CATEGORY_LABELS: Record<string, { en: string; ar: string }> = {
+  ARCHITECTURAL: { en: 'Architectural', ar: 'معماري' },
+  STRUCTURAL: { en: 'Structural', ar: 'إنشائي' },
+  MEP: { en: 'MEP', ar: 'كهرباء وميكانيك' },
+  GOVERNMENT: { en: 'Government', ar: 'حكومي' },
+  CONTRACTING: { en: 'Contracting', ar: 'مقاولات' },
+};
+
+// 2A: Phase dependency rules (arrows)
+const _PHASE_DEPENDENCIES: Record<string, string> = {
+  'ARCHITECTURAL': 'STRUCTURAL',
+  'STRUCTURAL': 'MEP',
+  'GOVERNMENT': 'CONTRACTING',
+};
+
+const _TASK_COLORS = [
+  '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16',
 ];
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -93,6 +116,36 @@ const STATUS_ICONS: Record<string, React.ReactNode> = {
   cancelled: <AlertCircle className="w-4 h-4" />,
 };
 
+// 2B: Get SLA color for a task bar
+function getSLABarColor(task: GanttTask): string {
+  if (!task.slaDays || !task.slaStartDate) {
+    // No SLA - use phase category color
+    if (task.phaseCategory && PHASE_CATEGORY_COLORS[task.phaseCategory]) {
+      return PHASE_CATEGORY_COLORS[task.phaseCategory].bar;
+    }
+    return task.color || PRIORITY_COLORS[task.priority];
+  }
+
+  const start = new Date(task.slaStartDate);
+  const now = new Date();
+  const elapsed = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  const remaining = task.slaDays - elapsed;
+  const percentRemaining = (remaining / task.slaDays) * 100;
+
+  if (remaining <= 0) return '#991b1b'; // dark red - breached
+  if (percentRemaining < 25) return '#ef4444'; // red - at risk
+  if (percentRemaining < 50) return '#f59e0b'; // amber - warning
+  return '#22c55e'; // green - on track
+}
+
+function isSLABreached(task: GanttTask): boolean {
+  if (!task.slaDays || !task.slaStartDate) return false;
+  const start = new Date(task.slaStartDate);
+  const now = new Date();
+  const elapsed = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  return elapsed > task.slaDays;
+}
+
 export function GanttChart({
   projectId,
   lang = 'ar',
@@ -107,6 +160,7 @@ export function GanttChart({
   const [selectedTask, setSelectedTask] = useState<GanttTask | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [showPhaseGroups, setShowPhaseGroups] = useState(true);
   
   // Drag state
   const [draggedTask, setDraggedTask] = useState<GanttTask | null>(null);
@@ -116,6 +170,45 @@ export function GanttChart({
   const timelineRef = useRef<HTMLDivElement>(null);
 
   const isRTL = lang === 'ar';
+
+  // 2A: Group tasks by phase category
+  const phaseGroups = useMemo(() => {
+    if (!showPhaseGroups) return { ungrouped: tasks };
+    
+    const groups: Record<string, GanttTask[]> = {};
+    const order = ['ARCHITECTURAL', 'STRUCTURAL', 'MEP', 'GOVERNMENT', 'CONTRACTING'];
+    
+    tasks.forEach(task => {
+      const cat = task.phaseCategory || 'OTHER';
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(task);
+    });
+    
+    // Sort by predefined order
+    const sorted: Record<string, GanttTask[]> = {};
+    order.forEach(cat => {
+      if (groups[cat]) sorted[cat] = groups[cat];
+    });
+    if (groups['OTHER']) sorted['OTHER'] = groups['OTHER'];
+    
+    return sorted;
+  }, [tasks, showPhaseGroups]);
+
+  // Flatten grouped tasks for rendering
+  const flattenedTasks = useMemo(() => {
+    const result: (GanttTask | { type: 'phase-header'; category: string })[] = [];
+    
+    if (showPhaseGroups) {
+      Object.entries(phaseGroups).forEach(([category, groupTasks]) => {
+        result.push({ type: 'phase-header', category } as any);
+        groupTasks.forEach(task => result.push(task));
+      });
+    } else {
+      tasks.forEach(task => result.push(task));
+    }
+    
+    return result;
+  }, [phaseGroups, tasks, showPhaseGroups]);
 
   // Calculate view range
   const viewRange = useMemo(() => {
@@ -140,27 +233,51 @@ export function GanttChart({
     return { start, end };
   }, [currentDate, viewMode]);
 
-  // Generate timeline headers
-  const timelineHeaders = useMemo(() => {
-    const headers: { date: Date; label: string; isToday: boolean }[] = [];
+  // Generate timeline headers with month labels
+  const { timelineHeaders, monthLabels } = useMemo(() => {
+    const headers: { date: Date; label: string; isToday: boolean; dayOfWeek: number }[] = [];
+    const months: { label: string; startIndex: number; count: number }[] = [];
     const current = new Date(viewRange.start);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    let lastMonth = -1;
+    let monthStartIdx = 0;
 
     while (current <= viewRange.end) {
       const isToday = current.getTime() === today.getTime();
+      const month = current.getMonth();
+      
+      if (month !== lastMonth && lastMonth !== -1) {
+        months.push({
+          label: current.toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US', { month: 'short', year: 'numeric' }),
+          startIndex: monthStartIdx,
+          count: headers.length - monthStartIdx,
+        });
+        monthStartIdx = headers.length;
+      }
+      lastMonth = month;
       
       headers.push({
         date: new Date(current),
         label: current.getDate().toString(),
         isToday,
+        dayOfWeek: current.getDay(),
       });
 
       current.setDate(current.getDate() + 1);
     }
+    
+    if (monthStartIdx < headers.length) {
+      const lastDate = headers[headers.length - 1].date;
+      months.push({
+        label: lastDate.toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US', { month: 'short', year: 'numeric' }),
+        startIndex: monthStartIdx,
+        count: headers.length - monthStartIdx,
+      });
+    }
 
-    return headers;
-  }, [viewRange]);
+    return { timelineHeaders: headers, monthLabels: months };
+  }, [viewRange, lang]);
 
   // Fetch tasks
   useEffect(() => {
@@ -244,7 +361,6 @@ export function GanttChart({
     setDragStartX(e.clientX);
     setOriginalDates({ start: task.startDate, end: task.endDate });
     
-    // Add global mouse move and up listeners
     document.addEventListener('mousemove', handleDragMove);
     document.addEventListener('mouseup', handleDragEnd);
   };
@@ -264,45 +380,29 @@ export function GanttChart({
     let newEndDate = originalDates.end;
 
     if (dragMode === 'move') {
-      // Move entire task
-      if (originalDates.start) {
-        newStartDate = new Date(originalDates.start.getTime() + daysDelta * ONE_DAY);
-      }
-      if (originalDates.end) {
-        newEndDate = new Date(originalDates.end.getTime() + daysDelta * ONE_DAY);
-      }
+      if (originalDates.start) newStartDate = new Date(originalDates.start.getTime() + daysDelta * ONE_DAY);
+      if (originalDates.end) newEndDate = new Date(originalDates.end.getTime() + daysDelta * ONE_DAY);
     } else if (dragMode === 'resize-left') {
-      // Resize from left (change start date)
       if (originalDates.start && originalDates.end) {
         const newStart = new Date(originalDates.start.getTime() + daysDelta * ONE_DAY);
-        if (newStart < originalDates.end) {
-          newStartDate = newStart;
-        }
+        if (newStart < originalDates.end) newStartDate = newStart;
       }
     } else if (dragMode === 'resize-right') {
-      // Resize from right (change end date)
       if (originalDates.start && originalDates.end) {
         const newEnd = new Date(originalDates.end.getTime() + daysDelta * ONE_DAY);
-        if (newEnd > originalDates.start) {
-          newEndDate = newEnd;
-        }
+        if (newEnd > originalDates.start) newEndDate = newEnd;
       }
     }
 
-    // Update task temporarily
     setTasks(prev => prev.map(t => 
-      t.id === draggedTask.id 
-        ? { ...t, startDate: newStartDate, endDate: newEndDate }
-        : t
+      t.id === draggedTask.id ? { ...t, startDate: newStartDate, endDate: newEndDate } : t
     ));
   }, [draggedTask, dragMode, dragStartX, originalDates, timelineHeaders.length]);
 
   const handleDragEnd = useCallback(() => {
     if (draggedTask) {
       const updatedTask = tasks.find(t => t.id === draggedTask.id);
-      if (updatedTask) {
-        onTaskUpdate?.(updatedTask);
-      }
+      if (updatedTask) onTaskUpdate?.(updatedTask);
     }
     
     setDraggedTask(null);
@@ -313,33 +413,44 @@ export function GanttChart({
     document.removeEventListener('mouseup', handleDragEnd);
   }, [draggedTask, tasks, onTaskUpdate, handleDragMove]);
 
-  // Handle task drag (legacy - simplified)
-  const handleTaskDrag = (task: GanttTask, newStartDate: Date) => {
-    const duration = task.endDate 
-      ? Math.ceil((task.endDate.getTime() - (task.startDate?.getTime() || 0)) / (1000 * 60 * 60 * 24))
-      : 1;
-    
-    const newEndDate = new Date(newStartDate);
-    newEndDate.setDate(newEndDate.getDate() + duration);
-
-    const updatedTask = {
-      ...task,
-      startDate: newStartDate,
-      endDate: newEndDate,
-    };
-
-    setTasks(prev => prev.map(t => t.id === task.id ? updatedTask : t));
-    onTaskUpdate?.(updatedTask);
-  };
-
   // Format date for display
   const formatDate = (date: Date | null) => {
     if (!date) return '-';
-    return date.toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US', {
-      month: 'short',
-      day: 'numeric',
-    });
+    return date.toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US', { month: 'short', day: 'numeric' });
   };
+
+  // 2C: Get today position in percentage
+  const todayPosition = useMemo(() => {
+    const todayIdx = timelineHeaders.findIndex(h => h.isToday);
+    if (todayIdx === -1) return null;
+    return (todayIdx / timelineHeaders.length) * 100;
+  }, [timelineHeaders]);
+
+  // 2C: Get SLA deadline positions
+  const slaDeadlinePositions = useMemo(() => {
+    return tasks
+      .filter(t => t.slaDays && t.slaStartDate && t.startDate)
+      .map(t => {
+        const slaStart = new Date(t.slaStartDate);
+        const deadline = new Date(slaStart);
+        deadline.setDate(deadline.getDate() + t.slaDays!);
+        
+        const offset = Math.floor(
+          (deadline.getTime() - viewRange.start.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        
+        const pct = (offset / timelineHeaders.length) * 100;
+        if (pct < 0 || pct > 100) return null;
+        
+        return {
+          position: pct,
+          taskId: t.id,
+          taskTitle: t.title,
+          breached: isSLABreached(t),
+        };
+      })
+      .filter(Boolean) as Array<{ position: number; taskId: string; taskTitle: string; breached: boolean }>;
+  }, [tasks, viewRange, timelineHeaders]);
 
   if (loading) {
     return (
@@ -350,68 +461,73 @@ export function GanttChart({
   }
 
   return (
-    <div className={`bg-slate-900/50 rounded-xl border border-slate-800 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className={cn("bg-slate-900/50 rounded-xl border border-slate-800", isRTL ? 'rtl' : 'ltr')} dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}
-      <div className="p-4 border-b border-slate-800 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <h2 className="text-xl font-bold text-white">
-            {lang === 'ar' ? 'مخطط جانت' : 'Gantt Chart'}
-          </h2>
-          <Badge variant="secondary" className="bg-slate-800">
-            {tasks.length} {lang === 'ar' ? 'مهمة' : 'tasks'}
-          </Badge>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* View Mode Toggle */}
-          <div className="flex items-center bg-slate-800 rounded-lg p-1">
-            {(['day', 'week', 'month'] as const).map((mode) => (
-              <button
-                key={mode}
-                onClick={() => setViewMode(mode)}
-                className={`px-3 py-1 rounded text-sm transition-colors ${
-                  viewMode === mode
-                    ? 'bg-blue-500 text-white'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                {mode === 'day' ? (lang === 'ar' ? 'يوم' : 'Day') :
-                 mode === 'week' ? (lang === 'ar' ? 'أسبوع' : 'Week') :
-                 (lang === 'ar' ? 'شهر' : 'Month')}
-              </button>
-            ))}
+      <div className="p-4 border-b border-slate-800">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-4">
+            <h2 className="text-xl font-bold text-white">
+              {lang === 'ar' ? 'مخطط جانت' : 'Gantt Chart'}
+            </h2>
+            <Badge variant="secondary" className="bg-slate-800">
+              {tasks.length} {lang === 'ar' ? 'مهمة' : 'tasks'}
+            </Badge>
           </div>
 
-          {/* Navigation */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigateTimeline('prev')}
-          >
-            {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setCurrentDate(new Date())}
-          >
-            {lang === 'ar' ? 'اليوم' : 'Today'}
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigateTimeline('next')}
-          >
-            {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-          </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* 2A: Phase Group Toggle */}
+            <Button
+              variant={showPhaseGroups ? 'default' : 'outline'}
+              size="sm"
+              className={cn(
+                showPhaseGroups ? 'bg-purple-600 hover:bg-purple-700' : 'border-slate-700 text-slate-400'
+              )}
+              onClick={() => setShowPhaseGroups(!showPhaseGroups)}
+            >
+              <Layers className="w-4 h-4 me-2" />
+              {showPhaseGroups 
+                ? (lang === 'ar' ? 'بمراحل' : 'Phased') 
+                : (lang === 'ar' ? 'بمراحل' : 'Phased')}
+            </Button>
 
-          {/* Add Task Button */}
-          <Button onClick={() => setIsCreateDialogOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            {lang === 'ar' ? 'إضافة مهمة' : 'Add Task'}
-          </Button>
+            {/* View Mode Toggle */}
+            <div className="flex items-center bg-slate-800 rounded-lg p-1">
+              {(['day', 'week', 'month'] as const).map((mode) => (
+                <button
+                  key={mode}
+                  onClick={() => setViewMode(mode)}
+                  className={cn(
+                    "px-3 py-1 rounded text-sm transition-colors",
+                    viewMode === mode
+                      ? 'bg-blue-500 text-white'
+                      : 'text-slate-400 hover:text-white'
+                  )}
+                >
+                  {mode === 'day' ? (lang === 'ar' ? 'يوم' : 'Day') :
+                   mode === 'week' ? (lang === 'ar' ? 'أسبوع' : 'Week') :
+                   (lang === 'ar' ? 'شهر' : 'Month')}
+                </button>
+              ))}
+            </div>
+
+            {/* Navigation */}
+            <Button variant="ghost" size="icon" onClick={() => navigateTimeline('prev')}>
+              {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            </Button>
+            
+            <Button variant="ghost" size="sm" onClick={() => setCurrentDate(new Date())}>
+              {lang === 'ar' ? 'اليوم' : 'Today'}
+            </Button>
+            
+            <Button variant="ghost" size="icon" onClick={() => navigateTimeline('next')}>
+              {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+            </Button>
+
+            <Button onClick={() => setIsCreateDialogOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              {lang === 'ar' ? 'إضافة مهمة' : 'Add Task'}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -426,67 +542,161 @@ export function GanttChart({
           </div>
           
           <div className="max-h-[500px] overflow-y-auto">
-            {tasks.map((task) => (
-              <div
-                key={task.id}
-                className="h-12 border-b border-slate-800 flex items-center px-4 hover:bg-slate-800/30 cursor-pointer"
-                onClick={() => handleTaskClick(task)}
-              >
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <div
-                    className="w-2 h-2 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: task.color || PRIORITY_COLORS[task.priority] }}
-                  />
-                  <span className="text-sm text-white truncate">{task.title}</span>
-                  {task.isMilestone && (
-                    <Badge variant="outline" className="text-xs">
-                      {lang === 'ar' ? 'معلم' : 'Milestone'}
-                    </Badge>
-                  )}
+            {flattenedTasks.map((item) => {
+              // Phase header row
+              if ((item as any).type === 'phase-header') {
+                const category = (item as any).category;
+                const phaseInfo = PHASE_CATEGORY_LABELS[category];
+                const colorInfo = PHASE_CATEGORY_COLORS[category];
+                const taskCount = (phaseGroups[category] || []).length;
+                
+                return (
+                  <div 
+                    key={`phase-${category}`}
+                    className={cn("h-10 flex items-center px-4 bg-slate-800/80 border-b border-slate-700/50", colorInfo?.bg)}
+                  >
+                    <div className={cn("flex items-center gap-2 font-semibold text-sm", colorInfo?.text)}>
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: colorInfo?.bar }} />
+                      {phaseInfo 
+                        ? (lang === 'ar' ? phaseInfo.ar : phaseInfo.en) 
+                        : category}
+                      <Badge variant="outline" className="text-[10px] border-slate-600 text-slate-400">
+                        {taskCount}
+                      </Badge>
+                    </div>
+                  </div>
+                );
+              }
+
+              // Regular task row
+              const task = item as GanttTask;
+              return (
+                <div
+                  key={task.id}
+                  className="h-12 border-b border-slate-800 flex items-center px-4 hover:bg-slate-800/30 cursor-pointer"
+                  onClick={() => handleTaskClick(task)}
+                >
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <div
+                      className="w-2 h-2 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: getSLABarColor(task) }}
+                    />
+                    {/* 2C: Milestone indicator */}
+                    {task.isMilestone && (
+                      <Diamond className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />
+                    )}
+                    <span className="text-sm text-white truncate">{task.title}</span>
+                    {/* Government entity */}
+                    {task.governmentEntity && (
+                      <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-amber-500/30 text-amber-400 bg-amber-500/10 shrink-0">
+                        {task.governmentEntity}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {STATUS_ICONS[task.status]}
+                    <span className="text-xs text-slate-400">{task.progress}%</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  {STATUS_ICONS[task.status]}
-                  <span className="text-xs text-slate-400">
-                    {task.progress}%
-                  </span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
         {/* Timeline */}
-        <div className="flex-1 overflow-x-auto">
-          {/* Timeline Header */}
-          <div className="h-12 border-b border-slate-800 flex bg-slate-800/50 sticky top-0">
+        <div className="flex-1 overflow-x-auto" ref={timelineRef}>
+          {/* Month labels row */}
+          <div className="h-6 border-b border-slate-800 flex bg-slate-900/80 sticky top-0 z-20">
+            {monthLabels.map((ml, idx) => (
+              <div
+                key={idx}
+                className="flex-shrink-0 h-6 flex items-center px-2 text-[10px] font-medium text-slate-500 border-r border-slate-700/50"
+                style={{ width: `${(ml.count / timelineHeaders.length) * 100}%` }}
+              >
+                {ml.label}
+              </div>
+            ))}
+          </div>
+          
+          {/* Day headers row */}
+          <div className="h-8 border-b border-slate-800 flex bg-slate-800/50 sticky top-6 z-20">
             {timelineHeaders.map((header, index) => (
               <div
                 key={index}
-                className={`flex-shrink-0 w-10 h-12 flex items-center justify-center text-xs border-r border-slate-700 last:border-r-0 ${
-                  header.isToday ? 'bg-blue-500/20 text-blue-400' : 'text-slate-400'
-                }`}
+                className={cn(
+                  "flex-shrink-0 w-10 h-8 flex flex-col items-center justify-center text-[10px] border-r border-slate-700/30 last:border-r-0",
+                  header.dayOfWeek === 5 || header.dayOfWeek === 6 ? 'bg-slate-800/30' : '',
+                  header.isToday ? 'bg-blue-500/20' : ''
+                )}
               >
-                {header.label}
+                <span className={cn(
+                  header.isToday ? 'text-blue-400 font-bold' : 'text-slate-500'
+                )}>
+                  {header.label}
+                </span>
               </div>
             ))}
           </div>
 
-          {/* Task Bars */}
+          {/* Task Bars + Today Line + SLA Deadlines */}
           <div className="relative">
-            {/* Today Line */}
-            {timelineHeaders.some(h => h.isToday) && (
+            {/* 2C: Today Line */}
+            {todayPosition !== null && (
               <div
-                className="absolute top-0 bottom-0 w-0.5 bg-blue-500 z-10"
-                style={{
-                  left: `${(timelineHeaders.findIndex(h => h.isToday) / timelineHeaders.length) * 100}%`,
-                }}
-              />
+                className="absolute top-0 bottom-0 w-0.5 bg-blue-500 z-10 pointer-events-none"
+                style={{ left: `${todayPosition}%` }}
+              >
+                <div className="absolute -top-5 -translate-x-1/2 bg-blue-500 text-white text-[9px] px-1.5 py-0.5 rounded whitespace-nowrap">
+                  {lang === 'ar' ? 'اليوم' : 'Today'}
+                </div>
+              </div>
             )}
 
+            {/* 2C: SLA Deadline Markers (dashed vertical lines) */}
+            {slaDeadlinePositions.map((sla) => (
+              <div
+                key={`sla-${sla.taskId}`}
+                className="absolute top-0 bottom-0 z-[5] pointer-events-none"
+                style={{ left: `${sla.position}%` }}
+              >
+                <div 
+                  className={cn(
+                    "w-0 h-full border-l border-dashed",
+                    sla.breached ? "border-red-500/60" : "border-amber-500/40"
+                  )} 
+                />
+                <div 
+                  className={cn(
+                    "absolute top-1 -translate-x-1/2 text-[8px] px-1 py-0.5 rounded max-w-[60px] truncate",
+                    sla.breached 
+                      ? "bg-red-500/80 text-white" 
+                      : "bg-amber-500/60 text-white"
+                  )}
+                >
+                  SLA
+                </div>
+              </div>
+            ))}
+
             {/* Task Rows */}
-            {tasks.map((task) => {
+            {flattenedTasks.map((item, rowIdx) => {
+              // Phase header row - just a separator
+              if ((item as any).type === 'phase-header') {
+                const category = (item as any).category;
+                const colorInfo = PHASE_CATEGORY_COLORS[category];
+                return (
+                  <div
+                    key={`phase-bar-${category}`}
+                    className="h-10 border-b border-slate-700/50 bg-slate-800/40"
+                  />
+                );
+              }
+
+              const task = item as GanttTask;
               const position = getTaskPosition(task);
               const isBeingDragged = draggedTask?.id === task.id;
+              const breached = isSLABreached(task);
+              const barColor = getSLABarColor(task);
               
               return (
                 <div
@@ -495,13 +705,15 @@ export function GanttChart({
                 >
                   {position && (
                     <div
-                      className={`absolute top-2 h-8 rounded-lg flex items-center group ${
-                        isBeingDragged ? 'ring-2 ring-white ring-opacity-50' : ''
-                      }`}
+                      className={cn(
+                        "absolute top-2 h-8 rounded-lg flex items-center group",
+                        isBeingDragged ? 'ring-2 ring-white ring-opacity-50' : '',
+                        breached && 'animate-pulse'
+                      )}
                       style={{
                         left: position.left,
                         width: position.width,
-                        backgroundColor: task.color || PRIORITY_COLORS[task.priority],
+                        backgroundColor: barColor,
                         cursor: dragMode === 'move' ? 'grabbing' : 'grab',
                       }}
                     >
@@ -525,7 +737,7 @@ export function GanttChart({
                         }}
                       />
 
-                      {/* Task Title - Drag Area */}
+                      {/* Task Title */}
                       <div 
                         className="flex-1 px-2 cursor-grab"
                         onMouseDown={(e) => handleDragStart(e, task, 'move')}
@@ -549,15 +761,23 @@ export function GanttChart({
                     </div>
                   )}
 
-                  {/* Milestone marker */}
-                  {task.isMilestone && task.endDate && (
-                    <div
-                      className="absolute top-3 w-4 h-4 transform rotate-45 bg-amber-500"
-                      style={{
-                        left: `${(Math.ceil((task.endDate.getTime() - viewRange.start.getTime()) / (1000 * 60 * 60 * 24)) / timelineHeaders.length) * 100}%`,
-                      }}
-                    />
-                  )}
+                  {/* 2C: Milestone diamond marker */}
+                  {task.isMilestone && task.endDate && (() => {
+                    const endDateOffset = Math.floor(
+                      (task.endDate.getTime() - viewRange.start.getTime()) / (1000 * 60 * 60 * 24)
+                    );
+                    const milestonePct = (endDateOffset / timelineHeaders.length) * 100;
+                    if (milestonePct < 0 || milestonePct > 100) return null;
+                    
+                    return (
+                      <div
+                        className="absolute top-3 z-[6] pointer-events-none"
+                        style={{ left: `${milestonePct}%` }}
+                      >
+                        <div className="w-5 h-5 transform rotate-45 bg-amber-500 border-2 border-amber-300 shadow-lg shadow-amber-500/30" />
+                      </div>
+                    );
+                  })()}
                 </div>
               );
             })}
@@ -565,13 +785,41 @@ export function GanttChart({
         </div>
       </div>
 
+      {/* Legend */}
+      <div className="p-3 border-t border-slate-800 flex items-center gap-4 flex-wrap text-xs">
+        <span className="text-slate-500">{lang === 'ar' ? 'ألوان SLA:' : 'SLA Colors:'}</span>
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded-sm bg-green-500" />
+          <span className="text-slate-400">{lang === 'ar' ? 'على المسار' : 'On Track'}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded-sm bg-amber-500" />
+          <span className="text-slate-400">{lang === 'ar' ? 'تحذير' : 'Warning'}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded-sm bg-red-500" />
+          <span className="text-slate-400">{lang === 'ar' ? 'خطر' : 'At Risk'}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded-sm bg-red-900 animate-pulse" />
+          <span className="text-slate-400">{lang === 'ar' ? 'مخالف' : 'Breached'}</span>
+        </div>
+        <span className="text-slate-600 mx-1">|</span>
+        <div className="flex items-center gap-1.5">
+          <Diamond className="w-3 h-3 text-amber-400 fill-amber-400" />
+          <span className="text-slate-400">{lang === 'ar' ? 'معلم' : 'Milestone'}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-4 h-0 border-t-2 border-dashed border-amber-500/60" />
+          <span className="text-slate-400">SLA {lang === 'ar' ? 'موعد نهائي' : 'Deadline'}</span>
+        </div>
+      </div>
+
       {/* Edit Task Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>
-              {lang === 'ar' ? 'تعديل المهمة' : 'Edit Task'}
-            </DialogTitle>
+            <DialogTitle>{lang === 'ar' ? 'تعديل المهمة' : 'Edit Task'}</DialogTitle>
           </DialogHeader>
           
           {selectedTask && (
@@ -690,9 +938,7 @@ export function GanttChart({
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>
-              {lang === 'ar' ? 'إضافة مهمة جديدة' : 'Add New Task'}
-            </DialogTitle>
+            <DialogTitle>{lang === 'ar' ? 'إضافة مهمة جديدة' : 'Add New Task'}</DialogTitle>
           </DialogHeader>
           
           <TaskForm
@@ -766,19 +1012,11 @@ function TaskForm({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label>{lang === 'ar' ? 'تاريخ البداية' : 'Start Date'}</Label>
-          <Input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-          />
+          <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
         </div>
         <div>
           <Label>{lang === 'ar' ? 'تاريخ النهاية' : 'End Date'}</Label>
-          <Input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-          />
+          <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
         </div>
       </div>
 

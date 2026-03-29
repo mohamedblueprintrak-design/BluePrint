@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Dialog,
@@ -24,6 +24,9 @@ import {
   HelpCircle,
   Search,
   ChevronLeft,
+  Plus,
+  Sparkles,
+  BarChart3,
 } from 'lucide-react';
 
 interface CommandPaletteProps {
@@ -31,8 +34,16 @@ interface CommandPaletteProps {
   onOpenChange: (open: boolean) => void;
 }
 
-// All available commands
-const commands = [
+interface CommandItem {
+  id: string;
+  label: string;
+  icon: React.ElementType;
+  category: string;
+  action?: () => void;
+}
+
+// Navigation commands
+const navCommands: CommandItem[] = [
   { id: '/dashboard', label: 'لوحة التحكم', icon: Home, category: 'الرئيسية' },
   { id: '/dashboard/projects', label: 'المشاريع', icon: FolderKanban, category: 'إدارة المشاريع' },
   { id: '/dashboard/tasks', label: 'المهام', icon: CheckSquare, category: 'إدارة المشاريع' },
@@ -48,6 +59,7 @@ const commands = [
   { id: '/dashboard/defects', label: 'العيوب', icon: Wrench, category: 'الجودة والسلامة' },
   { id: '/dashboard/site-diary', label: 'تقارير الموقع', icon: FileText, category: 'الجودة والسلامة' },
   { id: '/dashboard/team', label: 'الفريق', icon: Users, category: 'الموارد' },
+  { id: '/dashboard/workload', label: 'إدارة الأحمال', icon: Wrench, category: 'الموارد' },
   { id: '/dashboard/hr', label: 'الموارد البشرية', icon: Users, category: 'الموارد' },
   { id: '/dashboard/equipment', label: 'المعدات', icon: Wrench, category: 'الموارد' },
   { id: '/dashboard/documents', label: 'المستندات', icon: FileText, category: 'الموارد' },
@@ -59,14 +71,52 @@ const commands = [
   { id: '/dashboard/help', label: 'المساعدة', icon: HelpCircle, category: 'النظام' },
 ];
 
+// Engineering-specific quick actions (built dynamically with router)
+function buildActionCommands(router: ReturnType<typeof useRouter>): CommandItem[] {
+  return [
+    {
+      id: 'action-new-project',
+      label: 'مشروع جديد',
+      icon: Plus,
+      category: 'إجراءات سريعة',
+      action: () => router.push('/dashboard/projects'),
+    },
+    {
+      id: 'action-new-task',
+      label: 'مهمة جديدة',
+      icon: CheckSquare,
+      category: 'إجراءات سريعة',
+      action: () => router.push('/dashboard/tasks'),
+    },
+    {
+      id: 'action-view-sla',
+      label: 'عرض SLA',
+      icon: BarChart3,
+      category: 'إجراءات سريعة',
+      action: () => router.push('/dashboard/reports'),
+    },
+    {
+      id: 'action-ask-ai',
+      label: 'اسأل بلو',
+      icon: Sparkles,
+      category: 'إجراءات سريعة',
+      action: () => router.push('/dashboard/ai-chat'),
+    },
+  ];
+}
+
 export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const [search, setSearch] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
+  const allCommands = useCallback((): CommandItem[] => {
+    return [...buildActionCommands(router), ...navCommands];
+  }, [router]);
+
   // Filter commands based on search
-  const filteredCommands = commands.filter(
+  const filteredCommands = allCommands().filter(
     (cmd) =>
       cmd.label.includes(search) ||
       cmd.category.includes(search)
@@ -77,7 +127,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     if (!acc[cmd.category]) acc[cmd.category] = [];
     acc[cmd.category].push(cmd);
     return acc;
-  }, {} as Record<string, typeof commands>);
+  }, {} as Record<string, CommandItem[]>);
 
   // Reset state when dialog opens
   useEffect(() => {
@@ -104,8 +154,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     } else if (e.key === 'Enter') {
       e.preventDefault();
       if (filteredCommands[selectedIndex]) {
-        router.push(filteredCommands[selectedIndex].id);
-        onOpenChange(false);
+        handleCommandSelect(filteredCommands[selectedIndex]);
       }
     } else if (e.key === 'Escape') {
       onOpenChange(false);
@@ -113,8 +162,12 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   };
 
   // Handle command selection
-  const handleSelect = (id: string) => {
-    router.push(id);
+  const handleCommandSelect = (cmd: CommandItem) => {
+    if (cmd.action) {
+      cmd.action();
+    } else {
+      router.push(cmd.id);
+    }
     onOpenChange(false);
   };
 
@@ -122,17 +175,17 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl p-0" dir="rtl">
         {/* Search Input */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b">
-          <Search className="w-5 h-5 text-gray-400" />
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-700">
+          <Search className="w-5 h-5 text-slate-400" />
           <Input
             ref={inputRef}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="ابحث عن صفحة أو إجراء..."
-            className="border-0 shadow-none focus-visible:ring-0 px-0"
+            className="border-0 shadow-none focus-visible:ring-0 px-0 bg-transparent text-white"
           />
-          <kbd className="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded hidden sm:inline-block">
+          <kbd className="px-2 py-1 bg-slate-800 text-slate-400 text-xs rounded hidden sm:inline-block border border-slate-700">
             ESC
           </kbd>
         </div>
@@ -141,23 +194,29 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         <div className="max-h-80 overflow-y-auto p-2">
           {Object.entries(groupedCommands).map(([category, cmds]) => (
             <div key={category}>
-              <p className="px-3 py-2 text-xs text-gray-400 font-medium">{category}</p>
+              <p className="px-3 py-2 text-xs text-slate-400 font-medium">{category}</p>
               {cmds.map((cmd) => {
                 const Icon = cmd.icon;
                 const globalIndex = filteredCommands.indexOf(cmd);
+                const isAction = cmd.id.startsWith('action-');
                 return (
                   <button
                     key={cmd.id}
-                    onClick={() => handleSelect(cmd.id)}
+                    onClick={() => handleCommandSelect(cmd)}
                     onMouseEnter={() => setSelectedIndex(globalIndex)}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                       selectedIndex === globalIndex
-                        ? 'bg-blue-50 text-blue-700'
-                        : 'text-gray-700 hover:bg-gray-50'
+                        ? 'bg-violet-500/20 text-violet-300'
+                        : 'text-slate-300 hover:bg-slate-800'
                     }`}
                   >
                     <Icon className="w-5 h-5" />
                     <span className="flex-1 text-right">{cmd.label}</span>
+                    {isAction && (
+                      <Badge variant="outline" className="text-[10px] border-slate-700 text-slate-500">
+                        إجراء
+                      </Badge>
+                    )}
                     {selectedIndex === globalIndex && (
                       <ChevronLeft className="w-4 h-4" />
                     )}
@@ -168,22 +227,22 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           ))}
 
           {filteredCommands.length === 0 && (
-            <div className="py-8 text-center text-gray-400">
+            <div className="py-8 text-center text-slate-400">
               <Search className="w-8 h-8 mx-auto mb-2" />
-              <p>لا توجد نتائج لـ "{search}"</p>
+              <p>لا توجد نتائج لـ &quot;{search}&quot;</p>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-2 border-t flex items-center justify-between text-xs text-gray-400">
+        <div className="px-4 py-2 border-t border-slate-700 flex items-center justify-between text-xs text-slate-400">
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 bg-gray-100 rounded">↑↓</kbd>
+              <kbd className="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-700">↑↓</kbd>
               للتنقل
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 bg-gray-100 rounded">↵</kbd>
+              <kbd className="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-700">↵</kbd>
               للتأكيد
             </span>
           </div>

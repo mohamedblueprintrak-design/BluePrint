@@ -558,6 +558,13 @@ model Project {
   managerId           String?   // Project manager (User ID)
   clientId            String?   // Client reference
   budget              Float?    // Project budget
+  governmentApprovalStatus String? @default("PENDING")  // PENDING, SUBMITTED, APPROVED, REJECTED
+  governmentApprovalDate  DateTime?                 // Date of government approval
+  licenseNumber       String?                       // License/permit number
+  municipalityNotes   String?                       // Notes from municipality
+  electricalStatus    String? @default("NOT_STARTED")  // NOT_STARTED, IN_PROGRESS, COMPLETED
+  plumbingStatus      String? @default("NOT_STARTED")  // NOT_STARTED, IN_PROGRESS, COMPLETED
+  hvacStatus          String? @default("NOT_STARTED")  // NOT_STARTED, IN_PROGRESS, COMPLETED
   deletedAt           DateTime? // Soft delete
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt

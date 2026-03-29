@@ -619,6 +619,216 @@ export function createContractTemplate(): WorkflowPhaseTemplateData[] {
   ];
 }
 
+/**
+ * Create Structural Workflow Phase Template
+ * Creates phases for the structural engineering design workflow.
+ *
+ * Phases:
+ * 1. Soil Report (تقرير التربة) - 3 days
+ * 2. Foundation Design (تصميم الأساسات) - 5 days
+ * 3. Structural Calculations (الحسابات الإنشائية) - 7 days
+ * 4. Structural Drawings (الرسومات الإنشائية) - 6 days
+ */
+export function createStructuralTemplate(): WorkflowPhaseTemplateData[] {
+  return [
+    {
+      phaseType: 'SOIL_REPORT',
+      phaseTypeAr: 'تقرير التربة',
+      phaseCategory: 'STRUCTURAL',
+      description: 'Soil investigation and geotechnical report for foundation design',
+      descriptionAr: 'تقرير التحقيق الجيوتقني وتربة الموقع لتصميم الأساسات',
+      slaDays: 3,
+      slaWarningDays: 2,
+      order: 1,
+      color: '#92400E',
+    },
+    {
+      phaseType: 'FOUNDATION_DESIGN',
+      phaseTypeAr: 'تصميم الأساسات',
+      phaseCategory: 'STRUCTURAL',
+      description: 'Foundation design based on soil report and structural requirements',
+      descriptionAr: 'تصميم الأساسات بناءً على تقرير التربة والمتطلبات الإنشائية',
+      slaDays: 5,
+      slaWarningDays: 4,
+      order: 2,
+      dependsOnOrder: 1,
+      color: '#B45309',
+    },
+    {
+      phaseType: 'STRUCTURAL_CALCULATIONS',
+      phaseTypeAr: 'الحسابات الإنشائية',
+      phaseCategory: 'STRUCTURAL',
+      description: 'Full structural analysis and calculations including load, seismic, and wind analysis',
+      descriptionAr: 'التحليل والحسابات الإنشائية الكاملة بما في ذلك الأحمال والزلازل والرياح',
+      slaDays: 7,
+      slaWarningDays: 5,
+      order: 3,
+      dependsOnOrder: 2,
+      color: '#D97706',
+    },
+    {
+      phaseType: 'STRUCTURAL_DRAWINGS',
+      phaseTypeAr: 'الرسومات الإنشائية',
+      phaseCategory: 'STRUCTURAL',
+      description: 'Final structural drawings including reinforcement details and connection designs',
+      descriptionAr: 'الرسومات الإنشائية النهائية بما في ذلك تفاصيل التسليح وتصاميم الوصلات',
+      slaDays: 6,
+      slaWarningDays: 4,
+      order: 4,
+      dependsOnOrder: 3,
+      color: '#F59E0B',
+    },
+  ];
+}
+
+/**
+ * Create MEP Workflow Phase Template
+ * Creates phases for the Mechanical, Electrical, and Plumbing design workflow.
+ *
+ * Phases:
+ * 1. Electrical Design (تصميم كهربائي) - 5 days
+ * 2. Plumbing Design (تصميم سباكة) - 4 days
+ * 3. HVAC Design (تصميم تكييف) - 5 days
+ * 4. MEP Coordination (تنسيق MEP) - 3 days
+ * 5. MEP Shop Drawings (مخططات تنفيذية MEP) - 7 days
+ */
+export function createMEPTemplate(): WorkflowPhaseTemplateData[] {
+  return [
+    {
+      phaseType: 'ELECTRICAL_DESIGN',
+      phaseTypeAr: 'تصميم كهربائي',
+      phaseCategory: 'MEP',
+      description: 'Electrical power distribution, lighting, and low-current systems design',
+      descriptionAr: 'تصميم توزيع الطاقة الكهربائية والإضاءة والأنظمة منخفضة التيار',
+      slaDays: 5,
+      slaWarningDays: 4,
+      order: 1,
+      color: '#DC2626',
+    },
+    {
+      phaseType: 'PLUMBING_DESIGN',
+      phaseTypeAr: 'تصميم سباكة',
+      phaseCategory: 'MEP',
+      description: 'Water supply, drainage, and fire-fighting plumbing systems design',
+      descriptionAr: 'تصميم أنظمة إمداد المياه والصرف ومكافحة الحرائق',
+      slaDays: 4,
+      slaWarningDays: 3,
+      order: 2,
+      color: '#2563EB',
+    },
+    {
+      phaseType: 'HVAC_DESIGN',
+      phaseTypeAr: 'تصميم تكييف',
+      phaseCategory: 'MEP',
+      description: 'Heating, ventilation, and air conditioning system design and load calculations',
+      descriptionAr: 'تصميم نظام التدفئة والتهوية وتكييف الهواء وحسابات الأحمال',
+      slaDays: 5,
+      slaWarningDays: 4,
+      order: 3,
+      color: '#7C3AED',
+    },
+    {
+      phaseType: 'MEP_COORDINATION',
+      phaseTypeAr: 'تنسيق MEP',
+      phaseCategory: 'MEP',
+      description: 'Clash detection and coordination between all MEP disciplines',
+      descriptionAr: 'كشف التعارضات والتنسيق بين جميع تخصصات MEP',
+      slaDays: 3,
+      slaWarningDays: 2,
+      order: 4,
+      dependsOnOrder: 1,
+      color: '#0891B2',
+    },
+    {
+      phaseType: 'MEP_SHOP_DRAWINGS',
+      phaseTypeAr: 'مخططات تنفيذية MEP',
+      phaseCategory: 'MEP',
+      description: 'Final MEP shop drawings for contractor execution',
+      descriptionAr: 'المخططات التنفيذية النهائية لتنفيذ المقاول',
+      slaDays: 7,
+      slaWarningDays: 5,
+      order: 5,
+      dependsOnOrder: 4,
+      color: '#059669',
+    },
+  ];
+}
+
+/**
+ * Create Government Approvals Workflow Phase Template
+ * Creates phases for the complete government approval workflow in UAE/Gulf region.
+ *
+ * Phases:
+ * 1. Municipality Submission (تقديم البلدية) - 3 days
+ * 2. Municipality Review (مراجعة البلدية) - 21 days
+ * 3. Civil Defense (الدفاع المدني) - 14 days
+ * 4. FEWA/DEWA (هيئة الكهرباء والماء) - 14 days
+ * 5. Final Approval (الموافقة النهائية) - 3 days
+ */
+export function createGovernmentTemplate(): WorkflowPhaseTemplateData[] {
+  return [
+    {
+      phaseType: 'MUNICIPALITY_SUBMISSION',
+      phaseTypeAr: 'تقديم البلدية',
+      phaseCategory: 'GOVERNMENT',
+      description: 'Prepare and submit all required documents to the municipality for building permit',
+      descriptionAr: 'إعداد وتقديم جميع المستندات المطلوبة للبلدية للحصول على رخصة البناء',
+      slaDays: 3,
+      slaWarningDays: 2,
+      order: 1,
+      color: '#7C3AED',
+    },
+    {
+      phaseType: 'MUNICIPALITY_REVIEW',
+      phaseTypeAr: 'مراجعة البلدية',
+      phaseCategory: 'GOVERNMENT',
+      description: 'Municipality technical review and committee approval process',
+      descriptionAr: 'المراجعة الفنية للبلدية وعملية موافقة اللجنة',
+      slaDays: 21,
+      slaWarningDays: 5,
+      order: 2,
+      dependsOnOrder: 1,
+      color: '#6D28D9',
+    },
+    {
+      phaseType: 'CIVIL_DEFENSE_APPROVAL',
+      phaseTypeAr: 'الدفاع المدني',
+      phaseCategory: 'GOVERNMENT',
+      description: 'Submit fire safety plans to Civil Defense and obtain approval certificate',
+      descriptionAr: 'تقديم خطط السلامة للدفاع المدني والحصول على شهادة الموافقة',
+      slaDays: 14,
+      slaWarningDays: 5,
+      order: 3,
+      dependsOnOrder: 2,
+      color: '#DC2626',
+    },
+    {
+      phaseType: 'FEWA_DEWA_APPROVAL',
+      phaseTypeAr: 'هيئة الكهرباء والماء',
+      phaseCategory: 'GOVERNMENT',
+      description: 'Submit electrical and water connection plans to FEWA/DEWA for approval',
+      descriptionAr: 'تقديم مخططات التوصيل الكهربائي والمائي لهيئة الكهرباء والماء للموافقة',
+      slaDays: 14,
+      slaWarningDays: 5,
+      order: 4,
+      dependsOnOrder: 2,
+      color: '#2563EB',
+    },
+    {
+      phaseType: 'FINAL_GOVERNMENT_APPROVAL',
+      phaseTypeAr: 'الموافقة النهائية',
+      phaseCategory: 'GOVERNMENT',
+      description: 'Obtain final building permit after all government approvals are secured',
+      descriptionAr: 'الحصول على رخصة البناء النهائية بعد استيفاء جميع الموافقات الحكومية',
+      slaDays: 3,
+      slaWarningDays: 2,
+      order: 5,
+      dependsOnOrder: 3,
+      color: '#10B981',
+    },
+  ];
+}
+
 export default {
   initializeTemplates,
   createTasksFromTemplate,
@@ -627,4 +837,7 @@ export default {
   PREDEFINED_TEMPLATES,
   createArchitecturalTemplate,
   createContractTemplate,
+  createStructuralTemplate,
+  createMEPTemplate,
+  createGovernmentTemplate,
 };

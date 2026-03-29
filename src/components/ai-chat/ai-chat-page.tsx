@@ -5,9 +5,7 @@ import { useApp } from '@/context/app-context';
 import { useAuth } from '@/context/auth-context';
 import { useTranslation } from '@/lib/translations';
 import { useAIChat } from '@/hooks/use-data';
-import { useAI } from '@/lib/ai/ai-context';
-import { AVAILABLE_MODELS, getModelInfo } from '@/lib/ai/model-config';
-import { QuickModelSwitch } from '@/components/ai/model-selector';
+import { AVAILABLE_MODELS } from '@/lib/ai/model-config';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -67,6 +65,11 @@ import {
   Brain,
   Globe,
   Wand2,
+  ClipboardCheck,
+  MessageSquareReply,
+  Timer,
+  TrendingUp,
+  BarChart3,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -146,12 +149,51 @@ const COST_TIER_LABELS: Record<string, string> = {
   high: 'Premium',
 };
 
-// Quick Prompts
+// Quick Prompts - General
 const QUICK_PROMPTS = [
   { id: 'calc', labelAr: 'حسابات هندسية', labelEn: 'Engineering Calculations', icon: Calculator, color: 'text-blue-400' },
   { id: 'uae', labelAr: 'أكواد الإمارات', labelEn: 'UAE Building Codes', icon: BookOpen, color: 'text-green-400' },
   { id: 'price', labelAr: 'استعلام الأسعار', labelEn: 'Price Inquiry', icon: DollarSign, color: 'text-yellow-400' },
   { id: 'design', labelAr: 'تصميم إنشائي', labelEn: 'Structural Design', icon: Building2, color: 'text-purple-400' },
+];
+
+// Engineering Quick Prompts (Task 3)
+const ENGINEERING_QUICK_PROMPTS = [
+  { 
+    id: 'municipality_notes', 
+    labelAr: 'تحليل ملاحظات البلدية', 
+    labelEn: 'Analyze Municipality Notes', 
+    icon: ClipboardCheck, 
+    color: 'text-cyan-400' 
+  },
+  { 
+    id: 'contractor_response', 
+    labelAr: 'اقتراح رد على المقاول', 
+    labelEn: 'Suggest Contractor Response', 
+    icon: MessageSquareReply, 
+    color: 'text-teal-400' 
+  },
+  { 
+    id: 'sla_review', 
+    labelAr: 'مراجعة SLA', 
+    labelEn: 'Review SLA Status', 
+    icon: Timer, 
+    color: 'text-orange-400' 
+  },
+  { 
+    id: 'progress_report', 
+    labelAr: 'تقرير تقدم المشروع', 
+    labelEn: 'Project Progress Report', 
+    icon: TrendingUp, 
+    color: 'text-emerald-400' 
+  },
+  { 
+    id: 'boq_analysis', 
+    labelAr: 'تحليل تكاليف BOQ', 
+    labelEn: 'BOQ Cost Analysis', 
+    icon: BarChart3, 
+    color: 'text-rose-400' 
+  },
 ];
 
 // Chat Message Type
@@ -446,7 +488,7 @@ export function AIChatPage() {
         
         setMessages(prev => [...prev, assistantMessage]);
       }
-    } catch (_error) {
+    } catch {
       setMessages(prev => prev.filter(m => m.id !== loadingId));
       
       const errorMessage: ChatMessage = {
@@ -577,6 +619,22 @@ export function AIChatPage() {
       design: language === 'ar' 
         ? 'أحتاج مساعدة في التصميم الإنشائي لمشروعي. ما هي العوامل الرئيسية؟' 
         : 'I need help with structural design for my project. What are the main factors?',
+      // Engineering-specific prompts (Task 3)
+      municipality_notes: language === 'ar'
+        ? 'قم بتحليل ملاحظات البلدية التالية واقترح إجراءات تصحيحية مناسبة وفقاً لأكواد البناء الإماراتية. قم بترتيب الملاحظات حسب الأولوية واقترح جدول زمني للمعالجة.'
+        : 'Analyze the following municipality notes and suggest appropriate corrective actions according to UAE building codes. Prioritize the notes and suggest a resolution timeline.',
+      contractor_response: language === 'ar'
+        ? 'اقترح رد مهني ومفصل على طلب المقاول المتعلق بالتغييرات في المخططات. يجب أن يكون الرد متوازناً بين متطلبات المشروع ومطالب المقاول مع مراعاة العقد.'
+        : 'Suggest a professional and detailed response to the contractor\'s request regarding drawing changes. The response should balance project requirements and contractor demands while considering the contract terms.',
+      sla_review: language === 'ar'
+        ? 'قم بمراجعة حالة SLA لجميع المهام الحكومية في المشروع الحالي. حدد المهام المخالفة أو المعرضة للخطر واقترح إجراءات عاجلة. قدم ملخصاً بأرقام SLA المتبقية.'
+        : 'Review the SLA status for all government tasks in the current project. Identify breached or at-risk tasks and suggest urgent actions. Provide a summary with remaining SLA numbers.',
+      progress_report: language === 'ar'
+        ? 'قم بإعداد تقرير تقدم شامل للمشروع يتضمن: نسبة الإنجاز الكلية، حالة كل مرحلة (معماري، إنشائي، كهرباء وميكانيك، حكومي، مقاولات)، المهام المتأخرة، والمخاطر المحتملة.'
+        : 'Prepare a comprehensive project progress report including: overall completion percentage, status of each phase (Architectural, Structural, MEP, Government, Contracting), delayed tasks, and potential risks.',
+      boq_analysis: language === 'ar'
+        ? 'قم بتحليل تكاليف BOQ (جدول الكميات) للمشروع. حدد البنود التي تجاوزت الميزانية بنسبة أكثر من 20% واقترح إجراءات لتقليل التكاليف. قدم مقارنة بين التكاليف المخططة والفعلية.'
+        : 'Analyze the BOQ (Bill of Quantities) costs for the project. Identify items exceeding budget by more than 20% and suggest cost reduction measures. Provide a comparison between planned and actual costs.',
     };
     
     setInput(prompts[promptId] || '');
@@ -841,7 +899,7 @@ export function AIChatPage() {
                     : 'I can help you with engineering calculations, UAE building codes, and price inquiries.'}
                 </p>
                 
-                {/* Quick Prompts */}
+                {/* Quick Prompts - General */}
                 <div className="grid grid-cols-2 gap-2 max-w-lg">
                   {QUICK_PROMPTS.map((prompt) => (
                     <Button
@@ -856,6 +914,28 @@ export function AIChatPage() {
                       </span>
                     </Button>
                   ))}
+                </div>
+                
+                {/* Engineering Quick Prompts */}
+                <div className="mt-6 pt-4 border-t border-slate-800 w-full max-w-lg">
+                  <p className="text-sm text-slate-400 mb-3">
+                    {language === 'ar' ? '🏗️ أدوات هندسية سريعة:' : '🏗️ Engineering Quick Tools:'}
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {ENGINEERING_QUICK_PROMPTS.map((prompt) => (
+                      <Button
+                        key={prompt.id}
+                        variant="outline"
+                        className="h-auto py-3 px-4 bg-slate-800/50 border-slate-700 hover:bg-slate-800 hover:border-blue-500/50 justify-start"
+                        onClick={() => handleQuickPrompt(prompt.id)}
+                      >
+                        <prompt.icon className={cn("w-4 h-4 shrink-0 me-2", prompt.color)} />
+                        <span className="text-sm text-slate-300">
+                          {language === 'ar' ? prompt.labelAr : prompt.labelEn}
+                        </span>
+                      </Button>
+                    ))}
+                  </div>
                 </div>
                 
                 {/* Skills Info */}
@@ -1004,7 +1084,7 @@ export function AIChatPage() {
           {/* Quick Prompts (when there are messages) */}
           {messages.length > 0 && (
             <div className="flex gap-2 mb-3 overflow-x-auto pb-2">
-              {QUICK_PROMPTS.map((prompt) => (
+              {[...QUICK_PROMPTS, ...ENGINEERING_QUICK_PROMPTS].map((prompt) => (
                 <Button
                   key={prompt.id}
                   variant="outline"

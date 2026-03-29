@@ -33,7 +33,7 @@ import {
   User, Shield, BookOpen, Bot, FileSpreadsheet,
   PanelLeftClose, PanelLeft, Zap, Calculator, ShoppingCart,
   AlertTriangle, Receipt, X, ChevronDown, ChevronUp,
-  FolderOpen, Settings2
+  FolderOpen, Settings2, LayoutDashboard
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -173,8 +173,9 @@ function CollapsibleSection({
 }
 
 // Route mapping for navigation
-const getRoutes = (language: 'ar' | 'en'): Record<string, string> => ({
+const getRoutes = (_language: 'ar' | 'en'): Record<string, string> => ({
   'dashboard': '/dashboard',
+  'operations': '/dashboard/operations',
   'projects': '/dashboard/projects',
   'clients': '/dashboard/clients',
   'proposals': '/dashboard/proposals',
@@ -224,6 +225,7 @@ function SidebarContent({
   // Core items - always visible
   const coreItems: SidebarItem[] = [
     { id: 'dashboard', label: t.dashboard, icon: Home, href: '/dashboard' },
+    { id: 'operations', label: language === 'ar' ? 'مركز العمليات' : 'Operations Center', icon: LayoutDashboard, href: '/dashboard/operations' },
     { id: 'projects', label: t.projects, icon: Building2, href: '/dashboard/projects' },
     { id: 'tasks', label: t.tasks, icon: CheckSquare, badge: 3, href: '/dashboard/tasks' },
     { id: 'clients', label: t.clients, icon: Users, href: '/dashboard/clients' },
@@ -278,7 +280,7 @@ function SidebarContent({
     }
   }, [pathname, setCurrentPage, currentPage, routes]);
 
-  const handleItemClick = useCallback((id: string, href: string) => {
+  const handleItemClick = useCallback((id: string, _href: string) => {
     setCurrentPage(id);
     if (isMobile && onClose) {
       onClose();

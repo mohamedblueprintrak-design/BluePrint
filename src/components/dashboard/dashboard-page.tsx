@@ -20,9 +20,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Building2, Users, DollarSign, CheckSquare, AlertTriangle,
-  ArrowUpRight, ArrowDownRight, Clock, FileText, Loader2, Plus
+  ArrowUpRight, ArrowDownRight, Clock, FileText, Loader2, Plus,
+  Rocket, BarChart3, CalendarDays, Sparkles, Info
 } from 'lucide-react';
 import {
   RevenueChart,
@@ -41,7 +43,7 @@ type Period = '7d' | '30d' | '90d' | 'year';
 
 export function DashboardPage() {
   const router = useRouter();
-  const { language, setCurrentPage } = useApp();
+  const { language } = useApp();
   const { t, formatCurrency, formatDate } = useTranslation(language);
   
   const [period, setPeriod] = useState<Period>('30d');
@@ -58,7 +60,7 @@ export function DashboardPage() {
         if (!hasSeenModal && isMounted) {
           setShowWelcomeModal(true);
         }
-      } catch (e) {
+      } catch {
         // localStorage might not be available
         console.warn('localStorage not available');
       }
@@ -97,7 +99,7 @@ export function DashboardPage() {
     // Use real financial data from API instead of random values
     const baseRevenue = stats?.financial?.totalPaid || 0;
     // Calculate expenses as percentage of revenue if not provided
-    const baseExpenses = (stats?.financial as any)?.totalExpenses || baseRevenue * 0.4;
+    const baseExpenses = (stats?.financial as Record<string, number>)?.totalExpenses || baseRevenue * 0.4;
     const baseProfit = baseRevenue - baseExpenses;
     
     // Calculate monthly averages based on actual totals
@@ -144,7 +146,7 @@ export function DashboardPage() {
       : ['Materials', 'Labor', 'Equipment', 'Transportation', 'Utilities', 'Miscellaneous'];
 
     // Use real expense data from API
-    const financial = stats?.financial as any;
+    const financial = stats?.financial as Record<string, number> | undefined;
     const totalExpenses = financial?.totalExpenses || (stats?.financial?.totalPaid || 0) * 0.4;
     
     // Realistic expense distribution percentages based on construction industry standards
@@ -254,40 +256,103 @@ export function DashboardPage() {
         </Select>
       </div>
 
+      {/* Empty State - No Projects */}
+      {projects.length === 0 && !projectsLoading && (
+        <Card className="bg-slate-900/50 border-slate-800">
+          <CardContent className="p-8">
+            <div className="flex flex-col items-center text-center">
+              <div className="p-4 rounded-2xl bg-blue-500/10 mb-4">
+                <Rocket className="w-12 h-12 text-blue-400" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">
+                {language === 'ar' ? 'مرحبًا بك في BluePrint!' : 'Welcome to BluePrint!'}
+              </h3>
+              <p className="text-slate-400 max-w-md mb-6">
+                {language === 'ar'
+                  ? 'ابدأ بإنشاء مشروعك الأول لإدارة المشاريع والمهام والفريق بسهولة'
+                  : 'Start by creating your first project to manage projects, tasks, and team effortlessly'}
+              </p>
+              <Button
+                onClick={() => router.push('/dashboard/projects')}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Plus className="w-4 h-4 me-2" />
+                {t.newProject}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statCards.map((stat, index) => (
-          <Card 
-            key={index} 
-            className="bg-slate-900/50 border-slate-800 hover:border-slate-700 hover:shadow-lg hover:shadow-slate-900/50 transition-all duration-300 hover:-translate-y-1 group"
-          >
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div className={`p-2.5 rounded-xl ${stat.bgColor} group-hover:scale-110 transition-transform duration-300`}>
-                  <stat.icon className={`w-5 h-5 ${stat.color}`} />
-                </div>
-                <div className={`flex items-center gap-1 text-sm ${stat.trendUp ? 'text-green-400' : 'text-red-400'}`}>
-                  {stat.trend}
-                  {stat.trendUp ? (
-                    <ArrowUpRight className="w-3 h-3" />
-                  ) : (
-                    <ArrowDownRight className="w-3 h-3" />
-                  )}
-                </div>
-              </div>
-              <div className="mt-4">
-                <p className="text-2xl font-bold text-white">{stat.value}</p>
-                {stat.total && (
-                  <p className="text-sm text-slate-400">{language === 'ar' ? 'من' : 'of'} {stat.total}</p>
-                )}
-                {stat.subtitle && (
-                  <p className="text-sm text-slate-400">{stat.subtitle}</p>
-                )}
-              </div>
-              <p className="text-sm text-slate-400 mt-1">{stat.title}</p>
-            </CardContent>
-          </Card>
-        ))}
+        {statCards.map((stat, index) => {
+          const tooltipMap: Record<string, { ar: string; en: string }> = {
+            [t.activeProjects]: {
+              ar: 'عدد المشاريع التي تعمل عليها حاليًا من إجمالي المشاريع',
+              en: 'Number of projects currently in progress out of total projects',
+            },
+            [t.totalClients]: {
+              ar: 'إجمالي العملاء المسجلين في النظام',
+              en: 'Total registered clients in the system',
+            },
+            [t.revenue]: {
+              ar: 'إجمالي المبالغ المحصّلة من الفواتير المدفوعة',
+              en: 'Total amount collected from paid invoices',
+            },
+            [t.pendingTasks]: {
+              ar: 'المهام التي لم تكتمل بعد وتحتاج إلى اهتمام',
+              en: 'Tasks that are not yet completed and need attention',
+            },
+          };
+          const tooltipText = tooltipMap[stat.title];
+
+          return (
+            <Tooltip key={index}>
+              <TooltipTrigger asChild>
+                <Card
+                  className="bg-slate-900/50 border-slate-800 hover:border-slate-700 hover:shadow-lg hover:shadow-slate-900/50 transition-all duration-300 hover:-translate-y-1 group cursor-default"
+                >
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className={`p-2.5 rounded-xl ${stat.bgColor} group-hover:scale-110 transition-transform duration-300`}>
+                        <stat.icon className={`w-5 h-5 ${stat.color}`} />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {tooltipText && (
+                          <Info className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-400 transition-colors" />
+                        )}
+                        <div className={`flex items-center gap-1 text-sm ${stat.trendUp ? 'text-green-400' : 'text-red-400'}`}>
+                          {stat.trend}
+                          {stat.trendUp ? (
+                            <ArrowUpRight className="w-3 h-3" />
+                          ) : (
+                            <ArrowDownRight className="w-3 h-3" />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-4">
+                      <p className="text-2xl font-bold text-white">{stat.value}</p>
+                      {stat.total && (
+                        <p className="text-sm text-slate-400">{language === 'ar' ? 'من' : 'of'} {stat.total}</p>
+                      )}
+                      {stat.subtitle && (
+                        <p className="text-sm text-slate-400">{stat.subtitle}</p>
+                      )}
+                    </div>
+                    <p className="text-sm text-slate-400 mt-1">{stat.title}</p>
+                  </CardContent>
+                </Card>
+              </TooltipTrigger>
+              {tooltipText && (
+                <TooltipContent side="bottom" className="bg-slate-800 border-slate-700 text-slate-200 max-w-xs">
+                  <p className="text-xs">{language === 'ar' ? tooltipText.ar : tooltipText.en}</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          );
+        })}
       </div>
 
       {/* Charts Row 1 - Revenue & Project Status */}
@@ -514,6 +579,53 @@ export function DashboardPage() {
             </CardContent>
           </Card>
 
+          {/* Enhanced Quick Actions Bar */}
+          <Card className="bg-gradient-to-br from-violet-950/50 to-slate-900/50 border-violet-500/20">
+            <CardContent className="p-4">
+              <div className="grid grid-cols-1 gap-2">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-3 text-slate-300 hover:bg-violet-500/10 hover:text-violet-300 p-3 h-auto"
+                  onClick={() => router.push('/dashboard/reports')}
+                >
+                  <div className="p-1.5 rounded-lg bg-violet-500/20">
+                    <BarChart3 className="w-4 h-4 text-violet-400" />
+                  </div>
+                  <div className="text-start">
+                    <p className="text-sm font-medium">{language === 'ar' ? 'إنشاء تقرير' : 'Generate Report'}</p>
+                    <p className="text-[10px] text-slate-500">{language === 'ar' ? 'تقارير مالية وتشغيلية' : 'Financial & operational reports'}</p>
+                  </div>
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-3 text-slate-300 hover:bg-blue-500/10 hover:text-blue-300 p-3 h-auto"
+                  onClick={() => router.push('/dashboard/calendar')}
+                >
+                  <div className="p-1.5 rounded-lg bg-blue-500/20">
+                    <CalendarDays className="w-4 h-4 text-blue-400" />
+                  </div>
+                  <div className="text-start">
+                    <p className="text-sm font-medium">{language === 'ar' ? 'عرض الجدول' : 'View Schedule'}</p>
+                    <p className="text-[10px] text-slate-500">{language === 'ar' ? 'جدول المشاريع والجداول الزمنية' : 'Project schedule & timelines'}</p>
+                  </div>
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-3 text-slate-300 hover:bg-emerald-500/10 hover:text-emerald-300 p-3 h-auto"
+                  onClick={() => router.push('/dashboard/ai-chat')}
+                >
+                  <div className="p-1.5 rounded-lg bg-emerald-500/20">
+                    <Sparkles className="w-4 h-4 text-emerald-400" />
+                  </div>
+                  <div className="text-start">
+                    <p className="text-sm font-medium">{language === 'ar' ? 'اسأل الذكاء الاصطناعي' : 'Ask AI'}</p>
+                    <p className="text-[10px] text-slate-500">{language === 'ar' ? 'المساعد الذكي بلو جاهز لمساعدتك' : 'Blu AI assistant ready to help'}</p>
+                  </div>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Open Defects */}
           <Card className="bg-slate-900/50 border-slate-800 hover:border-red-500/50 transition-colors cursor-pointer" onClick={() => router.push('/dashboard/defects')}>
             <CardHeader>
@@ -584,7 +696,7 @@ export function DashboardPage() {
             ) : (
               <ScrollArea className="h-64">
                 <div className="space-y-3">
-                  {recentTasks.length > 0 ? recentTasks.map((task: any) => (
+                  {recentTasks.length > 0 ? recentTasks.map((task: Record<string, unknown>) => (
                     <div key={task.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800/50 transition-colors">
                       <div className={`w-2 h-2 rounded-full ${
                         task.priority === 'urgent' ? 'bg-red-500' :
@@ -641,7 +753,7 @@ export function DashboardPage() {
             ) : (
               <ScrollArea className="h-64">
                 <div className="space-y-3">
-                  {pendingInvoices.length > 0 ? pendingInvoices.map((invoice: any) => (
+                  {pendingInvoices.length > 0 ? pendingInvoices.map((invoice: Record<string, unknown>) => (
                     <div key={invoice.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800/50 transition-colors">
                       <div className="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center">
                         <FileText className="w-5 h-5 text-cyan-400" />

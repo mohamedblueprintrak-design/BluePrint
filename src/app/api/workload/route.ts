@@ -3,6 +3,36 @@ import { getUserFromRequest } from '../utils/demo-config';
 import { successResponse, unauthorizedResponse, serverErrorResponse } from '../utils/response';
 import { prisma } from '@/lib/db';
 
+// ============================================
+// Capacity Planning Constants
+// ============================================
+
+const MAX_WEEKLY_CAPACITY_HOURS = 40; // Standard full-time work week
+const _MAX_DAILY_CAPACITY_HOURS = 8;  // Standard work day (reserved for future use)
+
+/**
+ * Get suggested action based on utilization percentage
+ */
+function getSuggestedAction(utilizationPercentage: number): string {
+  if (utilizationPercentage <= 60) return 'available';
+  if (utilizationPercentage <= 80) return 'moderate';
+  if (utilizationPercentage <= 100) return 'heavy';
+  return 'overloaded';
+}
+
+/**
+ * Get color for suggested action
+ */
+function getActionColor(action: string): string {
+  switch (action) {
+    case 'available': return 'green';
+    case 'moderate': return 'yellow';
+    case 'heavy': return 'orange';
+    case 'overloaded': return 'red';
+    default: return 'gray';
+  }
+}
+
 export async function GET(request: NextRequest) {
   const user = await getUserFromRequest(request);
   if (!user || !user.organizationId) {
@@ -60,15 +90,27 @@ export async function GET(request: NextRequest) {
       totalEstimatedHours: number;
       totalActualHours: number;
       completionRate: number;
-      pressureScore: number; // 0-100
+      pressureScore: number;
+      maxCapacity: number;
+      currentLoad: number;
+      availableCapacity: number;
+      utilizationPercentage: number;
+      suggestedAction: string;
+      suggestedActionColor: string;
     }>();
 
-    // Initialize
+    // Initialize with capacity planning data
     for (const u of users) {
       workloadMap.set(u.id, {
         totalTasks: 0, todoTasks: 0, inProgressTasks: 0, reviewTasks: 0, doneTasks: 0,
         overdueTasks: 0, highPriorityTasks: 0, totalEstimatedHours: 0, totalActualHours: 0,
         completionRate: 0, pressureScore: 0,
+        maxCapacity: MAX_WEEKLY_CAPACITY_HOURS,
+        currentLoad: 0,
+        availableCapacity: MAX_WEEKLY_CAPACITY_HOURS,
+        utilizationPercentage: 0,
+        suggestedAction: 'available',
+        suggestedActionColor: 'green',
       });
     }
 
@@ -89,7 +131,7 @@ export async function GET(request: NextRequest) {
       if (task.dueDate && task.dueDate < now && task.status !== 'DONE') w.overdueTasks++;
     }
 
-    // Calculate derived metrics
+    // Calculate derived metrics including capacity planning
     const workloadData = users.map(u => {
       const w = workloadMap.get(u.id)!;
       w.completionRate = w.totalTasks > 0 ? Math.round((w.doneTasks / w.totalTasks) * 100) : 0;
@@ -101,6 +143,20 @@ export async function GET(request: NextRequest) {
       const reviewWeight = w.reviewTasks * 5;
       w.pressureScore = Math.min(100, Math.round(overdueWeight + highPriorityWeight + activeWeight + reviewWeight));
 
+      // Capacity planning calculations
+      // Use remaining estimated hours as current load (tasks not yet done)
+      const activeTaskHours = tasks
+        .filter(t => t.assignedTo === u.id && t.status !== 'DONE' && t.status !== 'CANCELLED')
+        .reduce((sum, t) => sum + (t.estimatedHours || 0), 0);
+
+      w.currentLoad = Math.round(activeTaskHours * 10) / 10;
+      w.availableCapacity = Math.max(0, Math.round((w.maxCapacity - w.currentLoad) * 10) / 10);
+      w.utilizationPercentage = w.maxCapacity > 0
+        ? Math.round((w.currentLoad / w.maxCapacity) * 100)
+        : 0;
+      w.suggestedAction = getSuggestedAction(w.utilizationPercentage);
+      w.suggestedActionColor = getActionColor(w.suggestedAction);
+
       return {
         userId: u.id,
         fullName: u.fullName || u.username,
@@ -111,17 +167,35 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // Sort by pressure score descending
-    workloadData.sort((a, b) => b.pressureScore - a.pressureScore);
+    // Sort by utilization percentage descending (most loaded first)
+    workloadData.sort((a, b) => b.utilizationPercentage - a.utilizationPercentage);
 
-    // Summary stats
+    // Team-level summary with capacity stats
+    const totalCapacity = users.length * MAX_WEEKLY_CAPACITY_HOURS;
+    const totalCurrentLoad = workloadData.reduce((sum, w) => sum + w.currentLoad, 0);
+    const totalAvailableCapacity = Math.max(0, totalCapacity - totalCurrentLoad);
+    const teamUtilization = totalCapacity > 0 ? Math.round((totalCurrentLoad / totalCapacity) * 100) : 0;
+
     const summary = {
       totalEmployees: users.length,
-      overloadedEmployees: workloadData.filter(w => w.pressureScore >= 70).length,
+      overloadedEmployees: workloadData.filter(w => w.suggestedAction === 'overloaded').length,
+      heavyLoadEmployees: workloadData.filter(w => w.suggestedAction === 'heavy').length,
+      moderateLoadEmployees: workloadData.filter(w => w.suggestedAction === 'moderate').length,
+      availableEmployees: workloadData.filter(w => w.suggestedAction === 'available').length,
       totalActiveTasks: tasks.filter(t => t.status !== 'DONE' && t.status !== 'CANCELLED').length,
       totalOverdueTasks: tasks.filter(t => t.dueDate && t.dueDate < now && t.status !== 'DONE').length,
       avgCompletionRate: workloadData.length > 0
         ? Math.round(workloadData.reduce((sum, w) => sum + w.completionRate, 0) / workloadData.length)
+        : 0,
+      // Capacity planning summary
+      maxWeeklyCapacity: MAX_WEEKLY_CAPACITY_HOURS,
+      totalTeamCapacity: totalCapacity,
+      totalCurrentLoad: Math.round(totalCurrentLoad * 10) / 10,
+      totalAvailableCapacity: Math.round(totalAvailableCapacity * 10) / 10,
+      teamUtilizationPercentage: teamUtilization,
+      teamSuggestedAction: getSuggestedAction(teamUtilization),
+      avgUtilizationPerEmployee: workloadData.length > 0
+        ? Math.round(workloadData.reduce((sum, w) => sum + w.utilizationPercentage, 0) / workloadData.length)
         : 0,
     };
 

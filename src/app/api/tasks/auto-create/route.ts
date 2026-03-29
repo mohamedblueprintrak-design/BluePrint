@@ -1,0 +1,398 @@
+/**
+ * Task Auto-Creation API
+ * POST /api/tasks/auto-create
+ *
+ * Automatically creates tasks based on phase category templates.
+ * Supports ARCHITECTURAL, STRUCTURAL, MEP, and GOVERNMENT phase categories.
+ */
+
+import { NextRequest } from 'next/server';
+import { db } from '@/lib/db';
+import { getUserFromRequest } from '../../utils/demo-config';
+import { successResponse, errorResponse, unauthorizedResponse, serverErrorResponse } from '../../utils/response';
+
+// ============================================
+// Task Templates by Phase Category
+// ============================================
+
+interface TaskTemplate {
+  title: string;
+  titleAr: string;
+  description: string;
+  descriptionAr: string;
+  taskType: 'STANDARD' | 'GOVERNMENTAL' | 'MANDATORY' | 'CLIENT' | 'INTERNAL';
+  slaDays: number;
+  order: number;
+  dependencies: number[]; // orders of tasks this depends on
+  governmentEntity?: string;
+  color?: string;
+}
+
+const PHASE_TEMPLATES: Record<string, TaskTemplate[]> = {
+  ARCHITECTURAL: [
+    {
+      title: 'Preliminary Sketch',
+      titleAr: 'المخطط المبدئي',
+      description: 'Create preliminary architectural sketches based on client requirements',
+      descriptionAr: 'إنشاء المخططات المعمارية المبدئية بناءً على متطلبات العميل',
+      taskType: 'STANDARD',
+      slaDays: 7,
+      order: 1,
+      dependencies: [],
+      color: '#3b82f6',
+    },
+    {
+      title: 'Concept Design',
+      titleAr: 'التصميم المفاهيمي',
+      description: 'Develop concept design including floor plans and elevations',
+      descriptionAr: 'تطوير التصميم المفاهيمي بما في ذلك المخططات والمواجهات',
+      taskType: 'STANDARD',
+      slaDays: 14,
+      order: 2,
+      dependencies: [1],
+      color: '#6366f1',
+    },
+    {
+      title: 'Client Approval',
+      titleAr: 'موافقة العميل',
+      description: 'Submit concept design for client review and approval',
+      descriptionAr: 'تقديم التصميم المفاهيمي لمراجعة العميل والموافقة',
+      taskType: 'CLIENT',
+      slaDays: 10,
+      order: 3,
+      dependencies: [2],
+      color: '#f59e0b',
+    },
+    {
+      title: 'Design Modification',
+      titleAr: 'تعديلات التصميم',
+      description: 'Incorporate client feedback and modify design accordingly',
+      descriptionAr: 'دمج ملاحظات العميل وتعديل التصميم وفقاً لذلك',
+      taskType: 'STANDARD',
+      slaDays: 7,
+      order: 4,
+      dependencies: [3],
+      color: '#8b5cf6',
+    },
+    {
+      title: 'Preliminary Drawings',
+      titleAr: 'المخططات التمهيدية',
+      description: 'Prepare preliminary drawings for all disciplines',
+      descriptionAr: 'إعداد المخططات التمهيدية لجميع التخصصات',
+      taskType: 'STANDARD',
+      slaDays: 14,
+      order: 5,
+      dependencies: [4],
+      color: '#06b6d4',
+    },
+    {
+      title: '3D Visualization',
+      titleAr: 'التصور ثلاثي الأبعاد',
+      description: 'Create 3D renders and visualizations for presentation',
+      descriptionAr: 'إنشاء صور تجسيد ثلاثية الأبعاد للعرض',
+      taskType: 'STANDARD',
+      slaDays: 7,
+      order: 6,
+      dependencies: [5],
+      color: '#10b981',
+    },
+    {
+      title: 'Final Architectural Drawings',
+      titleAr: 'المخططات المعمارية النهائية',
+      description: 'Produce final architectural drawings for submission',
+      descriptionAr: 'إنتاج المخططات المعمارية النهائية للتقديم',
+      taskType: 'STANDARD',
+      slaDays: 14,
+      order: 7,
+      dependencies: [6],
+      color: '#ec4899',
+    },
+  ],
+  STRUCTURAL: [
+    {
+      title: 'Soil Investigation Report',
+      titleAr: 'تقرير دراسة التربة',
+      description: 'Review and verify soil investigation report findings',
+      descriptionAr: 'مراجعة والتأكد من نتائج تقرير دراسة التربة',
+      taskType: 'MANDATORY',
+      slaDays: 21,
+      order: 1,
+      dependencies: [],
+      color: '#ef4444',
+    },
+    {
+      title: 'Structural Calculations',
+      titleAr: 'الحسابات الإنشائية',
+      description: 'Perform structural analysis and design calculations',
+      descriptionAr: 'إجراء التحليل الإنشائي وحسابات التصميم',
+      taskType: 'STANDARD',
+      slaDays: 21,
+      order: 2,
+      dependencies: [1],
+      color: '#f97316',
+    },
+    {
+      title: 'Structural Drawings',
+      titleAr: 'المخططات الإنشائية',
+      description: 'Prepare detailed structural drawings and details',
+      descriptionAr: 'إعداد المخططات الإنشائية التفصيلية',
+      taskType: 'STANDARD',
+      slaDays: 14,
+      order: 3,
+      dependencies: [2],
+      color: '#eab308',
+    },
+  ],
+  MEP: [
+    {
+      title: 'Electrical Design',
+      titleAr: 'التصميم الكهربائي',
+      description: 'Design electrical systems including power, lighting, and emergency systems',
+      descriptionAr: 'تصميم الأنظمة الكهربائية بما في ذلك الطاقة والإضاءة وأنظمة الطوارئ',
+      taskType: 'STANDARD',
+      slaDays: 14,
+      order: 1,
+      dependencies: [],
+      color: '#f59e0b',
+      governmentEntity: 'FEWA',
+    },
+    {
+      title: 'Plumbing Design',
+      titleAr: 'التصميم الصحي',
+      description: 'Design plumbing and drainage systems',
+      descriptionAr: 'تصميم أنظمة السباكة والصرف الصحي',
+      taskType: 'STANDARD',
+      slaDays: 14,
+      order: 2,
+      dependencies: [],
+      color: '#3b82f6',
+    },
+    {
+      title: 'HVAC Design',
+      titleAr: 'تصميم التكييف',
+      description: 'Design heating, ventilation, and air conditioning systems',
+      descriptionAr: 'تصميم أنظمة التدفئة والتهوية والتكييف',
+      taskType: 'STANDARD',
+      slaDays: 14,
+      order: 3,
+      dependencies: [],
+      color: '#10b981',
+    },
+  ],
+  GOVERNMENT: [
+    {
+      title: 'Municipality Approval',
+      titleAr: 'موافقة البلدية',
+      description: 'Submit drawings and documents for municipality approval',
+      descriptionAr: 'تقديم المخططات والمستندات لموافقة البلدية',
+      taskType: 'GOVERNMENTAL',
+      slaDays: 30,
+      order: 1,
+      dependencies: [],
+      governmentEntity: 'Municipality',
+      color: '#dc2626',
+    },
+    {
+      title: 'Civil Defense Approval',
+      titleAr: 'موافقة الدفاع المدني',
+      description: 'Obtain civil defense approval for fire safety and emergency systems',
+      descriptionAr: 'الحصول على موافقة الدفاع المدني لأنظمة السلامة والطوارئ',
+      taskType: 'GOVERNMENTAL',
+      slaDays: 21,
+      order: 2,
+      dependencies: [1],
+      governmentEntity: 'Civil Defense',
+      color: '#ef4444',
+    },
+    {
+      title: 'FEWA Connection Approval',
+      titleAr: 'موافقة هيئة كهرباء ومياه',
+      description: 'Obtain FEWA approval for electrical and water connections',
+      descriptionAr: 'الحصول على موافقة هيئة كهرباء ومياه للاتصالات الكهربائية والمائية',
+      taskType: 'GOVERNMENTAL',
+      slaDays: 30,
+      order: 3,
+      dependencies: [1],
+      governmentEntity: 'FEWA',
+      color: '#f59e0b',
+    },
+    {
+      title: 'Telecom/ICT Approval',
+      titleAr: 'موافقة الاتصالات',
+      description: 'Obtain telecommunications infrastructure approval',
+      descriptionAr: 'الحصول على موافقة البنية التحتية للاتصالات',
+      taskType: 'GOVERNMENTAL',
+      slaDays: 14,
+      order: 4,
+      dependencies: [1],
+      governmentEntity: 'Telecom/ICT',
+      color: '#6366f1',
+    },
+  ],
+};
+
+// ============================================
+// POST Handler
+// ============================================
+
+export async function POST(request: NextRequest) {
+  try {
+    const user = await getUserFromRequest(request);
+    if (!user || !user.organizationId) {
+      return unauthorizedResponse();
+    }
+
+    const body = await request.json();
+    const { projectId, phaseId, phaseCategory } = body;
+
+    if (!projectId || !phaseCategory) {
+      return errorResponse('projectId and phaseCategory are required');
+    }
+
+    // Validate phase category
+    const validCategories = ['ARCHITECTURAL', 'STRUCTURAL', 'MEP', 'GOVERNMENT'];
+    if (!validCategories.includes(phaseCategory)) {
+      return errorResponse(`Invalid phaseCategory. Must be one of: ${validCategories.join(', ')}`);
+    }
+
+    // Get the template for this category
+    const templates = PHASE_TEMPLATES[phaseCategory];
+    if (!templates || templates.length === 0) {
+      return errorResponse(`No task templates found for category: ${phaseCategory}`);
+    }
+
+    // Check if the project exists
+    const project = await db.project.findUnique({
+      where: { id: projectId },
+      select: { id: true, name: true, managerId: true },
+    });
+
+    if (!project) {
+      return errorResponse('Project not found');
+    }
+
+    // Check for existing tasks in this phase to avoid duplicates
+    const existingTasks = await db.task.findMany({
+      where: {
+        projectId,
+        workflowTemplate: phaseCategory,
+        deletedAt: null,
+      },
+      select: { title: true },
+    });
+
+    const existingTitles = new Set(existingTasks.map(t => t.title));
+
+    // Create tasks from template
+    const now = new Date();
+    const createdTasks: Array<Record<string, unknown>> = [];
+    const createdIds: string[] = [];
+
+    for (const template of templates) {
+      // Skip if task already exists
+      if (existingTitles.has(template.title)) continue;
+
+      const slaStartDate = new Date(now);
+      const dueDate = new Date(now);
+      dueDate.setDate(dueDate.getDate() + template.slaDays);
+
+      // Map dependency orders to actual task IDs (will resolve after creation)
+      const task = await db.task.create({
+        data: {
+          projectId,
+          title: template.title,
+          titleAr: template.titleAr,
+          description: template.description,
+          taskType: template.taskType,
+          slaDays: template.slaDays,
+          slaWarningDays: Math.max(1, Math.floor(template.slaDays * 0.2)),
+          slaStartDate,
+          dueDate,
+          order: template.order,
+          color: template.color,
+          governmentEntity: template.governmentEntity || null,
+          workflowTemplate: phaseCategory,
+          isMandatory: template.taskType === 'GOVERNMENTAL' || template.taskType === 'MANDATORY',
+          status: 'TODO',
+          dependencies: template.dependencies.length > 0 ? template.dependencies : null,
+          assignedTo: project.managerId || null,
+        },
+      });
+
+      createdIds.push(task.id);
+      createdTasks.push({
+        id: task.id,
+        title: task.title,
+        taskType: task.taskType,
+        slaDays: task.slaDays,
+        order: task.order,
+      });
+    }
+
+    // Second pass: resolve dependencies to actual task IDs
+    for (let i = 0; i < templates.length; i++) {
+      const template = templates[i];
+      if (existingTitles.has(template.title)) continue;
+      if (template.dependencies.length === 0) continue;
+
+      const createdTaskId = createdIds.shift();
+      if (!createdTaskId) continue;
+
+      // Map order numbers to task IDs
+      const dependencyIds: string[] = [];
+      const templateTasks = PHASE_TEMPLATES[phaseCategory];
+      // Track created index for dependency mapping
+
+      for (const depOrder of template.dependencies) {
+        // Find the template at that order
+        const depTemplate = templateTasks.find(t => t.order === depOrder);
+        if (depTemplate && !existingTitles.has(depTemplate.title)) {
+          // This corresponds to a created task at createdIdx position
+          // We need to find the right mapping
+          const matchingCreatedIdx = templates
+            .filter(t => !existingTitles.has(t.title))
+            .findIndex(t => t.order === depOrder);
+          if (matchingCreatedIdx >= 0 && matchingCreatedIdx < createdTasks.length) {
+            dependencyIds.push(createdTasks[matchingCreatedIdx].id as string);
+          }
+        }
+      }
+
+      if (dependencyIds.length > 0) {
+        await db.task.update({
+          where: { id: createdTaskId },
+          data: { dependencies: dependencyIds },
+        });
+      }
+    }
+
+    // Log the activity
+    if (phaseId) {
+      await db.activity.create({
+        data: {
+          userId: user.id,
+          organizationId: user.organizationId,
+          projectId,
+          entityType: 'WORKFLOW_PHASE',
+          entityId: phaseId,
+          action: 'AUTO_CREATE_TASKS',
+          description: `Auto-created ${createdTasks.length} tasks for ${phaseCategory} phase`,
+          metadata: {
+            phaseCategory,
+            taskCount: createdTasks.length,
+            taskIds: createdIds,
+          },
+        },
+      });
+    }
+
+    return successResponse({
+      message: `Successfully created ${createdTasks.length} tasks for ${phaseCategory} phase`,
+      taskCount: createdTasks.length,
+      tasks: createdTasks,
+    });
+  } catch (error) {
+    console.error('Task auto-create error:', error);
+    return serverErrorResponse();
+  }
+}
