@@ -13,11 +13,12 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: process.env.NODE_ENV === 'development',
   },
 
-  // ESLint configuration - CI pipeline runs ESLint separately
+  // ESLint configuration
+  // Note: ignoreDuringBuilds is true because CI runs 'npm run lint' separately.
+  // Running ESLint in both lint step and build step is redundant and can fail
+  // due to ESM compatibility issues between @eslint/eslintrc and minimatch.
   eslint: {
-    // In production builds, ESLint errors are caught by CI
-    // Set to true only if you need to bypass ESLint during local builds
-    ignoreDuringBuilds: false,
+    ignoreDuringBuilds: true,
   },
   
   // Image optimization configuration
