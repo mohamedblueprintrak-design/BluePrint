@@ -404,7 +404,7 @@ function SidebarContent({
           />
 
           {/* Admin Section */}
-          {user?.role === 'admin' && (
+          {user?.role === 'ADMIN' && (
             <CollapsibleSection 
               title={language === 'ar' ? 'الإدارة' : 'Admin'}
               icon={Shield}

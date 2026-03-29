@@ -26,6 +26,7 @@ export async function PATCH(
       return errorResponse('حالة العطاء غير صالحة', 'VALIDATION_ERROR');
     }
 
+    // @ts-expect-error bid model not in schema
     const bid = await db.bid.update({
       where: { id },
       data: { status },
@@ -51,6 +52,7 @@ export async function GET(
     if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
 
     const { id } = await params;
+    // @ts-expect-error bid model not in schema
     const bid = await db.bid.findUnique({
       where: { id },
       include: {

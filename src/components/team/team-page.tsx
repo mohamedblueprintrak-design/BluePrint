@@ -119,9 +119,9 @@ export default function TeamPage() {
   });
 
   // Stats calculations
-  const admins = members.filter((m) => m.role === 'admin').length;
-  const managers = members.filter((m) => m.role === 'manager' || m.role === 'project_manager').length;
-  const engineers = members.filter((m) => m.role === 'engineer').length;
+  const admins = members.filter((m) => m.role === UserRole.ADMIN).length;
+  const managers = members.filter((m) => m.role === UserRole.MANAGER || m.role === UserRole.PROJECT_MANAGER).length;
+  const engineers = members.filter((m) => m.role === UserRole.ENGINEER).length;
 
   // Open modal for create/edit
   const handleOpenModal = (member?: User) => {
@@ -387,7 +387,7 @@ export default function TeamPage() {
                   <Button variant="ghost" size="sm" onClick={() => handleOpenModal(member)}>
                     <Edit className="w-4 h-4" />
                   </Button>
-                  {member.role !== 'admin' && (
+                  {member.role !== UserRole.ADMIN && (
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(member.id)}>
                       <Trash2 className="w-4 h-4 text-red-500" />
                     </Button>

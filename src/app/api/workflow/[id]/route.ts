@@ -21,9 +21,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
       where: { id },
       include: {
         project: {
-          select: { id: true, name: true, code: true, organizationId: true },
+          select: { id: true, name: true, projectNumber: true, organizationId: true },
         },
-        assignedTo: { select: { id: true, name: true, email: true, avatar: true } },
+        assignedTo: { select: { id: true, fullName: true, email: true, avatar: true } },
         dependsOn: {
           select: {
             id: true,
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         },
         interactions: {
           include: {
-            respondedBy: { select: { id: true, name: true, avatar: true } },
+            respondedBy: { select: { id: true, fullName: true, avatar: true } },
           },
           orderBy: { createdAt: 'desc' },
         },
@@ -146,7 +146,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       where: { id },
       data: updateData,
       include: {
-        assignedTo: { select: { id: true, name: true, email: true, avatar: true } },
+        assignedTo: { select: { id: true, fullName: true, email: true, avatar: true } },
         dependsOn: { select: { id: true, phaseType: true, status: true } },
         dependentPhases: { select: { id: true, phaseType: true, status: true } },
         interactions: true,
@@ -185,9 +185,9 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         where: {
           projectId: existingPhase.projectId,
           title: `[Workflow] ${phaseLabel}`,
-          status: { in: ['TODO', 'IN_PROGRESS', 'IN_REVIEW'] },
+          status: { in: ['TODO', 'IN_PROGRESS', 'REVIEW'] },
         },
-        data: { status: 'DONE', completedAt: new Date() },
+        data: { status: 'DONE' },
       });
     }
 
@@ -222,7 +222,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         entityId: id,
         action: 'UPDATE',
         description: `Updated workflow phase ${existingPhase.phaseType}: ${JSON.stringify(updateData)}`,
-        oldValue: Object.keys(oldValues).length > 0 ? JSON.stringify(oldValues) : null,
+        oldValue: Object.keys(oldValues).length > 0 ? JSON.stringify(oldValues) as any : null,
         newValue: JSON.stringify(updateData),
       },
     });

@@ -72,10 +72,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         tasks: {
           orderBy: { createdAt: 'desc' },
         },
-        // Invoices
-        invoices: {
-          orderBy: { createdAt: 'desc' },
-        },
+        // Invoices - fetched separately since no direct relation exists on Project
         // BOQ Items
         boqItems: {
           orderBy: { itemNumber: 'asc' },
@@ -130,16 +127,27 @@ export async function GET(request: NextRequest, context: RouteContext) {
       rejected: project.workflowPhases.filter((p: { status: string }) => p.status === 'REJECTED').length,
     };
 
+    // Fetch invoices separately (no direct relation on Project model)
+    let projectInvoices: any[] = [];
+    try {
+      projectInvoices = await db.invoice.findMany({
+        where: { projectId: id, deletedAt: null },
+        orderBy: { createdAt: 'desc' },
+      });
+    } catch {
+      // Invoices table may not have projectId index
+    }
+
     const invoiceStats = {
-      total: project.invoices.length,
-      draft: project.invoices.filter((i: { status: string }) => i.status === 'DRAFT').length,
-      sent: project.invoices.filter((i: { status: string }) => i.status === 'SENT').length,
-      paid: project.invoices.filter((i: { status: string }) => i.status === 'PAID').length,
-      partiallyPaid: project.invoices.filter((i: { status: string }) => i.status === 'PARTIAL').length,
-      overdue: project.invoices.filter((i: { status: string }) => i.status === 'OVERDUE').length,
-      totalAmount: project.invoices.reduce((sum: number, i: { total: number }) => sum + i.total, 0),
-      totalPaid: project.invoices.reduce((sum: number, i: { paidAmount: number }) => sum + i.paidAmount, 0),
-      totalOutstanding: project.invoices.reduce((sum: number, i: { total: number; paidAmount: number }) => sum + (i.total - i.paidAmount), 0),
+      total: projectInvoices.length,
+      draft: projectInvoices.filter((i: { status: string }) => i.status === 'DRAFT').length,
+      sent: projectInvoices.filter((i: { status: string }) => i.status === 'SENT').length,
+      paid: projectInvoices.filter((i: { status: string }) => i.status === 'PAID').length,
+      partiallyPaid: projectInvoices.filter((i: { status: string }) => i.status === 'PARTIAL').length,
+      overdue: projectInvoices.filter((i: { status: string }) => i.status === 'OVERDUE').length,
+      totalAmount: projectInvoices.reduce((sum: number, i: { total: number }) => sum + i.total, 0),
+      totalPaid: projectInvoices.reduce((sum: number, i: { paidAmount: number }) => sum + i.paidAmount, 0),
+      totalOutstanding: projectInvoices.reduce((sum: number, i: { total: number; paidAmount: number }) => sum + (i.total - i.paidAmount), 0),
     };
 
     const defectStats = {

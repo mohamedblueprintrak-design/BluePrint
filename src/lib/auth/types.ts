@@ -3,10 +3,9 @@
  * أنواع المصادقة والتفويض
  */
 
-import { UserRole as PrismaUserRole } from '@prisma/client';
-
-// Re-export Prisma's UserRole for consistency
-export type UserRole = PrismaUserRole;
+// Re-export Prisma's UserRole as both type and value (needed for computed keys like [UserRole.ADMIN])
+import { UserRole } from '@prisma/client';
+export { UserRole };
 
 // Role values for permission mapping (using Prisma enum values)
 export const UserRoleValues = {
