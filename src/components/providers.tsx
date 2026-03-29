@@ -5,7 +5,7 @@ import { AuthProvider } from "@/context/auth-context";
 import { AppProvider } from "@/context/app-context";
 import { AIProvider } from "@/lib/ai/ai-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState } from";
+import { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw } from "lucide-react";

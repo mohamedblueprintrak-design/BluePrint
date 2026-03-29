@@ -19,7 +19,6 @@ const eslintConfig = [
       "@typescript-eslint/no-non-null-assertion": "warn",
       "@typescript-eslint/ban-ts-comment": "warn",
       "@typescript-eslint/prefer-as-const": "warn",
-      "@typescript-eslint/no-unused-disable-directive": "error",
       "@typescript-eslint/no-require-imports": "off",
       "@typescript-eslint/consistent-type-definitions": "off",
       "@typescript-eslint/no-duplicate-type-constituents": "off",

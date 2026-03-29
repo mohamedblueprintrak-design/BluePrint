@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { getUserFromRequest } from '../utils/demo-config';
+import { getUserFromRequest } from '../../utils/demo-config';
 
 function successResponse(data: unknown) { return NextResponse.json({ success: true, data }); }
 function errorResponse(message: string, code = 'ERROR', status = 400) {
