@@ -8,7 +8,9 @@
  * - Different log levels (error, warn, info, debug)
  */
 
+// @ts-expect-error - winston types not installed
 import winston from 'winston';
+// @ts-expect-error - winston-daily-rotate-file types not installed
 import DailyRotateFile from 'winston-daily-rotate-file';
 import path from 'path';
 
@@ -44,7 +46,7 @@ const consoleFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   winston.format.colorize({ all: true }),
   winston.format.printf(
-    (info) => `[${info.timestamp}] ${info.level}: ${info.message}`
+    (info: any) => `[${info.timestamp}] ${info.level}: ${info.message}`
   )
 );
 

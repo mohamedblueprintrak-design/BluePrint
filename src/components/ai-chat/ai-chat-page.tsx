@@ -128,6 +128,24 @@ const AI_SKILLS = [
   },
 ];
 
+// Provider color mapping
+const PROVIDER_COLORS: Record<string, string> = {
+  google: 'bg-blue-500',
+  openai: 'bg-green-500',
+  anthropic: 'bg-orange-500',
+  deepseek: 'bg-cyan-500',
+  mistral: 'bg-purple-500',
+  meta: 'bg-indigo-500',
+  xai: 'bg-red-500',
+};
+
+const COST_TIER_LABELS: Record<string, string> = {
+  free: 'Free',
+  low: 'Low Cost',
+  medium: 'Standard',
+  high: 'Premium',
+};
+
 // Quick Prompts
 const QUICK_PROMPTS = [
   { id: 'calc', labelAr: 'حسابات هندسية', labelEn: 'Engineering Calculations', icon: Calculator, color: 'text-blue-400' },
@@ -331,7 +349,7 @@ export function AIChatPage() {
   // State
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
-  const [selectedModel, setSelectedModel] = useState(AI_MODELS[0].id);
+  const [selectedModel, setSelectedModel] = useState(AVAILABLE_MODELS[0].id);
   const [isTyping, setIsTyping] = useState(false);
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
@@ -353,7 +371,7 @@ export function AIChatPage() {
   }, [messages, scrollToBottom]);
   
   // Get current model info
-  const currentModel = AI_MODELS.find(m => m.id === selectedModel) || AI_MODELS[0];
+  const currentModel = AVAILABLE_MODELS.find(m => m.id === selectedModel) || AVAILABLE_MODELS[0];
   
   // Handle send message
   const handleSend = async () => {
@@ -698,7 +716,7 @@ export function AIChatPage() {
                 <SelectContent className="bg-slate-900 border-slate-700 max-h-80">
                   {/* Group by provider */}
                   {['Google', 'OpenAI', 'DeepSeek', 'Mistral', 'Meta', 'xAI', 'Anthropic'].map(provider => {
-                    const models = AI_MODELS.filter(m => m.provider === provider);
+                    const models = AVAILABLE_MODELS.filter(m => m.provider === provider);
                     if (models.length === 0) return null;
                     return (
                       <SelectGroup key={provider}>
@@ -710,10 +728,10 @@ export function AIChatPage() {
                             className="text-white focus:bg-slate-800"
                           >
                             <div className="flex items-center gap-2">
-                              <span className={cn("w-2 h-2 rounded-full", model.color)} />
+                              <span className={cn("w-2 h-2 rounded-full", PROVIDER_COLORS[model.provider] || 'bg-slate-500')} />
                               <span>{model.name}</span>
                               <Badge variant="outline" className="text-xs border-slate-600 text-slate-400">
-                                {model.type}
+                                {COST_TIER_LABELS[model.costTier] || model.costTier}
                               </Badge>
                             </div>
                           </SelectItem>
@@ -771,15 +789,15 @@ export function AIChatPage() {
           
           {/* Current Model Badge */}
           <div className="flex items-center gap-2 mt-3">
-            <Badge variant="outline" className={cn("gap-1.5 border-slate-700", currentModel.color.replace('bg-', 'text-').replace('-500', '-400'))}>
-              <span className={cn("w-2 h-2 rounded-full", currentModel.color)} />
+            <Badge variant="outline" className={cn("gap-1.5 border-slate-700", (PROVIDER_COLORS[currentModel.provider] || 'bg-slate-500').replace('bg-', 'text-').replace('-500', '-400'))}>
+              <span className={cn("w-2 h-2 rounded-full", PROVIDER_COLORS[currentModel.provider] || 'bg-slate-500')} />
               {currentModel.name}
             </Badge>
             <Badge variant="outline" className="border-slate-700 text-slate-400">
               {currentModel.provider}
             </Badge>
             <Badge variant="outline" className="border-slate-700 text-slate-400">
-              {currentModel.type}
+              {COST_TIER_LABELS[currentModel.costTier] || currentModel.costTier}
             </Badge>
           </div>
           
@@ -914,7 +932,7 @@ export function AIChatPage() {
                           <>
                             <span>•</span>
                             <Badge variant="outline" className="text-xs border-slate-700 text-slate-400 py-0 px-1.5">
-                              {AI_MODELS.find(m => m.id === message.model)?.name || message.model}
+                              {AVAILABLE_MODELS.find(m => m.id === message.model)?.name || message.model}
                             </Badge>
                           </>
                         )}

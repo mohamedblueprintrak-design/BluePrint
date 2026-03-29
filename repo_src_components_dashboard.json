@@ -1,0 +1,19 @@
+{
+  "code": 200,
+  "data": {
+    "description": "",
+    "html": "<html><head><meta name=\"color-scheme\" content=\"light dark\"></head><body><pre style=\"word-wrap: break-word; white-space: pre-wrap;\">[\n  {\n    \"name\": \"charts\",\n    \"path\": \"src/components/dashboard/charts\",\n    \"sha\": \"c20c763c5008a35847d44276f01242f09a61d0b7\",\n    \"size\": 0,\n    \"url\": \"https://api.github.com/repos/mohamedblueprintrak-design/BluePrint/contents/src/components/dashboard/charts?ref=main\",\n    \"html_url\": \"https://github.com/mohamedblueprintrak-design/BluePrint/tree/main/src/components/dashboard/charts\",\n    \"git_url\": \"https://api.github.com/repos/mohamedblueprintrak-design/BluePrint/git/trees/c20c763c5008a35847d44276f01242f09a61d0b7\",\n    \"download_url\": null,\n    \"type\": \"dir\",\n    \"_links\": {\n      \"self\": \"https://api.github.com/repos/mohamedblueprintrak-design/BluePrint/contents/src/components/dashboard/charts?ref=main\",\n      \"git\": \"https://api.github.com/repos/mohamedblueprintrak-design/BluePrint/git/trees/c20c763c5008a35847d44276f01242f09a61d0b7\",\n      \"html\": \"https://github.com/mohamedblueprintrak-design/BluePrint/tree/main/src/components/dashboard/charts\"\n    }\n  },\n  {\n    \"name\": \"dashboard-page.tsx\",\n    \"path\": \"src/components/dashboard/dashboard-page.tsx\",\n    \"sha\": \"8e5cec34d88f2dd9cb35d50659504a73119f2c98\",\n    \"size\": 29450,\n    \"url\": \"https://api.github.com/repos/mohamedblueprintrak-design/BluePrint/contents/src/components/dashboard/dashboard-page.tsx?ref=main\",\n    \"html_url\": \"https://github.com/mohamedblueprintrak-design/BluePrint/blob/main/src/components/dashboard/dashboard-page.tsx\",\n    \"git_url\": \"https://api.github.com/repos/mohamedblueprintrak-design/BluePrint/git/blobs/8e5cec34d88f2dd9cb35d50659504a73119f2c98\",\n    \"download_url\": \"https://raw.githubusercontent.com/mohamedblueprintrak-design/BluePrint/main/src/components/dashboard/dashboard-page.tsx\",\n    \"type\": \"file\",\n    \"_links\": {\n      \"self\": \"https://api.github.com/repos/mohamedblueprintrak-design/BluePrint/contents/src/components/dashboard/dashboard-page.tsx?ref=main\",\n      \"git\": \"https://api.github.com/repos/mohamedblueprintrak-design/BluePrint/git/blobs/8e5cec34d88f2dd9cb35d50659504a73119f2c98\",\n      \"html\": \"https://github.com/mohamedblueprintrak-design/BluePrint/blob/main/src/components/dashboard/dashboard-page.tsx\"\n    }\n  }\n]\n</pre></body></html>",
+    "publishedTime": "Sun, 29 Mar 2026 09:50:38 GMT",
+    "title": "",
+    "url": "https://api.github.com/repos/mohamedblueprintrak-design/BluePrint/contents/src/components/dashboard",
+    "usage": {
+      "tokens": 696
+    }
+  },
+  "meta": {
+    "usage": {
+      "tokens": 696
+    }
+  },
+  "status": 20000
+}

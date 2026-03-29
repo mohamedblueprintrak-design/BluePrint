@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
 import { useProjects, useCreateProject, useDeleteProject, useClients } from '@/hooks/use-data';
@@ -53,6 +54,7 @@ const PROJECT_STATUSES = [
 ];
 
 export function ProjectsPage() {
+  const router = useRouter();
   const { language, setCurrentPage: _setCurrentPage } = useApp();
   const { t, formatCurrency, formatDate } = useTranslation(language);
   const { toast } = useToast();

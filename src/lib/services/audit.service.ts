@@ -34,11 +34,11 @@ export async function logAudit(data: AuditLogData): Promise<void> {
         entityId: data.entityId,
         action: data.action,
         description: data.description,
-        oldValue: data.oldValue ? JSON.stringify(data.oldValue) : null,
-        newValue: data.newValue ? JSON.stringify(data.newValue) : null,
+        oldValue: data.oldValue ? JSON.stringify(data.oldValue) : undefined,
+        newValue: data.newValue ? JSON.stringify(data.newValue) : undefined,
         ipAddress: data.ipAddress,
         userAgent: data.userAgent,
-        metadata: data.metadata ? JSON.stringify(data.metadata) : null,
+        metadata: data.metadata ? JSON.stringify(data.metadata) : undefined,
       },
     });
   } catch (error) {

@@ -95,7 +95,7 @@ export function AIProvider({ children }: { children: ReactNode }) {
         ...prev,
         isLoading: false,
         lastResponse: response,
-        error: response.success ? null : response.error
+        error: response.success ? null : (response.error ?? null)
       }));
 
       return response;

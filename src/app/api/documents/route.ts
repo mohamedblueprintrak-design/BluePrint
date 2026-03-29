@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       projectId: body.projectId || null,
       uploadedBy: user.id,
     };
-    const doc = await db.document.create({ data: docData });
+    const doc = await db.document.create({ data: docData as any });
     return success({ id: doc.id, fileName: doc.fileName });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Unknown error';

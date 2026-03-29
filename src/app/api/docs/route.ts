@@ -228,14 +228,6 @@ Authorization: Bearer <your-token>
           },
         },
       },
-      NotFoundError: {
-        description: 'Resource not found',
-        content: {
-          'application/json': {
-            schema: { $ref: '#/components/schemas/Error' },
-          },
-        },
-      },
       RateLimitError: {
         description: 'Rate limit exceeded',
         content: {
@@ -684,7 +676,7 @@ const apiRoutes = [
 ];
 
 apiRoutes.forEach(route => {
-  openApiSpec.paths[`/api/${route}`] = {
+  (openApiSpec.paths as any)[`/api/${route}`] = {
     get: {
       tags: ['API'],
       summary: `${route} - GET`,

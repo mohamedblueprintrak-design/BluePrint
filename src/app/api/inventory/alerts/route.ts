@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
       if (alerts.length === 0) return successResponse({ message: 'لا توجد تنبيهات للمخزون', alertsSent: 0 });
 
       try {
-        await db.notification.create({ data: { userId: user.id, title: 'تنبيه المخزون المنخفض', message: `${alerts.length} مادة تحتاج لإعادة طلب`, notificationType: 'low_stock', priority: 'urgent' } });
+        await db.notification.create({ data: { userId: user.id, title: 'تنبيه المخزون المنخفض', message: `${alerts.length} مادة تحتاج لإعادة طلب`, notificationType: 'low_stock', priority: 'URGENT' } });
       } catch {}
 
       return successResponse({ message: 'تم إرسال التنبيهات', alertsSent: alerts.length, alerts });
@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
       const { materialId, level, message } = data;
       try {
         const notification = await db.notification.create({
-          data: { userId: user.id, title: `تنبيه المخزون - ${level}`, message, notificationType: 'low_stock', referenceType: 'material', referenceId: materialId, priority: level === 'CRITICAL' ? 'urgent' : 'high' }
+          data: { userId: user.id, title: `تنبيه المخزون - ${level}`, message, notificationType: 'low_stock', referenceType: 'material', referenceId: materialId, priority: level === 'CRITICAL' ? 'URGENT' as const : 'HIGH' as const }
         });
         return successResponse({ notification });
       } catch { return successResponse({ message: 'تم إنشاء التنبيه (وضع تجريبي)' }); }

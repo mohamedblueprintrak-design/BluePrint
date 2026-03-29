@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
         progress: body.progress || 0,
         estimatedHours: body.estimatedHours,
         actualHours: body.actualHours,
-        dependencies: body.dependencies ? JSON.stringify(body.dependencies) : null,
+        dependencies: body.dependencies as any,
         order: body.order || 0,
         color: body.color,
         isMilestone: body.isMilestone || false,

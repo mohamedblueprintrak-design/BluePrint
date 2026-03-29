@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
         mitigationPlan: body.mitigationPlan,
         contingencyPlan: body.contingencyPlan,
         responseStrategy: body.responseStrategy,
-        triggerEvents: body.triggerEvents ? JSON.stringify(body.triggerEvents) : null,
+        triggerEvents: body.triggerEvents ? JSON.stringify(body.triggerEvents) : null as any,
         residualRisk: body.residualRisk,
       },
       include: {

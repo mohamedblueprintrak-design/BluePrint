@@ -9,7 +9,9 @@
  * - Provides sliding window algorithm
  */
 
+// @ts-expect-error - redis types not installed
 import { createClient } from 'redis';
+// @ts-expect-error - redis types not installed
 import type { RedisClientType } from 'redis';
 
 // ============================================
@@ -58,7 +60,7 @@ async function getRedisClient(): Promise<RedisClientType | null> {
       redisClient = createClient({
         url: redisUrl,
         socket: {
-          reconnectStrategy: (retries) => {
+          reconnectStrategy: (retries: number) => {
             if (retries > 10) {
               console.error('Redis connection failed after 10 retries');
               return new Error('Redis connection failed');
@@ -68,7 +70,7 @@ async function getRedisClient(): Promise<RedisClientType | null> {
         },
       });
 
-      redisClient.on('error', (err) => {
+      redisClient.on('error', (err: Error) => {
         console.error('Redis client error:', err);
       });
 

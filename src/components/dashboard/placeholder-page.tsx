@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
 import { Construction, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -29,7 +30,8 @@ interface PlaceholderPageProps {
 }
 
 export default function PlaceholderPage({ pageKey }: PlaceholderPageProps) {
-  const { isRTL } = useTranslation();
+  const { language } = useApp();
+  const { isRTL } = useTranslation(language);
   const info = pageInfo[pageKey];
 
   return (

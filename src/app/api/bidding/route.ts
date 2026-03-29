@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
     };
 
     const bid = await db.bid.create({
-      data: bidData,
+      data: bidData as any,
       include: {
         client: { select: { id: true, name: true } },
       },

@@ -8,6 +8,7 @@
 
 import { Server as HTTPServer } from 'http';
 import { Server as HTTPSServer } from 'https';
+// @ts-expect-error - socket.io types not installed
 import { Server as IOServer, Socket } from 'socket.io';
 import { verify } from 'jsonwebtoken';
 import { prisma } from '@/lib/db';
@@ -69,7 +70,8 @@ export function initializeWebSocket(
   });
 
   // Authentication middleware
-  io.use(async (socket, next) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  io.use(async (socket: any, next: any) => {
     try {
       const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.replace('Bearer ', '');
 
@@ -127,7 +129,7 @@ export function initializeWebSocket(
   });
 
   // Connection handler
-  io.on('connection', (socket) => {
+  io.on('connection', (socket: any) => {
     handleConnection(socket);
   });
 

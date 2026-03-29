@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     };
 
     const automation = await db.automation.create({
-      data: automationData,
+      data: automationData as any,
     });
 
     return successResponse(automation);

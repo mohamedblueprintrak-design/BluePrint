@@ -8,6 +8,7 @@
 'use client';
 
 import { useEffect, useRef, useCallback, useState } from 'react';
+// @ts-expect-error - socket.io-client types not installed
 import { io, Socket } from 'socket.io-client';
 import {
   WebSocketEventType,
@@ -99,13 +100,13 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
       onConnect?.();
     });
 
-    socket.on('disconnect', (reason) => {
+    socket.on('disconnect', (reason: string) => {
       console.log('[WebSocket] Disconnected:', reason);
       setIsConnected(false);
       onDisconnect?.();
     });
 
-    socket.on('connect_error', (error) => {
+    socket.on('connect_error', (error: Error) => {
       console.error('[WebSocket] Connection error:', error);
       onError?.({ message: error.message, code: 'CONNECTION_ERROR' });
     });

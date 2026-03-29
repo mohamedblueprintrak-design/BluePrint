@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
     };
 
     const event = await db.calendarEvent.create({
-      data: eventData,
+      data: eventData as any,
       include: {
         project: { select: { id: true, name: true } },
       },

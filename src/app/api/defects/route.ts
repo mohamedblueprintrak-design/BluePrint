@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     if (!projectId || !title) return error('المشروع والعنوان مطلوبان');
     
     const defect = await db.defect.create({
-      data: { projectId, title, description, severity: severity || 'medium', status: 'Open', location, assignedTo }
+      data: { projectId, title, description, severity: severity || 'medium', status: 'OPEN', location, assignedTo }
     });
     return success(defect);
   } catch (e) {

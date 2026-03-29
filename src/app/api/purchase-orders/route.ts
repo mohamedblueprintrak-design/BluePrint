@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
           subtotal,
           taxAmount,
           totalAmount,
-          status: 'draft',
+          status: 'DRAFT',
           notes,
           terms,
           createdById: user.id,
@@ -111,8 +111,7 @@ export async function POST(request: NextRequest) {
         orderDate,
         expectedDate,
         totalAmount,
-        status: 'draft',
-        createdAt: new Date().toISOString()
+        status: 'DRAFT',
       });
     }
   } catch (e) {

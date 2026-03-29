@@ -13,8 +13,8 @@ async function getUser(request: NextRequest) {
   const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : tokenCookie;
   if (!token) return null;
   try {
-    const payload = await jose.jwtVerify(token, getJWTSecret());
-    return await db.user.findUnique({ where: { id: payload.userId as string } });
+    const { payload } = await jose.jwtVerify(token, getJWTSecret());
+    return await db.user.findUnique({ where: { id: (payload as any).userId || payload.id } });
   } catch {
     return null;
   }
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
           title,
           content,
           category: category || 'guide',
-          tags: tags ? JSON.stringify(tags) : null,
+          tags: tags ? JSON.stringify(tags) : null as any,
           isPublished: isPublished ?? true,
           authorId: user.id
         }

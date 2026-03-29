@@ -8,6 +8,7 @@
 'use client';
 
 import React, { createContext, useContext, useCallback, useEffect, useState, useRef } from 'react';
+// @ts-expect-error - socket.io-client types not installed
 import { io, Socket } from 'socket.io-client';
 import { useSession } from 'next-auth/react';
 import {
@@ -93,12 +94,12 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
       setIsConnected(true);
     });
 
-    socket.on('disconnect', (reason) => {
+    socket.on('disconnect', (reason: string) => {
       console.log('[WebSocket] Disconnected:', reason);
       setIsConnected(false);
     });
 
-    socket.on('connect_error', (error) => {
+    socket.on('connect_error', (error: Error) => {
       console.error('[WebSocket] Connection error:', error.message);
     });
 

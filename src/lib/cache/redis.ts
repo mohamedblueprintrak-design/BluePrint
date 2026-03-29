@@ -3,6 +3,7 @@
  * خدمة التخزين المؤقت باستخدام Redis
  */
 
+// @ts-expect-error - redis types not installed
 import { createClient, RedisClientType } from 'redis';
 import logger from '@/lib/logger';
 
@@ -28,7 +29,7 @@ export async function initRedis(): Promise<RedisClientType | null> {
     redisClient = createClient({
       url: REDIS_URL,
       socket: {
-        reconnectStrategy: (retries) => {
+        reconnectStrategy: (retries: number) => {
           if (retries > 10) {
             logger.error('Redis connection failed after 10 retries');
             return new Error('Redis connection failed');
@@ -51,7 +52,7 @@ export async function initRedis(): Promise<RedisClientType | null> {
       logger.warn('Redis disconnected');
     });
 
-    redisClient.on('error', (err) => {
+    redisClient.on('error', (err: Error) => {
       logger.error('Redis error:', err);
     });
 

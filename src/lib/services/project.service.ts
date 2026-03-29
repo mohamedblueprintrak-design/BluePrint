@@ -13,7 +13,7 @@
 import { prisma } from '@/lib/db';
 import { getProjectRepository } from '@/lib/repositories';
 import { logAudit } from './audit.service';
-import type { Project } from '@prisma/client';
+import type { Project, ProjectStatus } from '@prisma/client';
 
 /**
  * Project statistics interface
@@ -354,7 +354,7 @@ class ProjectService {
     if (data.managerId !== undefined) updateData.managerId = data.managerId;
     if (data.clientId !== undefined) updateData.clientId = data.clientId;
     if (data.budget !== undefined) updateData.budget = data.budget;
-    if (data.status !== undefined) updateData.status = data.status;
+    if (data.status !== undefined) updateData.status = data.status as ProjectStatus;
     if (data.progressPercentage !== undefined) {
       updateData.progressPercentage = Math.max(0, Math.min(100, data.progressPercentage));
     }
@@ -425,7 +425,7 @@ class ProjectService {
         _sum: { contractValue: true },
       }),
       prisma.project.aggregate({
-        where: { organizationId, status: 'active' },
+        where: { organizationId, status: 'ACTIVE' },
         _avg: { progressPercentage: true },
       }),
     ]);
@@ -437,22 +437,22 @@ class ProjectService {
       pending: 0,
       onHold: 0,
       totalValue: valueAggregate._sum.contractValue || 0,
-      averageProgress: progressAggregate._avg.progressPercentage || 0,
+      averageProgress: progressAggregate._avg?.progressPercentage || 0,
     };
 
     for (const item of statusCounts) {
       stats.total += item._count;
       switch (item.status) {
-        case 'active':
+        case 'ACTIVE':
           stats.active = item._count;
           break;
-        case 'completed':
+        case 'COMPLETED':
           stats.completed = item._count;
           break;
-        case 'pending':
+        case 'PENDING':
           stats.pending = item._count;
           break;
-        case 'on_hold':
+        case 'ON_HOLD':
           stats.onHold = item._count;
           break;
       }

@@ -335,7 +335,7 @@ export default function CalendarPage() {
                           <p className="text-xs text-gray-500">
                             {new Date(event.startDate).toLocaleDateString('ar-SA')}
                           </p>
-                          <Badge variant="outline" size="sm" className="mt-1">
+                          <Badge variant="outline" className="mt-1">
                             {eventTypeLabels[event.eventType]}
                           </Badge>
                         </div>

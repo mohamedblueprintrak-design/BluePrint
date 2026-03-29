@@ -174,9 +174,6 @@ export async function POST(request: NextRequest) {
           isActive: true,
           language: 'ar',
           theme: 'system',
-          timezone: 'Asia/Riyadh',
-          leaveBalance: 30,
-          twoFactorEnabled: false,
           // SECURITY: Always assign to the same organization as the creator
           organizationId: user.organizationId || undefined,
         },

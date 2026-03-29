@@ -303,9 +303,9 @@ export async function GET(request: NextRequest) {
           yearsOfService: ((Date.now() - employee.createdAt.getTime()) / (1000 * 60 * 60 * 24 * 365)).toFixed(2)
         },
         attendance: {
-          present: attendance.filter(a => a.status === 'present').length,
-          late: attendance.filter(a => a.status === 'late').length,
-          absent: attendance.filter(a => a.status === 'absent').length
+          present: attendance.filter(a => a.status === 'PRESENT').length,
+          late: attendance.filter(a => a.status === 'LATE').length,
+          absent: attendance.filter(a => a.status === 'ABSENT').length
         }
       });
     }

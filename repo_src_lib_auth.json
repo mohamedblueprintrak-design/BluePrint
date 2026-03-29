@@ -1,0 +1,19 @@
+{
+  "code": 200,
+  "data": {
+    "description": "",
+    "html": "<html><head><meta name=\"color-scheme\" content=\"light dark\"></head><body><pre style=\"word-wrap: break-word; white-space: pre-wrap;\">[\n  {\n    \"name\": \"auth-service.ts\",\n    \"path\": \"src/lib/auth/auth-service.ts\",\n    \"sha\": \"f55b7a25c96942a33ce838c95deebbc26b6110fb\",\n    \"size\": 35492,\n    \"url\": \"https://api.github.com/repos/mohamedblueprintrak-design/BluePrint/contents/src/lib/auth/auth-service.ts?ref=main\",\n    \"html_url\": \"https://github.com/mohamedblueprintrak-design/BluePrint/blob/main/src/lib/auth/auth-service.ts\",\n    \"git_url\": \"https://api.github.com/repos/mohamedblueprintrak-design/BluePrint/git/blobs/f55b7a25c96942a33ce838c95deebbc26b6110fb\",\n    \"download_url\": \"https://raw.githubusercontent.com/mohamedblueprintrak-design/BluePrint/main/src/lib/auth/auth-service.ts\",\n    \"type\": \"file\",\n    \"_links\": {\n      \"self\": \"https://api.github.com/repos/mohamedblueprintrak-design/BluePrint/contents/src/lib/auth/auth-service.ts?ref=main\",\n      \"git\": \"https://api.github.com/repos/mohamedblueprintrak-design/BluePrint/git/blobs/f55b7a25c96942a33ce838c95deebbc26b6110fb\",\n      \"html\": \"https://github.com/mohamedblueprintrak-design/BluePrint/blob/main/src/lib/auth/auth-service.ts\"\n    }\n  },\n  {\n    \"name\": \"modules\",\n    \"path\": \"src/lib/auth/modules\",\n    \"sha\": \"d3b2d32d91f7716f08fd15414ae208e3e3a2a527\",\n    \"size\": 0,\n    \"url\": \"https://api.github.com/repos/mohamedblueprintrak-design/BluePrint/contents/src/lib/auth/modules?ref=main\",\n    \"html_url\": \"https://github.com/mohamedblueprintrak-design/BluePrint/tree/main/src/lib/auth/modules\",\n    \"git_url\": \"https://api.github.com/repos/mohamedblueprintrak-design/BluePrint/git/trees/d3b2d32d91f7716f08fd15414ae208e3e3a2a527\",\n    \"download_url\": null,\n    \"type\": \"dir\",\n    \"_links\": {\n      \"self\": \"https://api.github.com/repos/mohamedblueprintrak-design/BluePrint/contents/src/lib/auth/modules?ref=main\",\n      \"git\": \"https://api.github.com/repos/mohamedblueprintrak-design/BluePrint/git/trees/d3b2d32d91f7716f08fd15414ae208e3e3a2a527\",\n      \"html\": \"https://github.com/mohamedblueprintrak-design/BluePrint/tree/main/src/lib/auth/modules\"\n    }\n  },\n  {\n    \"name\": \"types.ts\",\n    \"path\": \"src/lib/auth/types.ts\",\n    \"sha\": \"71f9def57dd31e7eef13f9abaf1324432b5a22e6\",\n    \"size\": 5252,\n    \"url\": \"https://api.github.com/repos/mohamedblueprintrak-design/BluePrint/contents/src/lib/auth/types.ts?ref=main\",\n    \"html_url\": \"https://github.com/mohamedblueprintrak-design/BluePrint/blob/main/src/lib/auth/types.ts\",\n    \"git_url\": \"https://api.github.com/repos/mohamedblueprintrak-design/BluePrint/git/blobs/71f9def57dd31e7eef13f9abaf1324432b5a22e6\",\n    \"download_url\": \"https://raw.githubusercontent.com/mohamedblueprintrak-design/BluePrint/main/src/lib/auth/types.ts\",\n    \"type\": \"file\",\n    \"_links\": {\n      \"self\": \"https://api.github.com/repos/mohamedblueprintrak-design/BluePrint/contents/src/lib/auth/types.ts?ref=main\",\n      \"git\": \"https://api.github.com/repos/mohamedblueprintrak-design/BluePrint/git/blobs/71f9def57dd31e7eef13f9abaf1324432b5a22e6\",\n      \"html\": \"https://github.com/mohamedblueprintrak-design/BluePrint/blob/main/src/lib/auth/types.ts\"\n    }\n  }\n]\n</pre></body></html>",
+    "publishedTime": "Sun, 29 Mar 2026 09:50:38 GMT",
+    "title": "",
+    "url": "https://api.github.com/repos/mohamedblueprintrak-design/BluePrint/contents/src/lib/auth",
+    "usage": {
+      "tokens": 1020
+    }
+  },
+  "meta": {
+    "usage": {
+      "tokens": 1020
+    }
+  },
+  "status": 20000
+}

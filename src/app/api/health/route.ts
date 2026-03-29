@@ -88,13 +88,14 @@ export async function GET(request: NextRequest) {
   try {
     if (process.env.REDIS_URL) {
       const redisHealth = await checkRedisHealth();
+      const redisStatus = redisHealth.status === 'healthy' ? 'ok' : redisHealth.status === 'degraded' ? 'ok' : 'error';
       health.checks.redis = {
-        status: redisHealth.status,
+        status: redisStatus,
         latency: redisHealth.latency,
         error: redisHealth.error,
       };
       
-      if (redisHealth.status === 'unhealthy') {
+      if (redisHealth.status !== 'healthy') {
         health.status = health.status === 'unhealthy' ? 'unhealthy' : 'degraded';
       }
     } else {

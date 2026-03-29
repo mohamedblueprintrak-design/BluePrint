@@ -14,15 +14,10 @@ function ProjectWorkspaceContent() {
     router.push('/dashboard/projects');
   };
 
-  const handleNavigate = (page: string) => {
-    router.push(`/dashboard/${page}`);
-  };
-
   return (
     <ProjectWorkspace
       projectId={projectId}
       onBack={handleBack}
-      onNavigate={handleNavigate}
     />
   );
 }

@@ -14,6 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { constructWebhookEvent, mapStripeStatus } from '@/lib/stripe';
 import { db } from '@/lib/db';
+// @ts-expect-error stripe types not installed
 import Stripe from 'stripe';
 
 // Webhook secret from environment
@@ -111,7 +112,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       await db.subscription.update({
         where: { id: existingSubscription.id },
         data: {
-          status: 'active',
+          status: 'ACTIVE',
           currentPeriodStart: new Date(),
           currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
         },
@@ -122,7 +123,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         data: {
           organizationId,
           planId,
-          status: 'active',
+          status: 'ACTIVE',
           stripeSubscriptionId: session.subscription as string,
           stripeCustomerId: session.customer as string,
           stripePaymentIntentId: session.payment_intent as string,
@@ -132,11 +133,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       });
     }
 
-    // Update organization subscription status
+    // Update organization plan
     await db.organization.update({
       where: { id: organizationId },
       data: {
-        subscriptionStatus: 'active',
         planId,
       },
     });
@@ -179,20 +179,12 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
         stripeSubscriptionId: subscription.id,
       },
       data: {
-        status,
+        status: status as 'ACTIVE' | 'CANCELED' | 'PAST_DUE' | 'TRIALING',
         currentPeriodStart: new Date(sub.current_period_start * 1000),
         currentPeriodEnd: new Date(sub.current_period_end * 1000),
         cancelAtPeriodEnd: sub.cancel_at_period_end,
       },
     });
-
-    // Update organization status
-    if (organizationId) {
-      await db.organization.update({
-        where: { id: organizationId },
-        data: { subscriptionStatus: status },
-      });
-    }
 
     console.log(`Subscription updated: ${subscription.id}, status: ${status}`);
   } catch (dbError) {
@@ -214,17 +206,9 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
         stripeSubscriptionId: subscription.id,
       },
       data: {
-        status: 'canceled',
+        status: 'CANCELED',
       },
     });
-
-    // Update organization status
-    if (organizationId) {
-      await db.organization.update({
-        where: { id: organizationId },
-        data: { subscriptionStatus: 'canceled' },
-      });
-    }
 
     console.log(`Subscription canceled: ${subscription.id}`);
   } catch (dbError) {
@@ -247,7 +231,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
         subscriptionId: subscriptionId, // This would need the actual subscription ID from our DB
         amount: invoice.amount_paid / 100, // Convert from cents
         currency: invoice.currency.toUpperCase(),
-        status: 'succeeded',
+        status: 'SUCCEEDED',
         stripePaymentIntentId: inv.payment_intent as string,
         stripeInvoiceId: invoice.id,
         receiptUrl: invoice.hosted_invoice_url || undefined,
@@ -277,16 +261,8 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
           stripeSubscriptionId: inv.subscription as string,
         },
         data: {
-          status: 'past_due',
+          status: 'PAST_DUE',
         },
-      });
-    }
-
-    // Update organization status
-    if (organizationId) {
-      await db.organization.update({
-        where: { id: organizationId },
-        data: { subscriptionStatus: 'past_due' },
       });
     }
 

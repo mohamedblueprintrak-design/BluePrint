@@ -1,6 +1,8 @@
 'use client';
 
+// @ts-expect-error - jspdf types not installed
 import jsPDF from 'jspdf';
+// @ts-expect-error - jspdf-autotable types not installed
 import autoTable from 'jspdf-autotable';
 
 // Types

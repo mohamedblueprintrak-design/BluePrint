@@ -1,7 +1,8 @@
 // BluePrint - Type Definitions
 
 // Re-export canonical role types from auth/types (single source of truth)
-export { UserRole, Permission, ROLE_PERMISSIONS } from '@/lib/auth/types';
+import { UserRole, Permission, ROLE_PERMISSIONS } from '@/lib/auth/types';
+export { UserRole, Permission, ROLE_PERMISSIONS };
 
 // ============================================
 // Auth & User Types

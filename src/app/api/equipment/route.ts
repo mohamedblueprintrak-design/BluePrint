@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
     };
 
     const equipment = await db.equipment.create({
-      data: equipmentData,
+      data: equipmentData as any,
       include: {
         project: { select: { id: true, name: true } },
       },

@@ -1,0 +1,13 @@
+# Analysis artifacts - DO NOT COMMIT
+repo_*.json
+download/
+agent-ctx/
+worklog-addendum.md
+
+# Z-scripts internal
+.zscripts/
+
+# Temp files
+*.tmp
+.env.local
+.env.production

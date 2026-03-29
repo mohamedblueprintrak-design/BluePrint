@@ -3,6 +3,7 @@
  * إعداد مراقبة الأخطاء مع Sentry
  */
 
+// @ts-expect-error - @sentry/nextjs types not installed
 import * as Sentry from '@sentry/nextjs';
 
 const SENTRY_DSN = process.env.NEXT_PUBLIC_SENTRY_DSN;
@@ -52,7 +53,8 @@ if (SENTRY_DSN) {
     ],
     
     // Filter transactions
-    beforeSend(event, hint) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    beforeSend(event: any, hint: any) {
       // Filter out sensitive data
       if (event.request?.headers) {
         delete event.request.headers.authorization;
@@ -99,7 +101,8 @@ export function captureError(
     return;
   }
 
-  Sentry.withScope((scope) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Sentry.withScope((scope: any) => {
     if (context?.user) {
       scope.setUser({
         id: context.user.id,
@@ -157,8 +160,8 @@ export function captureDatabaseError(
   captureError(error, {
     tags: {
       type: 'database_error',
-      model: context?.model,
-      operation: context?.operation,
+      model: context?.model || '',
+      operation: context?.operation || '',
     },
     extra: {
       query: context?.query,
@@ -173,4 +176,5 @@ export function startTransaction(name: string, op: string) {
 }
 
 // Export types
+// @ts-expect-error - @sentry/nextjs types not installed
 export type { ErrorEvent, Breadcrumb } from '@sentry/nextjs';

@@ -192,7 +192,7 @@ class InvoiceService {
         taxAmount,
         total,
         paidAmount: 0,
-        status: 'draft',
+        status: 'DRAFT',
         notes: data.notes,
         organizationId,
       },
@@ -294,7 +294,7 @@ class InvoiceService {
    * Mark invoice as sent
    */
   async markAsSent(id: string, organizationId: string, userId: string): Promise<Invoice> {
-    return this.updateInvoice(id, { status: 'sent' }, organizationId, userId);
+    return this.updateInvoice(id, { status: 'SENT' } as any, organizationId, userId);
   }
 
   /**
@@ -315,11 +315,11 @@ class InvoiceService {
     }
 
     const newPaidAmount = invoice.paidAmount + amount;
-    const status = newPaidAmount >= invoice.total ? 'paid' : 'partial';
+    const status = newPaidAmount >= invoice.total ? 'PAID' : 'PARTIAL';
 
     return this.updateInvoice(
       id,
-      { paidAmount: newPaidAmount, status },
+      { paidAmount: newPaidAmount, status: status as any },
       organizationId,
       userId
     );
@@ -357,7 +357,7 @@ class InvoiceService {
     stats.overdue = await prisma.invoice.count({
       where: {
         organizationId,
-        status: { notIn: ['paid', 'draft', 'cancelled'] },
+        status: { notIn: ['PAID', 'DRAFT', 'CANCELLED'] },
         dueDate: { lt: new Date() },
       },
     });
@@ -365,13 +365,13 @@ class InvoiceService {
     for (const item of statusCounts) {
       stats.total += item._count;
       switch (item.status) {
-        case 'draft':
+        case 'DRAFT':
           stats.draft = item._count;
           break;
-        case 'sent':
+        case 'SENT':
           stats.sent = item._count;
           break;
-        case 'paid':
+        case 'PAID':
           stats.paid = item._count;
           break;
       }

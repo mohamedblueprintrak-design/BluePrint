@@ -1,0 +1,18 @@
+{
+  "code": 200,
+  "data": {
+    "description": "",
+    "html": "<html><head><meta name=\"color-scheme\" content=\"light dark\"></head><body><pre style=\"word-wrap: break-word; white-space: pre-wrap;\">import { PrismaClient } from '@prisma/client'\n\nconst globalForPrisma = globalThis as unknown as {\n  prisma: PrismaClient | undefined\n}\n\n// Check if DATABASE_URL is available\n// Support both DATABASE_URL and NETLIFY_DATABASE_URL (Netlify Neon integration)\nconst DATABASE_URL = process.env.DATABASE_URL || process.env.NETLIFY_DATABASE_URL\n\n// Helper to check if database is available\nexport function isDatabaseAvailable(): boolean {\n  return !!DATABASE_URL\n}\n\n// Get the actual database URL being used\nexport function getDatabaseUrl(): string | undefined {\n  return DATABASE_URL\n}\n\n// Create a proxy that throws a friendly error when db is accessed without a database\nfunction createNullDbProxy(): PrismaClient {\n  const handler: ProxyHandler<object> = {\n    get(_target, prop) {\n      // Allow typeof check\n      if (prop === 'then') {\n        return undefined\n      }\n      throw new Error(\n        `Database not available. Running in demo mode without DATABASE_URL. ` +\n        `Cannot access '${String(prop)}' on database client.`\n      )\n    }\n  }\n  return new Proxy({}, handler) as unknown as PrismaClient\n}\n\n// Create Prisma client only if DATABASE_URL is configured\n// This allows the app to run in demo mode without a database\nfunction createPrismaClient(): PrismaClient {\n  if (!DATABASE_URL) {\n    console.log('No DATABASE_URL found - running in demo mode without database')\n    return createNullDbProxy()\n  }\n\n  try {\n    const client = globalForPrisma.prisma ??\n      new PrismaClient({\n        log: process.env.NODE_ENV === 'development' ? ['query'] : [],\n        // For serverless platforms like Netlify\n        datasources: {\n          db: {\n            url: DATABASE_URL,\n          },\n        },\n      })\n    \n    if (process.env.NODE_ENV !== 'production') {\n      globalForPrisma.prisma = client\n    }\n    \n    return client\n  } catch (error) {\n    console.error('Failed to create Prisma client:', error)\n    return createNullDbProxy()\n  }\n}\n\nexport const db = createPrismaClient()\n\n// Alias for consistency - some files use prisma, others use db\nexport const prisma = db\n\n// Export a safe version for use in API routes that need to check first\nexport const dbSafe = {\n  get client() {\n    return isDatabaseAvailable() ? db : null\n  }\n}\n</pre></body></html>",
+    "title": "",
+    "url": "https://raw.githubusercontent.com/mohamedblueprintrak-design/BluePrint/main/src/lib/db.ts",
+    "usage": {
+      "tokens": 562
+    }
+  },
+  "meta": {
+    "usage": {
+      "tokens": 562
+    }
+  },
+  "status": 20000
+}

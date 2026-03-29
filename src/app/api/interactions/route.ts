@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       where,
       include: {
         phase: { select: { id: true, phaseType: true, phaseCategory: true } },
-        respondedBy: { select: { id: true, name: true, avatar: true } },
+        respondedBy: { select: { id: true, fullName: true, avatar: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       },
       include: {
         phase: { select: { id: true, phaseType: true, phaseCategory: true } },
-        respondedBy: { select: { id: true, name: true, avatar: true } },
+        respondedBy: { select: { id: true, fullName: true, avatar: true } },
       },
     });
 

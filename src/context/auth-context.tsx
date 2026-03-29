@@ -360,7 +360,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const hasPermission = useCallback((permission: string): boolean => {
     if (!user) return false;
     
-    const rolePermissions = CANONICAL_ROLE_PERMISSIONS[user.role] || [];
+    const rolePermissions = (CANONICAL_ROLE_PERMISSIONS as Record<string, Permission[]>)[user.role] || [];
     
     // Check if it's a canonical permission (e.g., 'project:create')
     if (rolePermissions.includes(permission as Permission)) {

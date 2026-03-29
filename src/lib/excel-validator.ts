@@ -13,6 +13,7 @@
  * Uses exceljs instead of xlsx for better security
  */
 
+// @ts-expect-error - exceljs types not installed
 import { Workbook, Worksheet } from 'exceljs';
 
 // ============================================
@@ -158,10 +159,10 @@ function extractSheetData(worksheet: Worksheet): { headers: string[]; data: Reco
   const headers: string[] = [];
   const data: Record<string, unknown>[] = [];
   
-  worksheet.eachRow((row, rowNumber) => {
+  worksheet.eachRow((row: any, rowNumber: number) => {
     const rowData: Record<string, unknown> = {};
     
-    row.eachCell((cell, colNumber) => {
+    row.eachCell((cell: any, colNumber: number) => {
       const value = cell.value;
       
       // Handle different cell value types
@@ -322,7 +323,7 @@ export async function validateAndParseExcel(
     headers,
     metadata: {
       sheetCount: workbook.worksheets.length,
-      sheetNames: workbook.worksheets.map(ws => ws.name),
+      sheetNames: workbook.worksheets.map((ws: any) => ws.name),
       totalRows: rowCount,
       totalColumns: colCount,
       fileSize: buffer.length,

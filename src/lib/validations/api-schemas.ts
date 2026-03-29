@@ -246,8 +246,8 @@ export const createProposalSchema = z.object({
 
 export const createLeaveRequestSchema = z.object({
   leaveType: z.enum(['annual', 'sick', 'emergency', 'maternity', 'paternity', 'unpaid']).default('annual'),
-  startDate: z.string().datetime().or(z.date(), 'تاريخ البداية مطلوب'),
-  endDate: z.string().datetime().or(z.date(), 'تاريخ النهاية مطلوب'),
+  startDate: z.string().datetime().or(z.date()),
+  endDate: z.string().datetime().or(z.date()),
   reason: z.string().optional(),
 });
 

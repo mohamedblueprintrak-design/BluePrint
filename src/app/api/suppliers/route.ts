@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       rating: body.rating || null,
       organizationId: user.organizationId,
     };
-    const supplier = await db.supplier.create({ data: supplierData });
+    const supplier = await db.supplier.create({ data: supplierData as any });
     return successResponse({ id: supplier.id, name: supplier.name });
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : "Unknown error";

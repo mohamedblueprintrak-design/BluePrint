@@ -36,40 +36,40 @@ import {
   HardHat,
   Eye,
 } from 'lucide-react';
-import type { User, UserRole } from '@/types';
+import { type User, UserRole } from '@/types';
 
 // Role labels in Arabic
-const roleLabels: Record<UserRole, string> = {
-  admin: 'مدير',
-  manager: 'مشرف',
-  engineer: 'مهندس',
-  accountant: 'محاسب',
-  hr: 'موارد بشرية',
-  project_manager: 'مدير مشروع',
-  viewer: 'مشاهد',
-};
+const roleLabels = {
+  [UserRole.ADMIN]: 'مدير',
+  [UserRole.MANAGER]: 'مشرف',
+  [UserRole.ENGINEER]: 'مهندس',
+  [UserRole.ACCOUNTANT]: 'محاسب',
+  [UserRole.HR]: 'موارد بشرية',
+  [UserRole.PROJECT_MANAGER]: 'مدير مشروع',
+  [UserRole.VIEWER]: 'مشاهد',
+} satisfies Record<UserRole, string>;
 
 // Role badge variants
-const roleVariants: Record<UserRole, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-  admin: 'destructive',
-  manager: 'default',
-  engineer: 'secondary',
-  accountant: 'secondary',
-  hr: 'secondary',
-  project_manager: 'default',
-  viewer: 'outline',
-};
+const roleVariants = {
+  [UserRole.ADMIN]: 'destructive' as const,
+  [UserRole.MANAGER]: 'default' as const,
+  [UserRole.ENGINEER]: 'secondary' as const,
+  [UserRole.ACCOUNTANT]: 'secondary' as const,
+  [UserRole.HR]: 'secondary' as const,
+  [UserRole.PROJECT_MANAGER]: 'default' as const,
+  [UserRole.VIEWER]: 'outline' as const,
+} satisfies Record<UserRole, 'default' | 'secondary' | 'destructive' | 'outline'>;
 
 // Role icons
-const roleIcons: Record<UserRole, any> = {
-  admin: Shield,
-  manager: UserCog,
-  engineer: HardHat,
-  accountant: Users,
-  hr: Users,
-  project_manager: UserCog,
-  viewer: Eye,
-};
+const roleIcons = {
+  [UserRole.ADMIN]: Shield,
+  [UserRole.MANAGER]: UserCog,
+  [UserRole.ENGINEER]: HardHat,
+  [UserRole.ACCOUNTANT]: Users,
+  [UserRole.HR]: Users,
+  [UserRole.PROJECT_MANAGER]: UserCog,
+  [UserRole.VIEWER]: Eye,
+} satisfies Record<UserRole, any>;
 
 export default function TeamPage() {
   const [members, setMembers] = useState<User[]>([]);
@@ -140,7 +140,7 @@ export default function TeamPage() {
       setFormData({
         fullName: '',
         email: '',
-        role: 'engineer',
+        role: UserRole.ENGINEER,
         department: '',
         phone: '',
         jobTitle: '',

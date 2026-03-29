@@ -24,10 +24,29 @@ export async function GET(request: NextRequest) {
 
   try {
     const { db } = await import('@/lib/db');
-    const where: Record<string, unknown> = { user: { organizationId: user.organizationId } };
+    // LeaveRequest has no Prisma relations; fetch users separately
+    const orgUsers = user.organizationId
+      ? await db.user.findMany({ where: { organizationId: user.organizationId }, select: { id: true, fullName: true, username: true } })
+      : [];
+    const userMap = new Map(orgUsers.map(u => [u.id, u]));
+    const orgUserIds = new Set(orgUsers.map(u => u.id));
+
+    const where: any = { userId: { in: [...orgUserIds] } };
     if (status) where.status = status;
-    const leaves = await db.leaveRequest.findMany({ where, include: { user: true, approver: true }, orderBy: { createdAt: 'desc' } });
-    return success(leaves.map((l: { id: string; user: { id: string; fullName?: string | null; username: string }; approver?: { fullName?: string | null } | null; leaveType: string; startDate: Date; endDate: Date; daysCount: number; status: string }) => ({ ...l, user: { id: l.user.id, fullName: l.user.fullName || l.user.username }, approver: l.approver?.fullName })));
+    const leaves = await db.leaveRequest.findMany({ where, orderBy: { createdAt: 'desc' } });
+
+    // Fetch approver info
+    const approverIds = [...new Set(leaves.map(l => l.approvedById).filter(Boolean))] as string[];
+    const approvers = approverIds.length > 0
+      ? await db.user.findMany({ where: { id: { in: approverIds } }, select: { id: true, fullName: true } })
+      : [];
+    const approverMap = new Map(approvers.map(a => [a.id, a.fullName]));
+
+    return success(leaves.map(l => ({
+      ...l,
+      user: { id: l.userId, fullName: userMap.get(l.userId)?.fullName || userMap.get(l.userId)?.username || 'غير معروف' },
+      approver: l.approvedById ? approverMap.get(l.approvedById) : null
+    })));
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Unknown error';
     return error(message, 'SERVER_ERROR', 500);
@@ -61,7 +80,7 @@ export async function POST(request: NextRequest) {
       reason: body.reason || null,
     };
 
-    const leave = await db.leaveRequest.create({ data: leaveData });
+    const leave = await db.leaveRequest.create({ data: leaveData as any });
     return success({ id: leave.id, daysCount });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Unknown error';
@@ -93,16 +112,18 @@ export async function PUT(request: NextRequest) {
     
     const leaveRequest = await db.leaveRequest.findUnique({
       where: { id: id as string },
-      include: { user: true }
     });
 
     if (!leaveRequest) {
       return error('طلب الإجازة غير موجود', 'NOT_FOUND', 404);
     }
 
+    // Fetch user separately (LeaveRequest has no Prisma relations)
+    const leaveUser = await db.user.findUnique({ where: { id: leaveRequest.userId } });
+
     await db.leaveRequest.update({
       where: { id: id as string },
-      data: { status, approvedById: user.id, approvedAt: new Date(), rejectionReason: rejectionReason as string | undefined }
+      data: { status: status as any, approvedById: user.id, approvedAt: new Date(), rejectionReason: rejectionReason as string | undefined }
     });
 
     try {
@@ -122,7 +143,7 @@ export async function PUT(request: NextRequest) {
       console.error('Failed to create leave notification:', notifError);
     }
 
-    if (sendNotification !== false && leaveRequest.user?.email) {
+    if (sendNotification !== false && leaveUser?.email) {
       try {
         // Default to notifying - NotificationSettings table not in Prisma schema
         // TODO: Add NotificationSettings model to schema when notification preferences are implemented
@@ -135,7 +156,7 @@ export async function PUT(request: NextRequest) {
           let emailTemplate;
           if (approve) {
             emailTemplate = emailTemplates.leaveApproved(
-              leaveRequest.user.fullName || leaveRequest.user.username,
+              leaveUser.fullName || leaveUser.username,
               leaveRequest.leaveType,
               startDate,
               endDate,
@@ -143,7 +164,7 @@ export async function PUT(request: NextRequest) {
             );
           } else {
             emailTemplate = emailTemplates.leaveRejected(
-              leaveRequest.user.fullName || leaveRequest.user.username,
+              leaveUser.fullName || leaveUser.username,
               leaveRequest.leaveType,
               startDate,
               endDate,
@@ -152,7 +173,7 @@ export async function PUT(request: NextRequest) {
           }
 
           await sendEmail({
-            to: leaveRequest.user.email,
+            to: leaveUser.email,
             subject: emailTemplate.subject,
             html: emailTemplate.html,
             text: emailTemplate.text

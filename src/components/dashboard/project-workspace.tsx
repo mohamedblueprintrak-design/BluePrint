@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -280,8 +281,9 @@ function calculateSLA(phase: WorkflowPhase, isAr: boolean): { text: string; colo
 }
 
 // ===== Main Component =====
-export default function ProjectWorkspace({ projectId, onBack, onNavigate }: ProjectWorkspaceProps) {
-  const { t, language, formatCurrency, formatDate, isRTL } = useTranslation(language);
+export default function ProjectWorkspace({ projectId, onBack }: ProjectWorkspaceProps) {
+  const { language } = useApp();
+  const { t, formatCurrency, formatDate, formatDateTime, isRTL } = useTranslation(language);
   const isAr = language === 'ar';
 
   // Data states
@@ -328,7 +330,7 @@ export default function ProjectWorkspace({ projectId, onBack, onNavigate }: Proj
           `/api/tasks?projectId=${projectId}`,
         ];
         const responses = await Promise.allSettled(
-          endpoints.map((url) => fetch(url, { headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' } }))
+          endpoints.map((url) => fetch(url, { headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' } as Record<string, string> }))
         );
 
         // Project
@@ -459,7 +461,7 @@ export default function ProjectWorkspace({ projectId, onBack, onNavigate }: Proj
         <p className="text-slate-400">{error || (isAr ? 'لم يتم العثور على المشروع' : 'Project not found')}</p>
         <Button variant="outline" onClick={onBack} className="border-slate-700 text-slate-300">
           <ArrowLeft className={`h-4 w-4 ${isRTL ? 'rotate-180' : ''} me-2`} />
-          {t('back')}
+          {t.back}
         </Button>
       </div>
     );
@@ -477,19 +479,19 @@ export default function ProjectWorkspace({ projectId, onBack, onNavigate }: Proj
         <thead>
           <tr className="border-b border-slate-700/50">
             <th className="text-start p-3 text-slate-400 font-medium">{isAr ? 'المرحلة' : 'Phase'}</th>
-            <th className="text-start p-3 text-slate-400 font-medium">{t('status')}</th>
+            <th className="text-start p-3 text-slate-400 font-medium">{t.status}</th>
             <th className="text-start p-3 text-slate-400 font-medium">{isAr ? 'المسؤول' : 'Assigned'}</th>
             <th className="text-start p-3 text-slate-400 font-medium">{isAr ? 'تاريخ البداية' : 'Start'}</th>
             <th className="text-start p-3 text-slate-400 font-medium">{isAr ? 'المتبقي' : 'SLA'}</th>
             <th className="text-start p-3 text-slate-400 font-medium">{isAr ? 'الرفض' : 'Rejections'}</th>
-            <th className="text-center p-3 text-slate-400 font-medium">{t('actions')}</th>
+            <th className="text-center p-3 text-slate-400 font-medium">{t.actions}</th>
           </tr>
         </thead>
         <tbody>
           {categoryPhases.length === 0 ? (
             <tr>
               <td colSpan={7} className="text-center py-8 text-slate-500">
-                {t('noData')}
+                {t.noData}
               </td>
             </tr>
           ) : (
@@ -668,7 +670,7 @@ export default function ProjectWorkspace({ projectId, onBack, onNavigate }: Proj
           {/* Progress */}
           <div>
             <div className="flex items-center justify-between text-xs mb-2">
-              <span className="text-slate-400">{t('progress')}</span>
+              <span className="text-slate-400">{t.progress}</span>
               <span className="text-white font-semibold">{Math.round(project.progress)}%</span>
             </div>
             <Progress value={project.progress} className="h-2 bg-slate-700" />
@@ -690,7 +692,7 @@ export default function ProjectWorkspace({ projectId, onBack, onNavigate }: Proj
             </div>
             <div className="bg-slate-800/50 rounded-lg p-3 text-center">
               <CheckCircle2 className="h-4 w-4 text-emerald-400 mx-auto mb-1" />
-              <p className="text-xs text-slate-500">{t('tasks')}</p>
+              <p className="text-xs text-slate-500">{t.tasks}</p>
               <p className="text-sm font-semibold text-white mt-0.5">{taskStats.total}</p>
             </div>
             <div className="bg-slate-800/50 rounded-lg p-3 text-center">
@@ -767,26 +769,26 @@ export default function ProjectWorkspace({ projectId, onBack, onNavigate }: Proj
                 {/* Project Details Card */}
                 <Card className="bg-slate-900/50 border-slate-800">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-base text-white">{t('projectDetails')}</CardTitle>
+                    <CardTitle className="text-base text-white">{isAr ? 'تفاصيل المشروع' : 'Project Details'}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <p className="text-slate-500 text-xs mb-1">{t('type')}</p>
+                        <p className="text-slate-500 text-xs mb-1">{t.type}</p>
                         <p className="text-white">{isAr ? tc.labelAr : tc.labelEn}</p>
                       </div>
                       <div>
-                        <p className="text-slate-500 text-xs mb-1">{t('projectStatus')}</p>
+                        <p className="text-slate-500 text-xs mb-1">{t.projectStatus}</p>
                         <Badge variant="secondary" className={`${sc.bg} ${sc.color} text-xs`}>
                           {isAr ? sc.labelAr : sc.labelEn}
                         </Badge>
                       </div>
                       <div>
-                        <p className="text-slate-500 text-xs mb-1">{t('startDate')}</p>
+                        <p className="text-slate-500 text-xs mb-1">{t.startDate}</p>
                         <p className="text-white">{formatDate(project.startDate)}</p>
                       </div>
                       <div>
-                        <p className="text-slate-500 text-xs mb-1">{t('endDate')}</p>
+                        <p className="text-slate-500 text-xs mb-1">{t.endDate}</p>
                         <p className="text-white">{project.endDate ? formatDate(project.endDate) : '—'}</p>
                       </div>
                       <div>
@@ -794,12 +796,12 @@ export default function ProjectWorkspace({ projectId, onBack, onNavigate }: Proj
                         <p className="text-white">{project.manager?.name || '—'}</p>
                       </div>
                       <div>
-                        <p className="text-slate-500 text-xs mb-1">{t('projectClient')}</p>
+                        <p className="text-slate-500 text-xs mb-1">{t.client}</p>
                         <p className="text-white">{project.client?.name || '—'}</p>
                       </div>
                       {project.location && (
                         <div className="col-span-2">
-                          <p className="text-slate-500 text-xs mb-1">{t('projectLocation')}</p>
+                          <p className="text-slate-500 text-xs mb-1">{t.projectLocation}</p>
                           <p className="text-white">{project.location}</p>
                         </div>
                       )}
@@ -819,7 +821,7 @@ export default function ProjectWorkspace({ projectId, onBack, onNavigate }: Proj
                       <CategoryProgressCard key={cat} category={cat} />
                     ))}
                     {totalPhases === 0 && (
-                      <p className="text-slate-500 text-sm text-center py-4">{t('noData')}</p>
+                      <p className="text-slate-500 text-sm text-center py-4">{t.noData}</p>
                     )}
                   </CardContent>
                 </Card>
@@ -868,11 +870,11 @@ export default function ProjectWorkspace({ projectId, onBack, onNavigate }: Proj
                       </div>
                       <div className="text-center bg-blue-500/10 rounded-lg p-3">
                         <p className="text-2xl font-bold text-blue-400">{taskStats.inProgress}</p>
-                        <p className="text-xs text-slate-500 mt-1">{t('inProgress')}</p>
+                        <p className="text-xs text-slate-500 mt-1">{isAr ? 'قيد التنفيذ' : 'In Progress'}</p>
                       </div>
                       <div className="text-center bg-emerald-500/10 rounded-lg p-3">
                         <p className="text-2xl font-bold text-emerald-400">{taskStats.done}</p>
-                        <p className="text-xs text-slate-500 mt-1">{t('completed')}</p>
+                        <p className="text-xs text-slate-500 mt-1">{t.completed}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -1026,17 +1028,17 @@ export default function ProjectWorkspace({ projectId, onBack, onNavigate }: Proj
                   </CardHeader>
                   <CardContent>
                     {invoices.length === 0 ? (
-                      <p className="text-slate-500 text-sm text-center py-8">{t('noData')}</p>
+                      <p className="text-slate-500 text-sm text-center py-8">{t.noData}</p>
                     ) : (
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                           <thead>
                             <tr className="border-b border-slate-700/50">
-                              <th className="text-start p-3 text-slate-400 font-medium">{t('invoiceNumber')}</th>
-                              <th className="text-start p-3 text-slate-400 font-medium">{t('date')}</th>
+                              <th className="text-start p-3 text-slate-400 font-medium">{t.invoiceNumber}</th>
+                              <th className="text-start p-3 text-slate-400 font-medium">{t.date}</th>
                               <th className="text-start p-3 text-slate-400 font-medium">{isAr ? 'الإجمالي' : 'Total'}</th>
-                              <th className="text-start p-3 text-slate-400 font-medium">{t('paid')}</th>
-                              <th className="text-start p-3 text-slate-400 font-medium">{t('status')}</th>
+                              <th className="text-start p-3 text-slate-400 font-medium">{t.paid}</th>
+                              <th className="text-start p-3 text-slate-400 font-medium">{t.status}</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -1080,7 +1082,7 @@ export default function ProjectWorkspace({ projectId, onBack, onNavigate }: Proj
                   </CardHeader>
                   <CardContent>
                     {siteReports.length === 0 ? (
-                      <p className="text-slate-500 text-sm text-center py-8">{t('noData')}</p>
+                      <p className="text-slate-500 text-sm text-center py-8">{t.noData}</p>
                     ) : (
                       <div className="space-y-3 max-h-96 overflow-y-auto">
                         {siteReports.map((report) => (
@@ -1129,16 +1131,16 @@ export default function ProjectWorkspace({ projectId, onBack, onNavigate }: Proj
                   </CardHeader>
                   <CardContent>
                     {defects.length === 0 ? (
-                      <p className="text-slate-500 text-sm text-center py-8">{t('noData')}</p>
+                      <p className="text-slate-500 text-sm text-center py-8">{t.noData}</p>
                     ) : (
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                           <thead>
                             <tr className="border-b border-slate-700/50">
-                              <th className="text-start p-3 text-slate-400 font-medium">{t('title')}</th>
+                              <th className="text-start p-3 text-slate-400 font-medium">{isAr ? 'العنوان' : 'Title'}</th>
                               <th className="text-start p-3 text-slate-400 font-medium">{isAr ? 'الخطورة' : 'Severity'}</th>
-                              <th className="text-start p-3 text-slate-400 font-medium">{t('status')}</th>
-                              <th className="text-start p-3 text-slate-400 font-medium">{t('date')}</th>
+                              <th className="text-start p-3 text-slate-400 font-medium">{t.status}</th>
+                              <th className="text-start p-3 text-slate-400 font-medium">{t.date}</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -1189,7 +1191,7 @@ export default function ProjectWorkspace({ projectId, onBack, onNavigate }: Proj
                 </CardHeader>
                 <CardContent>
                   {phases.length === 0 ? (
-                    <p className="text-slate-500 text-sm text-center py-8">{t('noData')}</p>
+                    <p className="text-slate-500 text-sm text-center py-8">{t.noData}</p>
                   ) : (
                     <ScrollArea className="max-h-[600px]">
                       <div className="relative">
@@ -1315,7 +1317,7 @@ export default function ProjectWorkspace({ projectId, onBack, onNavigate }: Proj
                     <Card className="bg-slate-900/50 border-slate-800">
                       <CardContent className="p-8 text-center">
                         <MessageSquare className="h-12 w-12 text-slate-600 mx-auto mb-3" />
-                        <p className="text-slate-500">{t('noData')}</p>
+                        <p className="text-slate-500">{t.noData}</p>
                       </CardContent>
                     </Card>
                   ) : (
@@ -1455,7 +1457,7 @@ export default function ProjectWorkspace({ projectId, onBack, onNavigate }: Proj
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setInteractionDialogOpen(false)} className="border-slate-600 text-slate-300">
-              {t('cancel')}
+              {t.cancel}
             </Button>
             <Button
               onClick={handleSubmitInteraction}
@@ -1463,7 +1465,7 @@ export default function ProjectWorkspace({ projectId, onBack, onNavigate }: Proj
               className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               {submittingInteraction && <Loader2 className="h-4 w-4 animate-spin me-2" />}
-              {t('submit')}
+              {t.submit}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -27,18 +27,18 @@ export async function GET(request: NextRequest) {
       completedTasks, openDefectsCount, resolvedDefects, criticalDefects, totalEmployees
     ] = await Promise.all([
       db.project.count({ where: { organizationId: orgId } }),
-      db.project.count({ where: { status: 'active', organizationId: orgId } }),
-      db.project.count({ where: { status: 'completed', organizationId: orgId } }),
-      db.project.count({ where: { status: 'pending', organizationId: orgId } }),
+      db.project.count({ where: { status: 'ACTIVE', organizationId: orgId } }),
+      db.project.count({ where: { status: 'COMPLETED', organizationId: orgId } }),
+      db.project.count({ where: { status: 'PENDING', organizationId: orgId } }),
       db.client.count({ where: { isActive: true, organizationId: orgId } }),
       db.invoice.aggregate({ where: { organizationId: orgId }, _sum: { total: true } }),
       db.invoice.aggregate({ where: { organizationId: orgId }, _sum: { paidAmount: true } }),
-      db.task.count({ where: { status: { not: 'done' }, project: { organizationId: orgId } } }),
-      db.task.count({ where: { status: 'in_progress', project: { organizationId: orgId } } }),
-      db.task.count({ where: { status: 'done', project: { organizationId: orgId } } }),
-      db.defect.count({ where: { status: 'Open', project: { organizationId: orgId } } }),
-      db.defect.count({ where: { status: 'Closed', project: { organizationId: orgId } } }),
-      db.defect.count({ where: { status: 'Open', severity: 'critical', project: { organizationId: orgId } } }),
+      db.task.count({ where: { status: { not: 'DONE' }, project: { organizationId: orgId } } }),
+      db.task.count({ where: { status: 'IN_PROGRESS', project: { organizationId: orgId } } }),
+      db.task.count({ where: { status: 'DONE', project: { organizationId: orgId } } }),
+      db.defect.count({ where: { status: 'OPEN', project: { organizationId: orgId } } }),
+      db.defect.count({ where: { status: 'CLOSED', project: { organizationId: orgId } } }),
+      db.defect.count({ where: { status: 'OPEN', severity: 'CRITICAL', project: { organizationId: orgId } } }),
       db.user.count({ where: { isActive: true, organizationId: orgId } })
     ]);
 
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
         },
         tasks: { 
           total: pendingTasks + completedTasks,
-          pending: await db.task.count({ where: { status: 'todo', project: { organizationId: user.organizationId } } }),
+          pending: await db.task.count({ where: { status: 'TODO', project: { organizationId: user.organizationId } } }),
           inProgress: inProgressTasks,
           completed: completedTasks,
           overdue: 0

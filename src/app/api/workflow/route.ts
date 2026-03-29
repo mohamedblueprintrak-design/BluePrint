@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const phases = await db.workflowPhase.findMany({
       where: { projectId },
       include: {
-        assignedTo: { select: { id: true, name: true, avatar: true } },
+        assignedTo: { select: { id: true, fullName: true, avatar: true } },
         dependsOn: { select: { id: true, phaseType: true, phaseCategory: true } },
       },
       orderBy: { order: 'asc' },
@@ -68,7 +68,7 @@ export async function PUT(request: NextRequest) {
       where: { id },
       data: updateData,
       include: {
-        assignedTo: { select: { id: true, name: true, avatar: true } },
+        assignedTo: { select: { id: true, fullName: true, avatar: true } },
       },
     });
 

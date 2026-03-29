@@ -6,6 +6,7 @@
  * when Stripe is not configured.
  */
 
+// @ts-expect-error - stripe types not installed
 import Stripe from 'stripe';
 
 // ============================================

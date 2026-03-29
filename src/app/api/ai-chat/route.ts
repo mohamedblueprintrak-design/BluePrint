@@ -479,7 +479,7 @@ async function handleSkillRequest(skill: string, params: Record<string, unknown>
       if (!query) {
         return errorResponse('يرجى تحديد كلمة البحث.');
       }
-      const results = await performWebSearch(query, num);
+      const results = await performWebSearch(query as string, num as number);
       return successResponse({ results, skill: 'web_search' });
     }
     
@@ -488,7 +488,7 @@ async function handleSkillRequest(skill: string, params: Record<string, unknown>
       if (!prompt) {
         return errorResponse('يرجى تحديد وصف الصورة.');
       }
-      const imageBase64 = await generateImage(prompt, size);
+      const imageBase64 = await generateImage(prompt as string, size as string);
       if (!imageBase64) {
         return errorResponse('فشل في توليد الصورة. يرجى المحاولة مرة أخرى.', 'IMAGE_ERROR', 500);
       }
@@ -500,7 +500,7 @@ async function handleSkillRequest(skill: string, params: Record<string, unknown>
       if (!text) {
         return errorResponse('يرجى تحديد النص للترجمة.');
       }
-      const translation = await translateText(text, targetLang);
+      const translation = await translateText(text as string, targetLang as string);
       return successResponse({ translation, original: text, targetLang, skill: 'translate' });
     }
     
@@ -509,7 +509,7 @@ async function handleSkillRequest(skill: string, params: Record<string, unknown>
       if (!code) {
         return errorResponse('يرجى تحديد الكود للشرح.');
       }
-      const explanation = await explainCode(code, language);
+      const explanation = await explainCode(code as string, language as string);
       return successResponse({ explanation, skill: 'explain_code' });
     }
     
@@ -518,7 +518,7 @@ async function handleSkillRequest(skill: string, params: Record<string, unknown>
       if (!text) {
         return errorResponse('يرجى تحديد النص للتلخيص.');
       }
-      const summary = await summarizeText(text, language);
+      const summary = await summarizeText(text as string, language as string);
       return successResponse({ summary, skill: 'summarize' });
     }
     
@@ -527,7 +527,7 @@ async function handleSkillRequest(skill: string, params: Record<string, unknown>
       if (!text) {
         return errorResponse('يرجى تحديد النص لتحليل المشاعر.');
       }
-      const analysis = await analyzeSentiment(text);
+      const analysis = await analyzeSentiment(text as string);
       return successResponse({ ...analysis, skill: 'sentiment' });
     }
     

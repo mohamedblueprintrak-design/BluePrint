@@ -10,7 +10,7 @@
 
 import { prisma } from '@/lib/db';
 import { logAudit } from './audit.service';
-import type { Task } from '@prisma/client';
+import type { Task, TaskPriority, TaskStatus } from '@prisma/client';
 
 /**
  * Task filtering options
@@ -272,8 +272,8 @@ class TaskService {
         projectId: data.projectId,
         parentId: data.parentId,
         assignedTo: data.assignedTo,
-        priority: data.priority || 'medium',
-        status: data.status || 'todo',
+        priority: (data.priority as TaskPriority) || 'MEDIUM',
+        status: (data.status as TaskStatus) || 'TODO',
         startDate: data.startDate,
         endDate: data.endDate,
         dueDate: data.dueDate,
@@ -354,8 +354,8 @@ class TaskService {
     if (data.projectId !== undefined) updateData.projectId = data.projectId;
     if (data.parentId !== undefined) updateData.parentId = data.parentId;
     if (data.assignedTo !== undefined) updateData.assignedTo = data.assignedTo;
-    if (data.priority !== undefined) updateData.priority = data.priority;
-    if (data.status !== undefined) updateData.status = data.status;
+    if (data.priority !== undefined) updateData.priority = data.priority as TaskPriority;
+    if (data.status !== undefined) updateData.status = data.status as TaskStatus;
     if (data.startDate !== undefined) updateData.startDate = data.startDate;
     if (data.endDate !== undefined) updateData.endDate = data.endDate;
     if (data.dueDate !== undefined) updateData.dueDate = data.dueDate;
@@ -369,7 +369,7 @@ class TaskService {
 
     const task = await prisma.task.update({
       where: { id },
-      data: updateData,
+      data: updateData as any,
     });
 
     await logAudit({
@@ -454,7 +454,7 @@ class TaskService {
     const updateData: UpdateTaskInput = { status };
     
     // If completing the task, set progress to 100%
-    if (status === 'done') {
+    if (status === 'DONE') {
       updateData.progress = 100;
     }
 
@@ -502,7 +502,7 @@ class TaskService {
         order: true,
         assignedTo: true,
       },
-    });
+    }) as unknown as GanttTaskDTO[];
   }
 
   /**
@@ -529,7 +529,7 @@ class TaskService {
         where: {
           project: { organizationId },
           dueDate: { lt: new Date() },
-          status: { notIn: ['done', 'cancelled'] },
+          status: { notIn: ['DONE', 'CANCELLED'] },
         },
       }),
     ]);
@@ -546,16 +546,16 @@ class TaskService {
     for (const item of statusCounts) {
       stats.total += item._count;
       switch (item.status) {
-        case 'todo':
+        case 'TODO':
           stats.todo = item._count;
           break;
-        case 'in_progress':
+        case 'IN_PROGRESS':
           stats.inProgress = item._count;
           break;
-        case 'review':
+        case 'REVIEW':
           stats.review = item._count;
           break;
-        case 'done':
+        case 'DONE':
           stats.done = item._count;
           break;
       }

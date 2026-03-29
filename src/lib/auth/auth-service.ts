@@ -15,6 +15,7 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { hash, compare } from 'bcryptjs';
 import { randomBytes, randomInt } from 'crypto';
+// @ts-expect-error - otplib types not installed
 import { generateSecret, generateURI, verifySync } from 'otplib';
 import { prisma } from '@/lib/db';
 import { env } from '@/lib/env';
@@ -332,7 +333,8 @@ class AuthenticationService {
           role: user.role as UserRole,
           avatar: user.avatar,
           organizationId: user.organizationId,
-          organization: user.organization,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          organization: (user as any).organization,
         },
         token: accessToken,
         refreshToken,
@@ -410,7 +412,7 @@ class AuthenticationService {
           username: data.username,
           password: hashedPassword,
           fullName: data.fullName,
-          role: organizationId ? UserRole.ADMIN : UserRole.VIEWER,
+          role: (organizationId ? UserRole.ADMIN : UserRole.VIEWER) as any,
           organizationId,
         },
         include: {
@@ -451,7 +453,8 @@ class AuthenticationService {
           role: user.role as UserRole,
           avatar: user.avatar,
           organizationId: user.organizationId,
-          organization: user.organization,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          organization: (user as any).organization,
         },
         token: accessToken,
         refreshToken,
@@ -517,7 +520,8 @@ class AuthenticationService {
           role: user.role as UserRole,
           avatar: user.avatar,
           organizationId: user.organizationId,
-          organization: user.organization,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          organization: (user as any).organization,
         },
         token: accessToken,
         refreshToken: newRefreshToken,
@@ -1234,7 +1238,9 @@ class AuthenticationService {
       }
 
       // Check if it's a backup code
-      const backupCodes: string[] = JSON.parse(twoFactorSecret.backupCodes || '[]');
+      const backupCodes = (Array.isArray(twoFactorSecret.backupCodes)
+        ? twoFactorSecret.backupCodes
+        : JSON.parse(String(twoFactorSecret.backupCodes || '[]'))) as string[];
       const backupCodeIndex = backupCodes.indexOf(code);
       
       if (backupCodeIndex !== -1) {

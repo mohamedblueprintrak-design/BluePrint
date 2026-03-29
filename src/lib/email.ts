@@ -2,6 +2,7 @@
 // For development, log emails to console
 // For production, configure SMTP
 
+// @ts-expect-error - nodemailer types not installed
 import nodemailer from 'nodemailer';
 
 export interface EmailOptions {

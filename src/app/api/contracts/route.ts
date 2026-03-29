@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       clientId: body.clientId || null,
       organizationId: user.organizationId,
     };
-    const contract = await db.contract.create({ data: contractData });
+    const contract = await db.contract.create({ data: contractData as any });
     return success({ id: contract.id });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Unknown error';
@@ -86,7 +86,7 @@ export async function PUT(request: NextRequest) {
     if (body.endDate !== undefined) updateData.endDate = body.endDate ? new Date(body.endDate as string) : null;
     if (body.description !== undefined) updateData.description = body.description;
     if (body.clientId !== undefined) updateData.clientId = body.clientId;
-    await db.contract.update({ where: { id }, data: updateData });
+    await db.contract.update({ where: { id }, data: updateData as any });
     return success({ id });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Unknown error';

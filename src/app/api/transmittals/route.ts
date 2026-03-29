@@ -74,11 +74,11 @@ export async function GET(request: NextRequest) {
     if (action === 'stats') {
       // Get statistics
       const total = await db.transmittal.count();
-      const sent = await db.transmittal.count({ where: { status: 'sent' } });
-      const acknowledged = await db.transmittal.count({ where: { status: 'acknowledged' } });
+      const sent = await db.transmittal.count({ where: { status: 'SENT' } });
+      const acknowledged = await db.transmittal.count({ where: { status: 'ACKNOWLEDGED' } });
       const overdue = await db.transmittal.count({ 
         where: { 
-          status: { not: 'acknowledged' },
+          status: { not: 'ACKNOWLEDGED' },
           dueDate: { lt: new Date() }
         }
       });
@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
       // Get overdue transmittals
       const overdue = await db.transmittal.findMany({
         where: {
-          status: { notIn: ['acknowledged', 'rejected'] },
+          status: { notIn: ['ACKNOWLEDGED', 'REJECTED'] },
           dueDate: { lt: new Date() }
         },
         include: { items: true, project: true },
@@ -251,13 +251,13 @@ export async function POST(request: NextRequest) {
           respondentName,
           respondentEmail,
           comments,
-          attachments: attachments ? JSON.stringify(attachments) : null
+          attachments: attachments ? JSON.stringify(attachments) : null as any
         }
       });
 
       // Update transmittal status
-      const newStatus = responseType === 'acknowledged' ? 'acknowledged' : 
-                       responseType === 'rejected' ? 'rejected' : 'acknowledged';
+      const newStatus: any = responseType === 'acknowledged' ? 'ACKNOWLEDGED' : 
+                       responseType === 'rejected' ? 'REJECTED' : 'ACKNOWLEDGED';
       
       await db.transmittal.update({
         where: { id: transmittalId },
