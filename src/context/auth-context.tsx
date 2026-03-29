@@ -1,36 +1,36 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { User, Organization, ApiResponse, LoginForm, RegisterForm, UserRole } from '@/types';
+import { User, Organization, ApiResponse, LoginForm, RegisterForm, UserRole, Permission, ROLE_PERMISSIONS as CANONICAL_ROLE_PERMISSIONS } from '@/types';
 
-// Permission definitions for each role
-const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
-  admin: [
-    'manage_users', 'manage_organization', 'manage_projects', 'manage_clients',
-    'manage_invoices', 'manage_contracts', 'manage_tasks', 'manage_hr',
-    'manage_inventory', 'manage_settings', 'view_reports', 'manage_subscriptions',
-    'manage_ai', 'export_data', 'manage_templates'
-  ],
-  manager: [
-    'manage_projects', 'manage_clients', 'manage_invoices', 'manage_contracts',
-    'manage_tasks', 'view_hr', 'manage_inventory', 'view_reports', 'export_data'
-  ],
-  project_manager: [
-    'manage_projects', 'view_clients', 'view_invoices', 'manage_tasks',
-    'view_inventory', 'view_reports'
-  ],
-  engineer: [
-    'view_projects', 'manage_tasks', 'view_invoices', 'view_reports', 'use_ai'
-  ],
-  accountant: [
-    'view_projects', 'manage_invoices', 'view_clients', 'view_reports', 'export_data'
-  ],
-  hr: [
-    'manage_hr', 'view_users', 'manage_attendance', 'manage_leaves', 'view_reports'
-  ],
-  viewer: [
-    'view_projects', 'view_tasks', 'view_invoices'
-  ]
+// Legacy permission name mapping (backward compatibility with old-style permissions)
+// Maps old names like 'manage_users' to new canonical Permission enum values
+const LEGACY_PERMISSION_MAP: Record<string, Permission[]> = {
+  manage_users: [Permission.USER_CREATE, Permission.USER_READ, Permission.USER_UPDATE, Permission.USER_DELETE],
+  manage_organization: [Permission.SETTINGS_UPDATE],
+  manage_projects: [Permission.PROJECT_CREATE, Permission.PROJECT_UPDATE, Permission.PROJECT_DELETE],
+  view_projects: [Permission.PROJECT_READ],
+  manage_clients: [Permission.CLIENT_CREATE, Permission.CLIENT_UPDATE, Permission.CLIENT_DELETE],
+  view_clients: [Permission.CLIENT_READ],
+  manage_invoices: [Permission.INVOICE_CREATE, Permission.INVOICE_UPDATE, Permission.INVOICE_DELETE],
+  view_invoices: [Permission.INVOICE_READ],
+  manage_contracts: [Permission.PROJECT_UPDATE],
+  manage_tasks: [Permission.TASK_CREATE, Permission.TASK_UPDATE, Permission.TASK_DELETE],
+  view_tasks: [Permission.TASK_READ],
+  manage_hr: [Permission.USER_CREATE, Permission.USER_UPDATE],
+  view_hr: [Permission.USER_READ],
+  manage_inventory: [Permission.SETTINGS_UPDATE],
+  view_inventory: [Permission.SETTINGS_READ],
+  manage_settings: [Permission.SETTINGS_UPDATE],
+  view_reports: [Permission.REPORTS_READ],
+  manage_subscriptions: [Permission.SETTINGS_UPDATE],
+  manage_ai: [Permission.REPORTS_READ],
+  export_data: [Permission.REPORTS_EXPORT],
+  manage_templates: [Permission.SETTINGS_UPDATE],
+  manage_attendance: [Permission.USER_READ],
+  manage_leaves: [Permission.USER_UPDATE],
+  view_users: [Permission.USER_READ],
+  use_ai: [Permission.REPORTS_READ],
 };
 
 interface AuthContextType {
@@ -51,7 +51,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AUTH_TOKEN_KEY = 'bp_token';
+const AUTH_TOKEN_KEY = 'bp_token'; // SECURITY NOTE: JWT stored in localStorage is vulnerable to XSS attacks.
+// TODO: Migrate to httpOnly cookies set by the server to mitigate XSS token theft.
 const AUTH_USER_KEY = 'bp_user';
 const AUTH_ORG_KEY = 'bp_organization';
 const TOKEN_EXPIRY_KEY = 'bp_token_expiry';
@@ -69,7 +70,7 @@ function getCookie(name: string): string | null {
 // Helper to delete cookie
 function deleteCookie(name: string) {
   if (typeof document === 'undefined') return;
-  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; sameSite=strict;`;
 }
 
 // Decode JWT token to get expiry
@@ -347,12 +348,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [token]);
 
-  // Check if user has a specific permission
+  // Check if user has a specific permission (supports both canonical and legacy permission names)
   const hasPermission = useCallback((permission: string): boolean => {
     if (!user) return false;
     
-    const rolePermissions = ROLE_PERMISSIONS[user.role] || [];
-    return rolePermissions.includes(permission) || rolePermissions.includes('*');
+    const rolePermissions = CANONICAL_ROLE_PERMISSIONS[user.role] || [];
+    
+    // Check if it's a canonical permission (e.g., 'project:create')
+    if (rolePermissions.includes(permission as Permission)) {
+      return true;
+    }
+    
+    // Check if it's a legacy permission name (e.g., 'manage_users')
+    const legacyMappings = LEGACY_PERMISSION_MAP[permission];
+    if (legacyMappings) {
+      return legacyMappings.some(p => rolePermissions.includes(p));
+    }
+    
+    return false;
   }, [user]);
 
   // Check if user has a specific role (or one of multiple roles)
@@ -418,6 +431,7 @@ export function useAuth() {
 }
 
 // Export permission helper for use outside components
+// Returns canonical Permission enum values for the given role
 export function getRolePermissions(role: UserRole): string[] {
-  return ROLE_PERMISSIONS[role] || [];
+  return (CANONICAL_ROLE_PERMISSIONS[role] || []).map(p => p as string);
 }

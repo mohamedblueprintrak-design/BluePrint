@@ -110,6 +110,7 @@ export const contractStatusSchema = z.enum([
 export const userRoleSchema = z.enum([
   'admin',
   'manager',
+  'project_manager',
   'engineer',
   'accountant',
   'hr',

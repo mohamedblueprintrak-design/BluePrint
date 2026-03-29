@@ -1,5 +1,8 @@
 // BluePrint - Type Definitions
 
+// Re-export canonical role types from auth/types (single source of truth)
+export { UserRole, Permission, ROLE_PERMISSIONS } from '@/lib/auth/types';
+
 // ============================================
 // Auth & User Types
 // ============================================
@@ -29,8 +32,6 @@ export interface User {
   updatedAt: Date | string;
   organization?: Organization;
 }
-
-export type UserRole = 'admin' | 'manager' | 'engineer' | 'accountant' | 'hr' | 'project_manager' | 'viewer';
 
 export interface Session {
   id: string;

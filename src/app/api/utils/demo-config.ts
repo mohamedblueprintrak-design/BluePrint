@@ -121,19 +121,19 @@ async function initializeDemoUsers(): Promise<DemoUser[]> {
     }
   ];
   
-  // Log credentials ONCE in development mode only
+  // Log credentials ONCE in development mode only (password hidden for security)
   if (!_demoCredentialsLogged && process.env.NODE_ENV !== 'production') {
-    console.log('\n' + '='.repeat(60));
-    console.log('🔐 DEMO MODE ENABLED');
-    console.log('='.repeat(60));
-    console.log('Demo credentials (use these to login):');
-    console.log('-'.repeat(60));
-    console.log(`  Admin: demo_admin / ${demoPassword}`);
-    console.log(`  User:  demo_user / ${demoPassword}`);
-    console.log('-'.repeat(60));
-    console.log('⚠️  These credentials are for development only!');
-    console.log('⚠️  They change every time the server restarts.');
-    console.log('='.repeat(60) + '\n');
+    console.warn('\n' + '='.repeat(60));
+    console.warn('🔐 DEMO MODE ENABLED');
+    console.warn('='.repeat(60));
+    console.warn('Demo credentials (check .env for password):');
+    console.warn('-'.repeat(60));
+    console.warn('  Admin: demo_admin');
+    console.warn('  User:  demo_user');
+    console.warn('-'.repeat(60));
+    console.warn('⚠️  These credentials are for development only!');
+    console.warn('⚠️  They change every time the server restarts.');
+    console.warn('='.repeat(60) + '\n');
     _demoCredentialsLogged = true;
   }
   

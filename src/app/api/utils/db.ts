@@ -10,8 +10,7 @@ export const DEMO_USERS: DemoUser[] = DEMO_MODE_ENABLED ? [
     id: 'demo-admin-001',
     username: 'admin',
     email: 'admin@blueprint.ae',
-    // SECURITY: Bcrypt hash - never expose the plain password in logs or responses
-    // Password: Admin@123456
+    // SECURITY: Bcrypt hash - never expose the plain password in production
     password: '$2b$10$UWaUflszu.zDeurvMcyIjezYBKG/kE9vjbDv52f4vUeVccE4dmqc6',
     fullName: 'مدير النظام',
     role: 'admin',
@@ -26,7 +25,7 @@ export const DEMO_USERS: DemoUser[] = DEMO_MODE_ENABLED ? [
     id: 'demo-manager-001',
     username: 'manager',
     email: 'manager@blueprint.ae',
-    // Password: Manager@123456
+    // SECURITY: Bcrypt hash - see demo-config.ts for generated credentials
     password: '$2b$10$VYbYHkL9.UvLtFsNcyTjdezYBKG/kE9vjbDv52f4vUeVccE4dmqc6',
     fullName: 'مدير المشاريع',
     role: 'manager',
@@ -41,7 +40,7 @@ export const DEMO_USERS: DemoUser[] = DEMO_MODE_ENABLED ? [
     id: 'demo-engineer-001',
     username: 'engineer',
     email: 'engineer@blueprint.ae',
-    // Password: Engineer@123456
+    // SECURITY: Bcrypt hash - see demo-config.ts for generated credentials
     password: '$2b$10$XZcZIlM0.VwMuGtOdTukefzYBKG/kE9vjbDv52f4vUeVccE4dmqc6',
     fullName: 'مهندس الموقع',
     role: 'engineer',

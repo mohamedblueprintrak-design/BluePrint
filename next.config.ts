@@ -200,13 +200,6 @@ const nextConfig: NextConfig = {
     ];
   },
   
-  // Rewrite rules for API routes
-  async rewrites() {
-    return [
-      // Keep API routes intact
-    ];
-  },
-  
   // Logging configuration
   logging: {
     fetches: {

@@ -172,9 +172,10 @@ const PUBLIC_PATHS = [
  * Paths that require specific roles
  */
 const ROLE_PROTECTED_PATHS: Record<string, string[]> = {
-  '/admin': ['ADMIN'],
-  '/settings': ['ADMIN', 'MANAGER'],
-  '/reports': ['ADMIN', 'MANAGER', 'ACCOUNTANT'],
+  '/admin': ['admin'],
+  '/settings': ['admin', 'manager'],
+  '/reports': ['admin', 'manager', 'accountant'],
+  '/hr': ['admin', 'manager', 'hr'],
 };
 
 // ============================================
@@ -185,7 +186,10 @@ const ROLE_PROTECTED_PATHS: Record<string, string[]> = {
  * Get JWT secret key
  */
 function getJwtSecret(): Uint8Array {
-  const secret = process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters';
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret.length < 32) {
+    throw new Error('JWT_SECRET environment variable is required and must be at least 32 characters');
+  }
   return new TextEncoder().encode(secret);
 }
 

@@ -13,9 +13,11 @@ import { UserRole, Permission, ROLE_PERMISSIONS } from '../types';
 
 const ROLE_HIERARCHY: Record<UserRole, number> = {
   [UserRole.ADMIN]: 100,
-  [UserRole.MANAGER]: 75,
+  [UserRole.MANAGER]: 80,
+  [UserRole.PROJECT_MANAGER]: 70,
   [UserRole.ENGINEER]: 50,
   [UserRole.ACCOUNTANT]: 50,
+  [UserRole.HR]: 50,
   [UserRole.VIEWER]: 25,
 };
 
@@ -114,7 +116,7 @@ export function canAccessFinancials(userRole: UserRole): boolean {
  * Check if user can access HR data
  */
 export function canAccessHR(userRole: UserRole): boolean {
-  return userRole === UserRole.ADMIN || userRole === UserRole.MANAGER;
+  return userRole === UserRole.ADMIN || userRole === UserRole.MANAGER || userRole === UserRole.HR;
 }
 
 // ============================================

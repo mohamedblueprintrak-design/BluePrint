@@ -110,7 +110,7 @@ function validateEnv(): Env {
     return {
       NODE_ENV: nodeEnv,
       DATABASE_URL: process.env.DATABASE_URL || 'postgresql://blueprint:dev@localhost:5432/blueprint',
-      JWT_SECRET: process.env.JWT_SECRET || 'development-secret-key-at-least-32-chars-do-not-use-in-prod',
+      JWT_SECRET: process.env.JWT_SECRET || '', // SECURITY: No fallback - must be set via environment
       JWT_EXPIRES_IN: '7d',
       NEXT_PUBLIC_APP_URL: 'http://localhost:3000',
       NEXT_PUBLIC_APP_NAME: 'BluePrint SaaS',

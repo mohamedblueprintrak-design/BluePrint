@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
         status: p.status,
         contractValue: p.contractValue,
         clientId: p.clientId,
-        client: (p as any).client?.name,
+        client: p.client?.name ?? null,
         progressPercentage: p.progressPercentage,
         createdAt: p.createdAt
       })),

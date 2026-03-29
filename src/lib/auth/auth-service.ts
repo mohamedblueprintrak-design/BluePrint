@@ -624,11 +624,24 @@ class AuthenticationService {
       
       const resetToken = await this.generatePasswordResetToken(user.id);
       
-      // In production, send email with reset link
-      // await this.sendPasswordResetEmail(user.email, resetToken);
-      
-      // For now, return token (remove in production)
-      console.log('Password reset token:', resetToken);
+      // Send password reset email with secure link
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const resetLink = `${appUrl}/reset-password?token=${resetToken}`;
+
+      const template = emailTemplates.passwordReset(
+        user.fullName || user.username,
+        resetLink,
+        60 // 1 hour expiry in minutes
+      );
+
+      await sendEmail({
+        to: user.email,
+        subject: template.subject,
+        html: template.html,
+        text: template.text,
+      }).catch(() => {
+        // Email sending failed but don't reveal error to prevent enumeration
+      });
       
       return { success: true };
     } catch (error) {
@@ -735,9 +748,11 @@ class AuthenticationService {
   isRoleAtLeast(userRole: UserRole, requiredRole: UserRole): boolean {
     const roleHierarchy: Record<UserRole, number> = {
       [UserRole.ADMIN]: 100,
-      [UserRole.MANAGER]: 75,
+      [UserRole.MANAGER]: 80,
+      [UserRole.PROJECT_MANAGER]: 70,
       [UserRole.ENGINEER]: 50,
       [UserRole.ACCOUNTANT]: 50,
+      [UserRole.HR]: 50,
       [UserRole.VIEWER]: 25,
     };
     

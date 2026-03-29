@@ -23,12 +23,14 @@ dist/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
+pnpm-debug.log*
 
 # Local env files
 .env
 .env*.local
 .env.production
+.env.staging
+.env.test
 
 # Vercel
 .vercel
@@ -42,6 +44,7 @@ next-env.d.ts
 .vscode/
 *.swp
 *.swo
+*.sublime-workspace
 
 # Prisma
 prisma/*.db
@@ -64,3 +67,18 @@ blob-report/
 tmp/
 temp/
 *.tmp
+
+# Uploads - user uploaded files
+uploads/
+
+# Security - prevent committing sensitive data
+*.key
+*.key.pub
+*.p12
+*.jks
+credentials.json
+service-account*.json
+
+# Backup files
+backups/
+*.sql.gz

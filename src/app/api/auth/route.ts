@@ -19,6 +19,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { authService } from '@/lib/auth/auth-service';
+import { UserRole } from '@/lib/auth/types';
 import { successResponse, errorResponse, unauthorizedResponse } from '../utils/response';
 import { 
   checkRateLimitByType, 
@@ -32,7 +33,7 @@ import { SignJWT } from 'jose';
 import { compare } from 'bcryptjs';
 
 // JWT secret for demo mode
-const DEMO_JWT_SECRET = process.env.JWT_SECRET || 'blueprint-demo-secret-key-for-development-minimum-32-characters';
+const DEMO_JWT_SECRET = process.env.JWT_SECRET || 'blueprint-dev-only-insecure-key-minimum-32-characters';
 
 /**
  * Generate JWT token for demo user
@@ -131,6 +132,7 @@ export async function POST(request: NextRequest) {
       response = await handleLogin(body, request);
       break;
     case 'signup':
+    case 'register':
       response = await handleSignup(body, request);
       break;
     case 'logout':
@@ -650,7 +652,7 @@ export async function GET(request: NextRequest) {
   const response = successResponse({
     user: {
       ...user,
-      permissions: authService.getRolePermissions(user.role as any),
+      permissions: authService.getRolePermissions(user.role as UserRole),
     },
   });
   

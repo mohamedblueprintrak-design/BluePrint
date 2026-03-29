@@ -9,8 +9,10 @@
 export enum UserRole {
   ADMIN = 'admin',
   MANAGER = 'manager',
+  PROJECT_MANAGER = 'project_manager',
   ENGINEER = 'engineer',
   ACCOUNTANT = 'accountant',
+  HR = 'hr',
   VIEWER = 'viewer',
 }
 
@@ -90,7 +92,22 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.REPORTS_READ,
     Permission.REPORTS_EXPORT,
   ],
-  
+
+  [UserRole.PROJECT_MANAGER]: [
+    Permission.PROJECT_CREATE,
+    Permission.PROJECT_READ,
+    Permission.PROJECT_UPDATE,
+    Permission.TASK_CREATE,
+    Permission.TASK_READ,
+    Permission.TASK_UPDATE,
+    Permission.TASK_DELETE,
+    Permission.CLIENT_READ,
+    Permission.INVOICE_READ,
+    Permission.DOCUMENT_READ,
+    Permission.DOCUMENT_CREATE,
+    Permission.REPORTS_READ,
+  ],
+
   [UserRole.ENGINEER]: [
     Permission.PROJECT_READ,
     Permission.TASK_CREATE,
@@ -112,8 +129,18 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.INVOICE_UPDATE,
     Permission.REPORTS_READ,
     Permission.REPORTS_EXPORT,
+    Permission.BUDGET_MANAGE,
   ],
-  
+
+  [UserRole.HR]: [
+    Permission.USER_READ,
+    Permission.USER_CREATE,
+    Permission.USER_UPDATE,
+    Permission.REPORTS_READ,
+    Permission.SETTINGS_READ,
+    Permission.SETTINGS_UPDATE,
+  ],
+
   [UserRole.VIEWER]: [
     Permission.PROJECT_READ,
     Permission.TASK_READ,
