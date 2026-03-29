@@ -134,7 +134,6 @@ async function main() {
       timezone: 'Asia/Dubai',
       locale: 'ar',
       planId: plans[2].id, // Enterprise plan
-      subscriptionStatus: 'active',
     },
   });
 
