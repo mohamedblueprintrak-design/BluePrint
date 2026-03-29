@@ -464,7 +464,7 @@ export function ProjectsPage() {
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-400 hover:text-blue-300"
                       onClick={(e) => {
                         e.stopPropagation();
-                        router.push(\`/dashboard/projects/\${project.id}\`);
+                        router.push(`/dashboard/projects/${project.id}`);
                       }}
                       title="Workspace">
                       <Eye className="w-4 h-4" />

@@ -19,16 +19,15 @@ async function getProjectContext(orgId: string | undefined): Promise<string> {
 
   try {
     const projects = await db.project.findMany({
-      where: { organizationId: orgId, status: { in: ['PLANNING', 'ACTIVE', 'ON_HOLD'] } },
+      where: { organizationId: orgId, status: { in: ['PENDING', 'ACTIVE', 'ON_HOLD'] } },
       select: {
         name: true,
-        code: true,
+        projectNumber: true,
         status: true,
-        progress: true,
+        progressPercentage: true,
         budget: true,
-        spent: true,
-        startDate: true,
-        endDate: true,
+        expectedStartDate: true,
+        expectedEndDate: true,
         client: { select: { name: true } },
       },
       take: 20,
@@ -39,7 +38,7 @@ async function getProjectContext(orgId: string | undefined): Promise<string> {
 
     let ctx = '\n\n===== بيانات المشاريع الحالية =====\n';
     for (const p of projects) {
-      ctx += `\n- مشروع: ${p.name} (${p.code}) | الحالة: ${p.status} | التقدم: ${p.progress}% | الميزانية: ${p.budget} | المصروف: ${p.spent} | العميل: ${p.client?.name || 'N/A'} | تاريخ البدء: ${p.startDate?.toISOString().split('T')[0]} | تاريخ الانتهاء: ${p.endDate?.toISOString().split('T')[0] || 'غير محدد'}`;
+      ctx += `\n- مشروع: ${p.name} (${p.projectNumber}) | الحالة: ${p.status} | التقدم: ${p.progressPercentage}% | الميزانية: ${p.budget} | العميل: ${p.client?.name || 'N/A'} | تاريخ البدء: ${p.expectedStartDate?.toISOString().split('T')[0]} | تاريخ الانتهاء: ${p.expectedEndDate?.toISOString().split('T')[0] || 'غير محدد'}`;
     }
     return ctx;
   } catch {
@@ -57,8 +56,8 @@ async function getMunContext(orgId: string | undefined): Promise<string> {
         phaseType: { in: ['MUN_SUBMISSION', 'MUN_APPROVAL'] },
       },
       include: {
-        project: { select: { name: true, code: true } },
-        assignedTo: { select: { name: true } },
+        project: { select: { name: true, projectNumber: true } },
+        assignedTo: { select: { fullName: true } },
         interactions: {
           select: {
             interactionType: true,
@@ -78,7 +77,7 @@ async function getMunContext(orgId: string | undefined): Promise<string> {
 
     let ctx = '\n\n===== بيانات ملاحظات البلدية (MUN Notes) =====\n';
     for (const phase of munPhases) {
-      ctx += `\n- مشروع: ${phase.project.name} (${phase.project.code}) | المرحلة: ${phase.phaseType} | الحالة: ${phase.status} | المكلف: ${phase.assignedTo?.name || 'غير محدد'} | تاريخ البدء: ${phase.startDate?.toISOString().split('T')[0] || 'N/A'} | عدد المرات المرفوضة: ${phase.rejectionCount}`;
+      ctx += `\n- مشروع: ${phase.project.name} (${phase.project.projectNumber}) | المرحلة: ${phase.phaseType} | الحالة: ${phase.status} | المكلف: ${phase.assignedTo?.fullName || 'غير محدد'} | تاريخ البدء: ${phase.startDate?.toISOString().split('T')[0] || 'N/A'} | عدد المرات المرفوضة: ${phase.rejectionCount}`;
       if (phase.notes) {
         ctx += ` | ملاحظات: ${phase.notes}`;
       }
@@ -106,46 +105,43 @@ async function getFinancialContext(orgId: string | undefined): Promise<string> {
     const [projects, invoices, boqItems] = await Promise.all([
       db.project.findMany({
         where: { organizationId: orgId, status: { not: 'CANCELLED' } },
-        select: { name: true, code: true, budget: true, spent: true, status: true },
+        select: { name: true, projectNumber: true, budget: true, status: true },
         take: 15,
         orderBy: { updatedAt: 'desc' },
       }),
       db.invoice.findMany({
-        where: { organizationId: orgId, status: { in: ['SENT', 'OVERDUE', 'PARTIALLY_PAID'] } },
-        select: { number: true, total: true, paidAmount: true, status: true, dueDate: true, client: { select: { name: true } } },
+        where: { organizationId: orgId, status: { in: ['SENT', 'OVERDUE', 'PARTIAL'] } },
+        select: { invoiceNumber: true, total: true, paidAmount: true, status: true, dueDate: true, client: { select: { name: true } } },
         take: 10,
         orderBy: { dueDate: 'asc' },
       }),
       db.bOQItem.findMany({
-        where: { organizationId: orgId },
-        select: { project: { select: { name: true } }, code: true, description: true, unit: true, quantity: true, unitPrice: true, totalPrice: true, category: true },
+        where: { project: { organizationId: orgId } },
+        select: { project: { select: { name: true } }, itemNumber: true, description: true, unit: true, quantity: true, unitPrice: true, totalPrice: true, category: true },
         take: 20,
         orderBy: { totalPrice: 'desc' },
       }),
     ]);
 
     const totalBudget = projects.reduce((s, p) => s + (p.budget || 0), 0);
-    const totalSpent = projects.reduce((s, p) => s + (p.spent || 0), 0);
     const outstandingInvoices = invoices.reduce((s, i) => s + ((i.total || 0) - (i.paidAmount || 0)), 0);
     const totalBoq = boqItems.reduce((s, b) => s + (b.totalPrice || 0), 0);
 
     let ctx = '\n\n===== الملخص المالي =====\n';
     ctx += `\nإجمالي ميزانية المشاريع: ${totalBudget.toLocaleString()}`;
-    ctx += `\nإجمالي المصروفات: ${totalSpent.toLocaleString()}`;
-    ctx += `\nنسبة الصرف: ${totalBudget > 0 ? ((totalSpent / totalBudget) * 100).toFixed(1) : 0}%`;
     ctx += `\nإجمالي الفواتير المستحقة: ${outstandingInvoices.toLocaleString()}`;
 
     if (invoices.length > 0) {
       ctx += '\n\nالفواتير المعلقة:';
       for (const inv of invoices) {
-        ctx += `\n- فاتورة ${inv.number} | ${inv.client?.name || 'N/A'} | الإجمالي: ${inv.total} | المدفوع: ${inv.paidAmount} | الحالة: ${inv.status} | الاستحقاق: ${inv.dueDate?.toISOString().split('T')[0]}`;
+        ctx += `\n- فاتورة ${inv.invoiceNumber} | ${inv.client?.name || 'N/A'} | الإجمالي: ${inv.total} | المدفوع: ${inv.paidAmount} | الحالة: ${inv.status} | الاستحقاق: ${inv.dueDate?.toISOString().split('T')[0]}`;
       }
     }
 
     if (boqItems.length > 0) {
       ctx += '\n\nأعلى بنود كشف الكميات (BOQ):';
       for (const boq of boqItems.slice(0, 10)) {
-        ctx += `\n- [${boq.code}] ${boq.description} | الكمية: ${boq.quantity} ${boq.unit} | سعر الوحدة: ${boq.unitPrice} | الإجمالي: ${boq.totalPrice}`;
+        ctx += `\n- [${boq.itemNumber}] ${boq.description} | الكمية: ${boq.quantity} ${boq.unit} | سعر الوحدة: ${boq.unitPrice} | الإجمالي: ${boq.totalPrice}`;
       }
     }
     ctx += `\nإجمالي BOQ: ${totalBoq.toLocaleString()}`;
@@ -163,13 +159,12 @@ async function getOverdueContext(orgId: string | undefined): Promise<string> {
     const now = new Date();
     const overdueTasks = await db.task.findMany({
       where: {
-        organizationId: orgId,
+        project: { organizationId: orgId },
         status: { not: 'DONE' },
         dueDate: { lt: now },
       },
       include: {
-        project: { select: { name: true, code: true } },
-        assignee: { select: { name: true } },
+        project: { select: { name: true, projectNumber: true } },
       },
       orderBy: { dueDate: 'asc' },
       take: 20,
@@ -181,7 +176,7 @@ async function getOverdueContext(orgId: string | undefined): Promise<string> {
     ctx += `عدد المهام المتأخرة: ${overdueTasks.length}\n\n`;
     for (const task of overdueTasks) {
       const daysOverdue = Math.ceil((now.getTime() - (task.dueDate?.getTime() || 0)) / (1000 * 60 * 60 * 24));
-      ctx += `- [${task.priority}] "${task.title}" | المشروع: ${task.project.name} | المكلف: ${task.assignee?.name || 'غير محدد'} | الحالة: ${task.status} | تاريخ الاستحقاق: ${task.dueDate?.toISOString().split('T')[0]} (${daysOverdue} يوم متأخر)\n`;
+      ctx += `- [${task.priority}] "${task.title}" | المشروع: ${task.project?.name} | الحالة: ${task.status} | تاريخ الاستحقاق: ${task.dueDate?.toISOString().split('T')[0]} (${daysOverdue} يوم متأخر)\n`;
     }
     ctx += '\nقدم توصيات لمعالجة هذه المهام المتأخرة.';
     return ctx;
@@ -201,7 +196,7 @@ export async function POST(request: NextRequest) {
 
     // Try to get orgId from authenticated user for contextual data (auth is optional for AI)
     const user = await getUserFromRequest(request);
-    const orgId = user?.organizationId;
+    const orgId = user?.organizationId ?? undefined;
 
     // Build context-specific data if requested
     let contextData = '';
@@ -223,12 +218,12 @@ export async function POST(request: NextRequest) {
       systemContent += contextData;
     }
 
-    const formattedMessages = [
+    const formattedMessages: { role: 'user' | 'system' | 'assistant'; content: string }[] = [
       { role: 'system' as const, content: systemContent },
       ...messages
         .filter((m: { role: string }) => m.role !== 'system')
         .map((msg: { role: string; content: string }) => ({
-          role: msg.role === 'user' ? 'user' : msg.role === 'assistant' ? 'assistant' : 'system',
+          role: (msg.role === 'user' ? 'user' : msg.role === 'assistant' ? 'assistant' : 'system') as 'user' | 'assistant' | 'system',
           content: msg.content,
         })),
     ];

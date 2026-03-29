@@ -202,7 +202,7 @@ async function generateImage(prompt: string, size: string = '1024x1024'): Promis
     const zai = await ZAI.create();
     const response = await zai.images.generations.create({
       prompt: prompt,
-      size: size as '1024x1024' | '1792x1024' | '1024x1792',
+      size: size as '1024x1024' | '768x1344' | '864x1152' | '1344x768' | '1152x864' | '1440x720' | '720x1440',
     });
     return response.data?.[0]?.base64 || null;
   } catch (error) {
@@ -475,7 +475,7 @@ export async function POST(request: NextRequest) {
 async function handleSkillRequest(skill: string, params: Record<string, unknown> | undefined, user: { id: string; username: string }): Promise<NextResponse> {
   switch (skill) {
     case 'web_search': {
-      const { query, num = 5 } = params || {};
+      const { query, num = 5 } = (params || {}) as { query?: string; num?: number };
       if (!query) {
         return errorResponse('يرجى تحديد كلمة البحث.');
       }
@@ -484,7 +484,7 @@ async function handleSkillRequest(skill: string, params: Record<string, unknown>
     }
     
     case 'generate_image': {
-      const { prompt, size = '1024x1024' } = params || {};
+      const { prompt, size = '1024x1024' } = (params || {}) as { prompt?: string; size?: string };
       if (!prompt) {
         return errorResponse('يرجى تحديد وصف الصورة.');
       }
@@ -496,7 +496,7 @@ async function handleSkillRequest(skill: string, params: Record<string, unknown>
     }
     
     case 'translate': {
-      const { text, targetLang = 'ar' } = params || {};
+      const { text, targetLang = 'ar' } = (params || {}) as { text?: string; targetLang?: string };
       if (!text) {
         return errorResponse('يرجى تحديد النص للترجمة.');
       }
@@ -505,7 +505,7 @@ async function handleSkillRequest(skill: string, params: Record<string, unknown>
     }
     
     case 'explain_code': {
-      const { code, language = 'ar' } = params || {};
+      const { code, language = 'ar' } = (params || {}) as { code?: string; language?: string };
       if (!code) {
         return errorResponse('يرجى تحديد الكود للشرح.');
       }
@@ -514,7 +514,7 @@ async function handleSkillRequest(skill: string, params: Record<string, unknown>
     }
     
     case 'summarize': {
-      const { text, language = 'ar' } = params || {};
+      const { text, language = 'ar' } = (params || {}) as { text?: string; language?: string };
       if (!text) {
         return errorResponse('يرجى تحديد النص للتلخيص.');
       }
@@ -523,7 +523,7 @@ async function handleSkillRequest(skill: string, params: Record<string, unknown>
     }
     
     case 'sentiment': {
-      const { text } = params || {};
+      const { text } = (params || {}) as { text?: string };
       if (!text) {
         return errorResponse('يرجى تحديد النص لتحليل المشاعر.');
       }

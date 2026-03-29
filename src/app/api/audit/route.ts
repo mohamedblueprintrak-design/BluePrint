@@ -46,10 +46,10 @@ export async function GET(request: NextRequest) {
         where,
         include: {
           user: {
-            select: { id: true, name: true, email: true, avatar: true },
+            select: { id: true, fullName: true, email: true, avatar: true },
           },
           project: {
-            select: { id: true, name: true, code: true },
+            select: { id: true, name: true, projectNumber: true },
           },
         },
         orderBy: { createdAt: 'desc' },
@@ -180,16 +180,16 @@ export async function POST(request: NextRequest) {
         entityId: entityId || null,
         action,
         description,
-        oldValue: oldValue ? (typeof oldValue === 'string' ? oldValue : JSON.stringify(oldValue)) : null,
-        newValue: newValue ? (typeof newValue === 'string' ? newValue : JSON.stringify(newValue)) : null,
+        oldValue: oldValue ? (typeof oldValue === 'string' ? oldValue : JSON.stringify(oldValue)) : undefined,
+        newValue: newValue ? (typeof newValue === 'string' ? newValue : JSON.stringify(newValue)) : undefined,
         ipAddress: effectiveIpAddress,
       },
       include: {
         user: {
-          select: { id: true, name: true, email: true, avatar: true },
+          select: { id: true, fullName: true, email: true, avatar: true },
         },
         project: {
-          select: { id: true, name: true, code: true },
+          select: { id: true, name: true, projectNumber: true },
         },
       },
     });

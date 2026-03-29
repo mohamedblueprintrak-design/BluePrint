@@ -3,18 +3,21 @@
  * أنواع المصادقة والتفويض
  */
 
-/**
- * User roles in the system
- */
-export enum UserRole {
-  ADMIN = 'admin',
-  MANAGER = 'manager',
-  PROJECT_MANAGER = 'project_manager',
-  ENGINEER = 'engineer',
-  ACCOUNTANT = 'accountant',
-  HR = 'hr',
-  VIEWER = 'viewer',
-}
+import { UserRole as PrismaUserRole } from '@prisma/client';
+
+// Re-export Prisma's UserRole for consistency
+export type UserRole = PrismaUserRole;
+
+// Role values for permission mapping (using Prisma enum values)
+export const UserRoleValues = {
+  ADMIN: 'ADMIN',
+  MANAGER: 'MANAGER',
+  PROJECT_MANAGER: 'PROJECT_MANAGER',
+  ENGINEER: 'ENGINEER',
+  ACCOUNTANT: 'ACCOUNTANT',
+  HR: 'HR',
+  VIEWER: 'VIEWER',
+} as const;
 
 /**
  * Permission definitions
@@ -71,10 +74,10 @@ export enum Permission {
 /**
  * Role to permissions mapping
  */
-export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
-  [UserRole.ADMIN]: Object.values(Permission),
+export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
+  [UserRoleValues.ADMIN]: Object.values(Permission),
   
-  [UserRole.MANAGER]: [
+  [UserRoleValues.MANAGER]: [
     Permission.PROJECT_CREATE,
     Permission.PROJECT_READ,
     Permission.PROJECT_UPDATE,
@@ -93,7 +96,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.REPORTS_EXPORT,
   ],
 
-  [UserRole.PROJECT_MANAGER]: [
+  [UserRoleValues.PROJECT_MANAGER]: [
     Permission.PROJECT_CREATE,
     Permission.PROJECT_READ,
     Permission.PROJECT_UPDATE,
@@ -108,7 +111,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.REPORTS_READ,
   ],
 
-  [UserRole.ENGINEER]: [
+  [UserRoleValues.ENGINEER]: [
     Permission.PROJECT_READ,
     Permission.TASK_CREATE,
     Permission.TASK_READ,
@@ -118,7 +121,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.REPORTS_READ,
   ],
   
-  [UserRole.ACCOUNTANT]: [
+  [UserRoleValues.ACCOUNTANT]: [
     Permission.PROJECT_READ,
     Permission.TASK_READ,
     Permission.CLIENT_CREATE,
@@ -132,7 +135,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.BUDGET_MANAGE,
   ],
 
-  [UserRole.HR]: [
+  [UserRoleValues.HR]: [
     Permission.USER_READ,
     Permission.USER_CREATE,
     Permission.USER_UPDATE,
@@ -141,7 +144,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.SETTINGS_UPDATE,
   ],
 
-  [UserRole.VIEWER]: [
+  [UserRoleValues.VIEWER]: [
     Permission.PROJECT_READ,
     Permission.TASK_READ,
     Permission.CLIENT_READ,

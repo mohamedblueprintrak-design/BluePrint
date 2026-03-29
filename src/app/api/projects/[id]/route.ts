@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { getUserFromRequest } from '../utils/demo-config';
-import { successResponse, unauthorizedResponse, notFoundResponse, serverErrorResponse } from '../utils/response';
+import { getUserFromRequest } from '../../utils/demo-config';
+import { successResponse, unauthorizedResponse, notFoundResponse, serverErrorResponse } from '../../utils/response';
 
 interface RouteContext {
   params: Promise<{ id: string }>;

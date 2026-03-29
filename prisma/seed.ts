@@ -5,7 +5,7 @@
  * Creates initial data for development and testing
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, UserRole, TaskPriority, TaskStatus, ProjectStatus, InvoiceStatus, RiskStatus, SupplierType, PriorityLevel } from '@prisma/client';
 import { hash } from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -154,7 +154,7 @@ async function main() {
       username: 'admin',
       password: adminPassword,
       fullName: 'System Administrator',
-      role: 'admin',
+      role: 'ADMIN',
       isActive: true,
       emailVerified: new Date(),
       organizationId: organization.id,
@@ -170,12 +170,12 @@ async function main() {
   // ============================================
   console.log('👥 Creating demo users...');
 
-  const demoUsers = [
+  const demoUsers: { email: string; username: string; fullName: string; role: UserRole; jobTitle: string; department: string }[] = [
     {
       email: 'manager@demo-construction.com',
       username: 'ahmed_manager',
       fullName: 'Ahmed Al-Rashid',
-      role: 'manager',
+      role: 'MANAGER',
       jobTitle: 'Project Manager',
       department: 'Projects',
     },
@@ -183,7 +183,7 @@ async function main() {
       email: 'engineer@demo-construction.com',
       username: 'sara_engineer',
       fullName: 'Sara Al-Mansouri',
-      role: 'engineer',
+      role: 'ENGINEER',
       jobTitle: 'Senior Engineer',
       department: 'Engineering',
     },
@@ -191,7 +191,7 @@ async function main() {
       email: 'accountant@demo-construction.com',
       username: 'mohammed_accountant',
       fullName: 'Mohammed Al-Farsi',
-      role: 'accountant',
+      role: 'ACCOUNTANT',
       jobTitle: 'Chief Accountant',
       department: 'Finance',
     },
@@ -199,7 +199,7 @@ async function main() {
       email: 'viewer@demo-construction.com',
       username: 'fatima_viewer',
       fullName: 'Fatima Al-Hassan',
-      role: 'viewer',
+      role: 'VIEWER',
       jobTitle: 'Executive Assistant',
       department: 'Administration',
     },
@@ -303,7 +303,7 @@ async function main() {
         name: 'برج الأعمال - المرحلة الأولى',
         location: 'دبي مارينا، دبي',
         projectType: 'تجاري',
-        status: 'active',
+        status: 'ACTIVE',
         progressPercentage: 45,
         description: 'برج تجاري من 40 طابق مع موقف سيارات تحت الأرض',
         contractValue: 85000000,
@@ -325,7 +325,7 @@ async function main() {
         name: 'مجمع سكني - الواحة',
         location: 'الواحة، أبوظبي',
         projectType: 'سكني',
-        status: 'active',
+        status: 'ACTIVE',
         progressPercentage: 25,
         description: 'مجمع سكني يحتوي على 200 وحدة سكنية مع مرافق ترفيهية',
         contractValue: 120000000,
@@ -347,7 +347,7 @@ async function main() {
         name: 'مركز تسوق النخيل',
         location: 'النخلة، الشارقة',
         projectType: 'تجاري',
-        status: 'pending',
+        status: 'PENDING',
         progressPercentage: 0,
         description: 'مركز تسوق متعدد الطوابق مع سينما ومنطقة ترفيه',
         contractValue: 45000000,
@@ -369,13 +369,13 @@ async function main() {
   // ============================================
   console.log('📋 Creating demo tasks...');
 
-  const tasks = [
+  const tasks: { title: string; description: string; projectId: string; priority: TaskPriority; status: TaskStatus; progress: number; dueDate: Date }[] = [
     {
       title: 'مراجعة المخططات التنفيذية',
       description: 'مراجعة جميع المخططات التنفيذية للمشروع',
       projectId: projects[0].id,
-      priority: 'high',
-      status: 'in_progress',
+      priority: 'HIGH',
+      status: 'IN_PROGRESS',
       progress: 60,
       dueDate: new Date('2025-02-15'),
     },
@@ -383,8 +383,8 @@ async function main() {
       title: 'إعداد جدول العمل',
       description: 'إعداد جدول العمل للمرحلة القادمة',
       projectId: projects[0].id,
-      priority: 'medium',
-      status: 'todo',
+      priority: 'MEDIUM',
+      status: 'TODO',
       progress: 0,
       dueDate: new Date('2025-02-20'),
     },
@@ -392,8 +392,8 @@ async function main() {
       title: 'تقييم الموردين',
       description: 'تقييم العروض المقدمة من الموردين',
       projectId: projects[1].id,
-      priority: 'high',
-      status: 'done',
+      priority: 'HIGH',
+      status: 'DONE',
       progress: 100,
       dueDate: new Date('2025-01-30'),
     },
@@ -401,8 +401,8 @@ async function main() {
       title: 'الحصول على التصاريح',
       description: 'استكمال إجراءات التصاريح البلدية',
       projectId: projects[2].id,
-      priority: 'critical',
-      status: 'in_progress',
+      priority: 'URGENT',
+      status: 'IN_PROGRESS',
       progress: 30,
       dueDate: new Date('2025-02-10'),
     },
@@ -421,7 +421,7 @@ async function main() {
   // ============================================
   console.log('📄 Creating demo invoices...');
 
-  const invoices = [
+  const invoices: { invoiceNumber: string; clientId: string; projectId?: string; issueDate: Date; dueDate: Date; subtotal: number; taxRate: number; taxAmount: number; total: number; paidAmount: number; status: InvoiceStatus; organizationId: string }[] = [
     {
       invoiceNumber: 'INV-2025-0001',
       clientId: clients[0].id,
@@ -433,7 +433,7 @@ async function main() {
       taxAmount: 25000,
       total: 525000,
       paidAmount: 400000,
-      status: 'partial',
+      status: 'PARTIAL',
       organizationId: organization.id,
     },
     {
@@ -447,7 +447,7 @@ async function main() {
       taxAmount: 37500,
       total: 787500,
       paidAmount: 0,
-      status: 'sent',
+      status: 'SENT',
       organizationId: organization.id,
     },
     {
@@ -460,7 +460,7 @@ async function main() {
       taxAmount: 12500,
       total: 262500,
       paidAmount: 262500,
-      status: 'paid',
+      status: 'PAID',
       organizationId: organization.id,
     },
   ];
@@ -478,10 +478,10 @@ async function main() {
   // ============================================
   console.log('🏭 Creating demo suppliers...');
 
-  const suppliers = [
+  const suppliers: { name: string; supplierType: SupplierType; email: string; phone: string; address: string; contactPerson: string; rating: number; isApproved: boolean; organizationId: string }[] = [
     {
       name: 'شركة الخرسانة المتحدة',
-      supplierType: 'materials',
+      supplierType: 'MATERIALS',
       email: 'sales@united-concrete.ae',
       phone: '+971 4 111 2222',
       address: 'Industrial City, Dubai',
@@ -492,7 +492,7 @@ async function main() {
     },
     {
       name: 'مصنع الحديد العربي',
-      supplierType: 'materials',
+      supplierType: 'MATERIALS',
       email: 'info@arab-steel.ae',
       phone: '+971 2 333 4444',
       address: 'ICAD, Abu Dhabi',
@@ -503,7 +503,7 @@ async function main() {
     },
     {
       name: 'مؤسسة المعدات الثقيلة',
-      supplierType: 'equipment',
+      supplierType: 'EQUIPMENT',
       email: 'rental@heavy-equip.ae',
       phone: '+971 6 555 6666',
       address: 'Industrial Area, Sharjah',
@@ -527,7 +527,7 @@ async function main() {
   // ============================================
   console.log('⚠️ Creating demo risks...');
 
-  const risks = [
+  const risks: { title: string; description: string; projectId: string; category: string; probability: number; impact: number; riskScore: number; status: RiskStatus; priority: PriorityLevel; mitigationPlan: string; responseStrategy: string }[] = [
     {
       title: 'تأخير تسليم المواد',
       description: 'خطر تأخير تسليم مواد البناء من الموردين الرئيسيين',
@@ -536,8 +536,8 @@ async function main() {
       probability: 3,
       impact: 4,
       riskScore: 12,
-      status: 'open',
-      priority: 'high',
+      status: 'OPEN',
+      priority: 'HIGH',
       mitigationPlan: 'التعاقد مع موردين بديلين وتخزين مخزون احتياطي',
       responseStrategy: 'mitigate',
     },
@@ -549,8 +549,8 @@ async function main() {
       probability: 4,
       impact: 3,
       riskScore: 12,
-      status: 'open',
-      priority: 'high',
+      status: 'OPEN',
+      priority: 'HIGH',
       mitigationPlan: 'تثبيت الأسعار في العقود طويلة الأجل',
       responseStrategy: 'transfer',
     },
@@ -562,8 +562,8 @@ async function main() {
       probability: 2,
       impact: 3,
       riskScore: 6,
-      status: 'mitigated',
-      priority: 'medium',
+      status: 'MITIGATED',
+      priority: 'MEDIUM',
       mitigationPlan: 'برامج تدريب داخلية وشراكات مع معاهد فنية',
       responseStrategy: 'mitigate',
     },
