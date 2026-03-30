@@ -10,12 +10,15 @@ import { Footer } from '@/components/layout/footer';
 import { MobileBottomNav } from '@/components/mobile-bottom-nav';
 import { cn } from '@/lib/utils';
 import { useApp } from '@/context/app-context';
+import { useTranslation } from '@/lib/translations';
 
 // Inner component that checks auth
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const { language } = useApp();
+  const { t } = useTranslation(language || 'ar');
 
   // Wait for component to mount to avoid hydration mismatch
   useEffect(() => {
@@ -39,7 +42,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
-          <p className="text-slate-400">جاري التحميل...</p>
+          <p className="text-slate-400">{t.loading}</p>
         </div>
       </div>
     );
@@ -50,7 +53,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
-          <p className="text-slate-400">جاري التحويل...</p>
+          <p className="text-slate-400">{language === 'ar' ? 'جاري التحويل...' : 'Redirecting...'}</p>
         </div>
       </div>
     );

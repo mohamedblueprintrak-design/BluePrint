@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
 
 interface PlanLimit {
   projects: number;
@@ -84,7 +85,7 @@ export function PricingPage({
   const handleSelectPlan = async (plan: Plan) => {
     if (!plan.stripePriceId) {
       // Show demo message if Stripe is not configured
-      alert(lang === 'ar' 
+      toast.info(lang === 'ar' 
         ? 'هذه الميزة قيد التطوير. يرجى التواصل مع الدعم للتفعيل.' 
         : 'This feature is under development. Please contact support to activate.');
       return;
@@ -119,7 +120,7 @@ export function PricingPage({
       }
     } catch (error) {
       console.error('Error selecting plan:', error);
-      alert(lang === 'ar' 
+      toast.error(lang === 'ar' 
         ? 'حدث خطأ أثناء معالجة الطلب' 
         : 'An error occurred while processing your request');
     } finally {

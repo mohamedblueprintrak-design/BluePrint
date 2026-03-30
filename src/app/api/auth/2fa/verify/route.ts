@@ -9,6 +9,47 @@ import { NextRequest } from 'next/server';
 import { authService } from '@/lib/auth/auth-service';
 import { successResponse, errorResponse } from '../../../utils/response';
 
+// SECURITY: In-memory rate limiter for failed 2FA attempts
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+const MAX_ATTEMPTS = 5;
+const WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+
+function isRateLimited(userId: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitStore.get(userId);
+  
+  if (!entry || now > entry.resetTime) {
+    return false;
+  }
+  
+  return entry.count >= MAX_ATTEMPTS;
+}
+
+function recordFailedAttempt(userId: string): void {
+  const now = Date.now();
+  const entry = rateLimitStore.get(userId);
+  
+  if (!entry || now > entry.resetTime) {
+    rateLimitStore.set(userId, { count: 1, resetTime: now + WINDOW_MS });
+  } else {
+    entry.count++;
+  }
+}
+
+function clearFailedAttempts(userId: string): void {
+  rateLimitStore.delete(userId);
+}
+
+// Periodically clean up expired entries (every 10 minutes)
+setInterval(() => {
+  const now = Date.now();
+  for (const [userId, entry] of rateLimitStore.entries()) {
+    if (now > entry.resetTime) {
+      rateLimitStore.delete(userId);
+    }
+  }
+}, 10 * 60 * 1000);
+
 /**
  * POST - Verify 2FA code
  * Body: { userId: string, code: string }
@@ -26,6 +67,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // SECURITY: Check rate limit for failed attempts
+    if (isRateLimited(userId)) {
+      return errorResponse(
+        'تم تجاوز عدد المحاولات المسموح. يرجى المحاولة بعد 5 دقائق',
+        'RATE_LIMIT_EXCEEDED',
+        429
+      );
+    }
+
     // Validate code format (6 digits for TOTP or 8 digits for backup)
     const codeRegex = /^(\d{6}|\d{8})$/;
     if (!codeRegex.test(code)) {
@@ -39,6 +89,7 @@ export async function POST(request: NextRequest) {
     const isValid = await authService.verifyTwoFactorCode(userId, code);
 
     if (!isValid) {
+      recordFailedAttempt(userId);
       return errorResponse(
         'رمز التحقق غير صحيح أو منتهي الصلاحية',
         'INVALID_CODE',
@@ -47,6 +98,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate tokens after successful 2FA verification
+    clearFailedAttempts(userId);
     const user = await authService.getUserById(userId);
     if (!user) {
       return errorResponse('المستخدم غير موجود', 'USER_NOT_FOUND', 404);

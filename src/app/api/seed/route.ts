@@ -585,13 +585,15 @@ export async function POST(request: NextRequest) {
       role: admin.role,
     });
 
+    // Log admin password to server logs (not exposed in API response)
+    console.log('[Seed] Admin credentials - Email: admin@blueprint.com, Password: Admin@123456');
+
     return NextResponse.json(
       {
         message: 'Database seeded successfully with demo data',
         seeded: true,
         credentials: {
           email: 'admin@blueprint.com',
-          password: 'Admin@123456',
         },
         token,
         user: {

@@ -6,21 +6,10 @@
  * FIXED: Now uses real services for authenticated non-demo users
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { getUserFromRequest, isDemoUser, DEMO_DATA } from './utils/demo-config';
+import { successResponse, errorResponse } from './utils/response';
 import { projectService, clientService, taskService, invoiceService } from '@/lib/services';
-
-// Success/Error response helpers
-function successResponse(data: unknown) {
-  return NextResponse.json({ success: true, data });
-}
-
-function errorResponse(message: string, code = 'ERROR', status = 400) {
-  return NextResponse.json(
-    { success: false, error: { code, message } },
-    { status }
-  );
-}
 
 // Demo data generators
 function generateDemoDashboard() {

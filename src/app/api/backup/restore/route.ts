@@ -28,8 +28,8 @@ export async function POST(request: NextRequest) {
       return errorResponse('معرف النسخة الاحتياطية مطلوب', 'BACKUP_ID_REQUIRED', 400);
     }
 
-    // SECURITY: Validate targetDir to prevent command injection
-    if (targetDir && !/^[\w./-]+$/.test(targetDir)) {
+    // SECURITY: Validate targetDir to prevent command injection and path traversal
+    if (targetDir && (!/^[\w./-]+$/.test(targetDir) || targetDir.includes('..'))) {
       return errorResponse('مسار غير صالح', 'INVALID_PATH', 400);
     }
 

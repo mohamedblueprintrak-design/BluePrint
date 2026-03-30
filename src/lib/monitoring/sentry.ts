@@ -6,6 +6,10 @@
 // @ts-expect-error - @sentry/nextjs types not installed
 import * as Sentry from '@sentry/nextjs';
 
+// NOTE: NEXT_PUBLIC_ prefix exposes this value to the browser bundle.
+// This is required because client-side Sentry integrations (BrowserTracing, Replay)
+// need the DSN in the browser. If server-only error reporting is sufficient,
+// consider switching to a server-side SENTRY_DSN and splitting client/server Sentry config.
 const SENTRY_DSN = process.env.NEXT_PUBLIC_SENTRY_DSN;
 const environment = process.env.NODE_ENV || 'development';
 

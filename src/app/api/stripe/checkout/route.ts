@@ -10,11 +10,41 @@ import {
   DEFAULT_PLANS,
 } from '@/lib/stripe';
 import { db } from '@/lib/db';
+import { getUserFromRequest } from '../../utils/demo-config';
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Require authentication
+    const user = await getUserFromRequest(request);
+    if (!user) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'UNAUTHORIZED',
+            message: 'غير مصرح',
+          },
+        },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { planId, interval = 'month', organizationId, email, name } = body;
+
+    // SECURITY: Verify the organizationId belongs to the authenticated user
+    if (organizationId && user.organizationId && organizationId !== user.organizationId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'FORBIDDEN',
+            message: 'غير مصرح بهذا التنظيم',
+          },
+        },
+        { status: 403 }
+      );
+    }
 
     // Validate required fields
     if (!planId || !organizationId || !email || !name) {

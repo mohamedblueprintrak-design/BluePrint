@@ -182,10 +182,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return successResponse({ id: task.id, title: task.title });
-
     // Invalidate task and project caches on creation
     await invalidateCache('tasks', 'projects');
+
+    return successResponse({ id: task.id, title: task.title });
   } catch (error) {
     if (error instanceof TaskAccessError) {
       return notFoundResponse(error.message);

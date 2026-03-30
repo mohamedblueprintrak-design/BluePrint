@@ -130,6 +130,15 @@ export const putHandlers = {
     const { id, ...data } = body;
     if (!id) return errorResponse('معرف العميل مطلوب');
 
+    // SECURITY: Whitelist allowed fields to prevent mass assignment
+    const ALLOWED_FIELDS = ['name', 'email', 'phone', 'address', 'city', 'country', 'taxNumber', 'contactPerson', 'creditLimit', 'paymentTerms', 'notes', 'isActive'];
+    const sanitizedData: Record<string, unknown> = {};
+    for (const key of ALLOWED_FIELDS) {
+      if (key in data && data[key] !== undefined) {
+        sanitizedData[key] = data[key];
+      }
+    }
+
     const database = await getDb();
     if (!database) return errorResponse('قاعدة البيانات غير متاحة');
 
@@ -139,7 +148,7 @@ export const putHandlers = {
     });
     if (!client) return notFoundResponse('العميل غير موجود');
 
-    await database.client.update({ where: { id: id as string }, data });
+    await database.client.update({ where: { id: id as string }, data: sanitizedData });
     return successResponse(true);
   }
 };

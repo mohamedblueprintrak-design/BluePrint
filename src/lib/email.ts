@@ -32,8 +32,7 @@ function createTransporter() {
       pass: smtpPass,
     },
     tls: {
-      // Do not fail on invalid certs (useful for some SMTP servers)
-      rejectUnauthorized: false,
+      rejectUnauthorized: process.env.NODE_ENV === 'production',
     },
   });
 }

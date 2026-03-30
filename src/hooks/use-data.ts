@@ -32,7 +32,23 @@ async function apiRequest<T>(
   }
 
   const response = await fetch(url, options);
-  return response.json();
+
+  if (!response.ok) {
+    let errorMessage = `Request failed with status ${response.status}`;
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error?.message || errorMessage;
+    } catch {
+      // Response body is not JSON
+    }
+    throw new Error(errorMessage);
+  }
+
+  const text = await response.text();
+  if (!text) {
+    return { success: true, data: null as T };
+  }
+  return JSON.parse(text);
 }
 
 // ============================================
@@ -859,7 +875,23 @@ async function defectApiRequest<T>(
   }
 
   const response = await fetch(url, options);
-  return response.json();
+
+  if (!response.ok) {
+    let errorMessage = `Request failed with status ${response.status}`;
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error?.message || errorMessage;
+    } catch {
+      // Response body is not JSON
+    }
+    throw new Error(errorMessage);
+  }
+
+  const text = await response.text();
+  if (!text) {
+    return { success: true, data: null as T };
+  }
+  return JSON.parse(text);
 }
 
 export function useDefects(projectId?: string) {
@@ -958,7 +990,23 @@ async function profileApiRequest<T>(
   }
 
   const response = await fetch(url, options);
-  return response.json();
+
+  if (!response.ok) {
+    let errorMessage = `Request failed with status ${response.status}`;
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error?.message || errorMessage;
+    } catch {
+      // Response body is not JSON
+    }
+    throw new Error(errorMessage);
+  }
+
+  const text = await response.text();
+  if (!text) {
+    return { success: true, data: null as T };
+  }
+  return JSON.parse(text);
 }
 
 export function useProfile() {
@@ -1346,7 +1394,23 @@ async function boqApiRequest<T>(
   }
 
   const response = await fetch(url, options);
-  return response.json();
+
+  if (!response.ok) {
+    let errorMessage = `Request failed with status ${response.status}`;
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error?.message || errorMessage;
+    } catch {
+      // Response body is not JSON
+    }
+    throw new Error(errorMessage);
+  }
+
+  const text = await response.text();
+  if (!text) {
+    return { success: true, data: null as T };
+  }
+  return JSON.parse(text);
 }
 
 export function useBOQItems(projectId?: string) {

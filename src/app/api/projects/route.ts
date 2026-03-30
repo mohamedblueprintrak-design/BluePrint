@@ -21,8 +21,8 @@ export async function GET(request: NextRequest) {
   }
 
   const { searchParams } = new URL(request.url);
-  const page = parseInt(searchParams.get('page') || '1');
-  const limit = parseInt(searchParams.get('limit') || '20');
+  const page = Math.max(1, parseInt(searchParams.get('page') || '1') || 1);
+  const limit = Math.max(1, Math.min(100, parseInt(searchParams.get('limit') || '20') || 20));
   const status = searchParams.get('status') || undefined;
   const search = searchParams.get('search') || undefined;
 
@@ -133,14 +133,14 @@ export async function POST(request: NextRequest) {
       user.id
     );
 
+    // Invalidate project caches on creation
+    await invalidateCache('projects');
+
     return successResponse({
       id: project.id,
       projectNumber: project.projectNumber,
       name: project.name
     });
-
-    // Invalidate project caches on creation
-    await invalidateCache('projects');
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : 'Unknown error';
     return serverErrorResponse(errMsg);

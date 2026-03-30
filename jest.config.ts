@@ -24,10 +24,10 @@ const config: Config = {
   ],
   coverageThreshold: {
     global: {
-      branches: 3,
-      functions: 3,
-      lines: 5,
-      statements: 5,
+      branches: 10,
+      functions: 10,
+      lines: 15,
+      statements: 15,
     },
   },
   coverageReporters: ['text', 'lcov', 'html'],

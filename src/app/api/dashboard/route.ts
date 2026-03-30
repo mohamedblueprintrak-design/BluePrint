@@ -23,8 +23,8 @@ export async function GET(request: NextRequest) {
     // Parallel queries for better performance
     const [
       totalProjects, activeProjects, completedProjects, pendingProjects,
-      totalClients, totalInvoices, totalPaid, pendingTasks, inProgressTasks,
-      completedTasks, openDefectsCount, resolvedDefects, criticalDefects, totalEmployees
+      totalClients, totalInvoices, totalPaid, taskCounts,
+      openDefectsCount, resolvedDefects, criticalDefects, totalEmployees
     ] = await Promise.all([
       db.project.count({ where: { organizationId: orgId } }),
       db.project.count({ where: { status: 'ACTIVE', organizationId: orgId } }),
@@ -33,14 +33,19 @@ export async function GET(request: NextRequest) {
       db.client.count({ where: { isActive: true, organizationId: orgId } }),
       db.invoice.aggregate({ where: { organizationId: orgId }, _sum: { total: true } }),
       db.invoice.aggregate({ where: { organizationId: orgId }, _sum: { paidAmount: true } }),
-      db.task.count({ where: { status: { not: 'DONE' }, project: { organizationId: orgId } } }),
-      db.task.count({ where: { status: 'IN_PROGRESS', project: { organizationId: orgId } } }),
-      db.task.count({ where: { status: 'DONE', project: { organizationId: orgId } } }),
+      db.task.groupBy({
+        by: ['status'],
+        where: { project: { organizationId: orgId } },
+        _count: true
+      }),
       db.defect.count({ where: { status: 'OPEN', project: { organizationId: orgId } } }),
       db.defect.count({ where: { status: 'CLOSED', project: { organizationId: orgId } } }),
       db.defect.count({ where: { status: 'OPEN', severity: 'CRITICAL', project: { organizationId: orgId } } }),
       db.user.count({ where: { isActive: true, organizationId: orgId } })
     ]);
+
+    // Build task count map from groupBy result (avoids N+1 separate count queries)
+    const taskCountMap = Object.fromEntries(taskCounts.map(t => [t.status, t._count]));
 
     return NextResponse.json({
       success: true,
@@ -59,10 +64,10 @@ export async function GET(request: NextRequest) {
           overdueAmount: 0
         },
         tasks: { 
-          total: pendingTasks + completedTasks,
-          pending: await db.task.count({ where: { status: 'TODO', project: { organizationId: user.organizationId } } }),
-          inProgress: inProgressTasks,
-          completed: completedTasks,
+          total: Object.values(taskCountMap).reduce((sum, c) => sum + c, 0),
+          pending: taskCountMap['TODO'] || 0,
+          inProgress: taskCountMap['IN_PROGRESS'] || 0,
+          completed: taskCountMap['DONE'] || 0,
           overdue: 0
         },
         defects: { 

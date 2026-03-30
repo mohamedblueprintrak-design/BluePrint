@@ -236,7 +236,7 @@ function SidebarContent({
     { id: 'dashboard', label: t.dashboard, icon: Home, href: '/dashboard' },
     { id: 'operations', label: language === 'ar' ? 'مركز العمليات' : 'Operations Center', icon: LayoutDashboard, href: '/dashboard/operations' },
     { id: 'projects', label: t.projects, icon: Building2, href: '/dashboard/projects' },
-    { id: 'tasks', label: t.tasks, icon: CheckSquare, badge: 3, href: '/dashboard/tasks' },
+    { id: 'tasks', label: t.tasks, icon: CheckSquare, badge: undefined, href: '/dashboard/tasks' },
     { id: 'clients', label: t.clients, icon: Users, href: '/dashboard/clients' },
     { id: 'invoices', label: t.invoices, icon: DollarSign, href: '/dashboard/invoices' },
   ];

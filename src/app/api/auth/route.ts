@@ -150,9 +150,10 @@ export async function POST(request: NextRequest) {
   }
   
   // Add rate limit headers to response
-  const ip = getClientIP(request);
-  const rateResult = checkRateLimitByType(ip, 'auth' as RateLimitType);
-  return addRateLimitHeaders(response, rateResult.remaining, rateResult.resetTime);
+  // NOTE: Do NOT call checkRateLimitByType here - it would double-count the request
+  // since rate limiting is already applied in middleware for all /api/ routes.
+  // Return reasonable default headers instead.
+  return addRateLimitHeaders(response, 9, Math.floor(Date.now() / 60000) * 60000 + 60000);
 }
 
 /**
@@ -315,8 +316,8 @@ async function handleLogin(
         path: '/',
       });
     }
-  } catch {
-    // Ignore cookie errors in test environment
+  } catch (cookieError) {
+    console.error('Failed to set auth cookies:', cookieError);
   }
 
   return response;
@@ -501,7 +502,7 @@ async function handleRefreshToken(
   cookieStore.set('refreshToken', result.refreshToken!, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    sameSite: 'strict',
     maxAge: 60 * 60 * 24 * 7, // 7 days
     path: '/',
   });

@@ -136,8 +136,8 @@ export const postHandlers = {
       return errorResponse('جميع الحقول مطلوبة');
     }
 
-    if (typeof password === 'string' && password.length < 6) {
-      return errorResponse('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+    if (typeof password === 'string' && password.length < 8) {
+      return errorResponse('كلمة المرور يجب أن تكون 8 أحرف على الأقل');
     }
 
     const database = await getDb();
@@ -189,12 +189,26 @@ export const postHandlers = {
     });
     if (!targetUser) return errorResponse('المستخدم غير موجود', 'NOT_FOUND', 404);
 
-    // Hash password if provided
-    if (data.password) {
-      data.password = await bcrypt.hash(data.password as string, 10);
+    // SECURITY: Prevent mass assignment - whitelist allowed fields
+    const ALLOWED_FIELDS = ['username', 'email', 'fullName', 'password', 'isActive', 'avatar', 'language', 'theme', 'role'];
+    const sanitizedData: Record<string, unknown> = {};
+    for (const key of ALLOWED_FIELDS) {
+      if (key in data && data[key] !== undefined) {
+        sanitizedData[key] = data[key];
+      }
     }
 
-    await database.user.update({ where: { id }, data });
+    // SECURITY: Block role escalation to admin from this endpoint
+    if (sanitizedData.role && sanitizedData.role === 'admin') {
+      return errorResponse('لا يمكن تعيين دور المدير من هذا المسار', 'FORBIDDEN_ROLE_CHANGE', 403);
+    }
+
+    // Hash password if provided
+    if (sanitizedData.password) {
+      sanitizedData.password = await bcrypt.hash(sanitizedData.password as string, 10);
+    }
+
+    await database.user.update({ where: { id }, data: sanitizedData });
     return successResponse(true);
   }
 };

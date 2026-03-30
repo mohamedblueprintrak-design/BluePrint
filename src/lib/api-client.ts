@@ -62,7 +62,22 @@ export async function apiGet<T>(
     headers: getDefaultHeaders(token),
   });
 
-  return response.json();
+  if (!response.ok) {
+    let errorMessage = `Request failed with status ${response.status}`;
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error?.message || errorMessage;
+    } catch {
+      // Response body is not JSON
+    }
+    throw new Error(errorMessage);
+  }
+
+  const text = await response.text();
+  if (!text) {
+    return { success: true, data: null as T };
+  }
+  return JSON.parse(text);
 }
 
 /**
@@ -79,7 +94,22 @@ export async function apiPost<T>(
     body: data ? JSON.stringify(data) : undefined,
   });
 
-  return response.json();
+  if (!response.ok) {
+    let errorMessage = `Request failed with status ${response.status}`;
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error?.message || errorMessage;
+    } catch {
+      // Response body is not JSON
+    }
+    throw new Error(errorMessage);
+  }
+
+  const text = await response.text();
+  if (!text) {
+    return { success: true, data: null as T };
+  }
+  return JSON.parse(text);
 }
 
 /**
@@ -96,7 +126,22 @@ export async function apiPut<T>(
     body: JSON.stringify(data),
   });
 
-  return response.json();
+  if (!response.ok) {
+    let errorMessage = `Request failed with status ${response.status}`;
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error?.message || errorMessage;
+    } catch {
+      // Response body is not JSON
+    }
+    throw new Error(errorMessage);
+  }
+
+  const text = await response.text();
+  if (!text) {
+    return { success: true, data: null as T };
+  }
+  return JSON.parse(text);
 }
 
 /**
@@ -120,7 +165,22 @@ export async function apiDelete<T>(
     headers: getDefaultHeaders(token),
   });
 
-  return response.json();
+  if (!response.ok) {
+    let errorMessage = `Request failed with status ${response.status}`;
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error?.message || errorMessage;
+    } catch {
+      // Response body is not JSON
+    }
+    throw new Error(errorMessage);
+  }
+
+  const text = await response.text();
+  if (!text) {
+    return { success: true, data: null as T };
+  }
+  return JSON.parse(text);
 }
 
 /**
@@ -145,7 +205,22 @@ export async function apiUpload<T>(
     body: formData,
   });
 
-  return response.json();
+  if (!response.ok) {
+    let errorMessage = `Request failed with status ${response.status}`;
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error?.message || errorMessage;
+    } catch {
+      // Response body is not JSON
+    }
+    throw new Error(errorMessage);
+  }
+
+  const text = await response.text();
+  if (!text) {
+    return { success: true, data: null as T };
+  }
+  return JSON.parse(text);
 }
 
 /**

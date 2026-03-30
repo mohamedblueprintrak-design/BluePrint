@@ -137,6 +137,15 @@ export const putHandlers = {
     const { id, ...data } = body;
     if (!id) return errorResponse('معرف العقد مطلوب');
 
+    // SECURITY: Whitelist allowed fields to prevent mass assignment
+    const ALLOWED_FIELDS = ['title', 'description', 'contractType', 'status', 'value', 'currency', 'startDate', 'endDate', 'terms', 'notes', 'clientId', 'projectId'];
+    const sanitizedData: Record<string, unknown> = {};
+    for (const key of ALLOWED_FIELDS) {
+      if (key in data && data[key] !== undefined) {
+        sanitizedData[key] = data[key];
+      }
+    }
+
     const database = await getDb();
     if (!database) return errorResponse('قاعدة البيانات غير متاحة');
 
@@ -146,7 +155,7 @@ export const putHandlers = {
     });
     if (!contract) return notFoundResponse('العقد غير موجود');
 
-    await database.contract.update({ where: { id: id as string }, data });
+    await database.contract.update({ where: { id: id as string }, data: sanitizedData });
     return successResponse(true);
   }
 };

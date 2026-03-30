@@ -197,6 +197,20 @@ class BackupService {
     const startTime = Date.now();
     const timestamp = new Date();
 
+    // SECURITY: Validate filesDir contains only safe characters to prevent command injection
+    if (!/^[\w./\-_]+$/.test(filesDir) || filesDir.includes('..')) {
+      return {
+        success: false,
+        backupId,
+        type: 'files',
+        timestamp,
+        size: 0,
+        duration: Date.now() - startTime,
+        location: '',
+        error: 'Invalid files directory path: contains unsafe characters or path traversal',
+      };
+    }
+
     try {
       await this.ensureBackupDir();
 

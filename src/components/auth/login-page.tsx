@@ -41,7 +41,7 @@ export function LoginPage() {
     setSuccess('');
     
     try {
-      const result = await login(loginForm);
+      const result = await login({ ...loginForm, rememberMe });
       if (result.success) {
         // Use window.location for reliable redirect after login
         // This ensures the new page loads with fresh auth state from localStorage

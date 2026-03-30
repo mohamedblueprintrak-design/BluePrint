@@ -258,7 +258,7 @@ function isStaticFile(pathname: string): boolean {
     pathname.startsWith('/_next') ||
     pathname.startsWith('/static') ||
     pathname.startsWith('/public') ||
-    pathname.includes('.') // Files with extensions
+    /\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|map)$/i.test(pathname)
   );
 }
 

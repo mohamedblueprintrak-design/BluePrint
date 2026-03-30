@@ -1,6 +1,14 @@
 // Email templates for BluePrint SaaS Platform
 // All templates are in Arabic as per platform requirements
 
+/**
+ * Escape HTML special characters to prevent XSS/injection
+ */
+function escapeHtml(str: string): string {
+  if (!str) return str;
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 export interface EmailTemplate {
   subject: string;
   html: string;
@@ -130,13 +138,13 @@ export const emailTemplates = {
    */
   welcome: (name: string, loginUrl?: string): EmailTemplate => {
     const content = `
-      <h2 style="margin-top: 0; color: #1f2937;">مرحباً ${name} 👋</h2>
+      <h2 style="margin-top: 0; color: #1f2937;">مرحباً ${escapeHtml(name)} 👋</h2>
       <p>نرحب بك في منصة <strong>BluePrint</strong> لإدارة مكاتب الاستشارات الهندسية.</p>
       <p>تم إنشاء حسابك بنجاح. يمكنك الآن الوصول إلى جميع خدمات المنصة.</p>
       <div class="info-box">
         <div class="info-row">
           <span class="info-label">الاسم</span>
-          <span class="info-value">${name}</span>
+          <span class="info-value">${escapeHtml(name)}</span>
         </div>
       </div>
       <p>يمكنك تسجيل الدخول والبدء باستخدام المنصة فوراً.</p>
@@ -148,7 +156,7 @@ export const emailTemplates = {
     return {
       subject: 'مرحباً بك في BluePrint',
       html: wrapEmailTemplate(content, 'مرحباً بك'),
-      text: `مرحباً ${name}،\n\nنرحب بك في منصة BluePrint لإدارة مكاتب الاستشارات الهندسية.\n\nتم إنشاء حسابك بنجاح. يمكنك الآن الوصول إلى جميع خدمات المنصة.\n\nمع أطيب التحيات،\nفريق BluePrint`,
+      text: `مرحباً ${escapeHtml(name)}،\n\nنرحب بك في منصة BluePrint لإدارة مكاتب الاستشارات الهندسية.\n\nتم إنشاء حسابك بنجاح. يمكنك الآن الوصول إلى جميع خدمات المنصة.\n\nمع أطيب التحيات،\nفريق BluePrint`,
     };
   },
 
@@ -169,12 +177,12 @@ export const emailTemplates = {
 
     const content = `
       <h2 style="margin-top: 0; color: #1f2937;">فاتورة جديدة 📄</h2>
-      <p>عزيزي/عزيزتي ${clientName}،</p>
+      <p>عزيزي/عزيزتي ${escapeHtml(clientName)}،</p>
       <p>تم إنشاء فاتورة جديدة باسمك في منصة BluePrint.</p>
       <div class="info-box">
         <div class="info-row">
           <span class="info-label">رقم الفاتورة</span>
-          <span class="info-value">${invoiceNumber}</span>
+          <span class="info-value">${escapeHtml(invoiceNumber)}</span>
         </div>
         <div class="info-row">
           <span class="info-label">المبلغ الإجمالي</span>
@@ -193,9 +201,9 @@ export const emailTemplates = {
     `;
 
     return {
-      subject: `فاتورة جديدة: ${invoiceNumber}`,
+      subject: `فاتورة جديدة: ${escapeHtml(invoiceNumber)}`,
       html: wrapEmailTemplate(content, 'فاتورة جديدة'),
-      text: `عزيزي/عزيزتي ${clientName}،\n\nتم إنشاء فاتورة جديدة باسمك.\n\nرقم الفاتورة: ${invoiceNumber}\nالمبلغ: ${formattedAmount}\n${dueDate ? `تاريخ الاستحقاق: ${dueDate}\n` : ''}\nيرجى مراجعة الفاتورة وإتمام عملية الدفع.\n\nمع أطيب التحيات،\nفريق BluePrint`,
+      text: `عزيزي/عزيزتي ${escapeHtml(clientName)}،\n\nتم إنشاء فاتورة جديدة باسمك.\n\nرقم الفاتورة: ${escapeHtml(invoiceNumber)}\nالمبلغ: ${formattedAmount}\n${dueDate ? `تاريخ الاستحقاق: ${dueDate}\n` : ''}\nيرجى مراجعة الفاتورة وإتمام عملية الدفع.\n\nمع أطيب التحيات،\nفريق BluePrint`,
     };
   },
 
@@ -226,16 +234,16 @@ export const emailTemplates = {
 
     const content = `
       <h2 style="margin-top: 0; color: #1f2937;">مهمة جديدة 📋</h2>
-      <p>مرحباً ${userName}،</p>
+      <p>مرحباً ${escapeHtml(userName)}،</p>
       <p>تم تعيين مهمة جديدة لك في منصة BluePrint.</p>
       <div class="info-box">
         <div class="info-row">
           <span class="info-label">عنوان المهمة</span>
-          <span class="info-value">${taskTitle}</span>
+          <span class="info-value">${escapeHtml(taskTitle)}</span>
         </div>
         <div class="info-row">
           <span class="info-label">المشروع</span>
-          <span class="info-value">${projectName}</span>
+          <span class="info-value">${escapeHtml(projectName)}</span>
         </div>
         ${priority ? `
         <div class="info-row">
@@ -256,9 +264,9 @@ export const emailTemplates = {
     `;
 
     return {
-      subject: `مهمة جديدة: ${taskTitle}`,
+      subject: `مهمة جديدة: ${escapeHtml(taskTitle)}`,
       html: wrapEmailTemplate(content, 'مهمة جديدة'),
-      text: `مرحباً ${userName}،\n\nتم تعيين مهمة جديدة لك.\n\nعنوان المهمة: ${taskTitle}\nالمشروع: ${projectName}\n${priority ? `الأولوية: ${priorityLabels[priority] || priority}\n` : ''}${dueDate ? `تاريخ الاستحقاق: ${dueDate}\n` : ''}\nيرجى مراجعة المهمة والبدء في تنفيذها.\n\nمع أطيب التحيات،\nفريق BluePrint`,
+      text: `مرحباً ${escapeHtml(userName)}，\n\nتم تعيين مهمة جديدة لك.\n\nعنوان المهمة: ${escapeHtml(taskTitle)}\nالمشروع: ${escapeHtml(projectName)}\n${priority ? `الأولوية: ${priorityLabels[priority] || priority}\n` : ''}${dueDate ? `تاريخ الاستحقاق: ${dueDate}\n` : ''}\nيرجى مراجعة المهمة والبدء في تنفيذها.\n\nمع أطيب التحيات،\nفريق BluePrint`,
     };
   },
 
@@ -285,7 +293,7 @@ export const emailTemplates = {
 
     const content = `
       <h2 style="margin-top: 0; color: #1f2937;">تم الموافقة على طلب الإجازة ✅</h2>
-      <p>مرحباً ${userName}،</p>
+      <p>مرحباً ${escapeHtml(userName)}،</p>
       <div class="success">
         <strong>تهانينا!</strong> تم الموافقة على طلب الإجازة الخاص بك.
       </div>
@@ -314,7 +322,7 @@ export const emailTemplates = {
     return {
       subject: 'تم الموافقة على طلب الإجازة',
       html: wrapEmailTemplate(content, 'الموافقة على الإجازة'),
-      text: `مرحباً ${userName}،\n\nتم الموافقة على طلب الإجازة الخاص بك.\n\nنوع الإجازة: ${leaveTypeLabels[leaveType] || leaveType}\nمن: ${startDate}\nإلى: ${endDate}\nعدد الأيام: ${daysCount} يوم\n\nنتمنى لك إجازة سعيدة!\n\nمع أطيب التحيات،\nفريق BluePrint`,
+      text: `مرحباً ${escapeHtml(userName)}،\n\nتم الموافقة على طلب الإجازة الخاص بك.\n\nنوع الإجازة: ${leaveTypeLabels[leaveType] || leaveType}\nمن: ${startDate}\nإلى: ${endDate}\nعدد الأيام: ${daysCount} يوم\n\nنتمنى لك إجازة سعيدة!\n\nمع أطيب التحيات،\nفريق BluePrint`,
     };
   },
 
@@ -341,7 +349,7 @@ export const emailTemplates = {
 
     const content = `
       <h2 style="margin-top: 0; color: #1f2937;">تم رفض طلب الإجازة ❌</h2>
-      <p>مرحباً ${userName}،</p>
+      <p>مرحباً ${escapeHtml(userName)}،</p>
       <p>نأسف لإبلاغك بأنه تم رفض طلب الإجازة الخاص بك.</p>
       <div class="info-box">
         <div class="info-row">
@@ -359,7 +367,7 @@ export const emailTemplates = {
       </div>
       ${rejectionReason ? `
       <div class="warning">
-        <strong>سبب الرفض:</strong> ${rejectionReason}
+        <strong>سبب الرفض:</strong> ${escapeHtml(rejectionReason || "")}
       </div>
       ` : ''}
       <p>إذا كان لديك أي استفسارات، يرجى التواصل مع إدارة الموارد البشرية.</p>
@@ -369,7 +377,7 @@ export const emailTemplates = {
     return {
       subject: 'تم رفض طلب الإجازة',
       html: wrapEmailTemplate(content, 'رفض الإجازة'),
-      text: `مرحباً ${userName}،\n\nنأسف لإبلاغك بأنه تم رفض طلب الإجازة الخاص بك.\n\nنوع الإجازة: ${leaveTypeLabels[leaveType] || leaveType}\nمن: ${startDate}\nإلى: ${endDate}\n${rejectionReason ? `\nسبب الرفض: ${rejectionReason}\n` : ''}\nإذا كان لديك أي استفسارات، يرجى التواصل مع إدارة الموارد البشرية.\n\nمع أطيب التحيات،\nفريق BluePrint`,
+      text: `مرحباً ${escapeHtml(userName)}،\n\nنأسف لإبلاغك بأنه تم رفض طلب الإجازة الخاص بك.\n\nنوع الإجازة: ${leaveTypeLabels[leaveType] || leaveType}\nمن: ${startDate}\nإلى: ${endDate}\n${rejectionReason ? `\nسبب الرفض: ${escapeHtml(rejectionReason)}\n` : ''}\nإذا كان لديك أي استفسارات، يرجى التواصل مع إدارة الموارد البشرية.\n\nمع أطيب التحيات،\nفريق BluePrint`,
     };
   },
 
@@ -379,7 +387,7 @@ export const emailTemplates = {
   passwordReset: (userName: string, resetLink: string, expiresInMinutes: number = 30): EmailTemplate => {
     const content = `
       <h2 style="margin-top: 0; color: #1f2937;">إعادة تعيين كلمة المرور 🔐</h2>
-      <p>مرحباً ${userName}،</p>
+      <p>مرحباً ${escapeHtml(userName)}،</p>
       <p>تلقينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك.</p>
       <div class="warning">
         <strong>تنبيه:</strong> ستنتهي صلاحية هذا الرابط خلال ${expiresInMinutes} دقيقة.
@@ -393,7 +401,7 @@ export const emailTemplates = {
     return {
       subject: 'إعادة تعيين كلمة المرور',
       html: wrapEmailTemplate(content, 'إعادة تعيين كلمة المرور'),
-      text: `مرحباً ${userName}،\n\nتلقينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك.\n\nاضغط على الرابط التالي لإعادة تعيين كلمة المرور:\n${resetLink}\n\nسينتهي هذا الرابط خلال ${expiresInMinutes} دقيقة.\n\nإذا لم تطلب إعادة تعيين كلمة المرور، يمكنك تجاهل هذه الرسالة.\n\nمع أطيب التحيات،\nفريق BluePrint`,
+      text: `مرحباً ${escapeHtml(userName)}،\n\nتلقينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك.\n\nاضغط على الرابط التالي لإعادة تعيين كلمة المرور:\n${resetLink}\n\nسينتهي هذا الرابط خلال ${expiresInMinutes} دقيقة.\n\nإذا لم تطلب إعادة تعيين كلمة المرور، يمكنك تجاهل هذه الرسالة.\n\nمع أطيب التحيات،\nفريق BluePrint`,
     };
   },
 
@@ -408,17 +416,17 @@ export const emailTemplates = {
   ): EmailTemplate => {
     const content = `
       <h2 style="margin-top: 0; color: #1f2937;">تم إضافتك إلى مشروع جديد 🏗️</h2>
-      <p>مرحباً ${userName}،</p>
+      <p>مرحباً ${escapeHtml(userName)}،</p>
       <p>تم إضافتك إلى فريق عمل مشروع جديد في منصة BluePrint.</p>
       <div class="info-box">
         <div class="info-row">
           <span class="info-label">اسم المشروع</span>
-          <span class="info-value">${projectName}</span>
+          <span class="info-value">${escapeHtml(projectName)}</span>
         </div>
         ${role ? `
         <div class="info-row">
           <span class="info-label">دورك في المشروع</span>
-          <span class="info-value">${role}</span>
+          <span class="info-value">${escapeHtml(role)}</span>
         </div>
         ` : ''}
       </div>
@@ -428,9 +436,9 @@ export const emailTemplates = {
     `;
 
     return {
-      subject: `تم إضافتك إلى مشروع: ${projectName}`,
+      subject: `تم إضافتك إلى مشروع: ${escapeHtml(projectName)}`,
       html: wrapEmailTemplate(content, 'مشروع جديد'),
-      text: `مرحباً ${userName}،\n\nتم إضافتك إلى فريق عمل مشروع جديد.\n\nاسم المشروع: ${projectName}\n${role ? `دورك في المشروع: ${role}\n` : ''}\nيمكنك الآن الوصول إلى جميع تفاصيل المشروع.\n\nمع أطيب التحيات،\nفريق BluePrint`,
+      text: `مرحباً ${escapeHtml(userName)}،\n\nتم إضافتك إلى فريق عمل مشروع جديد.\n\nاسم المشروع: ${escapeHtml(projectName)}\n${role ? `دورك في المشروع: ${escapeHtml(role)}\n` : ''}\nيمكنك الآن الوصول إلى جميع تفاصيل المشروع.\n\nمع أطيب التحيات،\nفريق BluePrint`,
     };
   },
 
@@ -451,14 +459,14 @@ export const emailTemplates = {
 
     const content = `
       <h2 style="margin-top: 0; color: #1f2937;">تم استلام الدفع 💰</h2>
-      <p>عزيزي/عزيزتي ${clientName}،</p>
+      <p>عزيزي/عزيزتي ${escapeHtml(clientName)}،</p>
       <div class="success">
         <strong>شكراً لك!</strong> تم استلام دفعتك بنجاح.
       </div>
       <div class="info-box">
         <div class="info-row">
           <span class="info-label">رقم الفاتورة</span>
-          <span class="info-value">${invoiceNumber}</span>
+          <span class="info-value">${escapeHtml(invoiceNumber)}</span>
         </div>
         <div class="info-row">
           <span class="info-label">المبلغ المدفوع</span>
@@ -480,9 +488,9 @@ export const emailTemplates = {
     `;
 
     return {
-      subject: `تم استلام الدفع - الفاتورة ${invoiceNumber}`,
+      subject: `تم استلام الدفع - الفاتورة ${escapeHtml(invoiceNumber)}`,
       html: wrapEmailTemplate(content, 'تأكيد الدفع'),
-      text: `عزيزي/عزيزتي ${clientName}،\n\nتم استلام دفعتك بنجاح.\n\nرقم الفاتورة: ${invoiceNumber}\nالمبلغ: ${formattedAmount}\nتاريخ الدفع: ${paymentDate}\n${paymentMethod ? `طريقة الدفع: ${paymentMethod}\n` : ''}\nنشكرك على ثقتك بنا.\n\nمع أطيب التحيات،\nفريق BluePrint`,
+      text: `عزيزي/عزيزتي ${escapeHtml(clientName)}،\n\nتم استلام دفعتك بنجاح.\n\nرقم الفاتورة: ${escapeHtml(invoiceNumber)}\nالمبلغ: ${formattedAmount}\nتاريخ الدفع: ${paymentDate}\n${paymentMethod ? `طريقة الدفع: ${paymentMethod}\n` : ''}\nنشكرك على ثقتك بنا.\n\nمع أطيب التحيات،\nفريق BluePrint`,
     };
   },
 
@@ -500,7 +508,7 @@ export const emailTemplates = {
     const isOverdue = daysRemaining < 0;
     const content = `
       <h2 style="margin-top: 0; color: #1f2937;">تذكير بموعد تسليم المهمة ${isOverdue ? '⚠️' : '⏰'}</h2>
-      <p>مرحباً ${userName}،</p>
+      <p>مرحباً ${escapeHtml(userName)}，</p>
       ${isOverdue ? `
         <div class="warning">
           <strong>تنبيه!</strong> هذه المهمة متأخرة بمقدار ${Math.abs(daysRemaining)} يوم.
@@ -511,11 +519,11 @@ export const emailTemplates = {
       <div class="info-box">
         <div class="info-row">
           <span class="info-label">عنوان المهمة</span>
-          <span class="info-value">${taskTitle}</span>
+          <span class="info-value">${escapeHtml(taskTitle)}</span>
         </div>
         <div class="info-row">
           <span class="info-label">المشروع</span>
-          <span class="info-value">${projectName}</span>
+          <span class="info-value">${escapeHtml(projectName)}</span>
         </div>
         <div class="info-row">
           <span class="info-label">تاريخ الاستحقاق</span>
@@ -534,9 +542,9 @@ export const emailTemplates = {
     `;
 
     return {
-      subject: `تذكير: ${taskTitle} ${isOverdue ? '(متأخر)' : ''}`,
+      subject: `تذكير: ${escapeHtml(taskTitle)} ${isOverdue ? '(متأخر)' : ''}`,
       html: wrapEmailTemplate(content, 'تذكير بمهمة'),
-      text: `مرحباً ${userName}،\n\n${isOverdue ? 'تنبيه! هذه المهمة متأخرة.' : 'هذا تذكير بموعد تسليم المهمة القادم.'}\n\nعنوان المهمة: ${taskTitle}\nالمشروع: ${projectName}\nتاريخ الاستحقاق: ${dueDate}\n${isOverdue ? `متأخر ${Math.abs(daysRemaining)} يوم` : `متبقي ${daysRemaining} يوم`}\n\nيرجى إعطاء الأولوية لهذه المهمة.\n\nمع أطيب التحيات،\nفريق BluePrint`,
+      text: `مرحباً ${escapeHtml(userName)}،\n\n${isOverdue ? 'تنبيه! هذه المهمة متأخرة.' : 'هذا تذكير بموعد تسليم المهمة القادم.'}\n\nعنوان المهمة: ${taskTitle}\nالمشروع: ${projectName}\nتاريخ الاستحقاق: ${dueDate}\n${isOverdue ? `متأخر ${Math.abs(daysRemaining)} يوم` : `متبقي ${daysRemaining} يوم`}\n\nيرجى إعطاء الأولوية لهذه المهمة.\n\nمع أطيب التحيات،\nفريق BluePrint`,
     };
   },
 
@@ -550,7 +558,7 @@ export const emailTemplates = {
   ): EmailTemplate => {
     const content = `
       <h2 style="margin-top: 0; color: #1f2937;">تحقق من بريدك الإلكتروني ✉️</h2>
-      <p>مرحباً ${userName}،</p>
+      <p>مرحباً ${escapeHtml(userName)}，</p>
       <p>شكراً لتسجيلك في منصة <strong>BluePrint</strong>. يرجى التحقق من بريدك الإلكتروني لتفعيل حسابك.</p>
       <div class="warning">
         <strong>تنبيه:</strong> ستنتهي صلاحية هذا الرابط خلال ${expiresInHours} ساعة.
@@ -566,7 +574,7 @@ export const emailTemplates = {
     return {
       subject: 'تحقق من بريدك الإلكتروني - BluePrint',
       html: wrapEmailTemplate(content, 'التحقق من البريد الإلكتروني'),
-      text: `مرحباً ${userName}،\n\nشكراً لتسجيلك في منصة BluePrint.\n\nيرجى التحقق من بريدك الإلكتروني بالضغط على الرابط التالي:\n${verificationLink}\n\nسينتهي هذا الرابط خلال ${expiresInHours} ساعة.\n\nإذا لم تقم بإنشاء حساب، يمكنك تجاهل هذه الرسالة.\n\nمع أطيب التحيات،\nفريق BluePrint`,
+      text: `مرحباً ${escapeHtml(userName)}،\n\nشكراً لتسجيلك في منصة BluePrint.\n\nيرجى التحقق من بريدك الإلكتروني بالضغط على الرابط التالي:\n${verificationLink}\n\nسينتهي هذا الرابط خلال ${expiresInHours} ساعة.\n\nإذا لم تقم بإنشاء حساب، يمكنك تجاهل هذه الرسالة.\n\nمع أطيب التحيات،\nفريق BluePrint`,
     };
   },
 
@@ -579,7 +587,7 @@ export const emailTemplates = {
   ): EmailTemplate => {
     const content = `
       <h2 style="margin-top: 0; color: #1f2937;">تم التحقق من بريدك الإلكتروني ✅</h2>
-      <p>مرحباً ${userName}،</p>
+      <p>مرحباً ${escapeHtml(userName)}،</p>
       <div class="success">
         <strong>تهانينا!</strong> تم التحقق من بريدك الإلكتروني بنجاح.
       </div>
@@ -591,7 +599,7 @@ export const emailTemplates = {
     return {
       subject: 'تم التحقق من بريدك الإلكتروني - BluePrint',
       html: wrapEmailTemplate(content, 'تم التحقق من البريد'),
-      text: `مرحباً ${userName}،\n\nتم التحقق من بريدك الإلكتروني بنجاح.\n\nيمكنك الآن الوصول الكامل إلى جميع ميزات منصة BluePrint.\n\nمع أطيب التحيات،\nفريق BluePrint`,
+      text: `مرحباً ${escapeHtml(userName)}،\n\nتم التحقق من بريدك الإلكتروني بنجاح.\n\nيمكنك الآن الوصول الكامل إلى جميع ميزات منصة BluePrint.\n\nمع أطيب التحيات،\nفريق BluePrint`,
     };
   },
 
@@ -603,7 +611,7 @@ export const emailTemplates = {
   ): EmailTemplate => {
     const content = `
       <h2 style="margin-top: 0; color: #1f2937;">تم تفعيل المصادقة الثنائية 🔐</h2>
-      <p>مرحباً ${userName}،</p>
+      <p>مرحباً ${escapeHtml(userName)}،</p>
       <div class="success">
         <strong>تم بنجاح!</strong> تم تفعيل المصادقة الثنائية على حسابك.
       </div>
@@ -623,7 +631,7 @@ export const emailTemplates = {
     return {
       subject: 'تم تفعيل المصادقة الثنائية - BluePrint',
       html: wrapEmailTemplate(content, 'تفعيل المصادقة الثنائية'),
-      text: `مرحباً ${userName}،\n\nتم تفعيل المصادقة الثنائية على حسابك بنجاح.\n\nحسابك الآن محمي بطريقة إضافية.\n\nإذا لم تقم بتفعيل هذه الميزة، يرجى التواصل مع الدعم فوراً.\n\nمع أطيب التحيات،\nفريق BluePrint`,
+      text: `مرحباً ${escapeHtml(userName)}،\n\nتم تفعيل المصادقة الثنائية على حسابك بنجاح.\n\nحسابك الآن محمي بطريقة إضافية.\n\nإذا لم تقم بتفعيل هذه الميزة، يرجى التواصل مع الدعم فوراً.\n\nمع أطيب التحيات،\nفريق BluePrint`,
     };
   },
 
@@ -637,7 +645,7 @@ export const emailTemplates = {
   ): EmailTemplate => {
     const content = `
       <h2 style="margin-top: 0; color: #1f2937;">رمز التحقق الخاص بك 🔑</h2>
-      <p>مرحباً ${userName}،</p>
+      <p>مرحباً ${escapeHtml(userName)}，</p>
       <p>إليك رمز التحقق الخاص بك:</p>
       <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 8px; margin: 20px 0;">
         ${code}
@@ -652,7 +660,7 @@ export const emailTemplates = {
     return {
       subject: `رمز التحقق: ${code} - BluePrint`,
       html: wrapEmailTemplate(content, 'رمز التحقق'),
-      text: `مرحباً ${userName}،\n\nرمز التحقق الخاص بك هو: ${code}\n\nسينتهي هذا الرمز خلال ${expiresInMinutes} دقائق.\n\nإذا لم تطلب هذا الرمز، يرجى تجاهل هذه الرسالة.\n\nمع أطيب التحيات،\nفريق BluePrint`,
+      text: `مرحباً ${escapeHtml(userName)}،\n\nرمز التحقق الخاص بك هو: ${code}\n\nسينتهي هذا الرمز خلال ${expiresInMinutes} دقائق.\n\nإذا لم تطلب هذا الرمز، يرجى تجاهل هذه الرسالة.\n\nمع أطيب التحيات،\nفريق BluePrint`,
     };
   },
 
@@ -668,20 +676,20 @@ export const emailTemplates = {
   ): EmailTemplate => {
     const content = `
       <h2 style="margin-top: 0; color: #1f2937;">تسجيل دخول جديد 🖥️</h2>
-      <p>مرحباً ${userName}،</p>
+      <p>مرحباً ${escapeHtml(userName)}،</p>
       <p>تم تسجيل الدخول إلى حسابك من جهاز جديد.</p>
       <div class="info-box">
         <div class="info-row">
           <span class="info-label">الجهاز</span>
-          <span class="info-value">${device}</span>
+          <span class="info-value">${escapeHtml(device)}</span>
         </div>
         <div class="info-row">
           <span class="info-label">الموقع</span>
-          <span class="info-value">${location}</span>
+          <span class="info-value">${escapeHtml(location)}</span>
         </div>
         <div class="info-row">
           <span class="info-label">الوقت</span>
-          <span class="info-value">${time}</span>
+          <span class="info-value">${escapeHtml(time)}</span>
         </div>
       </div>
       <div class="warning">
@@ -694,7 +702,7 @@ export const emailTemplates = {
     return {
       subject: 'تسجيل دخول جديد - BluePrint',
       html: wrapEmailTemplate(content, 'تسجيل دخول جديد'),
-      text: `مرحباً ${userName}،\n\nتم تسجيل الدخول إلى حسابك من جهاز جديد.\n\nالجهاز: ${device}\nالموقع: ${location}\nالوقت: ${time}\n\nإذا لم تكن أنت، يرجى تأمين حسابك فوراً.\n\nمع أطيب التحيات،\nفريق BluePrint`,
+      text: `مرحباً ${escapeHtml(userName)}،\n\nتم تسجيل الدخول إلى حسابك من جهاز جديد.\n\nالجهاز: ${escapeHtml(device)}\nالموقع: ${escapeHtml(location)}\nالوقت: ${time}\n\nإذا لم تكن أنت، يرجى تأمين حسابك فوراً.\n\nمع أطيب التحيات،\nفريق BluePrint`,
     };
   },
 };

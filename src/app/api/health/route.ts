@@ -112,7 +112,6 @@ export async function GET(request: NextRequest) {
   const requiredEnvVars = [
     'DATABASE_URL',
     'JWT_SECRET',
-    'NEXTAUTH_SECRET',
     'NEXT_PUBLIC_APP_URL',
   ];
   

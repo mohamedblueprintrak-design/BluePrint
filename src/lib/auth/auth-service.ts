@@ -628,6 +628,16 @@ class AuthenticationService {
       
       const resetToken = await this.generatePasswordResetToken(user.id);
       
+      // Store token in database for invalidation after use
+      await prisma.passwordResetToken.create({
+        data: {
+          email: user.email,
+          token: resetToken,
+          userId: user.id,
+          expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
+        },
+      });
+
       // Send password reset email with secure link
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
       const resetLink = `${appUrl}/reset-password?token=${resetToken}`;
@@ -685,15 +695,34 @@ class AuthenticationService {
         };
       }
       
+      // Check if token has already been used
+      const existingToken = await prisma.passwordResetToken.findUnique({
+        where: { token: data.token },
+      });
+      if (existingToken?.usedAt) {
+        return {
+          success: false,
+          error: 'Token already used',
+          code: 'TOKEN_USED',
+        };
+      }
+
       const hashedPassword = await this.hashPassword(data.newPassword);
       
-      await prisma.user.update({
-        where: { id: payload.userId },
-        data: { 
-          password: hashedPassword,
-          emailVerified: new Date(), // Verify email on password reset
-        },
-      });
+      await prisma.$transaction([
+        prisma.user.update({
+          where: { id: payload.userId },
+          data: { 
+            password: hashedPassword,
+            emailVerified: new Date(), // Verify email on password reset
+          },
+        }),
+        // Invalidate the token after successful password reset
+        prisma.passwordResetToken.update({
+          where: { token: data.token },
+          data: { usedAt: new Date() },
+        }),
+      ]);
       
       return { success: true };
     } catch (error) {

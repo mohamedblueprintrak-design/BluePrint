@@ -174,37 +174,49 @@ export const postHandlers = {
     const database = await getDb();
     if (!database) return errorResponse('قاعدة البيانات غير متاحة');
 
-    // Verify invoice belongs to user's organization
-    const paymentInvoice: any = await database.invoice.findFirst({
-      where: { id: invoiceId as string, organizationId: context.user.organizationId }
-    });
-    if (!paymentInvoice) return notFoundResponse('الفاتورة غير موجودة');
+    // Verify invoice belongs to user's organization and record payment atomically
+    let result;
+    try {
+      result = await database.$transaction(async (tx) => {
+        const paymentInvoice = await tx.invoice.findFirst({
+          where: { id: invoiceId as string, organizationId: context.user.organizationId }
+        });
+        if (!paymentInvoice) throw new Error('Invoice not found');
 
-    const payment: any = await database.payment.create({
-      data: {
-        invoiceId: invoiceId as string,
-        amount: parseFloat(amount as string),
-        paymentDate: paymentDate ? new Date(paymentDate as string) : new Date(),
-        paymentMethod: (paymentMethod as string) || 'bank_transfer',
-        referenceNumber: referenceNumber as string,
-        notes: notes as string
+        const payment = await tx.payment.create({
+          data: {
+            invoiceId: invoiceId as string,
+            amount: parseFloat(amount as string),
+            paymentDate: paymentDate ? new Date(paymentDate as string) : new Date(),
+            paymentMethod: (paymentMethod as string) || 'bank_transfer',
+            referenceNumber: referenceNumber as string,
+            notes: notes as string
+          }
+        });
+
+        // Update invoice paidAmount within the transaction
+        const newPaidAmount = (paymentInvoice.paidAmount || 0) + parseFloat(amount as string);
+        const newStatus = newPaidAmount >= paymentInvoice.total ? 'paid' : 
+                          newPaidAmount > 0 ? 'partial' : paymentInvoice.status;
+        
+        await tx.invoice.update({
+          where: { id: invoiceId as string },
+          data: { 
+            paidAmount: newPaidAmount,
+            status: newStatus
+          }
+        });
+
+        return payment;
+      });
+    } catch (error: any) {
+      if (error.message === 'Invoice not found') {
+        return notFoundResponse('الفاتورة غير موجودة');
       }
-    });
+      return errorResponse('حدث خطأ أثناء معالجة الدفع');
+    }
 
-    // Update invoice paidAmount
-    const newPaidAmount = (paymentInvoice.paidAmount || 0) + parseFloat(amount as string);
-    const newStatus = newPaidAmount >= paymentInvoice.total ? 'paid' : 
-                      newPaidAmount > 0 ? 'partial' : paymentInvoice.status;
-    
-    await database.invoice.update({
-      where: { id: invoiceId as string },
-      data: { 
-        paidAmount: newPaidAmount,
-        status: newStatus
-      }
-    });
-
-    return successResponse({ id: payment.id, amount: payment.amount });
+    return successResponse({ id: result.id, amount: result.amount });
   }
 };
 

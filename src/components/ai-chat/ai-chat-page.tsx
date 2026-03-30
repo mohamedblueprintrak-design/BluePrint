@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useApp } from '@/context/app-context';
 import { useAuth } from '@/context/auth-context';
 import { useTranslation } from '@/lib/translations';
+import DOMPurify from 'dompurify';
 import { useAIChat } from '@/hooks/use-data';
 import { AVAILABLE_MODELS } from '@/lib/ai/model-config';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -254,31 +255,12 @@ function CodeBlock({ code, language }: { code: string; language?: string }) {
 
 // Markdown-like Content Renderer with XSS Protection
 function MessageContent({ content, imageData }: { content: string; imageData?: string }) {
-  // SECURITY: Sanitize HTML to prevent XSS attacks
-  // TODO: Replace regex-based sanitizer with DOMPurify (https://github.com/cure53/DOMPurify)
-  // for more robust protection against XSS. Regex-based sanitization can potentially be bypassed.
-  // This is a defense-in-depth approach with multiple layers
+  // SECURITY: Sanitize HTML to prevent XSS attacks using DOMPurify
   const sanitizeHtml = (html: string): string => {
-    return html
-      // Remove script tags and their contents
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-      // Remove style tags and their contents
-      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
-      // Remove iframe, object, embed, and other dangerous tags
-      .replace(/<\/?(iframe|object|embed|form|input|button|textarea|select|option|link|meta|base|svg|math)\b[^>]*>/gi, '')
-      // Remove all event handlers (onclick, onerror, onload, onmouseover, etc.)
-      .replace(/\s+on\w+\s*=\s*["'][^"']*["']/gi, '')
-      .replace(/\s+on\w+\s*=\s*[^\s>]*/gi, '')
-      // Remove javascript:, vbscript:, and data: URLs (except images)
-      .replace(/javascript\s*:/gi, '')
-      .replace(/vbscript\s*:/gi, '')
-      .replace(/data\s*:(?!image\/)/gi, '')
-      // Remove any HTML comments
-      .replace(/<!--[\s\S]*?-->/g, '')
-      // Escape any remaining HTML tags except allowed ones
-      .replace(/<(?!\/?(strong|em|code|br|span|p)\b)[^>]*>/gi, '')
-      // Final safety: escape any < that might be part of an attack
-      .replace(/<(?!(\/?(strong|em|code|br|span|p)\s*>?))/gi, '&lt;');
+    return DOMPurify.sanitize(html, {
+      ALLOWED_TAGS: ['strong', 'em', 'code', 'br', 'span', 'p', 'pre', 'div'],
+      ALLOWED_ATTR: ['class'],
+    });
   };
 
   const renderContent = (text: string) => {

@@ -127,6 +127,15 @@ export const putHandlers = {
     const { id, ...data } = body;
     if (!id) return errorResponse('معرف المورد مطلوب');
 
+    // SECURITY: Whitelist allowed fields to prevent mass assignment
+    const ALLOWED_FIELDS = ['name', 'supplierType', 'email', 'phone', 'address', 'taxNumber', 'contactPerson', 'rating', 'creditLimit', 'isActive', 'notes'];
+    const sanitizedData: Record<string, unknown> = {};
+    for (const key of ALLOWED_FIELDS) {
+      if (key in data && data[key] !== undefined) {
+        sanitizedData[key] = data[key];
+      }
+    }
+
     const database = await getDb();
     if (!database) return errorResponse('قاعدة البيانات غير متاحة');
 
@@ -136,7 +145,7 @@ export const putHandlers = {
     });
     if (!supplier) return notFoundResponse('المورد غير موجود');
 
-    await database.supplier.update({ where: { id: id as string }, data });
+    await database.supplier.update({ where: { id: id as string }, data: sanitizedData });
     return successResponse(true);
   }
 };

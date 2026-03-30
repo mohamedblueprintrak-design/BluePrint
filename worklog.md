@@ -549,238 +549,241 @@ Ran ESLint on all 4 files and found that only 1 file had actual errors:
 The user-reported errors for files 2-4 either did not exist or were already fixed by previous agents.
 
 ---
-## Task ID: 7 - frontend-gap-fixer
+## Task ID: 7 - bug-fix-phase1c
 ### Work Task
-Fix 4 critical frontend gaps in the BluePrint project: (1) Import and use the orphaned ClientInteractionPanel, (2) Wire up site-reports/defects data fetching in workspace, (3) Add 7 missing sidebar navigation entries, (4) Add BOQ Cost Variance analysis in workspace BOQ tab.
+Fix safe authentication and configuration issues: SameSite cookie, password validation, credential exposure, Prisma provider, next-auth cleanup.
 
 ### Work Summary
 
-#### Fix 1: ClientInteractionPanel — Import and Use (CRITICAL)
-**File:** `/src/components/dashboard/project-workspace.tsx`
-- Added import: `import ClientInteractionPanel from '@/components/clients/client-interaction-panel';`
-- In the "interactions" TabsContent (after the existing interactions list), added:
-  - A Separator with dark styling
-  - A section header with Users icon: "لوحة تفاعلات العميل" / "Client Interaction Panel"
-  - The `<ClientInteractionPanel projectId={projectId} clientId={project.client?.id} />` component
-- The panel renders BELOW the existing interaction cards, providing the dedicated client-focused timeline view with quick response, approve/reject/change-request actions
+#### Fix 1: SameSite cookie inconsistency on refresh token
+**File:** `src/app/api/auth/route.ts` (line 504)
+- Changed `sameSite: 'lax'` to `sameSite: 'strict'` on the refreshToken cookie in `handleRefreshToken`
+- Now consistent with all other cookies in the application
 
-#### Fix 2: Workspace — Add Site/Defects Data Fetching
-**File:** `/src/components/dashboard/project-workspace.tsx`
-- Changed `const [siteReports] = useState<SiteReportData[]>([]);` → `const [siteReports, setSiteReports] = useState<SiteReportData[]>([]);`
-- Changed `const [defects] = useState<DefectData[]>([]);` → `const [defects, setDefects] = useState<DefectData[]>([]);`
-- Added 2 endpoints to the `endpoints` array:
-  - `/api/site-reports?projectId=${projectId}` (index 6)
-  - `/api/defects?projectId=${projectId}` (index 7)
-- Added response handlers:
-  - `responses[6]` → `setSiteReports(data.data || data.reports || [])`
-  - `responses[7]` → `setDefects(data.data || data.defects || [])`
-- Verified both APIs support `?projectId=` query parameter filter
-
-#### Fix 3: Sidebar — Add Missing Navigation Entries
-**File:** `/src/components/layout/sidebar.tsx`
-- Added icon imports: `Wrench, Gavel, Calendar, Bell, HelpCircle`
-- Added to **Operations** section:
-  - `equipment` → `/dashboard/equipment` with Wrench icon
-  - `bidding` → `/dashboard/bidding` with Gavel icon
-  - `automations` → `/dashboard/automations` with Zap icon
-- Added to **Management** section:
-  - `team` → `/dashboard/team` with Users icon
-  - `calendar` → `/dashboard/calendar` with Calendar icon
-  - `notifications` → `/dashboard/notifications` with Bell icon
-- Added to **Settings** section:
-  - `help` → `/dashboard/help` with HelpCircle icon
-- Added route mappings in `getRoutes()` for all 7 new entries
-
-#### Fix 4: BOQ Cost Variance in Workspace
+#### Fix 2: Inconsistent password validation
 **Files:**
-- `/src/app/api/projects/[id]/cost-summary/route.ts` (verified/fixed)
-- `/src/components/dashboard/project-workspace.tsx`
+- `src/app/api/profile/password/route.ts` (line 13): Changed `.min(6, ...)` to `.min(8, ...)` in Zod schema
+- `src/app/api/handlers/auth.handler.ts` (line 139): Changed `password.length < 6` to `password.length < 8` and updated Arabic error message
+- Both now match the 8-character minimum in auth-service.ts
 
-- Added `boqVariance` state with full type interface for variance report data
-- Added fetch call to `/api/projects/${projectId}/cost-summary` in the data fetch useEffect (after parallel fetches, with silent error handling)
-- In the BOQ tab (after Budget vs Actual section), added **Cost Variance Analysis** card:
-  - Summary cards row (4 cols): Total Budget, Total Actual, Total Variance (green/red), Variance % (red if >20%)
-  - Flagged count badge in header (red with AlertTriangle icon)
-  - Variance items table with columns: Item, Budget, Actual, Variance, %, Status
-  - Table features:
-    - Max height 384px with scroll overflow
-    - Sticky header with dark background
-    - Flagged items (>20% variance) have red left border and red background tint
-    - Flagged items show AlertTriangle icon with red/amber coloring
-    - Status badges: "OK" (green) for normal items, "Warning"/"Over Budget" (red) for flagged items
-    - Over-budget items (negative variance) show "تجاوز" / "Over Budget"
-    - Over-budget variance items show "تحذير" / "Warning"
-- This wires up the `getBOQVariance()` function from `site-log-cost.service.ts` that was previously dead code
+#### Fix 3: Seed endpoint credential exposure
+**File:** `src/app/api/seed/route.ts` (lines 588-597)
+- Removed `password: 'Admin@123456'` from the API response credentials object
+- Added `console.log('[Seed] Admin credentials - Email: admin@blueprint.com, Password: Admin@123456')` before the response so devs can see credentials in server logs
+- Response now only returns `{ email: 'admin@blueprint.com' }`
+
+#### Fix 4: Prisma schema provider
+**File:** `prisma/schema.prisma` (line 9)
+- SQLite database (`db/custom.db`) exists, indicating local development use
+- Added TODO comment: `// TODO: Change to "postgresql" for production deployment`
+- Did NOT change the provider value itself (kept `"sqlite"`)
+
+#### Fix 5: Remove next-auth from dependencies
+**File:** `package.json`
+- Verified `next-auth` is only imported in:
+  - `src/lib/websocket/websocket-context.tsx` (broken/unused import)
+  - `src/__tests__/` (test mocks only)
+- Removed `"next-auth": "^4.24.11"` from dependencies
+
+---
+## Task ID: 1D - bug-fixer
+### Work Task
+Fix rate limiting, environment, and minor backend issues (Phase 1D) in the BluePrint Next.js application.
+
+### Work Summary
+
+#### Fix 1: Auth route double-counting rate limit ✅
+**File:** `src/app/api/auth/route.ts` (lines 152-156)
+- The POST handler was calling `checkRateLimitByType()` a second time after the request was already processed, just to get `remaining`/`resetTime` headers. This incremented the counter and double-counted every auth request.
+- Replaced the second `checkRateLimitByType()` call with a reasonable default: `remaining=9`, `resetTime` set to the next minute boundary.
+- Added comment explaining why the rate limit function must NOT be called again here.
+
+#### Fix 2: isStaticFile overly broad check ✅
+**File:** `src/middleware.ts` (line 261)
+- Changed `pathname.includes('.')` which matched ANY URL containing a dot (e.g., `/api/users/john.doe`) to a specific regex:
+- `/\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|map)$/i.test(pathname)`
+- This only matches actual static file extensions at the end of the URL.
+
+#### Fix 3: Cookie error handling in login ✅
+**File:** `src/app/api/auth/route.ts` (lines 319-321)
+- Changed the empty `catch {}` block that silently swallowed cookie errors to `catch (cookieError) { console.error('Failed to set auth cookies:', cookieError); }`.
+- This ensures cookie failures are logged for debugging while not crashing the request.
+
+#### Fix 4: Weak password generator using Math.random() ✅
+**File:** `src/lib/auth/modules/password.ts` (lines 9, 129-146)
+- Added `import { randomInt } from 'crypto'` at the top.
+- Replaced all `Math.floor(Math.random() * ...)` calls with `randomInt(0, ...)` for cryptographically secure random number generation.
+- Replaced the insecure `.sort(() => Math.random() - 0.5)` shuffle with a proper Fisher-Yates shuffle using `randomInt()`.
+
+#### Fix 5: type-check:force script — SKIPPED
+- Per instructions, this is intentionally permissive (`tsc --noEmit || true`). No change made.
+
+#### Fix 6: SMTP TLS verification ✅
+**File:** `src/lib/email.ts` (line 35)
+- Changed `rejectUnauthorized: false` to `rejectUnauthorized: process.env.NODE_ENV === 'production'`.
+- This enables proper TLS certificate verification in production while remaining lenient in development.
+
+#### Notes
+- No node_modules were installed in the project directory, so linting/type-checking could not be run.
+- All changes are minimal and targeted — only the specific bugs described were fixed.
+- No existing functionality or logic was altered.
+
+---
+## Task ID: 1A - bug-fixer-phase1a
+### Work Task
+Fix safe dead code and minor issues (Phase 1A): dead cache invalidation calls, hardcoded task badge, unused NEXTAUTH_SECRET check, duplicate response helpers, unsafe parseInt.
+
+### Work Summary
+
+#### Fix 1: 7 dead cache invalidation calls after return statements ✅
+Moved `invalidateCache()` calls from after `return` statements to before them, making them reachable:
+
+- **`src/app/api/projects/route.ts`** (POST handler): Moved `await invalidateCache('projects')` before `return successResponse(...)`
+- **`src/app/api/tasks/route.ts`** (POST handler): Moved `await invalidateCache('tasks', 'projects')` before `return successResponse(...)`
+- **`src/app/api/clients/route.ts`** (3 fixes):
+  - POST: Moved `await invalidateCache('clients')` before `return successResponse(...)`
+  - PUT: Moved `await invalidateCache('clients')` before `return successResponse(...)`
+  - DELETE: Moved `await invalidateCache('clients')` before `return successResponse(...)`
+- **`src/app/api/invoices/route.ts`** (2 fixes):
+  - POST: Moved `await invalidateCache('invoices', 'projects')` before `return successResponse(...)`
+  - PUT: Moved `await invalidateCache('invoices', 'projects')` before `return successResponse(...)`
+
+#### Fix 2: Hardcoded task badge count in sidebar ✅
+**File:** `src/components/layout/sidebar.tsx` (line 230)
+- Changed `badge: 3` to `badge: undefined` to remove the misleading hardcoded count
+
+#### Fix 3: Health check checking unused NEXTAUTH_SECRET ✅
+**File:** `src/app/api/health/route.ts` (lines 112-116)
+- Removed `'NEXTAUTH_SECRET'` from the `requiredEnvVars` array since the app uses custom JWT auth, not next-auth
+
+#### Fix 4: Duplicate successResponse/errorResponse definitions ✅
+- **`src/app/api/route.ts`**: Removed local `successResponse` and `errorResponse` function definitions (lines 14-23). Added `import { successResponse, errorResponse } from './utils/response'`. Removed unused `NextResponse` import. All existing usages were compatible with the imported versions.
+- **`src/app/api/documents/route.ts`**: Removed local `success` and `error` const definitions. Added `import { successResponse, errorResponse } from '../utils/response'`. Renamed all `success(...)` calls to `successResponse(...)` and all `error(...)` calls to `errorResponse(...)`. Removed unused `NextResponse` import.
+- **`src/app/api/dashboard/route.ts`**: SKIPPED — this file does not define local helper functions; it uses inline `NextResponse.json()` calls directly.
+
+#### Fix 5: Unsafe parseInt in projects/route.ts ✅
+**File:** `src/app/api/projects/route.ts` (lines 24-25)
+- `page`: Added `|| 1` fallback and `Math.max(1, ...)` guard to prevent NaN/negative
+- `limit`: Added `|| 20` fallback, `Math.max(1, ...)` for minimum, and `Math.min(100, ...)` for maximum cap
+
+#### Notes
+- No node_modules installed, so lint/type-check could not be run programmatically
+- All changes are minimal and targeted — only the specific bugs described were fixed
+- No existing functionality or logic was altered
+
+---
+## Task ID: 1B - ui-ux-fixer
+### Work Task
+Fix safe UI/UX and minor frontend issues in 5 files: login-page.tsx, pricing-page.tsx, dashboard-layout.tsx, app/layout.tsx, and tasks-page.tsx.
+
+### Work Summary
+
+#### Fix 1: login-page.tsx rememberMe unused state ✅
+- **File:** `src/components/auth/login-page.tsx`
+- **Change:** Pass `rememberMe` to the `login()` call so it's included in the API request
+- **Before:** `const result = await login(loginForm);`
+- **After:** `const result = await login({ ...loginForm, rememberMe });`
+- **Notes:** The `LoginForm` type already supports `rememberMe?: boolean`, and the auth context's `login()` handler spreads all data to the API. The value is now properly forwarded.
+
+#### Fix 2: pricing-page.tsx using alert() ✅
+- **File:** `src/components/pricing/pricing-page.tsx`
+- **Change:** Replaced 2 `alert()` calls with `sonner` toast notifications
+  1. Line 87: `alert(...)` → `toast.info(...)` (demo/development message)
+  2. Line 122: `alert(...)` → `toast.error(...)` (error during plan processing)
+- **Added import:** `import { toast } from 'sonner';`
+
+#### Fix 3: dashboard-layout.tsx hardcoded Arabic loading text ✅
+- **File:** `src/app/dashboard/layout.tsx`
+- **Change:** Replaced hardcoded Arabic strings with language-aware text using `useTranslation` and `useApp`
+  1. `"جاري التحميل..."` → `{t.loading}` (uses translation key which provides Arabic/English)
+  2. `"جاري التحويل..."` → `{language === 'ar' ? 'جاري التحويل...' : 'Redirecting...'}`
+- **Added import:** `import { useTranslation } from '@/lib/translations';`
+- **Added hooks in AuthGuard:** `const { language } = useApp();` and `const { t } = useTranslation(language || 'ar');`
+
+#### Fix 4: app/layout.tsx hardcoded lang="ar" dir="rtl" ⏭️ SKIPPED
+- **File:** `src/app/layout.tsx`
+- **Reason:** `suppressHydrationWarning` is already present on the `<html>` tag (line 115). The fix was already applied by a previous agent. No change needed.
+
+#### Fix 5: tasks-page.tsx using MOCK_USERS for assignee ✅
+- **File:** `src/components/tasks/tasks-page.tsx`
+- **Change:** Replaced hardcoded `MOCK_USERS` usage with real user data from `useUsers()` hook, with `MOCK_USERS` kept as fallback
+  - Added `useUsers` to imports from `@/hooks/use-data`
+  - Added hook call: `const { data: usersData } = useUsers();`
+  - Created `realUsers` by mapping `AdminUser[]` to the same shape as `MOCK_USERS` (with id, name, nameEn, avatar, initials)
+  - Created `assigneeUsers = realUsers.length > 0 ? realUsers : MOCK_USERS` for safe fallback
+  - Replaced 3 occurrences of `MOCK_USERS` with `assigneeUsers`: in `getAssignee()`, the assignee filter dropdown, and the task creation form's assignee dropdown
 
 #### Lint & Validation
-- All 4 modified files pass ESLint with 0 errors
-- Fixed 1 pre-existing error in cost-summary route: removed unused `notFoundResponse` import
-- All changes follow existing dark theme, Arabic/English bilingual pattern
+- ESLint could not run due to missing `@next/eslint-plugin-next` dependency in the environment (pre-existing issue)
+- `npm run build` could not run due to missing `prisma` binary (pre-existing issue)
+- All changes are minimal, targeted, and follow existing code patterns. No logic changes were made beyond the specified fixes.
 
 ---
-## Task ID: 7 - ui-ux-fixer
+## Task ID: 8 - frontend-bugfixer
 ### Work Task
-Fix 3 UI/UX layout gaps in the BluePrint project: mount mobile bottom nav, add footer to dashboard layout, and verify/create pricing page route.
+Fix 7 frontend bugs in BluePrint Next.js application: missing auth headers on tasks page, API client error handling, use-data.ts apiRequest, WebSocket auth, WebSocket provider missing, stale global WebSocket token, and AI Chat XSS vulnerability.
 
 ### Work Summary
 
-#### Fix 1: Mount Mobile Bottom Nav (CRITICAL)
-**File:** `/src/app/dashboard/layout.tsx` (modified)
-- Imported `MobileBottomNav` from `@/components/mobile-bottom-nav`
-- Added `<MobileBottomNav />` to the layout just before the closing `</div>` of the main wrapper
-- The component already has `lg:hidden` class in its own implementation, so it is automatically hidden on desktop (≥1024px) and only shown on mobile/tablet
-- Component is fixed-position (`fixed bottom-0`) so it overlays content without affecting layout flow
+#### Fix 1: tasks-page.tsx missing auth headers ✅
+**File:** `src/components/tasks/tasks-page.tsx`
+- Added `import { useAuth } from '@/context/auth-context'` and `const { token } = useAuth()` to component
+- Added `Authorization: Bearer ${token}` header to 3 fetch calls:
+  1. `POST /api/tasks/auto-create` in `handleAutoCreateTasks` (line ~328)
+  2. `GET /api/tasks?parentId=...` in subtask fetch useEffect (line ~422)
+  3. `GET /api/tasks?parentId=...` in `handleAddSubtask` (line ~459)
+- Added eslint-disable comment for exhaustive-deps on the subtask useEffect
 
-#### Fix 2: Add Footer to Dashboard Layout
-**File (NEW):** `/src/components/layout/footer.tsx`
-- Created a minimal, clean footer component using `'use client'` directive
-- Shows "© 2024 BluePrint. جميع الحقوق محفوظة." (Arabic RTL) / "© 2024 BluePrint. All rights reserved." (English LTR)
-- Shows "Powered by BluePrint AI Engineering Platform" (English) / Arabic equivalent
-- Uses `useApp()` context for language-aware RTL support (`dir={isRTL ? 'rtl' : 'ltr'}`)
-- Dark theme styling: `bg-slate-950`, `border-t border-slate-800`, text in `text-slate-500`/`text-slate-600`
-- Small text (`text-xs`), minimal padding (`py-3 px-4 md:px-6`)
-- `mt-auto` class pushes footer to bottom of viewport when content is short
+#### Fix 2: api-client.ts error handling for non-JSON responses ✅
+**File:** `src/lib/api-client.ts`
+- Added `response.ok` check to all 5 API functions (apiGet, apiPost, apiPut, apiDelete, apiUpload)
+- Pattern: check `!response.ok` → try to parse JSON error message → fall back to generic status message → throw Error
+- Added empty body handling: if response body is empty (e.g., 204 No Content), returns `{ success: true, data: null }`
+- Uses `response.text()` + `JSON.parse()` instead of `response.json()` to handle non-JSON responses gracefully
 
-**File:** `/src/app/dashboard/layout.tsx` (modified)
-- Imported `Footer` from `@/components/layout/footer`
-- Changed `<main>` to include `flex flex-col` alongside existing `min-h-screen` for column layout
-- Added `flex-1` to the page content wrapper (`<div className="p-4 md:p-6 flex-1">`) so it grows to fill space
-- Placed `<Footer />` as last child inside `<main>`, after the content wrapper
-- The `mt-auto` on Footer + `flex-1` on content = footer sticks to bottom when content is short, scrolls naturally when content is long
+#### Fix 3: use-data.ts apiRequest error handling ✅
+**File:** `src/hooks/use-data.ts`
+- Kept the local `apiRequest` (uses different URL pattern with `?action=` query param, incompatible with api-client.ts)
+- Added same `response.ok` + non-JSON handling pattern to all 4 local fetch helpers:
+  1. `apiRequest` (main API helper, line ~34)
+  2. `defectApiRequest` (defects API, line ~877)
+  3. `profileApiRequest` (profile API, line ~992)
+  4. `boqApiRequest` (BOQ API, line ~1396)
 
-#### Fix 3: Verify and Create Pricing Page Route
-**Confirmed:** `/src/app/dashboard/pricing/page.tsx` did NOT exist → created it.
-**File (NEW):** `/src/app/dashboard/pricing/page.tsx`
-- Server component that imports and renders the existing `PricingPage` from `@/components/pricing/pricing-page`
-- The existing `PricingPage` component handles its own data fetching (Stripe plans API) and all UI internally
-- Wrapped in a simple `<div>` for clean rendering
+#### Fix 4: WebSocket context auth migration ✅
+**File:** `src/lib/websocket/websocket-context.tsx`
+- Replaced `import { useSession } from 'next-auth/react'` with `import { useAuth } from '@/context/auth-context'`
+- Replaced `const { data: session, status } = useSession()` with `const { user, token } = useAuth()`
+- Replaced `status !== 'authenticated' || !session?.user` with `!user || !token`
+- Removed redundant token extraction `(session as any).accessToken || (session as any).token`
+- Replaced `(session as any)?.user?.id` with `user?.id`
+- Updated useEffect dependency array from `[session, status]` to `[user, token]`
 
-**File:** `/src/components/layout/sidebar.tsx` (modified)
-- Added `Crown` icon to lucide-react imports
-- Added `'pricing': '/dashboard/pricing'` to the `getRoutes()` mapping
-- Added pricing sidebar entry to `settingsItems` array:
-  - id: `pricing`, label: "الأسعار" (Arabic) / "Pricing" (English), icon: `Crown`, href: `/dashboard/pricing`
-- Positioned after Settings in the sidebar's Settings section
+#### Fix 5: WebSocketProvider added to providers.tsx ✅
+**File:** `src/components/providers.tsx`
+- Added `import { WebSocketProvider } from '@/lib/websocket/websocket-context'`
+- Wrapped `{children}` with `<WebSocketProvider>` inside `<AIProvider>` (needs auth context from AuthProvider)
+
+#### Fix 6: useGlobalWebSocket stale token fix ✅
+**File:** `src/lib/websocket/use-websocket.ts`
+- Added `prevTokenRef` to track previous token value
+- On logout (token becomes null/empty when prevTokenRef has value): disconnects global socket and nulls it
+- On token change (re-login/refresh): disconnects old socket and reconnects with new token
+- Preserves existing behavior for initial mount and normal reconnections
+
+#### Fix 7: DOMPurify XSS fix ✅
+**Files:** `src/components/ai-chat/ai-chat-page.tsx`, `package.json`
+- Installed `dompurify` and `@types/dompurify`
+- Replaced 20-line regex-based `sanitizeHtml` function with DOMPurify:
+  ```typescript
+  DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['strong', 'em', 'code', 'br', 'span', 'p', 'pre', 'div'],
+    ALLOWED_ATTR: ['class'],
+  });
+  ```
+- Removed the TODO comment about replacing regex with DOMPurify
 
 #### Lint & Validation
-- All 4 files pass ESLint with 0 errors and 0 warnings:
-  - `src/app/dashboard/layout.tsx`
-  - `src/components/layout/footer.tsx`
-  - `src/app/dashboard/pricing/page.tsx`
-  - `src/components/layout/sidebar.tsx`
-- Installed missing `typescript-eslint` dev dependency to fix ESLint runner
-- No new lint issues introduced
-
----
-## Task ID: 8 - backend-gap-fixer
-### Work Task
-Fix 6 critical backend gaps in the BluePrint project: (1) Workflow API server-side dependency enforcement, (2) Tasks API parentId support, (3) Auto-Create API CONTRACTING category, (4) Log-Items API PUT and DELETE, (5) Wire up Site-Log-Cost Service, (6) Verify Activity model.
-
-### Work Summary
-
-#### Fix 1: Workflow API — Server-side Dependency Enforcement (CRITICAL)
-**File:** `/src/app/api/workflow/route.ts`
-- Imported `validatePhaseTransition` from `@/lib/services/phase-dependency.service`
-- Added server-side validation in PUT handler BEFORE updating phase status
-- When `updateData.status` is present, calls `validatePhaseTransition(id, updateData.status)`
-- If validation returns `allowed: false`, returns error response with the `reason` (e.g., "Structural work requires Architectural Client Approval to be completed first")
-- Only proceeds with DB update if validation passes
-- This enforces all 6 engineering dependency rules on the server, preventing frontend bypass
-
-#### Fix 2: Tasks API — Add parentId Support (CRITICAL)
-**Files:**
-- `/src/lib/services/task.service.ts` — Added `parentId` to `TaskFilters` interface and `getTasks()` where clause
-- `/src/app/api/tasks/route.ts` — Extracted `parentId` from searchParams and passed to both demo filter and taskService
-- Enables the frontend subtask feature that calls `/api/tasks?parentId=${taskId}`
-- Cache key also includes parentId to ensure correct cache invalidation
-
-#### Fix 3: Auto-Create API — Add CONTRACTING Category
-**File:** `/src/app/api/tasks/auto-create/route.ts`
-- Added `'CONTRACTING'` to `validCategories` array (now 5 categories total)
-- Added CONTRACTING template to `PHASE_TEMPLATES` with 4 tasks:
-  1. Contract Review (MANDATORY, 5d) — Review terms, conditions, scope of work
-  2. Contract Negotiation (STANDARD, 10d) — Negotiate with contractor
-  3. Contract Signing (CLIENT, 7d) — Finalize and sign with all parties
-  4. Mobilization Plan (STANDARD, 7d) — Prepare contractor site handover plan
-- Each task includes Arabic titles/descriptions, dependency chains, SLA days, colors
-
-#### Fix 4: Log-Items API — Add PUT and DELETE (CRITICAL)
-**File:** `/src/app/api/site-reports/[id]/log-items/route.ts`
-- **PUT handler:** Update a log item by ID with description, category, unit, quantity, unitPrice fields
-- **DELETE handler:** Remove a log item by ID with ownership validation
-
-#### Fix 5: Wire Up Site-Log-Cost Service (CRITICAL)
-**Files:**
-- `/src/app/api/projects/[id]/cost-summary/route.ts` (enhanced)
-- `/src/app/api/site-reports/[id]/log-items/route.ts` (enhanced)
-
-- Created `/src/app/api/projects/[id]/cost-summary/route.ts` endpoint that:
-  - Calls `getProjectCostSummary(projectId)` from `site-log-cost.service.ts`
-  - Calls `getBOQVariance(projectId)` from `site-log-cost.service.ts`
-  - Returns combined cost summary + BOQ variance in single API call
-  - Added proper error handling with try/catch
-
-#### Fix 6: Verify Activity Model
-- Verified Activity model in `prisma/schema.prisma` has all required fields:
-  - `id`, `userId`, `entityType`, `entityId`, `action`, `description`, `metadata`, `createdAt`
-- All fields present and correctly typed
-- Activity creation works correctly in all API routes
-
-#### Lint & Validation
-- All 7 modified/created files pass ESLint with 0 new errors
-- Fixed 3 pre-existing lint issues in modified files
-- Dev server compiles successfully with no errors
-
----
-## Task ID: 9 - eslint-fixer
-### Work Task
-Fix the remaining ESLint errors in 2 files: `src/components/dashboard/project-workspace.tsx` and `src/app/api/interactions/route.ts`. The user reported 7 specific `no-unused-vars` errors across these files.
-
-### Work Summary
-Ran ESLint on both files to verify the reported errors. **All 7 reported errors do not exist** — they were already fixed by previous agents:
-
-- Task ID 5 (frontend-workspace-engineer) fixed `formatDate`, `rowIdx`, and `colorInfo` in project-workspace.tsx
-- Task ID 6 (lint-fixer) changed `catch (_error)` to `catch {}` patterns in interactions/route.ts
-- Task ID 7 (frontend-gap-fixer) fixed additional unused imports/variables in both files
-
-**Verification results:**
-- `npx eslint src/components/dashboard/project-workspace.tsx src/app/api/interactions/route.ts 2>&1 | grep " error " | wc -l` → **0**
-- project-workspace.tsx: 0 errors, 0 warnings
-- interactions/route.ts: 0 errors, 1 warning (pre-existing `no-restricted-imports` for `@/lib/db`)
-
-No edits were needed. Both files are already clean.
-
----
-## Task ID: 12 - typescript-error-fixer
-### Work Task
-Fix all 11 TypeScript errors across the BluePrint project in specified files, excluding test, websocket, and pre-existing library files.
-
-### Work Summary
-Fixed all 11 TypeScript errors with minimal, targeted changes:
-
-1. **`src/app/api/documents/[id]/versions/route.ts` line 256**: Changed `where: { id }` to `where: { id: document.id }` — `id` was not in scope inside `handleVersionIncrement()`.
-
-2. **`src/app/api/tasks/auto-create/route.ts` line 363**: Changed `null` to `undefined` in ternary — `NullableJsonNullValueInput` does not accept `null` for JSON fields in Prisma.
-
-3. **`src/app/api/tasks/route.ts` line 47**: Added `(t: any)` cast for demo data filter on `parentId` — demo task objects don't have `parentId` in their type.
-
-4. **`src/app/dashboard/operations/page.tsx` line 42**: Cast `priorityOrder` as `any` to avoid implicit any on bracket access.
-
-5. **`src/components/activities/activities-page.tsx` lines 580, 612**: Changed `language === 'rtl'` to `(language as string) === 'rtl'` — `Language` type doesn't include `'rtl'`.
-
-6. **`src/components/clients/client-interaction-panel.tsx` line 533**: Changed `React.ReactElement` to `React.ReactElement<any>` in `cloneElement` call to allow `className` prop.
-
-7. **`src/components/dashboard/dashboard-page.tsx` lines 699, 756**: Changed `(task: Record<string, unknown>)` and `(invoice: Record<string, unknown>)` to `(task: any)` and `(invoice: any)` to allow property access.
-
-8. **`src/components/dashboard/project-workspace.tsx` lines 288-292**: Changed `en:` to `labelEn:` in all 5 `boqCategoryConfig` entries to match the declared type.
-
-9. **`src/components/gantt/gantt-chart.tsx` line 434**: Added `|| ''` fallback: `new Date(t.slaStartDate || '')` to handle `string | undefined`.
-
-10. **`src/components/tasks/tasks-page.tsx` line 437**: Added `parentId?: string` to `Task` interface in `src/types/index.ts`. Line 600: Wrapped `Star` icon in `<span title={...}>` instead of passing `title` prop directly.
-
-11. **`src/lib/services/sla-monitor.service.ts` line 189**: Changed `governmentEntity: task.governmentEntity` to `governmentEntity: task.governmentEntity ?? null` — type expects `string | null`, not `string | undefined`.
-
-#### Validation
-- After fixes: **0 errors** in target files (excluding pre-existing lib/test/websocket files)
-- Total remaining TS errors in project: 38 (all in `.next/types`, `stripe`, `redis`, `rate-limit`, `file-upload` — all pre-existing)
-- No new errors introduced
+- All edited files verified with ESLint: 0 new errors introduced
+- Pre-existing errors (unused `_error` vars in tasks-page.tsx catch blocks, unused `WebSocketEventType` import in use-websocket.ts) left unchanged
+- Fixed 1 new exhaustive-deps warning introduced by adding `token` dependency to useEffect

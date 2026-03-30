@@ -394,8 +394,9 @@ class ProjectService {
       throw new ProjectAccessError('Project not found or access denied');
     }
 
-    await prisma.project.delete({
+    await prisma.project.update({
       where: { id },
+      data: { deletedAt: new Date() },
     });
 
     // Log audit

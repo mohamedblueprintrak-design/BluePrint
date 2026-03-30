@@ -285,7 +285,7 @@ class ClientService {
     // Soft delete
     await prisma.client.update({
       where: { id },
-      data: { isActive: false },
+      data: { isActive: false, deletedAt: new Date() },
     });
 
     // Log audit

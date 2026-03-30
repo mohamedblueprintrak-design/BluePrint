@@ -14,7 +14,7 @@
  * - Each encryption uses a unique IV (Initialization Vector)
  */
 
-import { createCipheriv, createDecipheriv, randomBytes, createHash } from 'crypto';
+import { createCipheriv, createDecipheriv, randomBytes, createHash, pbkdf2Sync } from 'crypto';
 
 // ============================================
 // Configuration
@@ -85,11 +85,8 @@ export function encrypt(plaintext: string): string {
   const salt = randomBytes(SALT_LENGTH);
   const iv = randomBytes(IV_LENGTH);
   
-  // Derive a unique key for this encryption using salt
-  const derivedKey = createHash('sha256')
-    .update(Buffer.concat([key, salt]))
-    .digest()
-    .slice(0, KEY_LENGTH);
+  // Derive a unique key for this encryption using PBKDF2
+  const derivedKey = pbkdf2Sync(key, salt, 100000, KEY_LENGTH, 'sha256');
   
   // Create cipher
   const cipher = createCipheriv(ALGORITHM, derivedKey, iv, {
@@ -133,11 +130,8 @@ export function decrypt(encryptedData: string): string {
   const authTag = data.subarray(SALT_LENGTH + IV_LENGTH, SALT_LENGTH + IV_LENGTH + AUTH_TAG_LENGTH);
   const ciphertext = data.subarray(SALT_LENGTH + IV_LENGTH + AUTH_TAG_LENGTH);
   
-  // Derive the same key using salt
-  const derivedKey = createHash('sha256')
-    .update(Buffer.concat([key, salt]))
-    .digest()
-    .slice(0, KEY_LENGTH);
+  // Derive the same key using PBKDF2
+  const derivedKey = pbkdf2Sync(key, salt, 100000, KEY_LENGTH, 'sha256');
   
   // Create decipher
   const decipher = createDecipheriv(ALGORITHM, derivedKey, iv, {

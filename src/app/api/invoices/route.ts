@@ -189,10 +189,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return successResponse({ id: invoice.id, invoiceNumber: invoice.invoiceNumber, total: invoice.total });
-
     // Invalidate invoice caches on creation
     await invalidateCache('invoices', 'projects');
+
+    return successResponse({ id: invoice.id, invoiceNumber: invoice.invoiceNumber, total: invoice.total });
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : 'Unknown error';
     return serverErrorResponse(errMsg);
@@ -236,10 +236,10 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    return successResponse(invoice);
-
     // Invalidate invoice caches on update
     await invalidateCache('invoices', 'projects');
+
+    return successResponse(invoice);
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : 'Unknown error';
     return serverErrorResponse(errMsg);

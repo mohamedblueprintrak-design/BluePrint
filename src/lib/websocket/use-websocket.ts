@@ -232,12 +232,33 @@ export function useGlobalWebSocket(token?: string): {
   isConnected: boolean;
 } {
   const [isConnected, setIsConnected] = useState(false);
+  const prevTokenRef = useRef(token);
 
   useEffect(() => {
-    if (!token) return;
-
     const url = process.env.NEXT_PUBLIC_WEBSOCKET_URL || '';
     if (!url) return;
+
+    // If token was cleared (logout), disconnect the global socket
+    if (!token && prevTokenRef.current) {
+      if (globalSocket) {
+        globalSocket.disconnect();
+        globalSocket = null;
+      }
+      setIsConnected(false);
+      prevTokenRef.current = token;
+      return;
+    }
+
+    if (!token) return;
+
+    // If token changed (re-login or refresh), disconnect old and reconnect
+    if (prevTokenRef.current && prevTokenRef.current !== token) {
+      if (globalSocket) {
+        globalSocket.disconnect();
+        globalSocket = null;
+      }
+      setIsConnected(false);
+    }
 
     if (!globalSocket) {
       globalSocket = io(url, {
@@ -249,6 +270,8 @@ export function useGlobalWebSocket(token?: string): {
 
     globalSocket.on('connect', () => setIsConnected(true));
     globalSocket.on('disconnect', () => setIsConnected(false));
+
+    prevTokenRef.current = token;
 
     return () => {
       // Don't disconnect global socket on unmount

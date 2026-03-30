@@ -113,10 +113,10 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    return successResponse({ id: client.id, name: client.name });
-
     // Invalidate client caches on creation
     await invalidateCache('clients');
+
+    return successResponse({ id: client.id, name: client.name });
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : 'Unknown error';
     return serverErrorResponse(errMsg);
@@ -153,10 +153,10 @@ export async function PUT(request: NextRequest) {
       data: validData
     });
 
-    return successResponse(client);
-
     // Invalidate client caches on update
     await invalidateCache('clients');
+
+    return successResponse(client);
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : 'Unknown error';
     return serverErrorResponse(errMsg);
@@ -190,10 +190,10 @@ export async function DELETE(request: NextRequest) {
       data: { isActive: false }
     });
 
-    return successResponse({ message: 'تم حذف العميل' });
-
     // Invalidate client caches on delete
     await invalidateCache('clients');
+
+    return successResponse({ message: 'تم حذف العميل' });
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : 'Unknown error';
     return serverErrorResponse(errMsg);

@@ -229,17 +229,22 @@ class InvoiceService {
       throw new Error('Invoice not found');
     }
 
+    // SECURITY: Explicit field whitelist to prevent Mass Assignment
+    const allowedFields = ['clientId', 'projectId', 'issueDate', 'dueDate', 'subtotal', 'taxRate', 'taxAmount', 'total', 'paidAmount', 'status', 'notes'] as const;
+    const updateData: Record<string, unknown> = {};
+    for (const field of allowedFields) {
+      if ((data as Record<string, unknown>)[field] !== undefined) {
+        updateData[field] = (data as Record<string, unknown>)[field];
+      }
+    }
+
     // Recalculate totals if subtotal or tax rate changed
-    let updateData = { ...data };
     if (data.subtotal !== undefined || data.taxRate !== undefined) {
       const subtotal = data.subtotal ?? oldInvoice.subtotal;
       const taxRate = data.taxRate ?? oldInvoice.taxRate;
       const taxAmount = subtotal * (taxRate / 100);
-      updateData = {
-        ...updateData,
-        taxAmount,
-        total: subtotal + taxAmount,
-      };
+      updateData.taxAmount = taxAmount;
+      updateData.total = subtotal + taxAmount;
     }
 
     const invoice = await prisma.invoice.update({
@@ -274,8 +279,9 @@ class InvoiceService {
       throw new Error('Invoice not found');
     }
 
-    await prisma.invoice.delete({
+    await prisma.invoice.update({
       where: { id },
+      data: { deletedAt: new Date() },
     });
 
     await logAudit({

@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useApp } from '@/context/app-context';
+import { useAuth } from '@/context/auth-context';
 import { useTranslation } from '@/lib/translations';
-import { useTasks, useCreateTask, useUpdateTask, useDeleteTask, useProjects } from '@/hooks/use-data';
+import { useTasks, useCreateTask, useUpdateTask, useDeleteTask, useProjects, useUsers } from '@/hooks/use-data';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -144,6 +145,7 @@ interface SubtaskItem {
 
 export function TasksPage() {
   const { language } = useApp();
+  const { token } = useAuth();
   const { t, formatDate } = useTranslation(language);
   const { toast } = useToast();
   
@@ -171,12 +173,23 @@ export function TasksPage() {
   // Hooks
   const { data: tasksData, isLoading, refetch } = useTasks();
   const { data: projectsData } = useProjects();
+  const { data: usersData } = useUsers();
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
   
   const tasks = tasksData?.data || [];
   const projects = projectsData?.data || [];
+  
+  // Use real users from API, fallback to MOCK_USERS when data is empty
+  const realUsers = (usersData?.data || []).map((u: any) => ({
+    id: u.id,
+    name: u.fullName || u.username,
+    nameEn: u.fullName || u.username,
+    avatar: '',
+    initials: (u.fullName || u.username).split(' ').map((n: string) => n[0]).join('').slice(0, 2),
+  }));
+  const assigneeUsers = realUsers.length > 0 ? realUsers : MOCK_USERS;
   
   // Form state
   const [formData, setFormData] = useState<TaskFormData>(initialFormData);
@@ -314,7 +327,7 @@ export function TasksPage() {
     try {
       const response = await fetch('/api/tasks/auto-create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId: autoCreateProjectId, phaseCategory: autoCreatePhaseCategory })
       });
       
@@ -406,7 +419,9 @@ export function TasksPage() {
     const fetchSubtasks = async () => {
       setIsLoadingSubtasks(true);
       try {
-        const response = await fetch(`/api/tasks?parentId=${selectedTask.id}`);
+        const response = await fetch(`/api/tasks?parentId=${selectedTask.id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
         const result = await response.json();
         if (result.success && result.data) {
           setSubtasks(result.data.map((st: any) => ({
@@ -424,6 +439,7 @@ export function TasksPage() {
     };
     
     fetchSubtasks();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showTaskDetail, selectedTask]);
   
   // Add subtask (1C)
@@ -441,7 +457,9 @@ export function TasksPage() {
       
       setNewSubtaskTitle('');
       // Re-fetch subtasks
-      const response = await fetch(`/api/tasks?parentId=${selectedTask.id}`);
+      const response = await fetch(`/api/tasks?parentId=${selectedTask.id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       const result = await response.json();
       if (result.success && result.data) {
         setSubtasks(result.data.map((st: any) => ({
@@ -519,7 +537,7 @@ export function TasksPage() {
   // Get assignee
   const getAssignee = (assigneeId?: string) => {
     if (!assigneeId) return null;
-    return MOCK_USERS.find(u => u.id === assigneeId) || null;
+    return assigneeUsers.find(u => u.id === assigneeId) || null;
   };
   
   // Check if task is overdue
@@ -911,7 +929,7 @@ export function TasksPage() {
             </SelectTrigger>
             <SelectContent className="bg-slate-900 border-slate-800">
               <SelectItem value="all">{t.all}</SelectItem>
-              {MOCK_USERS.map((user) => (
+              {assigneeUsers.map((user) => (
                 <SelectItem key={user.id} value={user.id}>
                   {language === 'ar' ? user.name : user.nameEn}
                 </SelectItem>
@@ -1085,7 +1103,7 @@ export function TasksPage() {
                         <SelectValue placeholder={language === 'ar' ? 'اختر المسؤول' : 'Select assignee'} />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-900 border-slate-800">
-                        {MOCK_USERS.map((user) => (
+                        {assigneeUsers.map((user) => (
                           <SelectItem key={user.id} value={user.id}>
                             {language === 'ar' ? user.name : user.nameEn}
                           </SelectItem>

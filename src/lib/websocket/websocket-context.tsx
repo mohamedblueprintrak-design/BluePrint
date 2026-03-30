@@ -10,7 +10,7 @@
 import React, { createContext, useContext, useCallback, useEffect, useState, useRef } from 'react';
 // @ts-expect-error - socket.io-client types not installed
 import { io, Socket } from 'socket.io-client';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/context/auth-context';
 import {
   NotificationPayload,
   ProjectPayload,
@@ -52,7 +52,7 @@ const WebSocketContext = createContext<WebSocketContextValue | null>(null);
 // ============================================
 
 export function WebSocketProvider({ children }: { children: React.ReactNode }) {
-  const { data: session, status } = useSession();
+  const { user, token } = useAuth();
   const socketRef = useRef<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
@@ -62,7 +62,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize WebSocket connection
   useEffect(() => {
-    if (status !== 'authenticated' || !session?.user) return;
+    if (!user || !token) return;
 
     const url = process.env.NEXT_PUBLIC_WEBSOCKET_URL;
     if (!url) {
@@ -70,11 +70,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const token = (session as any).accessToken || (session as any).token;
-    if (!token) {
-      console.log('[WebSocket] No access token available');
-      return;
-    }
+
 
     // Initialize socket
     const socket = io(url, {
@@ -149,7 +145,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
       console.log('[WebSocket] Task update:', data);
 
       // Only show toast if task is assigned to current user
-      const currentUserId = (session as any)?.user?.id;
+      const currentUserId = user?.id;
       if (data.assignedTo === currentUserId) {
         toast.info(`تحديث المهمة: ${data.title}`);
       }
@@ -229,7 +225,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
       socketRef.current = null;
       setIsConnected(false);
     };
-  }, [session, status]);
+  }, [user, token]);
 
   // ============================================
   // Actions
