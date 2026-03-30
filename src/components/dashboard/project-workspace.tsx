@@ -72,6 +72,11 @@ import {
   HelpCircle,
   RotateCcw,
   Ban,
+  PenTool,
+  Waves,
+  Wifi,
+  Fan,
+  Flame,
 } from 'lucide-react';
 import ClientInteractionPanel from '@/components/clients/client-interaction-panel';
 
@@ -99,6 +104,7 @@ interface ProjectData {
   manager?: { id: string; name: string; avatar?: string } | null;
   _count?: { invoices: number; tasks: number; defects: number; siteReports: number; boqItems: number };
   plotNumber?: string | null;
+  customerFileNumber?: string | null;
   projectType?: string | null;
   visitDate?: string | null;
   paymentReceived?: number;
@@ -130,6 +136,9 @@ interface WorkflowPhase {
   rejectionCount: number;
   createdAt: string;
   updatedAt: string;
+  draftAssignedTo?: { id: string; name?: string; fullName?: string; avatar?: string } | null;
+  draftStartDate?: string;
+  draftEndDate?: string;
 }
 
 interface ClientInteraction {
@@ -230,26 +239,81 @@ const phaseStatusConfig: Record<string, { color: string; bg: string; labelAr: st
 };
 
 const phaseTypeLabels: Record<string, { ar: string; en: string }> = {
-  ARCHITECTURAL_SKETCH: { ar: 'المخطط المعماري', en: 'Architectural Sketch' },
+  // Architectural
+  ARCHITECTURAL_SKETCH: { ar: 'التصميم التخطيطي', en: 'Schematic Design' },
   ARCHITECTURAL_CONCEPT: { ar: 'التصميم المفاهيمي', en: 'Concept Design' },
-  CLIENT_APPROVAL: { ar: 'موافقة العميل', en: 'Client Approval' },
-  MODIFICATIONS: { ar: 'التعديلات', en: 'Modifications' },
-  PRELIMINARY: { ar: 'الرسومات الأولية', en: 'Preliminary Drawings' },
-  THREE_D_MAX: { ar: 'ثري دي ماكس', en: '3D Max' },
-  FINAL_DRAWINGS: { ar: 'الرسومات النهائية', en: 'Final Drawings' },
+  CLIENT_APPROVAL: { ar: 'اعتماد العميل', en: 'Client Approval' },
+  MODIFICATIONS: { ar: 'تعديلات التصميم', en: 'Design Modifications' },
+  LETTER_OF_INTENT: { ar: 'خطاب النوايا', en: 'Letter of Intent' },
+  PRELIMINARY: { ar: 'تطوير المخططات الأولية', en: 'Preliminary Drawings' },
+  PRELIMINARY_APPROVAL: { ar: 'اعتماد المخططات الأولية', en: 'Preliminary Approval' },
+  DESIGN_CONTRACT: { ar: 'عقد التصميم', en: 'Design Contract' },
+  GREEN_BUILDING_CHECK: { ar: 'قائمة التحقق الخضراء', en: 'Green Building Checklist' },
+  GREEN_BUILDING_CALC: { ar: 'حسابات المباني الخضراء', en: 'Green Building Calculations' },
+  GREEN_BUILDING_CHECK_STR: { ar: 'قائمة التحقق الخضراء (إنشائي)', en: 'Green Building Checklist (Structural)' },
+  THREE_D_MAX: { ar: 'التصميم الخارجي 3D', en: 'Exterior 3D Design' },
+  BRAJEL: { ar: 'مستندات البراجيل', en: 'Barajeel Documents' },
+  FINAL_DRAWINGS: { ar: 'المخططات النهائية', en: 'Final Drawings' },
+  // Structural
   SOIL_REPORT: { ar: 'تقرير التربة', en: 'Soil Report' },
-  FOUNDATION: { ar: 'الأساسات', en: 'Foundation Details' },
-  STRUCTURAL_CALC: { ar: 'الحسابات الإنشائية', en: 'Structural Calculations' },
+  FOUNDATION: { ar: 'القواعد', en: 'Foundation' },
+  BEAMS: { ar: 'الكمرات', en: 'Beams' },
+  COLUMNS: { ar: 'الأعمدة', en: 'Columns' },
+  SLABS: { ar: 'البلاطات', en: 'Slabs' },
+  STRUCTURAL_DETAILS: { ar: 'تفاصيل التصميم الإنشائي', en: 'Structural Details' },
+  STRUCTURAL_MODELING: { ar: 'نمذجة ETABS', en: 'ETABS Modeling' },
+  STRUCTURAL_CALC: { ar: 'حسابات ETABS', en: 'ETABS Calculations' },
+  STRUCTURAL_SCHEDULES: { ar: 'الجداول الإنشائية', en: 'Structural Schedules' },
+  STAIRCASE: { ar: 'تفاصيل الدرج', en: 'Staircase Details' },
+  MUN_APPROVAL_STR: { ar: 'اعتماد البلدية للإنشائي', en: 'Municipality Approval (Structural)' },
   STRUCTURAL_DRAWINGS: { ar: 'الرسومات الإنشائية', en: 'Structural Drawings' },
-  ELECTRICAL: { ar: 'الكهرباء', en: 'Electrical' },
-  DRAINAGE: { ar: 'الصرف الصحي', en: 'Drainage' },
-  WATER_SUPPLY: { ar: 'مياه الشرب', en: 'Water Supply' },
+  // MEP - Electrical
+  NOC: { ar: 'شهادة عدم المانعة', en: 'NOC' },
+  ELECTRICAL: { ar: 'الأعمال الكهربائية', en: 'Electrical Work' },
+  AC_CALCULATIONS: { ar: 'حسابات التكييف', en: 'AC Calculations' },
+  SOLAR_HEATING: { ar: 'التدفئة الشمسية', en: 'Solar Heating' },
+  LOAD_SCHEDULE: { ar: 'جدول الأحمال', en: 'Load Schedule' },
+  PANEL_SCHEDULE: { ar: 'جدول الوحات الكهربائية', en: 'Panel Schedule' },
+  ELEC_SPECIFICATIONS: { ar: 'المواصفات والبراجيل', en: 'Specifications & Barajeel' },
+  LIGHTING: { ar: 'الإنارة', en: 'Lighting' },
   HVAC: { ar: 'التكييف', en: 'HVAC' },
-  ETISALAT: { ar: 'اتصالات', en: 'Etisalat' },
+  // MEP - Drainage
+  DRAINAGE: { ar: 'الصرف الصحي', en: 'Drainage' },
+  SITE_DRAINAGE: { ar: 'صرف الموقع العام', en: 'Site Drainage' },
+  RAIN_DRAINAGE: { ar: 'صرف مياه الأمطار', en: 'Rain Water Drainage' },
+  TANK_DETAILS: { ar: 'تفاصيل الخزان', en: 'Tank Details' },
+  // MEP - Water Supply
+  WATER_SUPPLY: { ar: 'إمدادات المياه', en: 'Water Supply' },
+  SITE_WATER: { ar: 'مياه الموقع العام', en: 'Site Water Supply' },
+  GROUND_FLOOR_WATER: { ar: 'مياه الدور الأرضي', en: 'Ground Floor Water' },
+  ROOF_WATER: { ar: 'مياه طابق السطح', en: 'Roof Water Supply' },
+  // MEP - Etisalat
+  ETISALAT: { ar: 'اتصالات الموقع العام', en: 'Etisalat - Site' },
+  ETISALAT_GF: { ar: 'اتصالات الدور الأرضي', en: 'Etisalat - Ground Floor' },
+  // MEP - Civil Defense
+  CD_FIRE_SYSTEM: { ar: 'نظام الحريق', en: 'Fire Alarm System' },
+  CD_EMERGENCY_LIGHTING: { ar: 'الإضاءة الطارئة', en: 'Emergency Lighting' },
+  CD_FIRE_FITTING: { ar: 'نظام إطفاء الحريق', en: 'Fire Fighting System' },
+  CD_SCHEMATIC: { ar: 'المخطط التخطيطي', en: 'Schematic Diagram' },
+  MEP_COORDINATION: { ar: 'تنسيق MEP', en: 'MEP Coordination' },
+  MEP_SHOP_DRAWINGS: { ar: 'مخططات تنفيذية MEP', en: 'MEP Shop Drawings' },
+  // Government
+  COLLECT_DOCUMENTS: { ar: 'جمع المستندات', en: 'Collect Documents' },
+  RENEW_KROKY: { ar: 'تجديد الكروكي وفتح الملف', en: 'Renew Kuroky & Open File' },
+  CREATE_CASE: { ar: 'إنشاء المعاملة', en: 'Create Case' },
   MUN_SUBMISSION: { ar: 'تقديم البلدية', en: 'Municipality Submission' },
-  MUN_APPROVAL: { ar: 'موافقة البلدية', en: 'Municipality Approval' },
-  CIVIL_DEFENSE: { ar: 'الدفاع المدني', en: 'Civil Defense' },
-  SEWA_DEWA: { ar: 'هيئة الكهرباء والماء', en: 'SEWA/DEWA' },
+  SUBMIT_REJECTED: { ar: 'إعادة تقديم مرفوض', en: 'Resubmit Rejected' },
+  ARCH_STRC_APPROVAL: { ar: 'اعتماد معماري وإنشائي', en: 'Arch & Structural Approval' },
+  SUBMIT_ELE_UTILITIES: { ar: 'تقديم كهرباء ومرافق', en: 'Submit Electrical & Utilities' },
+  DEMARCATION: { ar: 'التحديد والتسوية', en: 'Demarcation & Leveling' },
+  CHOOSE_CONTRACTOR: { ar: 'اختيار المقاول', en: 'Choose Contractor' },
+  ISSUE_LICENSE: { ar: 'استخراج الرخصة', en: 'Issue License' },
+  SEWA_DEWA: { ar: 'هيئة الكهرباء والماء', en: 'FEWA/DEWA' },
+  ETISALAT_APPROVAL: { ar: 'موافقة الاتصالات', en: 'Etisalat Approval' },
+  CD_DESIGN_APPROVAL: { ar: 'تصميم الدفاع المدني', en: 'Civil Defense Design' },
+  CIVIL_DEFENSE: { ar: 'اعتماد الدفاع المدني', en: 'Civil Defense Approval' },
+  // Contracting
+  CONTRACT_REVIEW: { ar: 'مراجعة العقد', en: 'Contract Review' },
   CONTRACT_SIGNING: { ar: 'توقيع العقد', en: 'Contract Signing' },
 };
 
@@ -260,6 +324,35 @@ const categoryConfig: Record<string, { ar: string; en: string; icon: React.React
   GOVERNMENT: { ar: 'الموافقات', en: 'Government', icon: <Landmark className="h-4 w-4" /> },
   CONTRACTING: { ar: 'العقود', en: 'Contracting', icon: <FileText className="h-4 w-4" /> },
 };
+
+const mepSubGroupLabels: Record<string, { ar: string; en: string }> = {
+  NOC: { ar: 'الكهرباء - شهادة عدم المانعة', en: 'Electrical - NOC' },
+  ELECTRICAL: { ar: 'الكهرباء - الأعمال الكهربائية', en: 'Electrical - Electrical Work' },
+  AC_CALCULATIONS: { ar: 'الكهرباء - حسابات التكييف', en: 'Electrical - AC Calculations' },
+  SOLAR_HEATING: { ar: 'الكهرباء - التدفئة الشمسية', en: 'Electrical - Solar Heating' },
+  LOAD_SCHEDULE: { ar: 'الكهرباء - جدول الأحمال', en: 'Electrical - Load Schedule' },
+  PANEL_SCHEDULE: { ar: 'الكهرباء - جدول الوحات', en: 'Electrical - Panel Schedule' },
+  ELEC_SPECIFICATIONS: { ar: 'الكهرباء - المواصفات والبراجيل', en: 'Electrical - Specifications' },
+  LIGHTING: { ar: 'الكهرباء - الإنارة', en: 'Electrical - Lighting' },
+  DRAINAGE: { ar: 'الصرف الصحي', en: 'Drainage' },
+  SITE_DRAINAGE: { ar: 'الصرف - الموقع العام', en: 'Drainage - Site' },
+  RAIN_DRAINAGE: { ar: 'الصرف - مياه الأمطار', en: 'Drainage - Rain Water' },
+  TANK_DETAILS: { ar: 'الصرف - تفاصيل الخزان', en: 'Drainage - Tank' },
+  WATER_SUPPLY: { ar: 'امدادات المياه', en: 'Water Supply' },
+  SITE_WATER: { ar: 'المياه - الموقع العام', en: 'Water - Site' },
+  GROUND_FLOOR_WATER: { ar: 'المياه - الدور الأرضي', en: 'Water - Ground Floor' },
+  ROOF_WATER: { ar: 'المياه - طابق السطح', en: 'Water - Roof' },
+  ETISALAT: { ar: 'الاتصالات', en: 'Etisalat' },
+  ETISALAT_GF: { ar: 'الاتصالات - الدور الأرضي', en: 'Etisalat - GF' },
+  HVAC: { ar: 'التكييف', en: 'HVAC' },
+  CD_FIRE_SYSTEM: { ar: 'الدفاع المدني', en: 'Civil Defense' },
+  CD_EMERGENCY_LIGHTING: { ar: 'الدفاع المدني - إضاءة طارئة', en: 'CD - Emergency Lighting' },
+  CD_FIRE_FITTING: { ar: 'الدفاع المدني - إطفاء', en: 'CD - Fire Fighting' },
+  CD_SCHEMATIC: { ar: 'الدفاع المدني - مخطط', en: 'CD - Schematic' },
+  MEP_COORDINATION: { ar: 'تنسيق MEP', en: 'MEP Coordination' },
+};
+
+const mepGroupOrder = ['NOC', 'ELECTRICAL', 'AC_CALCULATIONS', 'SOLAR_HEATING', 'LOAD_SCHEDULE', 'PANEL_SCHEDULE', 'ELEC_SPECIFICATIONS', 'LIGHTING', 'DRAINAGE', 'SITE_DRAINAGE', 'RAIN_DRAINAGE', 'TANK_DETAILS', 'WATER_SUPPLY', 'SITE_WATER', 'GROUND_FLOOR_WATER', 'ROOF_WATER', 'ETISALAT', 'ETISALAT_GF', 'HVAC', 'CD_FIRE_SYSTEM', 'CD_EMERGENCY_LIGHTING', 'CD_FIRE_FITTING', 'CD_SCHEMATIC', 'MEP_COORDINATION'];
 
 const invoiceStatusConfig: Record<string, { color: string; bg: string; labelAr: string; labelEn: string }> = {
   DRAFT: { color: 'text-slate-400', bg: 'bg-slate-500/15', labelAr: 'مسودة', labelEn: 'Draft' },
@@ -1001,13 +1094,27 @@ export default function ProjectWorkspace({ projectId, onBack }: ProjectWorkspace
                   </td>
                   <td className="p-3">
                     {assignedName ? (
-                      <div className="flex items-center gap-1.5">
-                        <Avatar className="h-5 w-5">
-                          <AvatarFallback className="bg-blue-600/30 text-blue-300 text-[10px]">
-                            {assignedName.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-slate-300 text-xs">{assignedName}</span>
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <Avatar className="h-5 w-5">
+                            <AvatarFallback className="bg-blue-600/30 text-blue-300 text-[10px]">
+                              {assignedName.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-slate-300 text-xs">{assignedName}</span>
+                        </div>
+                        {/* Draft Assignment */}
+                        {phase.draftAssignedTo && (
+                          <div className="flex items-center gap-1 text-xs text-purple-400 mt-0.5">
+                            <PenTool className="h-3 w-3" />
+                            <span>{phase.draftAssignedTo.name || phase.draftAssignedTo.fullName}</span>
+                            {phase.draftStartDate && (
+                              <span className="text-slate-500">
+                                ({formatDate(phase.draftStartDate)} - {phase.draftEndDate ? formatDate(phase.draftEndDate) : '...'})
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <span className="text-slate-600 text-xs">—</span>
@@ -1225,6 +1332,12 @@ export default function ProjectWorkspace({ projectId, onBack }: ProjectWorkspace
               <FileSpreadsheet className="h-3.5 w-3.5 shrink-0" />
               <span className="text-xs">{project.plotNumber || '—'}</span>
             </div>
+            {project.customerFileNumber && (
+              <div className="flex items-center gap-2 text-slate-400">
+                <span className="text-xs">{isAr ? 'رقم ملف العميل:' : 'Customer File No:'}</span>
+                <span className="text-xs text-slate-200">{project.customerFileNumber}</span>
+              </div>
+            )}
             <div className="flex items-center gap-2 text-slate-400">
               <Building2 className="h-3.5 w-3.5 shrink-0" />
               <span className="text-xs">{project.projectType || '—'}</span>
@@ -1722,19 +1835,98 @@ export default function ProjectWorkspace({ projectId, onBack }: ProjectWorkspace
 
             {/* ===== MEP TAB ===== */}
             <TabsContent value="mep" className="p-4 lg:p-6 mt-0">
-              <Card className="bg-slate-900/50 border-slate-800">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-2">
-                    <Wrench className="h-5 w-5 text-cyan-400" />
-                    <CardTitle className="text-base text-white">
-                      {isAr ? 'مراحل الخدمات (MEP)' : 'MEP Phases'}
-                    </CardTitle>
+              <div className="space-y-6">
+                {/* Electrical Sub-Group */}
+                <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Zap className="h-5 w-5 text-red-400" />
+                    <h3 className="text-sm font-semibold text-slate-200">
+                      {isAr ? 'الكهرباء' : 'Electrical'}
+                    </h3>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <PhaseTable categoryPhases={phasesByCategory['MEP'] || []} />
-                </CardContent>
-              </Card>
+                  <PhaseTable categoryPhases={phasesByCategory['MEP']?.filter(p =>
+                    ['NOC', 'ELECTRICAL', 'AC_CALCULATIONS', 'SOLAR_HEATING', 'LOAD_SCHEDULE', 'PANEL_SCHEDULE', 'ELEC_SPECIFICATIONS', 'LIGHTING'].includes(p.phaseType)
+                  ) || []} />
+                </div>
+
+                {/* Drainage Sub-Group */}
+                <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Droplets className="h-5 w-5 text-blue-400" />
+                    <h3 className="text-sm font-semibold text-slate-200">
+                      {isAr ? 'الصرف الصحي' : 'Drainage'}
+                    </h3>
+                  </div>
+                  <PhaseTable categoryPhases={phasesByCategory['MEP']?.filter(p =>
+                    ['DRAINAGE', 'SITE_DRAINAGE', 'RAIN_DRAINAGE', 'TANK_DETAILS'].includes(p.phaseType)
+                  ) || []} />
+                </div>
+
+                {/* Water Supply Sub-Group */}
+                <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Waves className="h-5 w-5 text-cyan-400" />
+                    <h3 className="text-sm font-semibold text-slate-200">
+                      {isAr ? 'امدادات المياه' : 'Water Supply'}
+                    </h3>
+                  </div>
+                  <PhaseTable categoryPhases={phasesByCategory['MEP']?.filter(p =>
+                    ['WATER_SUPPLY', 'SITE_WATER', 'GROUND_FLOOR_WATER', 'ROOF_WATER'].includes(p.phaseType)
+                  ) || []} />
+                </div>
+
+                {/* Etisalat Sub-Group */}
+                <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Wifi className="h-5 w-5 text-emerald-400" />
+                    <h3 className="text-sm font-semibold text-slate-200">
+                      {isAr ? 'الاتصالات' : 'Etisalat'}
+                    </h3>
+                  </div>
+                  <PhaseTable categoryPhases={phasesByCategory['MEP']?.filter(p =>
+                    ['ETISALAT', 'ETISALAT_GF'].includes(p.phaseType)
+                  ) || []} />
+                </div>
+
+                {/* HVAC Sub-Group */}
+                <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Fan className="h-5 w-5 text-violet-400" />
+                    <h3 className="text-sm font-semibold text-slate-200">
+                      {isAr ? 'التكييف' : 'HVAC'}
+                    </h3>
+                  </div>
+                  <PhaseTable categoryPhases={phasesByCategory['MEP']?.filter(p =>
+                    ['HVAC'].includes(p.phaseType)
+                  ) || []} />
+                </div>
+
+                {/* Civil Defense Sub-Group */}
+                <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Flame className="h-5 w-5 text-red-500" />
+                    <h3 className="text-sm font-semibold text-slate-200">
+                      {isAr ? 'الدفاع المدني' : 'Civil Defense'}
+                    </h3>
+                  </div>
+                  <PhaseTable categoryPhases={phasesByCategory['MEP']?.filter(p =>
+                    ['CD_FIRE_SYSTEM', 'CD_EMERGENCY_LIGHTING', 'CD_FIRE_FITTING', 'CD_SCHEMATIC'].includes(p.phaseType)
+                  ) || []} />
+                </div>
+
+                {/* MEP Coordination */}
+                <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Wrench className="h-5 w-5 text-teal-400" />
+                    <h3 className="text-sm font-semibold text-slate-200">
+                      {isAr ? 'تنسيق MEP' : 'MEP Coordination'}
+                    </h3>
+                  </div>
+                  <PhaseTable categoryPhases={phasesByCategory['MEP']?.filter(p =>
+                    ['MEP_COORDINATION'].includes(p.phaseType)
+                  ) || []} />
+                </div>
+              </div>
             </TabsContent>
 
             {/* ===== GOVERNMENT TAB ===== */}

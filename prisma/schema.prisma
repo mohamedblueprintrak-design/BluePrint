@@ -446,6 +446,7 @@ model User {
   managedProjects Project[]      @relation("ProjectManager")
   activities      Activity[]
   assignedPhases       WorkflowPhase[]     @relation("PhaseAssignee")
+  DraftAssignee  WorkflowPhase[]  @relation("DraftAssignee")
   respondedInteractions ClientInteraction[] @relation("InteractionResponder")
   municipalityCorrespondence MunicipalityCorrespondence[]
 
@@ -554,6 +555,7 @@ model Project {
   actualStartDate     DateTime?
   actualEndDate       DateTime?
   plotNumber           String?        // Plot/Parcel number
+  customerFileNumber    String?        // Customer file number (رقم ملف العميل)
   visitDate            DateTime?      // Initial site visit date
   paymentReceived      Float          @default(0)  // Total payments received
   remainingBalance     Float          @default(0)  // Remaining contract balance
@@ -1416,11 +1418,15 @@ model WorkflowPhase {
   order           Int      @default(0)
   dependsOnId     String?
   rejectionCount  Int      @default(0)
+  draftAssignedToId    String?                          // Draftsman assigned to this phase
+  draftStartDate       DateTime?                        // Drafting start date
+  draftEndDate         DateTime?                        // Drafting end date
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   project         Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
   assignedTo      User?           @relation("PhaseAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  draftAssignedTo  User?           @relation("DraftAssignee", fields: [draftAssignedToId], references: [id], onDelete: SetNull)
   dependsOn       WorkflowPhase?  @relation("PhaseDependency", fields: [dependsOnId], references: [id], onDelete: SetNull)
   dependentPhases WorkflowPhase[] @relation("PhaseDependency")
   interactions    ClientInteraction[]
