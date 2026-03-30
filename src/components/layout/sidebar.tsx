@@ -35,7 +35,8 @@ import {
   PanelLeftClose, PanelLeft, Zap, Calculator, ShoppingCart,
   AlertTriangle, Receipt, X, ChevronDown, ChevronUp,
   LayoutDashboard, Wrench, Gavel, Compass, Handshake, Landmark,
-  ClipboardList, Lightbulb, UserCog, Calendar, Bell, HelpCircle, Crown
+  ClipboardList, Lightbulb, UserCog, Calendar, Bell, HelpCircle, Crown,
+  Send, Mail, Video, Briefcase as BriefcaseIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -210,6 +211,10 @@ const getRoutes = (_language: 'ar' | 'en'): Record<string, string> => ({
   'notifications': '/dashboard/notifications',
   'automations': '/dashboard/automations',
   'help': '/dashboard/help',
+  'transmittals': '/dashboard/transmittals',
+  'correspondence': '/dashboard/correspondence',
+  'meetings': '/dashboard/meetings',
+  'workload': '/dashboard/workload',
 });
 
 // Sidebar Content Component - shared between desktop and mobile
@@ -284,6 +289,9 @@ function SidebarContent({
   // ─── Section 4: السكرتارية (Secretarial) ───
   const secretarialItems: SidebarItem[] = [
     { id: 'calendar', label: language === 'ar' ? 'التقويم' : 'Calendar', icon: Calendar, href: '/dashboard/calendar', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.SECRETARY] },
+    { id: 'meetings', label: language === 'ar' ? 'الاجتماعات' : 'Meetings', icon: Video, href: '/dashboard/meetings', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.SECRETARY] },
+    { id: 'transmittals', label: language === 'ar' ? 'المراسلات الداخلية' : 'Transmittals', icon: Send, href: '/dashboard/transmittals', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.DRAFTSMAN, UserRole.SECRETARY] },
+    { id: 'correspondence', label: language === 'ar' ? 'المراسلات البلدية' : 'Municipality', icon: Mail, href: '/dashboard/correspondence', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.SECRETARY] },
     { id: 'notifications', label: language === 'ar' ? 'الإشعارات' : 'Notifications', icon: Bell, href: '/dashboard/notifications' },
   ];
 
@@ -291,6 +299,7 @@ function SidebarContent({
   const hrSectionItems: SidebarItem[] = [
     { id: 'hr', label: t.hr, icon: Users, href: '/dashboard/hr', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.HR] },
     { id: 'team', label: language === 'ar' ? 'الفريق' : 'Team', icon: Users, href: '/dashboard/team', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER] },
+    { id: 'workload', label: language === 'ar' ? 'الأحمال والقدرات' : 'Workload', icon: BriefcaseIcon, href: '/dashboard/workload', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER] },
   ];
 
   // ─── Section 6: المعرفة والذكاء الاصطناعي (Knowledge & AI) ───
