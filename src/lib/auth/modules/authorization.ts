@@ -19,6 +19,7 @@ const ROLE_HIERARCHY: Record<UserRole, number> = {
   [UserRole.DRAFTSMAN]: 45,
   [UserRole.ACCOUNTANT]: 50,
   [UserRole.HR]: 50,
+  [UserRole.SECRETARY]: 40,
   [UserRole.VIEWER]: 25,
 };
 

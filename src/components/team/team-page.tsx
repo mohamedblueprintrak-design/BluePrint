@@ -48,6 +48,7 @@ const roleLabels = {
   [UserRole.HR]: 'موارد بشرية',
   [UserRole.PROJECT_MANAGER]: 'مدير مشروع',
   [UserRole.VIEWER]: 'مشاهد',
+  [UserRole.SECRETARY]: 'سكرتيرة',
 } satisfies Record<UserRole, string>;
 
 // Role badge variants
@@ -60,6 +61,7 @@ const roleVariants = {
   [UserRole.HR]: 'secondary' as const,
   [UserRole.PROJECT_MANAGER]: 'default' as const,
   [UserRole.VIEWER]: 'outline' as const,
+  [UserRole.SECRETARY]: 'secondary' as const,
 } satisfies Record<UserRole, 'default' | 'secondary' | 'destructive' | 'outline'>;
 
 // Role icons
@@ -72,6 +74,7 @@ const roleIcons = {
   [UserRole.HR]: Users,
   [UserRole.PROJECT_MANAGER]: UserCog,
   [UserRole.VIEWER]: Eye,
+  [UserRole.SECRETARY]: HardHat,
 } satisfies Record<UserRole, any>;
 
 export default function TeamPage() {

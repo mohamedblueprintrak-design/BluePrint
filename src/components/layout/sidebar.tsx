@@ -236,7 +236,7 @@ function SidebarContent({
   // Roles list for "all except VIEWER" shorthand
   const ALL_EXCEPT_VIEWER: UserRole[] = [
     UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER,
-    UserRole.DRAFTSMAN, UserRole.ACCOUNTANT, UserRole.HR,
+    UserRole.DRAFTSMAN, UserRole.ACCOUNTANT, UserRole.HR, UserRole.SECRETARY,
   ];
 
   // Filter items by current user role
@@ -251,7 +251,7 @@ function SidebarContent({
     { id: 'operations', label: language === 'ar' ? 'مركز العمليات' : 'Operations Center', icon: LayoutDashboard, href: '/dashboard/operations', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER] },
     { id: 'projects', label: t.projects, icon: Building2, href: '/dashboard/projects' },
     { id: 'tasks', label: t.tasks, icon: CheckSquare, badge: undefined, href: '/dashboard/tasks', visibleRoles: ALL_EXCEPT_VIEWER },
-    { id: 'clients', label: t.clients, icon: Users, href: '/dashboard/clients', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.ACCOUNTANT] },
+    { id: 'clients', label: t.clients, icon: Users, href: '/dashboard/clients', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.ACCOUNTANT, UserRole.SECRETARY] },
     { id: 'invoices', label: t.invoices, icon: DollarSign, href: '/dashboard/invoices', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.ACCOUNTANT] },
   ];
 
@@ -279,7 +279,7 @@ function SidebarContent({
   // Management items - collapsible
   const managementItems: SidebarItem[] = [
     { id: 'reports', label: t.reports, icon: BarChart3, href: '/dashboard/reports', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.ACCOUNTANT] },
-    { id: 'documents', label: t.documents, icon: FileText, href: '/dashboard/documents', visibleRoles: [UserRole.ADMIN, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.DRAFTSMAN] },
+    { id: 'documents', label: t.documents, icon: FileText, href: '/dashboard/documents', visibleRoles: [UserRole.ADMIN, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.DRAFTSMAN, UserRole.SECRETARY] },
     { id: 'knowledge', label: t.knowledge, icon: BookOpen, href: '/dashboard/knowledge', visibleRoles: ALL_EXCEPT_VIEWER },
     { id: 'hr', label: t.hr, icon: Users, href: '/dashboard/hr', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.HR] },
     { id: 'team', label: language === 'ar' ? 'الفريق' : 'Team', icon: Users, href: '/dashboard/team', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER] },

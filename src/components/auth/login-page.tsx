@@ -385,6 +385,7 @@ export function LoginPage() {
                                 <option value="DRAFTSMAN">{language === 'ar' ? 'رسام' : 'Draftsman'}</option>
                                 <option value="ACCOUNTANT">{language === 'ar' ? 'محاسب' : 'Accountant'}</option>
                                 <option value="HR">{language === 'ar' ? 'موارد بشرية' : 'HR'}</option>
+                                <option value="SECRETARY">{language === 'ar' ? 'سكرتيرة' : 'Secretary'}</option>
                               </select>
                               <p className="text-xs text-slate-500">
                                 {language === 'ar' ? 'لو مديرك هيضيفك للفريق، اختار دورك هنا' : 'If your manager will add you to the team, select your role here'}
@@ -446,8 +447,10 @@ export function LoginPage() {
                                   { role: language === 'ar' ? 'مهندس معماري' : 'Arch. Eng', user: 'engineer', pass: 'Admin@123456', color: 'text-blue-400 border-blue-500/30 hover:bg-blue-500/10' },
                                   { role: language === 'ar' ? 'مهندس إنشائي' : 'Struct. Eng', user: 'struct_eng', pass: 'Admin@123456', color: 'text-orange-400 border-orange-500/30 hover:bg-orange-500/10' },
                                   { role: language === 'ar' ? 'مهندس كهربائي' : 'Elec. Eng', user: 'elec_eng', pass: 'Admin@123456', color: 'text-yellow-400 border-yellow-500/30 hover:bg-yellow-500/10' },
+                                  { role: language === 'ar' ? 'مهندس موقع' : 'Site Eng', user: 'site_eng', pass: 'Admin@123456', color: 'text-teal-400 border-teal-500/30 hover:bg-teal-500/10' },
                                   { role: language === 'ar' ? 'رسام' : 'Draftsman', user: 'draftsman', pass: 'Admin@123456', color: 'text-purple-400 border-purple-500/30 hover:bg-purple-500/10' },
                                   { role: language === 'ar' ? 'محاسب' : 'Accountant', user: 'accountant', pass: 'Admin@123456', color: 'text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10' },
+                                  { role: language === 'ar' ? 'سكرتيرة' : 'Secretary', user: 'secretary', pass: 'Admin@123456', color: 'text-pink-400 border-pink-500/30 hover:bg-pink-500/10' },
                                   { role: language === 'ar' ? 'مشاهد' : 'Viewer', user: 'viewer', pass: 'Admin@123456', color: 'text-slate-400 border-slate-500/30 hover:bg-slate-500/10' },
                                 ].map((demo) => (
                                   <button

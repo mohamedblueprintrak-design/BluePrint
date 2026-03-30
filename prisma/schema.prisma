@@ -23,6 +23,7 @@ enum UserRole {
   DRAFTSMAN        // Drafting and drawing access
   ACCOUNTANT       // Financial access
   HR               // Human resources access
+  SECRETARY        // Office management and documents
   VIEWER           // Read-only access
 }
 

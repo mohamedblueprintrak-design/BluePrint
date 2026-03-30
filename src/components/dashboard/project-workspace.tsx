@@ -419,6 +419,7 @@ const ROLE_TABS: Record<string, string[]> = {
   DRAFTSMAN: ['matrix', 'overview', 'architectural', 'boq'],
   ACCOUNTANT: ['matrix', 'overview', 'financial', 'boq'],
   HR: ['matrix', 'overview'],
+  SECRETARY: ['matrix', 'overview', 'documents', 'boq'],
   VIEWER: ['matrix', 'overview', 'timeline', 'boq'],
 };
 
