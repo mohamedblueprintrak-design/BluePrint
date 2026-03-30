@@ -172,6 +172,7 @@ export interface JwtPayload {
   username: string;
   role: UserRole;
   organizationId?: string;
+  department?: string;
   iat?: number;
   exp?: number;
 }
@@ -197,6 +198,7 @@ export interface SignupRequest {
   fullName: string;
   organizationName?: string;
   role?: string;
+  department?: string;
 }
 
 /**

@@ -281,7 +281,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           password: data.password,
           fullName: data.fullName,
           organizationName: data.organizationName,
-          role: data.role
+          role: data.role,
+          department: data.department
         }),
         signal: controller.signal
       });

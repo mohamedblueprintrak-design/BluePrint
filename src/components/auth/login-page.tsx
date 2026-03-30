@@ -28,7 +28,8 @@ export function LoginPage() {
     confirmPassword: '',
     fullName: '',
     organizationName: '',
-    role: ''
+    role: '',
+    department: ''
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -75,7 +76,7 @@ export function LoginPage() {
       const result = await register(registerForm);
       if (result.success) {
         setSuccess(language === 'ar' ? 'تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول' : 'Account created successfully! You can now login');
-        setRegisterForm({ username: '', email: '', password: '', confirmPassword: '', fullName: '', organizationName: '', role: '' });
+        setRegisterForm({ username: '', email: '', password: '', confirmPassword: '', fullName: '', organizationName: '', role: '', department: '' });
         // Switch to login tab after successful registration
         setTimeout(() => {
           const loginTab = document.querySelector('[value="login"]') as HTMLElement;
@@ -390,6 +391,32 @@ export function LoginPage() {
                               </p>
                             </div>
 
+                            {/* Department Selection - Only for Engineers */}
+                            {registerForm.role === 'ENGINEER' && (
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-300">
+                                  {language === 'ar' ? 'التخصص الهندسي' : 'Engineering Department'}
+                                </label>
+                                <select
+                                  value={registerForm.department || ''}
+                                  onChange={(e) => setRegisterForm({ ...registerForm, department: e.target.value })}
+                                  className="w-full px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                  <option value="">{language === 'ar' ? '-- اختر تخصصك --' : '-- Select your department --'}</option>
+                                  <option value="ARCHITECTURAL">{language === 'ar' ? 'معماري' : 'Architectural'}</option>
+                                  <option value="STRUCTURAL">{language === 'ar' ? 'إنشائي' : 'Structural'}</option>
+                                  <option value="ELECTRICAL">{language === 'ar' ? 'كهربائي' : 'Electrical'}</option>
+                                  <option value="MECHANICAL">{language === 'ar' ? 'ميكانيكي / تكييف' : 'Mechanical / HVAC'}</option>
+                                  <option value="PLUMBING">{language === 'ar' ? 'سباكة / صرف' : 'Plumbing / Drainage'}</option>
+                                  <option value="CIVIL">{language === 'ar' ? 'مدني' : 'Civil'}</option>
+                                  <option value="MEP">{language === 'ar' ? 'MEP (خدمات متكاملة)' : 'MEP (Multi-discipline)'}</option>
+                                </select>
+                                <p className="text-xs text-slate-500">
+                                  {language === 'ar' ? 'هيظهرلك تبس تخصصك + كل الأقسام في المصفوفة' : 'You will see your department tab + all departments in Matrix view'}
+                                </p>
+                              </div>
+                            )}
+
                   <Button
                     type="submit"
                     className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 transition-all duration-300 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
@@ -412,11 +439,13 @@ export function LoginPage() {
                               <p className="text-xs text-slate-500 text-center">
                                 {language === 'ar' ? 'تجربة سريعة - ادخل بدور مختلف' : 'Quick demo - Login as different role'}
                               </p>
-                              <div className="grid grid-cols-2 gap-2">
+                              <div className="grid grid-cols-3 gap-2">
                                 {[
                                   { role: language === 'ar' ? 'مدير' : 'Admin', user: 'admin', pass: 'Admin@123456', color: 'text-red-400 border-red-500/30 hover:bg-red-500/10' },
                                   { role: language === 'ar' ? 'مدير مشاريع' : 'Manager', user: 'manager', pass: 'Admin@123456', color: 'text-amber-400 border-amber-500/30 hover:bg-amber-500/10' },
-                                  { role: language === 'ar' ? 'مهندس' : 'Engineer', user: 'engineer', pass: 'Admin@123456', color: 'text-blue-400 border-blue-500/30 hover:bg-blue-500/10' },
+                                  { role: language === 'ar' ? 'مهندس معماري' : 'Arch. Eng', user: 'engineer', pass: 'Admin@123456', color: 'text-blue-400 border-blue-500/30 hover:bg-blue-500/10' },
+                                  { role: language === 'ar' ? 'مهندس إنشائي' : 'Struct. Eng', user: 'struct_eng', pass: 'Admin@123456', color: 'text-orange-400 border-orange-500/30 hover:bg-orange-500/10' },
+                                  { role: language === 'ar' ? 'مهندس كهربائي' : 'Elec. Eng', user: 'elec_eng', pass: 'Admin@123456', color: 'text-yellow-400 border-yellow-500/30 hover:bg-yellow-500/10' },
                                   { role: language === 'ar' ? 'رسام' : 'Draftsman', user: 'draftsman', pass: 'Admin@123456', color: 'text-purple-400 border-purple-500/30 hover:bg-purple-500/10' },
                                   { role: language === 'ar' ? 'محاسب' : 'Accountant', user: 'accountant', pass: 'Admin@123456', color: 'text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10' },
                                   { role: language === 'ar' ? 'مشاهد' : 'Viewer', user: 'viewer', pass: 'Admin@123456', color: 'text-slate-400 border-slate-500/30 hover:bg-slate-500/10' },

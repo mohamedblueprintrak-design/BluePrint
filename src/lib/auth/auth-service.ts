@@ -412,6 +412,7 @@ class AuthenticationService {
           password: hashedPassword,
           fullName: data.fullName,
           role: (organizationId ? UserRole.ADMIN : (data.role && Object.values(UserRole).includes(data.role as UserRole) ? data.role : UserRole.VIEWER)) as any,
+          department: data.department || null,
           organizationId,
         },
         include: {

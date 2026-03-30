@@ -44,6 +44,7 @@ async function generateDemoToken(user: typeof DEMO_USERS[0]): Promise<string> {
     username: user.username,
     role: user.role,
     organizationId: user.organizationId,
+    department: (user as any).department || undefined,
   })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()

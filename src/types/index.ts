@@ -906,6 +906,7 @@ export interface RegisterForm {
   fullName: string;
   organizationName?: string;
   role?: string;
+  department?: string;
 }
 
 export interface ProjectForm {

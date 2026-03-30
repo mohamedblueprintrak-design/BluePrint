@@ -16,6 +16,7 @@ export interface DemoUser {
   avatar: string | null;
   language: string;
   theme: string;
+  department?: string;
   organizationId: string;
   organization: { id: string; name: string; currency: string };
 }

@@ -1565,8 +1565,19 @@ export default function ProjectWorkspace({ projectId, onBack }: ProjectWorkspace
               <TabsList className="bg-transparent h-auto p-0 gap-0">
                 {(() => {
                   const userRole = user?.role || 'VIEWER';
-                  const allowedTabs =
-                    ROLE_TABS[userRole] || ROLE_TABS.VIEWER;
+                  const userDept = ((user as any)?.department || '').toUpperCase();
+                  // Engineer tabs based on department (domino: Matrix shows ALL, tab shows own dept only)
+                  let allowedTabs = ROLE_TABS[userRole] || ROLE_TABS.VIEWER;
+                  if (userRole === 'ENGINEER' && userDept) {
+                    const base = ['matrix', 'overview', 'boq'];
+                    if (userDept.includes('ARCH') || userDept.includes('معمار')) allowedTabs = [...base, 'architectural'];
+                    else if (userDept.includes('STRUCT') || userDept.includes('إنشائ') || userDept.includes('هيكلي')) allowedTabs = [...base, 'structural'];
+                    else if (userDept.includes('ELEC') || userDept.includes('كهربائ')) allowedTabs = [...base, 'mep'];
+                    else if (userDept.includes('MEP')) allowedTabs = [...base, 'mep'];
+                    else if (userDept.includes('MECH') || userDept.includes('HVAC') || userDept.includes('ميكانيك') || userDept.includes('تكييف')) allowedTabs = [...base, 'mep'];
+                    else if (userDept.includes('PLUMB') || userDept.includes('سباك') || userDept.includes('صرف')) allowedTabs = [...base, 'mep'];
+                    else if (userDept.includes('CIVIL') || userDept.includes('مدني')) allowedTabs = [...base, 'structural'];
+                  }
                   const allTabs = [
                     {
                       key: 'matrix',
