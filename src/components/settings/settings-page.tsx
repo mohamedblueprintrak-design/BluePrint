@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { useApp } from '@/context/app-context';
+import { useAuth } from '@/context/auth-context';
 import { useTranslation } from '@/lib/translations';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -163,11 +164,21 @@ interface Integration {
 
 export function SettingsPage() {
   const { language, isRTL, theme, setTheme, setLanguage, currency, setCurrency } = useApp();
+  const { user } = useAuth();
   const { t } = useTranslation(language);
   const { toast } = useToast();
 
+  // Role checks
+  const isAdmin = user?.role === 'ADMIN';
+  const isManagerOrAdmin = ['ADMIN', 'MANAGER'].includes(user?.role ?? '');
+
   // State
-  const [activeTab, setActiveTab] = useState('company');
+  const [activeTab, setActiveTab] = useState(() => {
+    // Set default tab based on user role
+    if (isAdmin) return 'company';
+    if (isManagerOrAdmin) return 'appearance';
+    return 'appearance';
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [showApiKey, setShowApiKey] = useState<string | null>(null);
   const [isCreateApiDialogOpen, setIsCreateApiDialogOpen] = useState(false);
@@ -606,10 +617,12 @@ export function SettingsPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="bg-slate-900/50 border border-slate-800 p-1 h-auto flex-wrap gap-1">
-          <TabsTrigger value="company" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white">
-            <Building2 className="w-4 h-4 me-2" />
-            {texts.companySettings}
-          </TabsTrigger>
+          {isAdmin && (
+            <TabsTrigger value="company" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white">
+              <Building2 className="w-4 h-4 me-2" />
+              {texts.companySettings}
+            </TabsTrigger>
+          )}
           <TabsTrigger value="appearance" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white">
             <Palette className="w-4 h-4 me-2" />
             {texts.appearance}
@@ -622,17 +635,22 @@ export function SettingsPage() {
             <Shield className="w-4 h-4 me-2" />
             {texts.security}
           </TabsTrigger>
-          <TabsTrigger value="billing" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white">
-            <CreditCard className="w-4 h-4 me-2" />
-            {texts.billing}
-          </TabsTrigger>
-          <TabsTrigger value="integrations" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white">
-            <Plug className="w-4 h-4 me-2" />
-            {texts.integrations}
-          </TabsTrigger>
+          {isManagerOrAdmin && (
+            <TabsTrigger value="billing" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white">
+              <CreditCard className="w-4 h-4 me-2" />
+              {texts.billing}
+            </TabsTrigger>
+          )}
+          {isAdmin && (
+            <TabsTrigger value="integrations" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white">
+              <Plug className="w-4 h-4 me-2" />
+              {texts.integrations}
+            </TabsTrigger>
+          )}
         </TabsList>
 
-        {/* Company Settings Tab */}
+        {/* Company Settings Tab - ADMIN only */}
+        {isAdmin && (
         <TabsContent value="company" className="space-y-6">
           {renderSectionHeader(
             texts.companySettings,
@@ -822,6 +840,7 @@ export function SettingsPage() {
             </CardFooter>
           </Card>
         </TabsContent>
+        )}
 
         {/* Appearance Tab */}
         <TabsContent value="appearance" className="space-y-6">
@@ -1248,12 +1267,15 @@ export function SettingsPage() {
           </Card>
         </TabsContent>
 
-        {/* Billing Tab */}
+        {/* Billing Tab - ADMIN, MANAGER only */}
+        {isManagerOrAdmin && (
         <TabsContent value="billing" className="space-y-6">
           <BillingPage />
         </TabsContent>
+        )}
 
-        {/* Integrations Tab */}
+        {/* Integrations Tab - ADMIN only */}
+        {isAdmin && (
         <TabsContent value="integrations" className="space-y-6">
           {renderSectionHeader(
             texts.integrations,
@@ -1367,6 +1389,7 @@ export function SettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
+        )}
       </Tabs>
     </div>
   );

@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/app-context';
+import { useAuth } from '@/context/auth-context';
 import { useTranslation } from '@/lib/translations';
 import { useDashboard, useProjects, useTasks, useInvoices } from '@/hooks/use-data';
 import { WelcomeModal } from '@/components/onboarding/welcome-modal';
@@ -44,6 +45,8 @@ type Period = '7d' | '30d' | '90d' | 'year';
 export function DashboardPage() {
   const router = useRouter();
   const { language } = useApp();
+  const { user, hasRole, hasPermission } = useAuth();
+  const canSeeFinancials = hasRole(['ADMIN', 'MANAGER', 'ACCOUNTANT', 'PROJECT_MANAGER'] as any);
   const { t, formatCurrency, formatDate } = useTranslation(language);
   
   const [period, setPeriod] = useState<Period>('30d');
@@ -179,7 +182,7 @@ export function DashboardPage() {
       trend: '+5%',
       trendUp: true
     },
-    {
+    canSeeFinancials ? {
       title: t.revenue,
       value: formatCurrency(stats?.financial?.totalPaid || 0),
       subtitle: `${formatCurrency(stats?.financial?.totalPending || 0)} ${language === 'ar' ? 'معلق' : 'pending'}`,
@@ -187,6 +190,15 @@ export function DashboardPage() {
       color: 'text-cyan-400',
       bgColor: 'bg-cyan-500/10',
       trend: '+18%',
+      trendUp: true
+    } : {
+      title: language === 'ar' ? 'إجمالي المهام' : 'Total Tasks',
+      value: stats?.tasks?.total || 0,
+      total: stats?.tasks?.completed || 0,
+      icon: CheckSquare,
+      color: 'text-cyan-400',
+      bgColor: 'bg-cyan-500/10',
+      trend: '+8%',
       trendUp: true
     },
     {
@@ -311,10 +323,13 @@ export function DashboardPage() {
               ar: 'إجمالي العملاء المسجلين في النظام',
               en: 'Total registered clients in the system',
             },
-            [t.revenue]: {
+            ...(canSeeFinancials ? { [t.revenue]: {
               ar: 'إجمالي المبالغ المحصّلة من الفواتير المدفوعة',
               en: 'Total amount collected from paid invoices',
-            },
+            }} : { [language === 'ar' ? 'إجمالي المهام' : 'Total Tasks']: {
+              ar: 'إجمالي المهام المسجلة في النظام',
+              en: 'Total tasks registered in the system',
+            }}),
             [t.pendingTasks]: {
               ar: 'المهام التي لم تكتمل بعد وتحتاج إلى اهتمام',
               en: 'Tasks that are not yet completed and need attention',
@@ -372,7 +387,8 @@ export function DashboardPage() {
 
       {/* Charts Row 1 - Revenue & Project Status */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Monthly Revenue Chart */}
+        {/* Monthly Revenue Chart (financial users) / Project Progress (non-financial users) */}
+        {canSeeFinancials ? (
         <Card className="bg-slate-900/50 border-slate-800">
           <CardHeader>
             <CardTitle className="text-white">
@@ -394,6 +410,47 @@ export function DashboardPage() {
             )}
           </CardContent>
         </Card>
+        ) : (
+        <Card className="bg-slate-900/50 border-slate-800">
+          <CardHeader>
+            <CardTitle className="text-white">
+              {language === 'ar' ? 'تقدم المشاريع' : 'Project Progress'}
+            </CardTitle>
+            <CardDescription className="text-slate-400">
+              {language === 'ar' ? 'نظرة عامة على تقدم المشاريع' : 'Overview of project progress'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {projectsLoading ? (
+              <ChartLoader />
+            ) : (
+              <ScrollArea className="h-[300px]">
+                <div className="space-y-4">
+                  {recentProjects.length > 0 ? recentProjects.map((project: any) => (
+                    <div key={project.id} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium text-white truncate">{project.name}</p>
+                        <span className="text-xs text-slate-400">{project.progressPercentage || 0}%</span>
+                      </div>
+                      <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-blue-500 rounded-full transition-all duration-500"
+                          style={{ width: `${project.progressPercentage || 0}%` }}
+                        />
+                      </div>
+                    </div>
+                  )) : (
+                    <div className="flex flex-col items-center justify-center py-8 text-slate-400">
+                      <Building2 className="w-12 h-12 mb-4 opacity-50" />
+                      <p>{t.noData}</p>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            )}
+          </CardContent>
+        </Card>
+        )}
 
         {/* Project Status Distribution */}
         <Card className="bg-slate-900/50 border-slate-800">
@@ -442,7 +499,8 @@ export function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Expense by Category */}
+        {/* Expense by Category (financial users) / Team Activity (non-financial users) */}
+        {canSeeFinancials ? (
         <Card className="bg-slate-900/50 border-slate-800">
           <CardHeader>
             <CardTitle className="text-white">
@@ -464,6 +522,28 @@ export function DashboardPage() {
             )}
           </CardContent>
         </Card>
+        ) : (
+        <Card className="bg-slate-900/50 border-slate-800">
+          <CardHeader>
+            <CardTitle className="text-white">
+              {language === 'ar' ? 'نشاط الفريق' : 'Team Activity'}
+            </CardTitle>
+            <CardDescription className="text-slate-400">
+              {language === 'ar' ? 'نظرة عامة على نشاط المهام' : 'Overview of task activity'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {tasksLoading ? (
+              <ChartLoader />
+            ) : (
+              <TaskCompletionChart
+                data={taskCompletionData}
+                language={language}
+              />
+            )}
+          </CardContent>
+        </Card>
+        )}
       </div>
 
       {/* Main Content Grid */}
@@ -571,6 +651,7 @@ export function DashboardPage() {
                 </div>
                 <span className="text-xs text-slate-300 group-hover:text-white">{t.newClient}</span>
               </Button>
+              {canSeeFinancials && (
               <Button 
                 variant="outline" 
                 className="h-24 flex flex-col gap-2 bg-slate-800/50 border-slate-700 hover:bg-cyan-500/20 hover:border-cyan-500 transition-all duration-300 group"
@@ -581,6 +662,7 @@ export function DashboardPage() {
                 </div>
                 <span className="text-xs text-slate-300 group-hover:text-white">{t.newInvoice}</span>
               </Button>
+              )}
               <Button 
                 variant="outline" 
                 className="h-24 flex flex-col gap-2 bg-slate-800/50 border-slate-700 hover:bg-orange-500/20 hover:border-orange-500 transition-all duration-300 group"
@@ -598,6 +680,7 @@ export function DashboardPage() {
           <Card className="bg-gradient-to-br from-violet-950/50 to-slate-900/50 border-violet-500/20">
             <CardContent className="p-4">
               <div className="grid grid-cols-1 gap-2">
+                {hasPermission('REPORTS_READ') && (
                 <Button
                   variant="ghost"
                   className="w-full justify-start gap-3 text-slate-300 hover:bg-violet-500/10 hover:text-violet-300 p-3 h-auto"
@@ -611,6 +694,7 @@ export function DashboardPage() {
                     <p className="text-[10px] text-slate-500">{language === 'ar' ? 'تقارير مالية وتشغيلية' : 'Financial & operational reports'}</p>
                   </div>
                 </Button>
+                )}
                 <Button
                   variant="ghost"
                   className="w-full justify-start gap-3 text-slate-300 hover:bg-blue-500/10 hover:text-blue-300 p-3 h-auto"
@@ -664,9 +748,13 @@ export function DashboardPage() {
           {/* AI Insights */}
           <AIInsightsCard
             title={language === 'ar' ? 'رؤى ذكية' : 'AI Insights'}
-            context={JSON.stringify({
+            context={JSON.stringify(canSeeFinancials ? {
               activeProjects: stats?.projects?.active || 0,
               totalRevenue: stats?.financial?.totalPaid || 0,
+              pendingTasks: stats?.tasks?.pending || 0,
+              openDefects: stats?.defects?.open || 0
+            } : {
+              activeProjects: stats?.projects?.active || 0,
               pendingTasks: stats?.tasks?.pending || 0,
               openDefects: stats?.defects?.open || 0
             })}
@@ -741,7 +829,8 @@ export function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Pending Invoices */}
+        {/* Pending Invoices (financial users) / Upcoming Deadlines (non-financial users) */}
+        {canSeeFinancials ? (
         <Card className="bg-slate-900/50 border-slate-800">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-white flex items-center gap-2">
@@ -793,6 +882,64 @@ export function DashboardPage() {
             )}
           </CardContent>
         </Card>
+        ) : (
+        <Card className="bg-slate-900/50 border-slate-800">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-white flex items-center gap-2">
+              <Clock className="w-5 h-5 text-violet-400" />
+              {language === 'ar' ? 'المواعيد النهائية القادمة' : 'Upcoming Deadlines'}
+            </CardTitle>
+            <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard/tasks')} className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10">
+              {t.view} {language === 'ar' ? 'الكل' : 'All'}
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {tasksLoading ? (
+              <div className="space-y-3">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="flex items-center gap-3 p-2">
+                    <Skeleton className="w-2 h-2 rounded-full" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <ScrollArea className="h-64">
+                <div className="space-y-3">
+                  {recentTasks.length > 0 ? recentTasks
+                    .filter((task: any) => task.dueDate)
+                    .slice(0, 5)
+                    .map((task: any) => (
+                    <div key={task.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800/50 transition-colors">
+                      <div className={`w-2 h-2 rounded-full ${
+                        task.priority === 'urgent' ? 'bg-red-500' :
+                        task.priority === 'high' ? 'bg-orange-500' :
+                        task.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                      }`} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-white truncate">{task.title}</p>
+                        <p className="text-xs text-slate-400">{task.project?.name || task.project || t.noData}</p>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs text-slate-400">
+                        <Clock className="w-3 h-3" />
+                        {formatDate(task.dueDate)}
+                      </div>
+                    </div>
+                  )) : (
+                    <div className="flex flex-col items-center justify-center py-8 text-slate-400">
+                      <Clock className="w-12 h-12 mb-4 opacity-50" />
+                      <p>{t.noData}</p>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            )}
+          </CardContent>
+        </Card>
+        )}
       </div>
     </div>
   );

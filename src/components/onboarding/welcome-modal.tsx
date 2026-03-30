@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/app-context';
+import { useAuth } from '@/context/auth-context';
 import {
   Dialog,
   DialogContent,
@@ -15,7 +16,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card } from '@/components/ui/card';
 import {
   Building2, Users, Bot, ArrowRight, ArrowLeft,
-  Sparkles, CheckCircle2, Rocket
+  Sparkles, CheckCircle2, Rocket, ListTodo, UserPlus,
+  FileText, LayoutDashboard, DollarSign, BarChart3,
+  Settings, ClipboardList, Calculator
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -29,6 +32,7 @@ interface WelcomeModalProps {
 export function WelcomeModal({ isOpen, onClose }: WelcomeModalProps) {
   const router = useRouter();
   const { language } = useApp();
+  const { user } = useAuth();
   const [dontShowAgain, setDontShowAgain] = useState(false);
   const isRTL = language === 'ar';
 
@@ -47,44 +51,344 @@ export function WelcomeModal({ isOpen, onClose }: WelcomeModalProps) {
     router.push(path);
   };
 
-  const quickStartOptions = [
-    {
-      id: 'project',
-      icon: Building2,
-      title: isRTL ? 'إنشاء أول مشروع' : 'Create First Project',
-      description: isRTL 
-        ? 'ابدأ بإضافة مشروعك الأول وتتبع تقدمه' 
-        : 'Start by adding your first project and track its progress',
-      path: '/dashboard/projects',
-      color: 'text-blue-400',
-      bgColor: 'bg-blue-500/20',
-      borderColor: 'border-blue-500/30 hover:border-blue-500',
-    },
-    {
-      id: 'client',
-      icon: Users,
-      title: isRTL ? 'إضافة عميل' : 'Add Client',
-      description: isRTL 
-        ? 'أضف عملاءك لإدارة المشاريع والفواتير' 
-        : 'Add your clients to manage projects and invoices',
-      path: '/dashboard/clients',
-      color: 'text-green-400',
-      bgColor: 'bg-green-500/20',
-      borderColor: 'border-green-500/30 hover:border-green-500',
-    },
-    {
-      id: 'ai',
-      icon: Bot,
-      title: isRTL ? 'اكتشف المساعد الذكي' : 'Explore AI Assistant',
-      description: isRTL 
-        ? 'تعرف على كيف يمكن للذكاء الاصطناعي مساعدتك' 
-        : 'Learn how AI can help you manage your projects',
-      path: '/dashboard/ai-chat',
-      color: 'text-purple-400',
-      bgColor: 'bg-purple-500/20',
-      borderColor: 'border-purple-500/30 hover:border-purple-500',
-    },
-  ];
+  // Role-specific quick start options
+  const quickStartOptions = useMemo(() => {
+    const role = user?.role;
+
+    // ADMIN quick start options
+    if (role === 'ADMIN') {
+      return [
+        {
+          id: 'project',
+          icon: Building2,
+          title: isRTL ? 'إنشاء أول مشروع' : 'Create First Project',
+          description: isRTL
+            ? 'ابدأ بإضافة مشروعك الأول وتتبع تقدمه'
+            : 'Start by adding your first project and track its progress',
+          path: '/dashboard/projects',
+          color: 'text-blue-400',
+          bgColor: 'bg-blue-500/20',
+          borderColor: 'border-blue-500/30 hover:border-blue-500',
+        },
+        {
+          id: 'team',
+          icon: UserPlus,
+          title: isRTL ? 'دعوة أعضاء الفريق' : 'Invite Team Members',
+          description: isRTL
+            ? 'أضف فريقك وابدأ التعاون على المشاريع'
+            : 'Add your team and start collaborating on projects',
+          path: '/dashboard/team',
+          color: 'text-green-400',
+          bgColor: 'bg-green-500/20',
+          borderColor: 'border-green-500/30 hover:border-green-500',
+        },
+        {
+          id: 'settings',
+          icon: Settings,
+          title: isRTL ? 'تهيئة الإعدادات' : 'Configure Settings',
+          description: isRTL
+            ? 'خصص إعدادات الشركة والمظهر'
+            : 'Customize company settings and appearance',
+          path: '/dashboard/settings',
+          color: 'text-purple-400',
+          bgColor: 'bg-purple-500/20',
+          borderColor: 'border-purple-500/30 hover:border-purple-500',
+        },
+      ];
+    }
+
+    // MANAGER quick start options
+    if (role === 'MANAGER') {
+      return [
+        {
+          id: 'project',
+          icon: Building2,
+          title: isRTL ? 'إنشاء أول مشروع' : 'Create First Project',
+          description: isRTL
+            ? 'ابدأ بإضافة مشروعك الأول وتتبع تقدمه'
+            : 'Start by adding your first project and track its progress',
+          path: '/dashboard/projects',
+          color: 'text-blue-400',
+          bgColor: 'bg-blue-500/20',
+          borderColor: 'border-blue-500/30 hover:border-blue-500',
+        },
+        {
+          id: 'client',
+          icon: Users,
+          title: isRTL ? 'إضافة عميل' : 'Add Client',
+          description: isRTL
+            ? 'أضف عملاءك لإدارة المشاريع والفواتير'
+            : 'Add your clients to manage projects and invoices',
+          path: '/dashboard/clients',
+          color: 'text-green-400',
+          bgColor: 'bg-green-500/20',
+          borderColor: 'border-green-500/30 hover:border-green-500',
+        },
+        {
+          id: 'ai',
+          icon: Bot,
+          title: isRTL ? 'اكتشف المساعد الذكي' : 'Explore AI Assistant',
+          description: isRTL
+            ? 'تعرف على كيف يمكن للذكاء الاصطناعي مساعدتك'
+            : 'Learn how AI can help you manage your projects',
+          path: '/dashboard/ai-chat',
+          color: 'text-purple-400',
+          bgColor: 'bg-purple-500/20',
+          borderColor: 'border-purple-500/30 hover:border-purple-500',
+        },
+      ];
+    }
+
+    // PROJECT_MANAGER quick start options
+    if (role === 'PROJECT_MANAGER') {
+      return [
+        {
+          id: 'project',
+          icon: Building2,
+          title: isRTL ? 'إنشاء أول مشروع' : 'Create First Project',
+          description: isRTL
+            ? 'ابدأ بإضافة مشروعك الأول وتتبع تقدمه'
+            : 'Start by adding your first project and track its progress',
+          path: '/dashboard/projects',
+          color: 'text-blue-400',
+          bgColor: 'bg-blue-500/20',
+          borderColor: 'border-blue-500/30 hover:border-blue-500',
+        },
+        {
+          id: 'tasks',
+          icon: ListTodo,
+          title: isRTL ? 'عرض المهام' : 'View Tasks',
+          description: isRTL
+            ? 'تابع جميع المهام وتقدمها'
+            : 'Track all tasks and their progress',
+          path: '/dashboard/tasks',
+          color: 'text-green-400',
+          bgColor: 'bg-green-500/20',
+          borderColor: 'border-green-500/30 hover:border-green-500',
+        },
+        {
+          id: 'ai',
+          icon: Bot,
+          title: isRTL ? 'اكتشف المساعد الذكي' : 'Explore AI Assistant',
+          description: isRTL
+            ? 'تعرف على كيف يمكن للذكاء الاصطناعي مساعدتك'
+            : 'Learn how AI can help you manage your projects',
+          path: '/dashboard/ai-chat',
+          color: 'text-purple-400',
+          bgColor: 'bg-purple-500/20',
+          borderColor: 'border-purple-500/30 hover:border-purple-500',
+        },
+      ];
+    }
+
+    // ENGINEER quick start options
+    if (role === 'ENGINEER') {
+      return [
+        {
+          id: 'tasks',
+          icon: ListTodo,
+          title: isRTL ? 'عرض مهامي' : 'View My Tasks',
+          description: isRTL
+            ? 'شاهد المهام المسندة إليك وابدأ العمل'
+            : 'See tasks assigned to you and start working',
+          path: '/dashboard/tasks',
+          color: 'text-blue-400',
+          bgColor: 'bg-blue-500/20',
+          borderColor: 'border-blue-500/30 hover:border-blue-500',
+        },
+        {
+          id: 'projects',
+          icon: LayoutDashboard,
+          title: isRTL ? 'تصفح المشاريع' : 'Browse Projects',
+          description: isRTL
+            ? 'استكشف المشاريع النشطة والمخطط لها'
+            : 'Explore active and planned projects',
+          path: '/dashboard/projects',
+          color: 'text-green-400',
+          bgColor: 'bg-green-500/20',
+          borderColor: 'border-green-500/30 hover:border-green-500',
+        },
+        {
+          id: 'ai',
+          icon: Bot,
+          title: isRTL ? 'اكتشف المساعد الذكي' : 'Explore AI Assistant',
+          description: isRTL
+            ? 'تعرف على كيف يمكن للذكاء الاصطناعي مساعدتك'
+            : 'Learn how AI can help you with your work',
+          path: '/dashboard/ai-chat',
+          color: 'text-purple-400',
+          bgColor: 'bg-purple-500/20',
+          borderColor: 'border-purple-500/30 hover:border-purple-500',
+        },
+      ];
+    }
+
+    // DRAFTSMAN quick start options
+    if (role === 'DRAFTSMAN') {
+      return [
+        {
+          id: 'tasks',
+          icon: ListTodo,
+          title: isRTL ? 'عرض مهامي' : 'View My Tasks',
+          description: isRTL
+            ? 'شاهد المهام المسندة إليك وابدأ العمل'
+            : 'See tasks assigned to you and start working',
+          path: '/dashboard/tasks',
+          color: 'text-blue-400',
+          bgColor: 'bg-blue-500/20',
+          borderColor: 'border-blue-500/30 hover:border-blue-500',
+        },
+        {
+          id: 'projects',
+          icon: LayoutDashboard,
+          title: isRTL ? 'تصفح المشاريع' : 'Browse Projects',
+          description: isRTL
+            ? 'استكشف المشاريع النشطة والمخطط لها'
+            : 'Explore active and planned projects',
+          path: '/dashboard/projects',
+          color: 'text-green-400',
+          bgColor: 'bg-green-500/20',
+          borderColor: 'border-green-500/30 hover:border-green-500',
+        },
+        {
+          id: 'boq',
+          icon: ClipboardList,
+          title: isRTL ? 'عرض BOQ' : 'View BOQ',
+          description: isRTL
+            ? 'راجع قوائم الكميات للمشاريع'
+            : 'Review bills of quantities for projects',
+          path: '/dashboard/boq',
+          color: 'text-orange-400',
+          bgColor: 'bg-orange-500/20',
+          borderColor: 'border-orange-500/30 hover:border-orange-500',
+        },
+      ];
+    }
+
+    // ACCOUNTANT quick start options
+    if (role === 'ACCOUNTANT') {
+      return [
+        {
+          id: 'invoice',
+          icon: FileText,
+          title: isRTL ? 'إنشاء فاتورة' : 'Create Invoice',
+          description: isRTL
+            ? 'أنشئ فاتورتك الأولى وأرسلها للعملاء'
+            : 'Create your first invoice and send it to clients',
+          path: '/dashboard/invoices',
+          color: 'text-blue-400',
+          bgColor: 'bg-blue-500/20',
+          borderColor: 'border-blue-500/30 hover:border-blue-500',
+        },
+        {
+          id: 'budgets',
+          icon: DollarSign,
+          title: isRTL ? 'عرض الميزانيات' : 'View Budgets',
+          description: isRTL
+            ? 'تابع ميزانيات المشاريع والنفقات'
+            : 'Track project budgets and expenses',
+          path: '/dashboard/budgets',
+          color: 'text-green-400',
+          bgColor: 'bg-green-500/20',
+          borderColor: 'border-green-500/30 hover:border-green-500',
+        },
+        {
+          id: 'reports',
+          icon: BarChart3,
+          title: isRTL ? 'التقارير المالية' : 'Financial Reports',
+          description: isRTL
+            ? 'عرض التقارير المالية والتحليلات'
+            : 'View financial reports and analytics',
+          path: '/dashboard/reports',
+          color: 'text-purple-400',
+          bgColor: 'bg-purple-500/20',
+          borderColor: 'border-purple-500/30 hover:border-purple-500',
+        },
+      ];
+    }
+
+    // HR quick start options
+    if (role === 'HR') {
+      return [
+        {
+          id: 'team',
+          icon: Users,
+          title: isRTL ? 'إدارة الفريق' : 'Team Management',
+          description: isRTL
+            ? 'أضف الموظفين وأدر فرق العمل'
+            : 'Add employees and manage teams',
+          path: '/dashboard/team',
+          color: 'text-blue-400',
+          bgColor: 'bg-blue-500/20',
+          borderColor: 'border-blue-500/30 hover:border-blue-500',
+        },
+        {
+          id: 'directory',
+          icon: UserPlus,
+          title: isRTL ? 'دليل الموظفين' : 'Employee Directory',
+          description: isRTL
+            ? 'تصفح بيانات الموظفين ومعلوماتهم'
+            : 'Browse employee profiles and information',
+          path: '/dashboard/hr',
+          color: 'text-green-400',
+          bgColor: 'bg-green-500/20',
+          borderColor: 'border-green-500/30 hover:border-green-500',
+        },
+        {
+          id: 'settings',
+          icon: Settings,
+          title: isRTL ? 'إعدادات الشركة' : 'Company Settings',
+          description: isRTL
+            ? 'أعد إعدادات الشركة والسياسات'
+            : 'Configure company settings and policies',
+          path: '/dashboard/settings',
+          color: 'text-purple-400',
+          bgColor: 'bg-purple-500/20',
+          borderColor: 'border-purple-500/30 hover:border-purple-500',
+        },
+      ];
+    }
+
+    // VIEWER (and default/fallback) quick start options
+    return [
+      {
+        id: 'projects',
+        icon: LayoutDashboard,
+        title: isRTL ? 'تصفح المشاريع' : 'Browse Projects',
+        description: isRTL
+          ? 'استكشف المشاريع النشطة والمخطط لها'
+          : 'Explore active and planned projects',
+        path: '/dashboard/projects',
+        color: 'text-blue-400',
+        bgColor: 'bg-blue-500/20',
+        borderColor: 'border-blue-500/30 hover:border-blue-500',
+      },
+      {
+        id: 'reports',
+        icon: BarChart3,
+        title: isRTL ? 'عرض التقارير' : 'View Reports',
+        description: isRTL
+          ? 'اطلع على التقارير والإحصائيات'
+          : 'View reports and statistics',
+        path: '/dashboard/reports',
+        color: 'text-green-400',
+        bgColor: 'bg-green-500/20',
+        borderColor: 'border-green-500/30 hover:border-green-500',
+      },
+      {
+        id: 'ai',
+        icon: Bot,
+        title: isRTL ? 'اكتشف المساعد الذكي' : 'Explore AI Assistant',
+        description: isRTL
+          ? 'تعرف على كيف يمكن للذكاء الاصطناعي مساعدتك'
+          : 'Learn how AI can help you',
+        path: '/dashboard/ai-chat',
+        color: 'text-purple-400',
+        bgColor: 'bg-purple-500/20',
+        borderColor: 'border-purple-500/30 hover:border-purple-500',
+      },
+    ];
+  }, [user?.role, isRTL]);
 
   const features = [
     {

@@ -396,9 +396,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
   
-  // Check role-based access
+  // Check role-based access (normalize role to lowercase for comparison)
+  const userRole = payload.role.toLowerCase();
   const requiredRoles = getRequiredRole(pathname);
-  if (requiredRoles && !requiredRoles.includes(payload.role)) {
+  if (requiredRoles && !requiredRoles.includes(userRole)) {
     // For API routes, return 403
     if (pathname.startsWith('/api/')) {
       return NextResponse.json(
