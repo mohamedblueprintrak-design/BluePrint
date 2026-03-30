@@ -8,7 +8,6 @@
 'use client';
 
 import React, { createContext, useContext, useCallback, useEffect, useState, useRef } from 'react';
-// @ts-expect-error - socket.io-client types not installed
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from '@/context/auth-context';
 import {

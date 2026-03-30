@@ -11,6 +11,7 @@ import { MobileBottomNav } from '@/components/mobile-bottom-nav';
 import { cn } from '@/lib/utils';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
 
 // Inner component that checks auth
 function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -89,7 +90,9 @@ export default function DashboardLayout({
           
           {/* Page Content */}
           <div className="p-4 md:p-6 flex-1">
-            {children}
+            <ErrorBoundary>
+              {children}
+            </ErrorBoundary>
           </div>
           
           {/* Footer - sticky to bottom */}

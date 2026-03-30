@@ -3,7 +3,6 @@
  * خدمة التخزين المؤقت باستخدام Redis
  */
 
-// @ts-expect-error - redis types not installed
 import { createClient, RedisClientType } from 'redis';
 import logger from '@/lib/logger';
 

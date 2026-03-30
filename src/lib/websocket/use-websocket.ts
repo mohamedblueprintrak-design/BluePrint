@@ -8,7 +8,6 @@
 'use client';
 
 import { useEffect, useRef, useCallback, useState } from 'react';
-// @ts-expect-error - socket.io-client types not installed
 import { io, Socket } from 'socket.io-client';
 import {
   WebSocketEventType,

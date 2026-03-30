@@ -20,7 +20,7 @@ export async function GET(
 ) {
   const user = await getUserFromRequest(request);
 
-  if (!user) {
+  if (!user || user.role !== 'ADMIN') {
     return unauthorizedResponse();
   }
 

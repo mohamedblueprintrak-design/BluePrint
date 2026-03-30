@@ -8,7 +8,6 @@
 
 import { Server as HTTPServer } from 'http';
 import { Server as HTTPSServer } from 'https';
-// @ts-expect-error - socket.io types not installed
 import { Server as IOServer, Socket } from 'socket.io';
 import { verify } from 'jsonwebtoken';
 import { prisma } from '@/lib/db';

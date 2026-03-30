@@ -8,7 +8,7 @@
 
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { getUserFromRequest } from '../../utils/demo-config';
+import { getUserFromRequest, isDemoUser } from '../../utils/demo-config';
 import { successResponse, errorResponse, unauthorizedResponse, serverErrorResponse } from '../../utils/response';
 
 // ============================================
@@ -288,6 +288,10 @@ export async function POST(request: NextRequest) {
       return unauthorizedResponse();
     }
 
+    if (isDemoUser(user.id)) {
+      return errorResponse('Auto-create is not available in demo mode', 'FORBIDDEN', 403);
+    }
+
     const body = await request.json();
     const { projectId, phaseId, phaseCategory } = body;
 
@@ -309,7 +313,7 @@ export async function POST(request: NextRequest) {
 
     // Check if the project exists
     const project = await db.project.findUnique({
-      where: { id: projectId },
+      where: { id: projectId, organizationId: user.organizationId },
       select: { id: true, name: true, managerId: true },
     });
 

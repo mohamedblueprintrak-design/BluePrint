@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { getUserFromRequest } from '../../utils/demo-config';
+import { unauthorizedResponse } from '../../utils/response';
 
 // PATCH - Update automation status
 export async function PATCH(
@@ -7,6 +9,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const user = await getUserFromRequest(request);
+    if (!user) return unauthorizedResponse();
+
     const { id } = await params;
     const body = await request.json();
     const { status } = body;
@@ -41,6 +46,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const user = await getUserFromRequest(request);
+    if (!user) return unauthorizedResponse();
+
     const { id } = await params;
     
     // @ts-expect-error automation model not in schema
@@ -65,6 +73,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const user = await getUserFromRequest(request);
+    if (!user) return unauthorizedResponse();
+
     const { id } = await params;
     
     try {

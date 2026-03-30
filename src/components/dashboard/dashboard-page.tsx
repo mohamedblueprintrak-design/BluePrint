@@ -24,7 +24,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import {
   Building2, Users, DollarSign, CheckSquare, AlertTriangle,
   ArrowUpRight, ArrowDownRight, Clock, FileText, Loader2, Plus,
-  Rocket, BarChart3, CalendarDays, Sparkles, Info
+  Rocket, BarChart3, CalendarDays, Sparkles, Info, AlertCircle
 } from 'lucide-react';
 import {
   RevenueChart,
@@ -75,7 +75,7 @@ export function DashboardPage() {
     };
   }, []);
   
-  const { data: dashboardData, isLoading: dashboardLoading } = useDashboard();
+  const { data: dashboardData, isLoading: dashboardLoading, error, refetch } = useDashboard();
   const { data: projectsData, isLoading: projectsLoading } = useProjects();
   const { data: tasksData, isLoading: tasksLoading } = useTasks({ status: 'todo' });
   const { data: invoicesData, isLoading: invoicesLoading } = useInvoices({ status: 'pending' });
@@ -255,6 +255,21 @@ export function DashboardPage() {
           </SelectContent>
         </Select>
       </div>
+
+      {/* Error State */}
+      {error && (
+        <Card className="bg-red-500/10 border-red-500/30">
+          <CardContent className="p-6 text-center">
+            <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-3" />
+            <p className="text-red-400 font-medium">
+              {language === 'ar' ? 'حدث خطأ في تحميل البيانات' : 'Failed to load dashboard data'}
+            </p>
+            <Button variant="outline" size="sm" onClick={() => refetch()} className="mt-3">
+              {language === 'ar' ? 'إعادة المحاولة' : 'Retry'}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Empty State - No Projects */}
       {projects.length === 0 && !projectsLoading && (

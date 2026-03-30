@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const entityType = searchParams.get('entityType');
     const entityId = searchParams.get('entityId');
-    const organizationId = searchParams.get('organizationId');
+    const organizationId = user.organizationId;
     const projectId = searchParams.get('projectId');
     const userId = searchParams.get('userId');
     const action = searchParams.get('action');
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
 
     if (entityType) where.entityType = entityType;
     if (entityId) where.entityId = entityId;
-    if (organizationId) where.organizationId = organizationId;
+    where.organizationId = organizationId;
     if (projectId) where.projectId = projectId;
     if (userId) where.userId = userId;
     if (action) where.action = action;

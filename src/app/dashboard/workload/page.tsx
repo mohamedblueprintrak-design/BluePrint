@@ -79,7 +79,7 @@ interface ReassignTask {
   project?: string;
 }
 
-export function WorkloadPage() {
+export default function WorkloadPage() {
   const { language } = useApp();
   const { t } = useTranslation(language);
 

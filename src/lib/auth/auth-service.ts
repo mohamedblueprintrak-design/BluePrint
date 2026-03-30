@@ -15,7 +15,6 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { hash, compare } from 'bcryptjs';
 import { randomBytes, randomInt } from 'crypto';
-// @ts-expect-error - otplib types not installed
 import { generateSecret, generateURI, verifySync } from 'otplib';
 import { prisma } from '@/lib/db';
 import { env } from '@/lib/env';

@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-// @ts-expect-error react-dropzone types
 import { useDropzone } from 'react-dropzone';
 import { Upload, X, File, Image as ImageIcon, FileText, FileSpreadsheet, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';

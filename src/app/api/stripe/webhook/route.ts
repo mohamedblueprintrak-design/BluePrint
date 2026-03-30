@@ -14,7 +14,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { constructWebhookEvent, mapStripeStatus } from '@/lib/stripe';
 import { db } from '@/lib/db';
-// @ts-expect-error stripe types not installed
 import Stripe from 'stripe';
 
 // Webhook secret from environment

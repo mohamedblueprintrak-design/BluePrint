@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
 import { useDocuments, useUploadFile, useCreateDocument, useDeleteDocument, CreateDocumentData } from '@/hooks/use-data';
@@ -137,17 +137,19 @@ export function DocumentsPage() {
   const documents = documentsData?.data || [];
 
   // Calculate stats
-  const totalDocuments = documents.length;
-  const totalSize = documents.reduce((sum: number, doc: Document) => sum + (doc.fileSize || 0), 0);
-  
-  // Recent uploads (last 7 days)
-  const weekAgo = new Date();
-  weekAgo.setDate(weekAgo.getDate() - 7);
-  const recentUploads = documents.filter((doc: Document) => 
-    new Date(doc.createdAt) >= weekAgo
-  ).length;
+  const stats = useMemo(() => {
+    const totalDocuments = documents.length;
+    const totalSize = documents.reduce((sum: number, doc: Document) => sum + (doc.fileSize || 0), 0);
+    
+    // Recent uploads (last 7 days)
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const recentUploads = documents.filter((doc: Document) => 
+      new Date(doc.createdAt) >= weekAgo
+    ).length;
 
-  const stats = { totalDocuments, totalSize, recentUploads };
+    return { totalDocuments, totalSize, recentUploads };
+  }, [documents]);
 
   // Filter documents
   const filteredDocuments = documents.filter((doc: Document) => {
@@ -435,6 +437,7 @@ export function DocumentsPage() {
             <Button 
               variant="ghost" 
               size="icon" 
+              aria-label="Preview document"
               className="h-8 w-8 text-slate-400 hover:text-white"
               onClick={() => handlePreview(doc)}
             >
@@ -443,6 +446,7 @@ export function DocumentsPage() {
             <Button 
               variant="ghost" 
               size="icon" 
+              aria-label="Download document"
               className="h-8 w-8 text-slate-400 hover:text-white"
               onClick={() => handleDownload(doc)}
             >
@@ -451,6 +455,7 @@ export function DocumentsPage() {
             <Button 
               variant="ghost" 
               size="icon" 
+              aria-label="Delete document"
               className="h-8 w-8 text-slate-400 hover:text-red-400"
               onClick={() => handleDelete(doc)}
             >
@@ -508,6 +513,7 @@ export function DocumentsPage() {
             <Button 
               variant="ghost" 
               size="icon" 
+              aria-label="Preview document"
               className="h-8 w-8 text-slate-400 hover:text-white"
               onClick={() => handlePreview(doc)}
             >
@@ -516,6 +522,7 @@ export function DocumentsPage() {
             <Button 
               variant="ghost" 
               size="icon" 
+              aria-label="Download document"
               className="h-8 w-8 text-slate-400 hover:text-white"
               onClick={() => handleDownload(doc)}
             >
@@ -524,6 +531,7 @@ export function DocumentsPage() {
             <Button 
               variant="ghost" 
               size="icon" 
+              aria-label="Delete document"
               className="h-8 w-8 text-slate-400 hover:text-red-400"
               onClick={() => handleDelete(doc)}
             >

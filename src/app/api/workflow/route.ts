@@ -55,15 +55,15 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, ...updateData } = body;
+    const { id, status, assigneeId, notes, progress } = body;
 
     if (!id) {
       return errorResponse('Phase ID is required');
     }
 
     // Server-side dependency enforcement: validate phase transition
-    if (updateData.status) {
-      const validation = await validatePhaseTransition(id, updateData.status);
+    if (status) {
+      const validation = await validatePhaseTransition(id, status);
       if (!validation.allowed) {
         return errorResponse(
           validation.reason || 'Phase transition is not allowed due to dependency constraints'
@@ -71,13 +71,9 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    // Convert date strings if present
-    if (updateData.startDate) updateData.startDate = new Date(updateData.startDate);
-    if (updateData.endDate) updateData.endDate = new Date(updateData.endDate);
-
     const phase = await db.workflowPhase.update({
       where: { id },
-      data: updateData,
+      data: { status, assignedToId: assigneeId, notes },
       include: {
         assignedTo: { select: { id: true, fullName: true, avatar: true } },
       },

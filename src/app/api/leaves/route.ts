@@ -97,6 +97,10 @@ export async function PUT(request: NextRequest) {
     return error('لا يمكن تحديث طلبات الإجازة في الوضع التجريبي', 'DEMO_MODE', 403);
   }
 
+  if (user.role !== 'ADMIN' && user.role !== 'MANAGER' && user.role !== 'HR') {
+    return error('Only managers can approve leaves', 'FORBIDDEN', 403);
+  }
+
   try {
     const { db } = await import('@/lib/db');
     const { sendEmail } = await import('@/lib/email');

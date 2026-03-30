@@ -17,8 +17,8 @@ export async function GET(
     if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
 
     const { id } = await params;
-    const member = await db.user.findUnique({
-      where: { id },
+    const member = await db.user.findFirst({
+      where: { id, organizationId: user.organizationId },
       select: {
         id: true,
         email: true,
@@ -58,6 +58,10 @@ export async function PUT(
     }
 
     const { id } = await params;
+    // Verify user belongs to the same organization
+    const targetUser = await db.user.findFirst({ where: { id, organizationId: user.organizationId }, select: { id: true } });
+    if (!targetUser) return errorResponse('User not found', 'NOT_FOUND', 404);
+
     const body = await request.json();
     const { fullName, email, role, department, phone, jobTitle } = body;
 
@@ -98,6 +102,10 @@ export async function DELETE(
 
     // SECURITY: Prevent self-deletion
     const { id } = await params;
+    // Verify user belongs to the same organization
+    const targetUser = await db.user.findFirst({ where: { id, organizationId: user.organizationId }, select: { id: true } });
+    if (!targetUser) return errorResponse('User not found', 'NOT_FOUND', 404);
+
     if (id === user.id) {
       return errorResponse('لا يمكنك حذف حسابك الخاص', 'SELF_DELETE', 400);
     }

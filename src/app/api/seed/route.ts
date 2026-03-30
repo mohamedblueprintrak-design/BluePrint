@@ -1,10 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { db } from '@/lib/db';
-import { signToken } from '@/lib/auth';
+import { SignJWT } from 'jose';
+
+// Sign JWT token using jose (Edge-compatible, consistent with auth-service)
+async function signToken(payload: { userId: string; email: string; role: string }): Promise<string> {
+  const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+  return new SignJWT(payload)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setIssuer('blueprint-saas')
+    .setAudience('blueprint-users')
+    .setExpirationTime('2h')
+    .sign(secret);
+}
 
 // POST /api/seed - Seed database with demo data
 export async function POST(request: NextRequest) {
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json(
+      { error: 'Seed endpoint is disabled in production' },
+      { status: 403 }
+    );
+  }
+
   try {
     // Check if data already exists
     const existingUsers = await db.user.count();
@@ -579,7 +598,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Create admin token for immediate login
-    const token = signToken({
+    const token = await signToken({
       userId: admin.id,
       email: admin.email,
       role: admin.role,
@@ -615,7 +634,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Seed error:', error);
     return NextResponse.json(
-      { error: 'Failed to seed database', details: String(error) },
+      { error: 'Failed to seed database' },
       { status: 500 }
     );
   }

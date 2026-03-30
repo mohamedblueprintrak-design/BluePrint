@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
@@ -33,8 +33,8 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import {
-  Building2, Plus, Search, Edit, Trash2, 
-  Eye, MapPin, DollarSign, Users, Sparkles
+  Building2, Plus, Search, Edit, Trash2,
+  Eye, MapPin, DollarSign, Users, Sparkles, AlertCircle
 } from 'lucide-react';
 
 const PROJECT_TYPES = [
@@ -64,7 +64,7 @@ export function ProjectsPage() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [showAddDialog, setShowAddDialog] = useState(false);
   
-  const { data: projectsData, isLoading, refetch } = useProjects();
+  const { data: projectsData, isLoading, isError, refetch } = useProjects();
   const { data: clientsData } = useClients();
   const createProject = useCreateProject();
   const deleteProject = useDeleteProject();
@@ -83,23 +83,25 @@ export function ProjectsPage() {
   });
 
   // Filter projects
-  const filteredProjects = projects.filter((project: any) => {
-    const matchesSearch = project.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          project.projectNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          project.location?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
-    const matchesType = typeFilter === 'all' || project.projectType === typeFilter;
-    return matchesSearch && matchesStatus && matchesType;
-  });
+  const filteredProjects = useMemo(() => {
+    return projects.filter((project: any) => {
+      const matchesSearch = project.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            project.projectNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            project.location?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
+      const matchesType = typeFilter === 'all' || project.projectType === typeFilter;
+      return matchesSearch && matchesStatus && matchesType;
+    });
+  }, [projects, searchQuery, statusFilter, typeFilter]);
 
   // Stats
-  const stats = {
+  const stats = useMemo(() => ({
     total: projects.length,
     active: projects.filter((p: any) => p.status === 'active').length,
     completed: projects.filter((p: any) => p.status === 'completed').length,
     pending: projects.filter((p: any) => p.status === 'pending').length,
     totalValue: projects.reduce((sum: number, p: any) => sum + (p.contractValue || 0), 0)
-  };
+  }), [projects]);
 
   const handleCreateProject = async () => {
     if (!formData.name) {
@@ -393,6 +395,14 @@ export function ProjectsPage() {
         <div className="flex items-center justify-center py-12">
           <div className="text-slate-400">{t.loading}</div>
         </div>
+      ) : isError ? (
+        <div className="flex flex-col items-center justify-center py-12 text-red-400">
+          <AlertCircle className="w-12 h-12 mb-3 opacity-70" />
+          <p className="text-lg">{language === 'ar' ? 'فشل تحميل المشاريع' : 'Failed to load projects'}</p>
+          <Button variant="outline" className="mt-4" onClick={() => refetch()}>
+            {language === 'ar' ? 'إعادة المحاولة' : 'Retry'}
+          </Button>
+        </div>
       ) : filteredProjects.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-slate-400">
           <Building2 className="w-16 h-16 mb-4 opacity-50" />
@@ -468,15 +478,17 @@ export function ProjectsPage() {
                         e.stopPropagation();
                         router.push(`/dashboard/projects/${project.id}`);
                       }}
-                      title="Workspace">
+                      title="Workspace"
+                      aria-label="View project">
                       <Eye className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white" aria-label="Edit project">
                       <Edit className="w-4 h-4" />
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="icon" 
+                      aria-label="Delete project"
                       className="h-8 w-8 text-slate-400 hover:text-red-400"
                       onClick={(e) => {
                         e.stopPropagation();

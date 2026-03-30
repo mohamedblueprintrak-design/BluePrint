@@ -11,7 +11,7 @@ const DEMO_EXPENSES = [
 
 export async function GET(request: NextRequest) {
   const user = await getUserFromRequest(request);
-  if (!user) return error('غير مصرح', 'UNAUTHORIZED', 401);
+  if (!user || !user.organizationId) return error('غير مصرح', 'UNAUTHORIZED', 401);
 
   const projectId = new URL(request.url).searchParams.get('projectId');
 
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const { db } = await import('@/lib/db');
-    const where: { projectId?: string } = {};
+    const where: { projectId?: string, project?: { organizationId: string } } = { project: { organizationId: user.organizationId } };
     if (projectId) where.projectId = projectId;
     
     const budgets = await db.budget.findMany({ 
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const user = await getUserFromRequest(request);
-  if (!user) return error('غير مصرح', 'UNAUTHORIZED', 401);
+  if (!user || !user.organizationId) return error('غير مصرح', 'UNAUTHORIZED', 401);
 
   // Demo mode - cannot create expenses
   if (isDemoUser(user.id)) {
@@ -66,6 +66,12 @@ export async function POST(request: NextRequest) {
     const { db } = await import('@/lib/db');
     const body = await request.json();
     if (!body.category || !body.amount) return error('الفئة والمبلغ مطلوبان');
+    
+    // Verify project belongs to user's organization
+    if (body.projectId) {
+      const project = await db.project.findUnique({ where: { id: body.projectId, organizationId: user.organizationId }, select: { id: true } });
+      if (!project) return error('المشروع غير موجود', 'NOT_FOUND', 404);
+    }
     
     const amount = parseFloat(body.amount) || 0;
     const budget = await db.budget.create({ 
@@ -89,7 +95,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   const user = await getUserFromRequest(request);
-  if (!user) return error('غير مصرح', 'UNAUTHORIZED', 401);
+  if (!user || !user.organizationId) return error('غير مصرح', 'UNAUTHORIZED', 401);
 
   // Demo mode - cannot update expenses
   if (isDemoUser(user.id)) {
@@ -99,6 +105,9 @@ export async function PUT(request: NextRequest) {
   try {
     const { db } = await import('@/lib/db');
     const { id, ...data } = await request.json();
+    // Verify budget belongs to user's organization
+    const existingBudget = await db.budget.findUnique({ where: { id }, include: { project: { select: { organizationId: true } } } });
+    if (!existingBudget || existingBudget.project.organizationId !== user.organizationId) return error('المصروف غير موجود', 'NOT_FOUND', 404);
     const amount = parseFloat(data.amount) || 0;
     await db.budget.update({ 
       where: { id }, 
@@ -118,7 +127,7 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   const user = await getUserFromRequest(request);
-  if (!user) return error('غير مصرح', 'UNAUTHORIZED', 401);
+  if (!user || !user.organizationId) return error('غير مصرح', 'UNAUTHORIZED', 401);
 
   // Demo mode - cannot delete expenses
   if (isDemoUser(user.id)) {
@@ -129,6 +138,9 @@ export async function DELETE(request: NextRequest) {
     const { db } = await import('@/lib/db');
     const id = new URL(request.url).searchParams.get('id');
     if (!id) return error('معرف المصروف مطلوب');
+    // Verify budget belongs to user's organization
+    const existingBudget = await db.budget.findUnique({ where: { id }, include: { project: { select: { organizationId: true } } } });
+    if (!existingBudget || existingBudget.project.organizationId !== user.organizationId) return error('المصروف غير موجود', 'NOT_FOUND', 404);
     await db.budget.delete({ where: { id } });
     return success({ message: 'تم الحذف' });
   } catch (e) {

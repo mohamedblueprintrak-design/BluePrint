@@ -9,9 +9,7 @@
  * - Provides sliding window algorithm
  */
 
-// @ts-expect-error - redis types not installed
 import { createClient } from 'redis';
-// @ts-expect-error - redis types not installed
 import type { RedisClientType } from 'redis';
 
 // ============================================
@@ -306,17 +304,40 @@ export const rateLimiters = {
 
 /**
  * Get client IP from request headers
+ *
+ * SECURITY NOTE: In production with a trusted proxy, only the rightmost IP in
+ * X-Forwarded-For (the one appended by the trusted proxy) should be trusted.
+ * This sanitization is a baseline defense; configure TRUSTED_PROXY_IPS for full protection.
  */
 export function getClientIP(headers: Headers): string {
+  const ipRegex = /^[0-9a-fA-F.:]+$/;
+  const maxIPLength = 45; // Max IPv6 address length
+
+  function sanitize(ip: string): string {
+    const cleaned = ip.trim();
+    if (cleaned.length > maxIPLength || !ipRegex.test(cleaned)) return 'unknown';
+    return cleaned;
+  }
+
   const forwarded = headers.get('x-forwarded-for');
-  if (forwarded) return forwarded.split(',')[0].trim();
-  
+  if (forwarded) {
+    const candidate = forwarded.split(',')[0].trim();
+    const sanitized = sanitize(candidate);
+    if (sanitized !== 'unknown') return sanitized;
+  }
+
   const realIP = headers.get('x-real-ip');
-  if (realIP) return realIP;
-  
+  if (realIP) {
+    const sanitized = sanitize(realIP);
+    if (sanitized !== 'unknown') return sanitized;
+  }
+
   const cfIP = headers.get('cf-connecting-ip');
-  if (cfIP) return cfIP;
-  
+  if (cfIP) {
+    const sanitized = sanitize(cfIP);
+    if (sanitized !== 'unknown') return sanitized;
+  }
+
   return 'unknown';
 }
 

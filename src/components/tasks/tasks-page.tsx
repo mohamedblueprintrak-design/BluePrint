@@ -416,13 +416,18 @@ export function TasksPage() {
       return;
     }
     
+    const controller = new AbortController();
+    const isMountedRef = { current: true };
+    
     const fetchSubtasks = async () => {
       setIsLoadingSubtasks(true);
       try {
         const response = await fetch(`/api/tasks?parentId=${selectedTask.id}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: { 'Authorization': `Bearer ${token}` },
+          signal: controller.signal,
         });
         const result = await response.json();
+        if (!isMountedRef.current) return;
         if (result.success && result.data) {
           setSubtasks(result.data.map((st: any) => ({
             id: st.id,
@@ -431,14 +436,19 @@ export function TasksPage() {
             completed: st.status === 'done',
           })));
         }
-      } catch {
+      } catch (err) {
+        if (!isMountedRef.current || (err instanceof DOMException && err.name === 'AbortError')) return;
         setSubtasks([]);
       } finally {
-        setIsLoadingSubtasks(false);
+        if (isMountedRef.current) setIsLoadingSubtasks(false);
       }
     };
     
     fetchSubtasks();
+    return () => {
+      controller.abort();
+      isMountedRef.current = false;
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showTaskDetail, selectedTask]);
   
@@ -457,17 +467,21 @@ export function TasksPage() {
       
       setNewSubtaskTitle('');
       // Re-fetch subtasks
-      const response = await fetch(`/api/tasks?parentId=${selectedTask.id}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const result = await response.json();
-      if (result.success && result.data) {
-        setSubtasks(result.data.map((st: any) => ({
-          id: st.id,
-          title: st.title,
-          status: st.status || 'todo',
-          completed: st.status === 'done',
-        })));
+      try {
+        const response = await fetch(`/api/tasks?parentId=${selectedTask.id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const result = await response.json();
+        if (result.success && result.data) {
+          setSubtasks(result.data.map((st: any) => ({
+            id: st.id,
+            title: st.title,
+            status: st.status || 'todo',
+            completed: st.status === 'done',
+          })));
+        }
+      } catch {
+        // Silently fail - subtasks will refresh on next selection
       }
     } catch {
       toast({
@@ -609,7 +623,7 @@ export function TasksPage() {
         <CardContent className="p-4 space-y-3">
           {/* Header with priority, mandatory indicator, and drag handle */}
           <div className="flex items-start gap-2">
-            <GripVertical className="w-4 h-4 text-slate-500 mt-1 cursor-grab opacity-0 group-hover:opacity-100 transition-opacity" />
+            <GripVertical className="w-4 h-4 text-slate-500 mt-1 cursor-grab opacity-0 group-hover:opacity-100 transition-opacity" role="button" aria-label="Drag to reorder" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <div className={`w-2 h-2 rounded-full ${priorityConfig.dotColor}`} />
@@ -714,7 +728,7 @@ export function TasksPage() {
               <Avatar className="w-6 h-6">
                 <AvatarImage src={assignee.avatar} />
                 <AvatarFallback className="text-[10px] bg-blue-600">
-                  {language === 'ar' ? assignee.initials : assignee.nameEn.split(' ').map(n => n[0]).join('')}
+                  {language === 'ar' ? assignee.initials : assignee.nameEn.split(' ').map((n: string) => n[0]).join('')}
                 </AvatarFallback>
               </Avatar>
             ) : (
@@ -727,6 +741,7 @@ export function TasksPage() {
               <Button 
                 variant="ghost" 
                 size="icon" 
+                aria-label="View task"
                 className="h-6 w-6 text-slate-400 hover:text-white"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -739,6 +754,7 @@ export function TasksPage() {
               <Button 
                 variant="ghost" 
                 size="icon" 
+                aria-label="Delete task"
                 className="h-6 w-6 text-slate-400 hover:text-red-400"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -1335,7 +1351,7 @@ export function TasksPage() {
                             <AvatarFallback className="text-[10px] bg-blue-600">
                               {language === 'ar' 
                                 ? getAssignee(selectedTask.assignedToId)?.initials 
-                                : getAssignee(selectedTask.assignedToId)?.nameEn.split(' ').map(n => n[0]).join('')
+                                : getAssignee(selectedTask.assignedToId)?.nameEn.split(' ').map((n: string) => n[0]).join('')
                               }
                             </AvatarFallback>
                           </Avatar>

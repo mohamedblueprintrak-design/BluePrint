@@ -8,9 +8,7 @@
  * - Different log levels (error, warn, info, debug)
  */
 
-// @ts-expect-error - winston types not installed
 import winston from 'winston';
-// @ts-expect-error - winston-daily-rotate-file types not installed
 import DailyRotateFile from 'winston-daily-rotate-file';
 import path from 'path';
 

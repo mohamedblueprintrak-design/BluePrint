@@ -174,12 +174,14 @@ export const postHandlers = {
     const database = await getDb();
     if (!database) return errorResponse('قاعدة البيانات غير متاحة');
 
+    const orgId = context.user.organizationId;
+
     // Verify invoice belongs to user's organization and record payment atomically
     let result;
     try {
-      result = await database.$transaction(async (tx) => {
+      result = await database.$transaction(async (tx: any) => {
         const paymentInvoice = await tx.invoice.findFirst({
-          where: { id: invoiceId as string, organizationId: context.user.organizationId }
+          where: { id: invoiceId as string, organizationId: orgId }
         });
         if (!paymentInvoice) throw new Error('Invoice not found');
 

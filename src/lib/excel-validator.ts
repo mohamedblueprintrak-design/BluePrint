@@ -13,7 +13,6 @@
  * Uses exceljs instead of xlsx for better security
  */
 
-// @ts-expect-error - exceljs types not installed
 import { Workbook, Worksheet } from 'exceljs';
 
 // ============================================

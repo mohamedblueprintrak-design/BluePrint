@@ -153,16 +153,23 @@ class InvoiceService {
    */
   private async generateInvoiceNumber(organizationId: string): Promise<string> {
     const year = new Date().getFullYear();
-    const count = await prisma.invoice.count({
-      where: {
-        organizationId,
-        createdAt: {
-          gte: new Date(year, 0, 1),
-          lt: new Date(year + 1, 0, 1),
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const count = await prisma.invoice.count({
+        where: {
+          organizationId,
+          invoiceNumber: { startsWith: `INV-${year}` },
         },
-      },
-    });
-    return `INV-${year}-${String(count + 1).padStart(5, '0')}`;
+      });
+      const invoiceNumber = `INV-${year}-${String(count + 1).padStart(5, '0')}`;
+      // Check if this number already exists (race condition guard)
+      const exists = await prisma.invoice.findUnique({
+        where: { invoiceNumber },
+      });
+      if (!exists) return invoiceNumber;
+      // If exists due to concurrent request, retry with next iteration
+    }
+    // Fallback: use timestamp-based unique number after retries exhausted
+    return `INV-${year}-${Date.now()}`;
   }
 
   /**

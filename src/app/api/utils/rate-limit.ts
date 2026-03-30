@@ -77,7 +77,6 @@ async function initRedis(): Promise<boolean> {
   }
   
   try {
-    // @ts-expect-error redis module types may not be available
     const { createClient } = await import('redis');
     redisClient = createClient({ 
       url: redisUrl,

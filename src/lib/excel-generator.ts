@@ -1,4 +1,3 @@
-// @ts-expect-error - exceljs types not installed
 import { Workbook, Worksheet } from 'exceljs';
 
 // Types for Excel export

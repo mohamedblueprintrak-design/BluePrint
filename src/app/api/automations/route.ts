@@ -8,8 +8,10 @@ function errorResponse(message: string, code = 'ERROR', status = 400) {
 }
 
 // GET - Fetch all automations
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const user = await getUserFromRequest(request);
+    if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
     // @ts-expect-error automation model not in schema
     const automations = await db.automation.findMany({
       orderBy: { createdAt: 'desc' },

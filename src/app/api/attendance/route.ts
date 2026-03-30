@@ -57,7 +57,16 @@ export async function POST(request: NextRequest) {
   try {
     const { db } = await import('@/lib/db');
     const body = await request.json();
-    const att = await db.attendance.create({ data: { ...body, userId: body.userId || user.id } });
+    const att = await db.attendance.create({
+      data: {
+        userId: body.userId || user.id,
+        date: body.date,
+        checkIn: body.checkIn,
+        checkOut: body.checkOut,
+        status: body.status || 'PRESENT',
+        notes: body.notes,
+      }
+    });
     return success({ id: att.id, date: att.date });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Unknown error';
@@ -76,9 +85,12 @@ export async function PUT(request: NextRequest) {
 
   try {
     const { db } = await import('@/lib/db');
-    const { id, ...data } = await request.json();
-    await db.attendance.update({ where: { id }, data });
-    return success({ id, ...data });
+    const { id, status, checkOut, notes } = await request.json();
+    await db.attendance.update({
+      where: { id },
+      data: { status, checkOut, notes }
+    });
+    return success({ id });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Unknown error';
     return error(message, 'SERVER_ERROR', 500);

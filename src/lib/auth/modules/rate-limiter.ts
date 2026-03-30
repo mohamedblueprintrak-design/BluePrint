@@ -197,26 +197,43 @@ class RateLimiter {
 
   /**
    * Get client IP from request
+   *
+   * SECURITY NOTE: In production with a trusted proxy, only the rightmost IP in
+   * X-Forwarded-For (the one appended by the trusted proxy) should be trusted.
+   * This sanitization is a baseline defense; configure TRUSTED_PROXY_IPS for full protection.
    */
   getClientIP(request: NextRequest): string {
+    const ipRegex = /^[0-9a-fA-F.:]+$/;
+    const maxIPLength = 45; // Max IPv6 address length
+
+    function sanitize(ip: string): string {
+      const cleaned = ip.trim();
+      if (cleaned.length > maxIPLength || !ipRegex.test(cleaned)) return 'unknown';
+      return cleaned;
+    }
+
     // Check X-Forwarded-For header (most common for proxies)
     const forwarded = request.headers.get('x-forwarded-for');
     if (forwarded) {
-      return forwarded.split(',')[0].trim();
+      const candidate = forwarded.split(',')[0].trim();
+      const sanitized = sanitize(candidate);
+      if (sanitized !== 'unknown') return sanitized;
     }
-    
+
     // Check X-Real-IP header (nginx)
     const realIP = request.headers.get('x-real-ip');
     if (realIP) {
-      return realIP.trim();
+      const sanitized = sanitize(realIP);
+      if (sanitized !== 'unknown') return sanitized;
     }
-    
+
     // Check CF-Connecting-IP (Cloudflare)
     const cfIP = request.headers.get('cf-connecting-ip');
     if (cfIP) {
-      return cfIP.trim();
+      const sanitized = sanitize(cfIP);
+      if (sanitized !== 'unknown') return sanitized;
     }
-    
+
     return 'unknown';
   }
 

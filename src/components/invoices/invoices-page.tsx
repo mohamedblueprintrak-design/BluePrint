@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
 import { useInvoices, useCreateInvoice, useClients, useProjects } from '@/hooks/use-data';
@@ -41,7 +41,8 @@ import {
   FileText, Plus, Search, Eye, Edit, Trash2, Download,
   Clock, AlertCircle, CheckCircle, Calendar
 } from 'lucide-react';
-import { downloadInvoicePDF, previewInvoicePDF } from '@/lib/pdf/invoice-pdf';
+import { downloadInvoicePDF } from '@/lib/pdf/invoice-pdf';
+import { apiDelete } from '@/lib/api-client';
 
 // Invoice Status Configuration
 const INVOICE_STATUSES = [
@@ -79,7 +80,7 @@ export function InvoicesPage() {
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
 
   // Data hooks
-  const { data: invoicesData, isLoading, refetch } = useInvoices();
+  const { data: invoicesData, isLoading, isError, refetch } = useInvoices();
   const { data: clientsData } = useClients();
   const { data: projectsData } = useProjects();
   const createInvoice = useCreateInvoice();
@@ -113,35 +114,39 @@ export function InvoicesPage() {
   const calculations = { subtotal, taxAmount, grandTotal };
 
   // Filter invoices
-  const filteredInvoices = invoices.filter((invoice: any) => {
-    const matchesSearch = 
-      invoice.invoiceNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      invoice.client?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      invoice.project?.name?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter;
-    const matchesClient = clientFilter === 'all' || invoice.clientId === clientFilter;
-    
-    let matchesDateRange = true;
-    if (dateFromFilter && invoice.issueDate) {
-      matchesDateRange = new Date(invoice.issueDate) >= new Date(dateFromFilter);
-    }
-    if (dateToFilter && invoice.issueDate) {
-      matchesDateRange = matchesDateRange && new Date(invoice.issueDate) <= new Date(dateToFilter);
-    }
-    
-    return matchesSearch && matchesStatus && matchesClient && matchesDateRange;
-  });
+  const filteredInvoices = useMemo(() => {
+    return invoices.filter((invoice: any) => {
+      const matchesSearch = 
+        invoice.invoiceNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        invoice.client?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        invoice.project?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter;
+      const matchesClient = clientFilter === 'all' || invoice.clientId === clientFilter;
+      
+      let matchesDateRange = true;
+      if (dateFromFilter && invoice.issueDate) {
+        matchesDateRange = new Date(invoice.issueDate) >= new Date(dateFromFilter);
+      }
+      if (dateToFilter && invoice.issueDate) {
+        matchesDateRange = matchesDateRange && new Date(invoice.issueDate) <= new Date(dateToFilter);
+      }
+      
+      return matchesSearch && matchesStatus && matchesClient && matchesDateRange;
+    });
+  }, [invoices, searchQuery, statusFilter, clientFilter, dateFromFilter, dateToFilter]);
 
   // Calculate stats
-  const totalInvoiced = invoices.reduce((sum: number, inv: any) => sum + (inv.total || 0), 0);
-  const totalPaid = invoices.reduce((sum: number, inv: any) => sum + (inv.paidAmount || 0), 0);
-  const pending = invoices
-    .filter((inv: any) => inv.status === 'sent' || inv.status === 'partial')
-    .reduce((sum: number, inv: any) => sum + ((inv.total || 0) - (inv.paidAmount || 0)), 0);
-  const overdue = invoices
-    .filter((inv: any) => inv.status === 'overdue')
-    .reduce((sum: number, inv: any) => sum + ((inv.total || 0) - (inv.paidAmount || 0)), 0);
-  const stats = { totalInvoiced, totalPaid, pending, overdue };
+  const stats = useMemo(() => {
+    const totalInvoiced = invoices.reduce((sum: number, inv: any) => sum + (inv.total || 0), 0);
+    const totalPaid = invoices.reduce((sum: number, inv: any) => sum + (inv.paidAmount || 0), 0);
+    const pending = invoices
+      .filter((inv: any) => inv.status === 'sent' || inv.status === 'partial')
+      .reduce((sum: number, inv: any) => sum + ((inv.total || 0) - (inv.paidAmount || 0)), 0);
+    const overdue = invoices
+      .filter((inv: any) => inv.status === 'overdue')
+      .reduce((sum: number, inv: any) => sum + ((inv.total || 0) - (inv.paidAmount || 0)), 0);
+    return { totalInvoiced, totalPaid, pending, overdue };
+  }, [invoices]);
 
   // Add invoice item
   const addInvoiceItem = () => {
@@ -278,14 +283,24 @@ export function InvoicesPage() {
   };
 
   // Handle delete invoice
-  const handleDeleteInvoice = async (_id: string) => {
+  const handleDeleteInvoice = async (id: string) => {
     if (!confirm(t.confirmDelete)) return;
     
-    toast({
-      title: t.successDelete,
-      description: language === 'ar' ? 'تم حذف الفاتورة بنجاح' : 'Invoice deleted successfully'
-    });
-    refetch();
+    try {
+      await apiDelete(`/api/invoices`, { id });
+      
+      toast({
+        title: t.successDelete,
+        description: language === 'ar' ? 'تم حذف الفاتورة بنجاح' : 'Invoice deleted successfully'
+      });
+      refetch();
+    } catch (error) {
+      toast({
+        title: language === 'ar' ? 'خطأ' : 'Error',
+        description: error instanceof Error ? error.message : (language === 'ar' ? 'فشل حذف الفاتورة' : 'Failed to delete invoice'),
+        variant: 'destructive'
+      });
+    }
   };
 
   return (
@@ -579,6 +594,7 @@ export function InvoicesPage() {
                               type="button"
                               variant="ghost"
                               size="icon"
+                              aria-label="Remove item"
                               className="h-9 w-9 text-red-400 hover:text-red-300 hover:bg-red-500/10"
                               onClick={() => removeInvoiceItem(item.id)}
                               disabled={invoiceItems.length === 1}
@@ -705,6 +721,14 @@ export function InvoicesPage() {
         <div className="flex items-center justify-center py-12">
           <div className="text-slate-400">{t.loading}</div>
         </div>
+      ) : isError ? (
+        <div className="flex flex-col items-center justify-center py-12 text-red-400">
+          <AlertCircle className="w-12 h-12 mb-3 opacity-70" />
+          <p className="text-lg">{language === 'ar' ? 'فشل تحميل الفواتير' : 'Failed to load invoices'}</p>
+          <Button variant="outline" className="mt-4" onClick={() => refetch()}>
+            {language === 'ar' ? 'إعادة المحاولة' : 'Retry'}
+          </Button>
+        </div>
       ) : filteredInvoices.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-slate-400">
           <FileText className="w-16 h-16 mb-4 opacity-50" />
@@ -762,17 +786,19 @@ export function InvoicesPage() {
                       <Button 
                         variant="ghost" 
                         size="icon" 
+                        aria-label="View invoice"
                         className="h-8 w-8 text-slate-400 hover:text-white"
                         onClick={() => handleViewInvoice(invoice)}
                       >
                         <Eye className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white">
+                      <Button variant="ghost" size="icon" aria-label="Edit invoice" className="h-8 w-8 text-slate-400 hover:text-white">
                         <Edit className="w-4 h-4" />
                       </Button>
                       <Button 
                         variant="ghost" 
                         size="icon" 
+                        aria-label="Download invoice"
                         className="h-8 w-8 text-slate-400 hover:text-cyan-400"
                         onClick={() => {
                           downloadInvoicePDF({
@@ -806,6 +832,7 @@ export function InvoicesPage() {
                       <Button 
                         variant="ghost" 
                         size="icon" 
+                        aria-label="Delete invoice"
                         className="h-8 w-8 text-slate-400 hover:text-red-400"
                         onClick={() => handleDeleteInvoice(invoice.id)}
                       >

@@ -7,8 +7,9 @@
  */
 
 import { NextRequest } from 'next/server';
+import { db } from '@/lib/db';
 import { getUserFromRequest } from '@/app/api/utils/demo-config';
-import { successResponse, errorResponse, unauthorizedResponse, serverErrorResponse } from '@/app/api/utils/response';
+import { successResponse, errorResponse, unauthorizedResponse, notFoundResponse, serverErrorResponse } from '@/app/api/utils/response';
 import { getProjectCostSummary, getBOQVariance } from '@/lib/services/site-log-cost.service';
 
 export async function GET(
@@ -23,6 +24,10 @@ export async function GET(
     if (!projectId) {
       return errorResponse('Project ID is required');
     }
+
+    // Verify project belongs to user's organization
+    const project = await db.project.findUnique({ where: { id: projectId, organizationId: user.organizationId }, select: { id: true } });
+    if (!project) return notFoundResponse('Project not found');
 
     // Fetch both cost summary and BOQ variance in parallel
     const [costSummary, boqVariance] = await Promise.all([

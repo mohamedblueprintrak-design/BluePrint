@@ -6,7 +6,7 @@ const error = (message: string, code = 'ERROR', status = 400) => NextResponse.js
 
 export async function GET(request: NextRequest) {
   const user = await getUserFromRequest(request);
-  if (!user) return error('غير مصرح', 'UNAUTHORIZED', 401);
+  if (!user || !user.organizationId) return error('غير مصرح', 'UNAUTHORIZED', 401);
   
   const { searchParams } = new URL(request.url);
   const projectId = searchParams.get('projectId');
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
   try {
     const { db } = await import('@/lib/db');
     
-    const whereClause: any = {};
+    const whereClause: any = { project: { organizationId: user.organizationId } };
     if (projectId) whereClause.projectId = projectId;
     if (status) whereClause.status = status;
     
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const user = await getUserFromRequest(request);
-  if (!user) return error('غير مصرح', 'UNAUTHORIZED', 401);
+  if (!user || !user.organizationId) return error('غير مصرح', 'UNAUTHORIZED', 401);
   
   // Demo mode - cannot create defects
   if (isDemoUser(user.id)) {
@@ -64,6 +64,10 @@ export async function POST(request: NextRequest) {
     
     if (!projectId || !title) return error('المشروع والعنوان مطلوبان');
     
+    // Verify project belongs to user's organization
+    const project = await db.project.findUnique({ where: { id: projectId, organizationId: user.organizationId }, select: { id: true } });
+    if (!project) return error('المشروع غير موجود', 'NOT_FOUND', 404);
+    
     const defect = await db.defect.create({
       data: { projectId, title, description, severity: severity || 'medium', status: 'OPEN', location, assignedTo }
     });
@@ -76,7 +80,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   const user = await getUserFromRequest(request);
-  if (!user) return error('غير مصدق', 'UNAUTHORIZED', 401);
+  if (!user || !user.organizationId) return error('غير مصدق', 'UNAUTHORIZED', 401);
   
   // Demo mode - cannot update defects
   if (isDemoUser(user.id)) {
@@ -89,6 +93,10 @@ export async function PUT(request: NextRequest) {
     const { id, title, description, severity, status, location, assignedTo, resolutionNotes } = body;
     
     if (!id) return error('معرف العيب مطلوب');
+    
+    // Verify defect belongs to user's organization
+    const existingDefect = await db.defect.findUnique({ where: { id }, include: { project: { select: { organizationId: true } } } });
+    if (!existingDefect || existingDefect.project.organizationId !== user.organizationId) return error('العيب غير موجود', 'NOT_FOUND', 404);
     
     const updateData: any = {};
     if (title) updateData.title = title;
@@ -114,7 +122,7 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   const user = await getUserFromRequest(request);
-  if (!user) return error('غير مصدق', 'UNAUTHORIZED', 401);
+  if (!user || !user.organizationId) return error('غير مصدق', 'UNAUTHORIZED', 401);
   
   // Demo mode - cannot delete defects
   if (isDemoUser(user.id)) {
@@ -127,6 +135,10 @@ export async function DELETE(request: NextRequest) {
     const id = searchParams.get('id');
     
     if (!id) return error('معرف العيب مطلوب');
+    
+    // Verify defect belongs to user's organization
+    const existingDefect = await db.defect.findUnique({ where: { id }, include: { project: { select: { organizationId: true } } } });
+    if (!existingDefect || existingDefect.project.organizationId !== user.organizationId) return error('العيب غير موجود', 'NOT_FOUND', 404);
     
     await db.defect.delete({ where: { id } });
     return success({ message: 'تم الحذف بنجاح' });

@@ -18,7 +18,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     const { id } = await context.params;
 
     const project = await db.project.findUnique({
-      where: { id },
+      where: { id, organizationId: user.organizationId },
       include: {
         client: {
           select: {

@@ -20,17 +20,18 @@ interface RateLimitResult {
 class MemoryCache {
   private store = new Map<string, { value: unknown; expires: number }>();
   private cleanupInterval: NodeJS.Timeout;
+  private readonly maxSize: number;
 
-  constructor() {
-    // Clean up expired entries every minute
+  constructor(maxSize: number = 100_000) {
+    this.maxSize = maxSize;
+    // Clean up expired entries every 5 minutes
     this.cleanupInterval = setInterval(() => {
-      const now = Date.now();
-      for (const [key, entry] of this.store.entries()) {
-        if (entry.expires < now) {
-          this.store.delete(key);
-        }
-      }
-    }, 60000);
+      this.cleanup();
+    }, 5 * 60 * 1000);
+    // Don't prevent the process from exiting
+    if (this.cleanupInterval.unref) {
+      this.cleanupInterval.unref();
+    }
   }
 
   async get<T>(key: string): Promise<T | null> {
@@ -44,6 +45,7 @@ class MemoryCache {
   }
 
   async set(key: string, value: unknown, ttl: number): Promise<void> {
+    this.evictIfNeeded();
     this.store.set(key, {
       value,
       expires: Date.now() + ttl * 1000,
@@ -55,9 +57,19 @@ class MemoryCache {
   }
 
   async increment(key: string, ttl: number): Promise<number> {
-    const current = (await this.get<number>(key)) || 0;
+    // Atomic read-and-increment in a single synchronous operation
+    // to avoid the race condition where two concurrent calls read
+    // the same value before either writes.
+    const now = Date.now();
+    const entry = this.store.get(key);
+    const current = (entry && entry.expires >= now) ? (entry.value as number) : 0;
     const newValue = current + 1;
-    await this.set(key, newValue, ttl);
+
+    this.evictIfNeeded();
+    this.store.set(key, {
+      value: newValue,
+      expires: now + ttl * 1000,
+    });
     return newValue;
   }
 
@@ -65,6 +77,42 @@ class MemoryCache {
     const entry = this.store.get(key);
     if (!entry) return -1;
     return Math.max(0, Math.floor((entry.expires - Date.now()) / 1000));
+  }
+
+  async clearPrefix(prefix: string): Promise<void> {
+    for (const key of this.store.keys()) {
+      if (key.startsWith(prefix)) {
+        this.store.delete(key);
+      }
+    }
+  }
+
+  /** Remove all expired entries. */
+  private cleanup(): void {
+    const now = Date.now();
+    for (const [key, entry] of this.store.entries()) {
+      if (entry.expires < now) {
+        this.store.delete(key);
+      }
+    }
+  }
+
+  /** Evict oldest entries when the store exceeds maxSize. */
+  private evictIfNeeded(): void {
+    if (this.store.size < this.maxSize) return;
+    // Delete the first (oldest-inserted) entries to make room
+    let evicted = 0;
+    const toEvict = Math.max(1, Math.floor(this.maxSize * 0.1)); // evict 10%
+    for (const [key, entry] of this.store.entries()) {
+      if (evicted >= toEvict) break;
+      this.store.delete(key);
+      evicted++;
+    }
+  }
+
+  /** Stop the periodic cleanup interval (call on shutdown). */
+  destroy(): void {
+    clearInterval(this.cleanupInterval);
   }
 }
 
@@ -87,7 +135,6 @@ async function getCache(): Promise<MemoryCache | any> {
   if (redisUrl && process.env.NODE_ENV === 'production') {
     try {
       // Dynamic import for Redis (only in production)
-      // @ts-expect-error - redis types not installed
       const { createClient } = await import('redis');
       
       redisClient = createClient({
@@ -270,8 +317,7 @@ export const CacheService = {
       const cache = await getCache();
       
       if (cache instanceof MemoryCache) {
-        // For memory cache, we need to manually delete keys
-        // This is a simplified implementation
+        await cache.clearPrefix(`${prefix}:`);
         return;
       }
       

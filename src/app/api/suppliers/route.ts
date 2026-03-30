@@ -106,7 +106,7 @@ export async function DELETE(request: NextRequest) {
     const id = searchParams.get('id');
     if (!id) return errorResponse('معرف المورد مطلوب');
     
-    await db.supplier.update({ where: { id }, data: { isActive: false } });
+    await db.supplier.update({ where: { id, organizationId: user.organizationId }, data: { isActive: false } });
     return successResponse({ message: 'تم حذف المورد' });
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : "Unknown error";

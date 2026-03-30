@@ -6,7 +6,6 @@
  * when Stripe is not configured.
  */
 
-// @ts-expect-error - stripe types not installed
 import Stripe from 'stripe';
 
 // ============================================
@@ -58,8 +57,18 @@ export async function safeStripeOp<T>(
   }
   try {
     return await operation(getStripe());
-  } catch (error) {
-    console.error('Stripe operation failed:', error);
+  } catch (error: any) {
+    const errorType = error?.type ?? (error instanceof Error ? error.constructor.name : 'UnknownError');
+    const errorCode = error?.code ?? 'N/A';
+    const errorMessage = error?.message ?? String(error);
+
+    if (errorType === 'StripeInvalidRequestError' || errorType === 'INVALID_REQUEST_ERROR') {
+      console.warn(`[Stripe] Invalid request error (code: ${errorCode}): ${errorMessage}`);
+    } else if (errorType === 'StripeAuthenticationError' || errorType === 'AUTHENTICATION_ERROR') {
+      console.warn(`[Stripe] Authentication error (code: ${errorCode}): ${errorMessage}`);
+    } else {
+      console.error(`[Stripe] ${errorType} (code: ${errorCode}): ${errorMessage}`);
+    }
     return null;
   }
 }
@@ -758,7 +767,7 @@ export function constructWebhookEvent(
     return getStripe().webhooks.constructEvent(payload, signature, STRIPE_WEBHOOK_SECRET);
   } catch (error) {
     console.error('Webhook signature verification failed:', error);
-    return null;
+    throw new Error('Invalid webhook signature');
   }
 }
 

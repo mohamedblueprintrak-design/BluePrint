@@ -314,6 +314,13 @@ export async function POST(request: NextRequest) {
       return errorResponse('معرف المستخدم والعنوان مطلوبان');
     }
 
+    const targetUser = await db.user.findFirst({
+      where: { id: userId, organizationId: user.organizationId }
+    });
+    if (!targetUser) {
+      return errorResponse('User not found in your organization', 'NOT_FOUND', 404);
+    }
+
     const validTypes = [
       'task_assigned', 'task_completed', 'task_due_soon',
       'invoice_created', 'invoice_paid', 'invoice_overdue',

@@ -5,10 +5,15 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { getUserFromRequest } from '../utils/demo-config';
+import { unauthorizedResponse } from '../utils/response';
 
 // GET - Fetch risks
 export async function GET(request: NextRequest) {
   try {
+    const user = await getUserFromRequest(request);
+    if (!user) return unauthorizedResponse();
+
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get('projectId');
     const status = searchParams.get('status');
@@ -47,6 +52,9 @@ export async function GET(request: NextRequest) {
 // POST - Create new risk
 export async function POST(request: NextRequest) {
   try {
+    const user = await getUserFromRequest(request);
+    if (!user) return unauthorizedResponse();
+
     const body = await request.json();
     
     const risk = await db.risk.create({
@@ -89,6 +97,9 @@ export async function POST(request: NextRequest) {
 // PUT - Update risk
 export async function PUT(request: NextRequest) {
   try {
+    const user = await getUserFromRequest(request);
+    if (!user) return unauthorizedResponse();
+
     const body = await request.json();
     const { id, ...data } = body;
 
@@ -148,6 +159,9 @@ export async function PUT(request: NextRequest) {
 // DELETE - Delete risk
 export async function DELETE(request: NextRequest) {
   try {
+    const user = await getUserFromRequest(request);
+    if (!user) return unauthorizedResponse();
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 

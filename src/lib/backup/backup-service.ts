@@ -588,8 +588,11 @@ class BackupService {
     }
 
     const encryptedPath = `${filepath}.enc`;
+    // SECURITY: Pass encryption key via environment variable to avoid exposure in ps/process listings.
+    // In production, prefer using the AWS Encryption SDK or a dedicated secrets manager.
     await execAsync(
-      `openssl enc -aes-256-cbc -salt -pbkdf2 -in "${filepath}" -out "${encryptedPath}" -pass pass:"${this.config.encryptionKey}"`
+      `openssl enc -aes-256-cbc -salt -pbkdf2 -in "${filepath}" -out "${encryptedPath}" -pass env:BACKUP_ENC_KEY`,
+      { env: { ...process.env, BACKUP_ENC_KEY: this.config.encryptionKey } }
     );
 
     // Delete original file
@@ -604,11 +607,27 @@ class BackupService {
     }
 
     const decryptedPath = filepath.replace('.enc', '');
+    // SECURITY: Pass encryption key via environment variable to avoid exposure in ps/process listings.
     await execAsync(
-      `openssl enc -aes-256-cbc -d -pbkdf2 -in "${filepath}" -out "${decryptedPath}" -pass pass:"${this.config.encryptionKey}"`
+      `openssl enc -aes-256-cbc -d -pbkdf2 -in "${filepath}" -out "${decryptedPath}" -pass env:BACKUP_ENC_KEY`,
+      { env: { ...process.env, BACKUP_ENC_KEY: this.config.encryptionKey } }
     );
 
     return decryptedPath;
+  }
+
+  /**
+   * SECURITY: Reject strings that contain shell metacharacters to prevent command injection.
+   * In production, prefer using the AWS SDK (PutObjectCommand) instead of shell exec.
+   */
+  private validateNoShellMetacharacters(value: string, label: string): void {
+    // Allow alphanumeric, dash, underscore, dot, forward slash, colon (for s3:// URIs)
+    if (!/^[\w./:_-]+$/.test(value)) {
+      throw new Error(
+        `Security: ${label} contains disallowed characters. ` +
+        `Only alphanumeric, dash, underscore, dot, slash, and colon are permitted.`
+      );
+    }
   }
 
   private async uploadToS3(filepath: string, key: string): Promise<void> {
@@ -616,7 +635,14 @@ class BackupService {
       return;
     }
 
-    const command = `aws s3 cp "${filepath}" "s3://${this.config.s3Bucket}/${key}" --region ${this.config.s3Region || 'us-east-1'}`;
+    // SECURITY: Validate all interpolated values to prevent shell command injection.
+    const region = this.config.s3Region || 'us-east-1';
+    this.validateNoShellMetacharacters(this.config.s3Bucket, 's3Bucket');
+    this.validateNoShellMetacharacters(region, 's3Region');
+    this.validateNoShellMetacharacters(filepath, 'filepath');
+    this.validateNoShellMetacharacters(key, 'key');
+
+    const command = `aws s3 cp "${filepath}" "s3://${this.config.s3Bucket}/${key}" --region ${region}`;
     await execAsync(command);
   }
 

@@ -75,6 +75,9 @@ export async function PUT(request: NextRequest) {
     const { db } = await import('@/lib/db');
     const body = await request.json() as Record<string, unknown>;
     const id = body.id as string;
+    // Verify contract belongs to user's organization
+    const existingContract = await db.contract.findFirst({ where: { id, organizationId: user.organizationId }, select: { id: true } });
+    if (!existingContract) return error('العقد غير موجود', 'NOT_FOUND', 404);
     // SECURITY: Only allow updating specific fields (prevent mass assignment)
     const updateData: Record<string, unknown> = {};
     if (body.title !== undefined) updateData.title = body.title;
@@ -107,6 +110,9 @@ export async function DELETE(request: NextRequest) {
     const { db } = await import('@/lib/db');
     const id = new URL(request.url).searchParams.get('id');
     if (!id) return error('معرف العقد مطلوب');
+    // Verify contract belongs to user's organization
+    const existingContract = await db.contract.findFirst({ where: { id, organizationId: user.organizationId }, select: { id: true } });
+    if (!existingContract) return error('العقد غير موجود', 'NOT_FOUND', 404);
     await db.contract.delete({ where: { id } });
     return success({ message: 'تم الحذف' });
   } catch (e) {
