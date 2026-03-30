@@ -34,8 +34,8 @@ import {
   User, Shield, BookOpen, Bot, FileSpreadsheet,
   PanelLeftClose, PanelLeft, Zap, Calculator, ShoppingCart,
   AlertTriangle, Receipt, X, ChevronDown, ChevronUp,
-  FolderOpen, Settings2, LayoutDashboard, Wrench, Gavel,
-  Calendar, Bell, HelpCircle, Crown
+  LayoutDashboard, Wrench, Gavel, Compass, Handshake, Landmark,
+  ClipboardList, Lightbulb, UserCog, Calendar, Bell, HelpCircle, Crown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -245,61 +245,70 @@ function SidebarContent({
     [user?.role]
   );
 
-  // Core items - always visible (filtered per-item)
-  const coreItems: SidebarItem[] = [
+  // ─── Main Dashboard ───
+  const mainItems: SidebarItem[] = [
     { id: 'dashboard', label: t.dashboard, icon: Home, href: '/dashboard' },
     { id: 'operations', label: language === 'ar' ? 'مركز العمليات' : 'Operations Center', icon: LayoutDashboard, href: '/dashboard/operations', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER] },
-    { id: 'projects', label: t.projects, icon: Building2, href: '/dashboard/projects' },
-    { id: 'tasks', label: t.tasks, icon: CheckSquare, badge: undefined, href: '/dashboard/tasks', visibleRoles: ALL_EXCEPT_VIEWER },
-    { id: 'clients', label: t.clients, icon: Users, href: '/dashboard/clients', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.ACCOUNTANT, UserRole.SECRETARY] },
-    { id: 'invoices', label: t.invoices, icon: DollarSign, href: '/dashboard/invoices', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.ACCOUNTANT] },
   ];
 
-  // Finance items - collapsible
+  // ─── Section 1: التصميم والمشاريع (Design & Projects) ───
+  const designItems: SidebarItem[] = [
+    { id: 'projects', label: t.projects, icon: Building2, href: '/dashboard/projects' },
+    { id: 'tasks', label: t.tasks, icon: CheckSquare, href: '/dashboard/tasks', visibleRoles: ALL_EXCEPT_VIEWER },
+    { id: 'boq', label: language === 'ar' ? 'جدول الكميات' : 'BOQ', icon: FileSpreadsheet, href: '/dashboard/boq', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.DRAFTSMAN, UserRole.ACCOUNTANT] },
+    { id: 'documents', label: t.documents, icon: FileText, href: '/dashboard/documents', visibleRoles: [UserRole.ADMIN, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.DRAFTSMAN, UserRole.SECRETARY] },
+    { id: 'defects', label: language === 'ar' ? 'العيوب والمخالفات' : 'Defects', icon: AlertTriangle, href: '/dashboard/defects', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER] },
+    { id: 'siteDiary', label: t.siteDiary, icon: FileSpreadsheet, href: '/dashboard/site-diary', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER] },
+    { id: 'equipment', label: language === 'ar' ? 'المعدات' : 'Equipment', icon: Wrench, href: '/dashboard/equipment', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER] },
+  ];
+
+  // ─── Section 2: العملاء والتعاقدات (Clients & Contracts) ───
+  const clientItems: SidebarItem[] = [
+    { id: 'clients', label: t.clients, icon: Users, href: '/dashboard/clients', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.ACCOUNTANT, UserRole.SECRETARY] },
+    { id: 'proposals', label: t.proposals, icon: FileText, href: '/dashboard/proposals', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER] },
+    { id: 'bidding', label: language === 'ar' ? 'العطاءات' : 'Bidding', icon: Gavel, href: '/dashboard/bidding', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER] },
+    { id: 'contracts', label: t.contracts, icon: FileCheck, href: '/dashboard/contracts', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER] },
+    { id: 'invoices', label: t.invoices, icon: DollarSign, href: '/dashboard/invoices', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.ACCOUNTANT] },
+    { id: 'suppliers', label: t.suppliers, icon: Briefcase, href: '/dashboard/suppliers', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER] },
+  ];
+
+  // ─── Section 3: المحاسبة والمالية (Finance & Accounting) ───
   const financeItems: SidebarItem[] = [
     { id: 'budgets', label: language === 'ar' ? 'الميزانيات' : 'Budgets', icon: Calculator, href: '/dashboard/budgets', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.ACCOUNTANT] },
     { id: 'vouchers', label: language === 'ar' ? 'السندات' : 'Vouchers', icon: Receipt, href: '/dashboard/vouchers', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.ACCOUNTANT] },
-    { id: 'contracts', label: t.contracts, icon: FileCheck, href: '/dashboard/contracts', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER] },
-    { id: 'proposals', label: t.proposals, icon: FileText, href: '/dashboard/proposals', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER] },
     { id: 'purchaseOrders', label: language === 'ar' ? 'طلبات الشراء' : 'Purchase Orders', icon: ShoppingCart, href: '/dashboard/purchase-orders', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER] },
-  ];
-
-  // Operations items - collapsible
-  const operationsItems: SidebarItem[] = [
     { id: 'inventory', label: t.inventory, icon: Package, href: '/dashboard/inventory', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER] },
-    { id: 'suppliers', label: t.suppliers, icon: Briefcase, href: '/dashboard/suppliers', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER] },
-    { id: 'boq', label: language === 'ar' ? 'جدول الكميات' : 'BOQ', icon: FileSpreadsheet, href: '/dashboard/boq', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.DRAFTSMAN, UserRole.ACCOUNTANT] },
-    { id: 'siteDiary', label: t.siteDiary, icon: FileSpreadsheet, href: '/dashboard/site-diary', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER] },
-    { id: 'defects', label: language === 'ar' ? 'العيوب والمخالفات' : 'Defects', icon: AlertTriangle, href: '/dashboard/defects', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER] },
-    { id: 'equipment', label: language === 'ar' ? 'المعدات' : 'Equipment', icon: Wrench, href: '/dashboard/equipment', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER] },
-    { id: 'bidding', label: language === 'ar' ? 'العطاءات' : 'Bidding', icon: Gavel, href: '/dashboard/bidding', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER] },
-    { id: 'automations', label: language === 'ar' ? 'الأتمتة' : 'Automations', icon: Zap, href: '/dashboard/automations', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER] },
+    { id: 'reports', label: t.reports, icon: BarChart3, href: '/dashboard/reports', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.ACCOUNTANT] },
   ];
 
-  // Management items - collapsible
-  const managementItems: SidebarItem[] = [
-    { id: 'reports', label: t.reports, icon: BarChart3, href: '/dashboard/reports', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.ACCOUNTANT] },
-    { id: 'documents', label: t.documents, icon: FileText, href: '/dashboard/documents', visibleRoles: [UserRole.ADMIN, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.DRAFTSMAN, UserRole.SECRETARY] },
-    { id: 'knowledge', label: t.knowledge, icon: BookOpen, href: '/dashboard/knowledge', visibleRoles: ALL_EXCEPT_VIEWER },
-    { id: 'hr', label: t.hr, icon: Users, href: '/dashboard/hr', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.HR] },
-    { id: 'team', label: language === 'ar' ? 'الفريق' : 'Team', icon: Users, href: '/dashboard/team', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER] },
-    { id: 'calendar', label: language === 'ar' ? 'التقويم' : 'Calendar', icon: Calendar, href: '/dashboard/calendar', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER] },
+  // ─── Section 4: السكرتارية (Secretarial) ───
+  const secretarialItems: SidebarItem[] = [
+    { id: 'calendar', label: language === 'ar' ? 'التقويم' : 'Calendar', icon: Calendar, href: '/dashboard/calendar', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.SECRETARY] },
     { id: 'notifications', label: language === 'ar' ? 'الإشعارات' : 'Notifications', icon: Bell, href: '/dashboard/notifications' },
   ];
 
-  // AI & Settings
-  const aiItems: SidebarItem[] = [
-    { id: 'aiChat', label: t.aiChat, icon: Bot, href: '/dashboard/ai-chat' },
+  // ─── Section 5: الموارد البشرية (Human Resources) ───
+  const hrSectionItems: SidebarItem[] = [
+    { id: 'hr', label: t.hr, icon: Users, href: '/dashboard/hr', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.HR] },
+    { id: 'team', label: language === 'ar' ? 'الفريق' : 'Team', icon: Users, href: '/dashboard/team', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER] },
   ];
 
-  const settingsItems: SidebarItem[] = [
-    { id: 'settings', label: t.settings, icon: Settings, href: '/dashboard/settings', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER] },
+  // ─── Section 6: المعرفة والذكاء الاصطناعي (Knowledge & AI) ───
+  const knowledgeItems: SidebarItem[] = [
+    { id: 'knowledge', label: t.knowledge, icon: BookOpen, href: '/dashboard/knowledge', visibleRoles: ALL_EXCEPT_VIEWER },
+    { id: 'aiChat', label: t.aiChat, icon: Bot, href: '/dashboard/ai-chat' },
     { id: 'help', label: language === 'ar' ? 'المساعدة' : 'Help', icon: HelpCircle, href: '/dashboard/help' },
+  ];
+
+  // ─── System & Settings (bottom) ───
+  const systemItems: SidebarItem[] = [
+    { id: 'automations', label: language === 'ar' ? 'الأتمتة' : 'Automations', icon: Zap, href: '/dashboard/automations', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER] },
+    { id: 'settings', label: t.settings, icon: Settings, href: '/dashboard/settings', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER] },
     { id: 'pricing', label: language === 'ar' ? 'الأسعار' : 'Pricing', icon: Crown, href: '/dashboard/pricing', visibleRoles: [UserRole.ADMIN] },
   ];
 
   const adminItems: SidebarItem[] = [
-    { id: 'admin', label: language === 'ar' ? 'الإدارة' : 'Admin', icon: Shield, href: '/dashboard/admin', visibleRoles: [UserRole.ADMIN] },
+    { id: 'admin', label: language === 'ar' ? 'لوحة الإدارة' : 'Admin Panel', icon: Shield, href: '/dashboard/admin', visibleRoles: [UserRole.ADMIN] },
     { id: 'activities', label: t.activities, icon: Zap, href: '/dashboard/activities', visibleRoles: [UserRole.ADMIN] },
   ];
 
@@ -366,9 +375,9 @@ function SidebarContent({
       <div className="flex-1 overflow-hidden px-2">
         <ScrollArea className="h-full">
           <nav className="space-y-1 pb-2 pr-2">
-          {/* Core Items */}
+          {/* ─── Main Dashboard ─── */}
           <SidebarSection 
-            items={filterByRole(coreItems)} 
+            items={filterByRole(mainItems)} 
             currentPage={currentPage}
             sidebarCollapsed={sidebarCollapsed}
             isMobile={isMobile}
@@ -376,11 +385,39 @@ function SidebarContent({
             onItemClick={handleItemClick}
           />
 
-          {/* Finance Section - Collapsible */}
+          {/* ─── التصميم والمشاريع (Design & Projects) ─── */}
+          <CollapsibleSection 
+            title={language === 'ar' ? 'التصميم والمشاريع' : 'Design & Projects'}
+            icon={Compass}
+            items={filterByRole(designItems)}
+            currentPage={currentPage}
+            sidebarCollapsed={sidebarCollapsed}
+            isMobile={isMobile}
+            isRTL={isRTL}
+            onItemClick={handleItemClick}
+            defaultOpen={true}
+          />
+
+          {/* ─── العملاء والتعاقدات (Clients & Contracts) ─── */}
+          {filterByRole(clientItems).length > 0 && (
+          <CollapsibleSection 
+            title={language === 'ar' ? 'العملاء والتعاقدات' : 'Clients & Contracts'}
+            icon={Handshake}
+            items={filterByRole(clientItems)}
+            currentPage={currentPage}
+            sidebarCollapsed={sidebarCollapsed}
+            isMobile={isMobile}
+            isRTL={isRTL}
+            onItemClick={handleItemClick}
+            defaultOpen={false}
+          />
+          )}
+
+          {/* ─── المحاسبة والمالية (Finance & Accounting) ─── */}
           {filterByRole(financeItems).length > 0 && (
           <CollapsibleSection 
-            title={language === 'ar' ? 'المالية' : 'Finance'}
-            icon={DollarSign}
+            title={language === 'ar' ? 'المحاسبة والمالية' : 'Finance & Accounting'}
+            icon={Landmark}
             items={filterByRole(financeItems)}
             currentPage={currentPage}
             sidebarCollapsed={sidebarCollapsed}
@@ -391,12 +428,12 @@ function SidebarContent({
           />
           )}
 
-          {/* Operations Section - Collapsible */}
-          {filterByRole(operationsItems).length > 0 && (
+          {/* ─── السكرتارية (Secretarial) ─── */}
+          {filterByRole(secretarialItems).length > 0 && (
           <CollapsibleSection 
-            title={language === 'ar' ? 'العمليات' : 'Operations'}
-            icon={FolderOpen}
-            items={filterByRole(operationsItems)}
+            title={language === 'ar' ? 'السكرتارية' : 'Secretarial'}
+            icon={ClipboardList}
+            items={filterByRole(secretarialItems)}
             currentPage={currentPage}
             sidebarCollapsed={sidebarCollapsed}
             isMobile={isMobile}
@@ -406,12 +443,12 @@ function SidebarContent({
           />
           )}
 
-          {/* Management Section - Collapsible */}
-          {filterByRole(managementItems).length > 0 && (
+          {/* ─── الموارد البشرية (Human Resources) ─── */}
+          {filterByRole(hrSectionItems).length > 0 && (
           <CollapsibleSection 
-            title={language === 'ar' ? 'الإدارة' : 'Management'}
-            icon={Settings2}
-            items={filterByRole(managementItems)}
+            title={language === 'ar' ? 'الموارد البشرية' : 'Human Resources'}
+            icon={UserCog}
+            items={filterByRole(hrSectionItems)}
             currentPage={currentPage}
             sidebarCollapsed={sidebarCollapsed}
             isMobile={isMobile}
@@ -421,10 +458,23 @@ function SidebarContent({
           />
           )}
 
-          {/* AI Section */}
+          {/* ─── المعرفة والذكاء الاصطناعي (Knowledge & AI) ─── */}
           <Separator className="my-2 bg-slate-800" />
+          <CollapsibleSection 
+            title={language === 'ar' ? 'المعرفة والذكاء الاصطناعي' : 'Knowledge & AI'}
+            icon={Lightbulb}
+            items={filterByRole(knowledgeItems)}
+            currentPage={currentPage}
+            sidebarCollapsed={sidebarCollapsed}
+            isMobile={isMobile}
+            isRTL={isRTL}
+            onItemClick={handleItemClick}
+            defaultOpen={false}
+          />
+
+          {/* ─── System & Settings ─── */}
           <SidebarSection 
-            items={aiItems} 
+            items={filterByRole(systemItems)} 
             currentPage={currentPage}
             sidebarCollapsed={sidebarCollapsed}
             isMobile={isMobile}
@@ -432,20 +482,10 @@ function SidebarContent({
             onItemClick={handleItemClick}
           />
 
-          {/* Settings Section */}
-          <SidebarSection 
-            items={settingsItems} 
-            currentPage={currentPage}
-            sidebarCollapsed={sidebarCollapsed}
-            isMobile={isMobile}
-            isRTL={isRTL}
-            onItemClick={handleItemClick}
-          />
-
-          {/* Admin Section */}
+          {/* ─── Admin Panel ─── */}
           {filterByRole(adminItems).length > 0 && (
             <CollapsibleSection 
-              title={language === 'ar' ? 'الإدارة' : 'Admin'}
+              title={language === 'ar' ? 'لوحة الإدارة' : 'Admin Panel'}
               icon={Shield}
               items={filterByRole(adminItems)}
               currentPage={currentPage}
