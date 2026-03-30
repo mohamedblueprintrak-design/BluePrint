@@ -241,14 +241,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userResult = await meResponse.json();
 
         if (userResult.success) {
-          const userData = userResult.data;
+          // Extract user from response - API returns { user: {...}, demoMode? } or flat user
+          const userData = userResult.data?.user || userResult.data;
           setUser(userData);
           localStorage.setItem(AUTH_USER_KEY, JSON.stringify(userData));
 
           // Set organization
-          if (userData.organization) {
-            setOrganization(userData.organization);
-            localStorage.setItem(AUTH_ORG_KEY, JSON.stringify(userData.organization));
+          const orgData = userData.organization;
+          if (orgData) {
+            setOrganization(orgData);
+            localStorage.setItem(AUTH_ORG_KEY, JSON.stringify(orgData));
           }
         }
         return { success: true, data: result.data };
@@ -344,13 +346,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       const result = await response.json();
       if (result.success) {
-        const userData = result.data;
+        // Extract user from response - API returns { user: {...}, demoMode? } or flat user
+        const userData = result.data?.user || result.data;
         setUser(userData);
         localStorage.setItem(AUTH_USER_KEY, JSON.stringify(userData));
 
-        if (userData.organization) {
-          setOrganization(userData.organization);
-          localStorage.setItem(AUTH_ORG_KEY, JSON.stringify(userData.organization));
+        const orgData = userData.organization;
+        if (orgData) {
+          setOrganization(orgData);
+          localStorage.setItem(AUTH_ORG_KEY, JSON.stringify(orgData));
         }
       }
     } catch (error) {

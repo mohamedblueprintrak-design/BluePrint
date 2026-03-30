@@ -195,6 +195,7 @@ async function handleLogin(
           fullName: demoUser.fullName,
           role: demoUser.role,
           avatar: demoUser.avatar,
+          department: (demoUser as any).department || undefined,
           organizationId: demoUser.organizationId,
           organization: demoUser.organization,
         },
@@ -337,6 +338,8 @@ async function handleSignup(
     password: string;
     fullName: string;
     organizationName?: string;
+    role?: string;
+    department?: string;
   },
   request: NextRequest
 ): Promise<NextResponse> {
@@ -377,6 +380,8 @@ async function handleSignup(
     password: data.password,
     fullName: data.fullName,
     organizationName: data.organizationName,
+    role: data.role,
+    department: data.department,
   });
 
   if (!result.success) {
@@ -628,6 +633,7 @@ export async function GET(request: NextRequest) {
           avatar: demoUser.avatar,
           language: demoUser.language,
           theme: demoUser.theme,
+          department: (demoUser as any).department || undefined,
           organizationId: demoUser.organizationId,
           organization: demoUser.organization,
         },
