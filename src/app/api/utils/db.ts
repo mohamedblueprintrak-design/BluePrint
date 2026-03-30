@@ -143,6 +143,21 @@ export const DEMO_USERS: DemoUser[] = DEMO_MODE_ENABLED ? [
     organization: { id: 'demo-org-001', name: 'BluePrint Demo', currency: 'AED' }
   },
   {
+    id: 'demo-mech-eng-001',
+    username: 'mech_eng',
+    email: 'mech_eng@blueprint.ae',
+    password: '$2b$10$SHEo0xb9OExBg5zzp7M4eeGDd0MFfppsC06l9B.DBl5wNwrtniRwu',
+    fullName: 'عمر الميكانيكي',
+    role: 'ENGINEER',
+    department: 'MECHANICAL',
+    isActive: true,
+    avatar: null,
+    language: 'ar',
+    theme: 'dark',
+    organizationId: 'demo-org-001',
+    organization: { id: 'demo-org-001', name: 'BluePrint Demo', currency: 'AED' }
+  },
+  {
     id: 'demo-secretary-001',
     username: 'secretary',
     email: 'secretary@blueprint.ae',

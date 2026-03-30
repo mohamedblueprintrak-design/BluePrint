@@ -253,7 +253,6 @@ function SidebarContent({
   // ─── Main Dashboard ───
   const mainItems: SidebarItem[] = [
     { id: 'dashboard', label: t.dashboard, icon: Home, href: '/dashboard' },
-    { id: 'operations', label: language === 'ar' ? 'مركز العمليات' : 'Operations Center', icon: LayoutDashboard, href: '/dashboard/operations', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER] },
   ];
 
   // ─── Section 1: التصميم والمشاريع (Design & Projects) ───
@@ -297,8 +296,8 @@ function SidebarContent({
 
   // ─── Section 5: الموارد البشرية (Human Resources) ───
   const hrSectionItems: SidebarItem[] = [
-    { id: 'hr', label: t.hr, icon: Users, href: '/dashboard/hr', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.HR] },
-    { id: 'team', label: language === 'ar' ? 'الفريق' : 'Team', icon: Users, href: '/dashboard/team', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER] },
+    { id: 'hr', label: t.hr, icon: Users, href: '/dashboard/hr', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.HR, UserRole.SECRETARY] },
+    { id: 'team', label: language === 'ar' ? 'الفريق' : 'Team', icon: Users, href: '/dashboard/team', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.SECRETARY] },
     { id: 'workload', label: language === 'ar' ? 'الأحمال والقدرات' : 'Workload', icon: BriefcaseIcon, href: '/dashboard/workload', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER] },
   ];
 

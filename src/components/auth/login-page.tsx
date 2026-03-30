@@ -448,6 +448,7 @@ export function LoginPage() {
                                   { role: language === 'ar' ? 'مهندس إنشائي' : 'Struct. Eng', user: 'struct_eng', pass: 'Admin@123456', color: 'text-orange-400 border-orange-500/30 hover:bg-orange-500/10' },
                                   { role: language === 'ar' ? 'مهندس كهربائي' : 'Elec. Eng', user: 'elec_eng', pass: 'Admin@123456', color: 'text-yellow-400 border-yellow-500/30 hover:bg-yellow-500/10' },
                                   { role: language === 'ar' ? 'مهندس موقع' : 'Site Eng', user: 'site_eng', pass: 'Admin@123456', color: 'text-teal-400 border-teal-500/30 hover:bg-teal-500/10' },
+                                  { role: language === 'ar' ? 'مهندس ميكانيكا' : 'MEP Eng', user: 'mech_eng', pass: 'Admin@123456', color: 'text-cyan-400 border-cyan-500/30 hover:bg-cyan-500/10' },
                                   { role: language === 'ar' ? 'رسام' : 'Draftsman', user: 'draftsman', pass: 'Admin@123456', color: 'text-purple-400 border-purple-500/30 hover:bg-purple-500/10' },
                                   { role: language === 'ar' ? 'محاسب' : 'Accountant', user: 'accountant', pass: 'Admin@123456', color: 'text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10' },
                                   { role: language === 'ar' ? 'سكرتيرة' : 'Secretary', user: 'secretary', pass: 'Admin@123456', color: 'text-pink-400 border-pink-500/30 hover:bg-pink-500/10' },
