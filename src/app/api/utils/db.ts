@@ -26,7 +26,7 @@ export const DEMO_USERS: DemoUser[] = DEMO_MODE_ENABLED ? [
     username: 'manager',
     email: 'manager@blueprint.ae',
     // SECURITY: Bcrypt hash - see demo-config.ts for generated credentials
-    password: '$2b$10$VYbYHkL9.UvLtFsNcyTjdezYBKG/kE9vjbDv52f4vUeVccE4dmqc6',
+    password: '$2b$10$SHEo0xb9OExBg5zzp7M4eeGDd0MFfppsC06l9B.DBl5wNwrtniRwu',
     fullName: 'مدير المشاريع',
     role: 'MANAGER',
     isActive: true,
@@ -41,7 +41,7 @@ export const DEMO_USERS: DemoUser[] = DEMO_MODE_ENABLED ? [
     username: 'engineer',
     email: 'engineer@blueprint.ae',
     // SECURITY: Bcrypt hash - see demo-config.ts for generated credentials
-    password: '$2b$10$XZcZIlM0.VwMuGtOdTukefzYBKG/kE9vjbDv52f4vUeVccE4dmqc6',
+    password: '$2b$10$SHEo0xb9OExBg5zzp7M4eeGDd0MFfppsC06l9B.DBl5wNwrtniRwu',
     fullName: 'مهندس الموقع',
     role: 'ENGINEER',
     department: 'ARCHITECTURAL',
@@ -57,7 +57,7 @@ export const DEMO_USERS: DemoUser[] = DEMO_MODE_ENABLED ? [
     username: 'draftsman',
     email: 'draftsman@blueprint.ae',
     // SECURITY: Bcrypt hash - see demo-config.ts for generated credentials
-    password: '$2b$10$YZdZJmN1.WxNvHuPeTvlgfzYBKG/kE9vjbDv52f4vUeVccE4dmqc6',
+    password: '$2b$10$SHEo0xb9OExBg5zzp7M4eeGDd0MFfppsC06l9B.DBl5wNwrtniRwu',
     fullName: 'عمر الرسام',
     role: 'DRAFTSMAN',
     isActive: true,
@@ -72,7 +72,7 @@ export const DEMO_USERS: DemoUser[] = DEMO_MODE_ENABLED ? [
     username: 'accountant',
     email: 'accountant@blueprint.ae',
     // SECURITY: Bcrypt hash - see demo-config.ts for generated credentials
-    password: '$2b$10$AeAeKnO2.XyOwIvQfUwmhgYBKG/kE9vjbDv52f4vUeVccE4dmqc6',
+    password: '$2b$10$SHEo0xb9OExBg5zzp7M4eeGDd0MFfppsC06l9B.DBl5wNwrtniRwu',
     fullName: 'فاطمة المحاسبة',
     role: 'ACCOUNTANT',
     isActive: true,
@@ -87,7 +87,7 @@ export const DEMO_USERS: DemoUser[] = DEMO_MODE_ENABLED ? [
     username: 'viewer',
     email: 'viewer@blueprint.ae',
     // SECURITY: Bcrypt hash - see demo-config.ts for generated credentials
-    password: '$2b$10$BfBfLoP3.YzPxJwGrXvnihYBKG/kE9vjbDv52f4vUeVccE4dmqc6',
+    password: '$2b$10$SHEo0xb9OExBg5zzp7M4eeGDd0MFfppsC06l9B.DBl5wNwrtniRwu',
     fullName: 'أحمد المشاهد',
     role: 'VIEWER',
     isActive: true,
@@ -101,7 +101,7 @@ export const DEMO_USERS: DemoUser[] = DEMO_MODE_ENABLED ? [
     id: 'demo-struct-eng-001',
     username: 'struct_eng',
     email: 'struct_eng@blueprint.ae',
-    password: '$2b$10$CgCgMpP4.AzQyKxHsYwoigYBKG/kE9vjbDv52f4vUeVccE4dmqc6',
+    password: '$2b$10$SHEo0xb9OExBg5zzp7M4eeGDd0MFfppsC06l9B.DBl5wNwrtniRwu',
     fullName: 'خالد الإنشائي',
     role: 'ENGINEER',
     department: 'STRUCTURAL',
@@ -116,7 +116,7 @@ export const DEMO_USERS: DemoUser[] = DEMO_MODE_ENABLED ? [
     id: 'demo-elec-eng-001',
     username: 'elec_eng',
     email: 'elec_eng@blueprint.ae',
-    password: '$2b$10$DhDhNqQ5.BaRzLyItZxpjhYBKG/kE9vjbDv52f4vUeVccE4dmqc6',
+    password: '$2b$10$SHEo0xb9OExBg5zzp7M4eeGDd0MFfppsC06l9B.DBl5wNwrtniRwu',
     fullName: 'محمد الكهربائي',
     role: 'ENGINEER',
     department: 'ELECTRICAL',
