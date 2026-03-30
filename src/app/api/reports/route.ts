@@ -58,7 +58,7 @@ async function getUserFromToken(request: NextRequest) {
         return {
           id: 'demo-admin-001',
           organizationId: 'demo-org-001',
-          role: 'admin',
+          role: 'ADMIN',
           organization: { id: 'demo-org-001', name: 'BluePrint Demo', currency: 'AED' }
         };
       }
@@ -73,7 +73,7 @@ async function getUserFromToken(request: NextRequest) {
       return {
         id: 'demo-admin-001',
         organizationId: 'demo-org-001',
-        role: 'admin',
+        role: 'ADMIN',
         organization: { id: 'demo-org-001', name: 'BluePrint Demo', currency: 'AED' }
       };
     }

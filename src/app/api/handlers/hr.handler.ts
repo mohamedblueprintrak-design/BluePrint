@@ -125,7 +125,7 @@ export const postHandlers = {
 
     // Notify admins in the same organization
     const admins: any[] = await database.user.findMany({ 
-      where: { role: 'admin', organizationId: context.user.organizationId } 
+      where: { role: 'ADMIN', organizationId: context.user.organizationId } 
     });
     for (const admin of admins) {
       await database.notification.create({

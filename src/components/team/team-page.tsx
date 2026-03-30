@@ -87,7 +87,7 @@ export default function TeamPage() {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
-    role: 'engineer' as UserRole,
+    role: 'ENGINEER' as UserRole,
     department: '',
     phone: '',
     jobTitle: '',

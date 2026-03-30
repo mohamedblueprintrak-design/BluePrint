@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
           id: '1',
           email: 'ahmed@blueprint.com',
           fullName: 'أحمد محمد',
-          role: 'admin',
+          role: 'ADMIN',
           department: 'الإدارة',
           phone: '+966 50 123 4567',
           jobTitle: 'مدير النظام',
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
           id: '2',
           email: 'sara@blueprint.com',
           fullName: 'سارة أحمد',
-          role: 'manager',
+          role: 'MANAGER',
           department: 'إدارة المشاريع',
           phone: '+966 55 987 6543',
           jobTitle: 'مديرة المشاريع',
@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
           id: '3',
           email: 'mohammed@blueprint.com',
           fullName: 'محمد علي',
-          role: 'engineer',
+          role: 'ENGINEER',
           department: 'الهندسة المدنية',
           phone: '+966 56 111 2222',
           jobTitle: 'مهندس مدني',
@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
           id: '4',
           email: 'fatima@blueprint.com',
           fullName: 'فاطمة حسن',
-          role: 'engineer',
+          role: 'ENGINEER',
           department: 'الهندسة المعمارية',
           phone: '+966 57 333 4444',
           jobTitle: 'مهندسة معمارية',
@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
           id: '5',
           email: 'khalid@blueprint.com',
           fullName: 'خالد سعود',
-          role: 'project_manager',
+          role: 'PROJECT_MANAGER',
           department: 'إدارة المشاريع',
           phone: '+966 58 555 6666',
           jobTitle: 'مدير مشروع أول',
@@ -113,7 +113,7 @@ export async function GET(request: NextRequest) {
           id: '6',
           email: 'noura@blueprint.com',
           fullName: 'نورة عبدالله',
-          role: 'accountant',
+          role: 'ACCOUNTANT',
           department: 'المالية',
           phone: '+966 59 777 8888',
           jobTitle: 'محاسبة',
@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
           id: '7',
           email: 'omar@blueprint.com',
           fullName: 'عمر فهد',
-          role: 'engineer',
+          role: 'ENGINEER',
           department: 'الهندسة الكهربائية',
           phone: '+966 54 999 0000',
           jobTitle: 'مهندس كهربائي',
@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
     if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
 
     // SECURITY: Only admins and managers can create team members
-    if (!['admin', 'manager'].includes(user.role)) {
+    if (!['ADMIN', 'MANAGER'].includes(user.role)) {
       return errorResponse('ليس لديك صلاحية إنشاء أعضاء فريق', 'FORBIDDEN', 403);
     }
 
@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
           email,
           username: email.split('@')[0],
           fullName,
-          role: role || 'engineer',
+          role: role || 'ENGINEER',
           department,
           phone,
           jobTitle,

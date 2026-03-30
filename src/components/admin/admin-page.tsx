@@ -97,7 +97,7 @@ export function AdminPage() {
     email: '',
     password: '',
     fullName: '',
-    role: 'viewer',
+    role: 'VIEWER',
   });
 
   // Filter users
@@ -152,7 +152,7 @@ export function AdminPage() {
           description: language === 'ar' ? 'تم إضافة المستخدم بنجاح' : 'User added successfully'
         });
         setShowAddUserDialog(false);
-        setFormData({ username: '', email: '', password: '', fullName: '', role: 'viewer' });
+        setFormData({ username: '', email: '', password: '', fullName: '', role: 'VIEWER' });
       } else {
         toast({
           title: language === 'ar' ? 'خطأ' : 'Error',
@@ -189,7 +189,7 @@ export function AdminPage() {
         });
         setShowEditUserDialog(false);
         setSelectedUser(null);
-        setFormData({ username: '', email: '', password: '', fullName: '', role: 'viewer' });
+        setFormData({ username: '', email: '', password: '', fullName: '', role: 'VIEWER' });
       } else {
         toast({
           title: language === 'ar' ? 'خطأ' : 'Error',
@@ -421,7 +421,7 @@ export function AdminPage() {
                   <Button 
                     className="bg-blue-600 hover:bg-blue-700"
                     onClick={() => {
-                      setFormData({ username: '', email: '', password: '', fullName: '', role: 'viewer' });
+                      setFormData({ username: '', email: '', password: '', fullName: '', role: 'VIEWER' });
                       setShowAddUserDialog(true);
                     }}
                   >
