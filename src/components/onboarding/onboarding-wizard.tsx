@@ -18,7 +18,7 @@ import { Progress } from '@/components/ui/progress';
 import {
   Building2, Users, Bot, ArrowRight, ArrowLeft,
   CheckCircle2, Rocket, Briefcase, FileText,
-  Settings, Sparkles, Target
+  Settings, Sparkles, Target, BarChart3
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -422,5 +422,4 @@ export function useOnboarding() {
   return { shouldShow, isLoading, markAsCompleted, checkOnboarding };
 }
 
-// Add BarChart3 import
-import { BarChart3 } from 'lucide-react';
+

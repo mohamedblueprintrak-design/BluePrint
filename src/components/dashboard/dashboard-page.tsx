@@ -7,6 +7,7 @@ import { useAuth } from '@/context/auth-context';
 import { useTranslation } from '@/lib/translations';
 import { useDashboard, useProjects, useTasks, useInvoices } from '@/hooks/use-data';
 import { WelcomeModal } from '@/components/onboarding/welcome-modal';
+import { OnboardingWizard } from '@/components/onboarding/onboarding-wizard';
 import { FloatingAIButton } from '@/components/ai/floating-ai-button';
 import { AIInsightsCard } from '@/components/ai/ai-insights-card';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -51,6 +52,7 @@ export function DashboardPage() {
   
   const [period, setPeriod] = useState<Period>('30d');
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [showOnboardingWizard, setShowOnboardingWizard] = useState(false);
   
   // Check if welcome modal should be shown - only on client side
   useEffect(() => {
@@ -233,8 +235,9 @@ export function DashboardPage() {
       {/* Welcome Modal */}
       <WelcomeModal 
         isOpen={showWelcomeModal} 
-        onClose={() => setShowWelcomeModal(false)} 
+        onClose={() => { setShowWelcomeModal(false); setShowOnboardingWizard(true); }} 
       />
+      <OnboardingWizard isOpen={showOnboardingWizard} onClose={() => setShowOnboardingWizard(false)} />
       
       {/* Welcome Banner */}
       <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 p-6 text-white shadow-lg shadow-blue-500/20">
