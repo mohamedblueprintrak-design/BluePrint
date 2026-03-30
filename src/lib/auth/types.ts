@@ -13,6 +13,7 @@ export const UserRoleValues = {
   MANAGER: 'MANAGER',
   PROJECT_MANAGER: 'PROJECT_MANAGER',
   ENGINEER: 'ENGINEER',
+  DRAFTSMAN: 'DRAFTSMAN',
   ACCOUNTANT: 'ACCOUNTANT',
   HR: 'HR',
   VIEWER: 'VIEWER',
@@ -141,6 +142,17 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     Permission.REPORTS_READ,
     Permission.SETTINGS_READ,
     Permission.SETTINGS_UPDATE,
+  ],
+
+  [UserRoleValues.DRAFTSMAN]: [
+    Permission.PROJECT_READ,
+    Permission.TASK_CREATE,
+    Permission.TASK_READ,
+    Permission.TASK_UPDATE,
+    Permission.DOCUMENT_CREATE,
+    Permission.DOCUMENT_READ,
+    Permission.DOCUMENT_UPDATE,
+    Permission.REPORTS_READ,
   ],
 
   [UserRoleValues.VIEWER]: [

@@ -20,6 +20,7 @@ enum UserRole {
   MANAGER          // Project management access
   PROJECT_MANAGER  // Project-level management
   ENGINEER         // Technical access
+  DRAFTSMAN        // Drafting and drawing access
   ACCOUNTANT       // Financial access
   HR               // Human resources access
   VIEWER           // Read-only access
@@ -446,6 +447,7 @@ model User {
   activities      Activity[]
   assignedPhases       WorkflowPhase[]     @relation("PhaseAssignee")
   respondedInteractions ClientInteraction[] @relation("InteractionResponder")
+  municipalityCorrespondence MunicipalityCorrespondence[]
 
   @@index([organizationId])
   @@index([email])
@@ -582,6 +584,7 @@ model Project {
   activities          Activity[]
   workflowPhases      WorkflowPhase[]
   clientInteractions  ClientInteraction[]
+  municipalityCorrespondence MunicipalityCorrespondence[]
 
   client              Client?   @relation(fields: [clientId], references: [id])
   manager             User?     @relation("ProjectManager", fields: [managerId], references: [id])
@@ -613,6 +616,7 @@ model BOQItem {
 
   project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
   siteLogItems   SiteLogItem[]
+  invoiceItems  InvoiceItem[]
 
   @@index([projectId])
   @@index([projectId, category])
@@ -637,11 +641,15 @@ model Defect {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
+  siteReportId     String?
+  siteReport       SiteReport? @relation(fields: [siteReportId], references: [id])
+
   project         Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([projectId])
   @@index([projectId, status])
   @@index([projectId, severity])
+  @@index([siteReportId])
 }
 
 // ============================================
@@ -699,6 +707,7 @@ model SiteReport {
 
   project           Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
   logItems          SiteLogItem[]
+  defects           Defect[]
 }
 
 // ============================================
@@ -974,10 +983,39 @@ model Invoice {
   updatedAt       DateTime  @updatedAt
 
   client          Client?   @relation(fields: [clientId], references: [id])
+  items           InvoiceItem[]
 
   @@index([deletedAt])
   @@index([clientId])
   @@index([organizationId, status])
+}
+
+// ============================================
+// بنود الفاتورة (Invoice Items)
+// ============================================
+
+model InvoiceItem {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  description String
+  boqItemId   String?  // Optional link to BOQ item
+
+  quantity    Float    @default(1)
+  unitPrice   Float    @default(0)
+  unit        String   @default("unit")
+  totalPrice  Float    @default(0)
+  notes       String?
+
+  sortOrder   Int      @default(0)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  boqItem     BOQItem? @relation(fields: [boqItemId], references: [id])
+
+  @@index([invoiceId])
+  @@index([boqItemId])
 }
 
 // ============================================
@@ -1522,4 +1560,40 @@ model CronJobLog {
   @@index([jobName])
   @@index([startedAt])
   @@index([status])
+}
+
+// ============================================
+// المراسلات البلدية (Municipality Correspondence)
+// تتبع التفاعلات مع البلديات على مدار الوقت
+// ============================================
+
+model MunicipalityCorrespondence {
+  id              String   @id @default(cuid())
+  projectId       String
+  correspondenceType String  // SUBMISSION, RESPONSE, REJECTION, APPROVAL, INQUIRY, AMENDMENT
+  
+  referenceNumber String?  // الرقم المرجعي الرسمي من البلدية
+  submissionDate  DateTime @default(now())
+  responseDate    DateTime?
+  
+  subject         String?  // موضوع مختصر / Brief subject line
+  content         String?  // المحتوى الكامل للمراسلة / Full content/text
+  notes           String?  // ملاحظات داخلية من الاستشاري / Internal notes
+  
+  status          String   @default("PENDING") // PENDING, UNDER_REVIEW, APPROVED, REJECTED, AMENDMENT_REQUIRED
+  
+  attachments     Json?    // قائمة المرفقات / List of attached documents
+  responseNotes   String?  // رد البلدية / Municipality response notes
+  
+  createdById     String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdBy       User?    @relation(fields: [createdById], references: [id])
+  
+  @@index([projectId])
+  @@index([status])
+  @@index([correspondenceType])
 }

@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useApp } from '@/context/app-context';
+import { useAuth } from '@/context/auth-context';
 import { useTranslation } from '@/lib/translations';
 import { useSiteReports, useProjects } from '@/hooks/use-data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,7 +31,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import {
   Calendar, Plus, Search, Eye, Edit, Cloud, Thermometer,
-  Users, AlertTriangle, FileText
+  Users, AlertTriangle, FileText, Loader2, CheckCircle2, Send
 } from 'lucide-react';
 
 const WEATHER_OPTIONS = [
@@ -49,10 +51,15 @@ export function SiteDiaryPage() {
   const { language } = useApp();
   const { t, formatDate } = useTranslation(language);
   const { toast } = useToast();
+  const { hasRole, token } = useAuth();
+  const queryClient = useQueryClient();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [projectFilter, setProjectFilter] = useState('all');
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+
+  const canApprove = hasRole(['ADMIN', 'MANAGER', 'PROJECT_MANAGER']);
   
   const { data: reportsData, isLoading } = useSiteReports();
   const { data: projectsData } = useProjects();
@@ -105,6 +112,44 @@ export function SiteDiaryPage() {
         {language === 'ar' ? statusConfig.label : status}
       </Badge>
     );
+  };
+
+  const handleStatusChange = async (reportId: string, newStatus: string) => {
+    setUpdatingStatus(reportId);
+    try {
+      const response = await fetch('/api/site-reports', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ id: reportId, status: newStatus })
+      });
+      const result = await response.json();
+      if (result.success) {
+        toast({
+          title: t.successSave,
+          description: newStatus === 'SUBMITTED'
+            ? (language === 'ar' ? 'تم إرسال التقرير بنجاح' : 'Report submitted successfully')
+            : (language === 'ar' ? 'تم اعتماد التقرير بنجاح' : 'Report approved successfully')
+        });
+        queryClient.invalidateQueries({ queryKey: ['site-reports'] });
+      } else {
+        toast({
+          title: language === 'ar' ? 'خطأ' : 'Error',
+          description: result.error?.message || (language === 'ar' ? 'فشل تحديث الحالة' : 'Failed to update status'),
+          variant: 'destructive'
+        });
+      }
+    } catch {
+      toast({
+        title: language === 'ar' ? 'خطأ' : 'Error',
+        description: language === 'ar' ? 'حدث خطأ أثناء تحديث الحالة' : 'An error occurred while updating status',
+        variant: 'destructive'
+      });
+    } finally {
+      setUpdatingStatus(null);
+    }
   };
 
   const handleCreateReport = async () => {
@@ -421,6 +466,44 @@ export function SiteDiaryPage() {
                 <div className="flex items-center justify-between pt-2">
                   <span className="text-xs text-slate-500">{formatDate(report.createdAt)}</span>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {report.status === 'draft' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 gap-1 text-green-400 hover:text-green-300 hover:bg-green-500/10"
+                        disabled={updatingStatus === report.id}
+                        onClick={() => handleStatusChange(report.id, 'SUBMITTED')}
+                      >
+                        {updatingStatus === report.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Send className="w-4 h-4" />
+                        )}
+                        <span className="text-xs">{language === 'ar' ? 'إرسال' : 'Submit'}</span>
+                      </Button>
+                    )}
+                    {report.status === 'submitted' && canApprove && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 gap-1 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
+                        disabled={updatingStatus === report.id}
+                        onClick={() => handleStatusChange(report.id, 'APPROVED')}
+                      >
+                        {updatingStatus === report.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="w-4 h-4" />
+                        )}
+                        <span className="text-xs">{language === 'ar' ? 'اعتماد' : 'Approve'}</span>
+                      </Button>
+                    )}
+                    {report.status === 'approved' && (
+                      <Badge variant="secondary" className="h-8 gap-1 bg-green-500/20 text-green-400 border-green-500/30">
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span className="text-xs">{language === 'ar' ? 'معتمد' : 'Approved'}</span>
+                      </Badge>
+                    )}
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white">
                       <Eye className="w-4 h-4" />
                     </Button>

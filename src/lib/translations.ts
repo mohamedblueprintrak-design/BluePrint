@@ -254,6 +254,7 @@ export const translations = {
     
     // Roles
     engineer: 'مهندس',
+    draftsman: 'راسم',
     accountant: 'محاسب',
     viewer: 'مشاهد',
     
@@ -555,6 +556,7 @@ export const translations = {
     
     // Roles
     engineer: 'Engineer',
+    draftsman: 'Draftsman',
     accountant: 'Accountant',
     viewer: 'Viewer',
     

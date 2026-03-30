@@ -218,6 +218,40 @@ export const postHandlers = {
       return errorResponse('حدث خطأ أثناء معالجة الدفع');
     }
 
+    // After payment is created, update project remaining balance
+    const invoice = await database.invoice.findUnique({
+      where: { id: invoiceId as string },
+      select: { projectId: true, total: true }
+    });
+
+    if (invoice?.projectId) {
+      // Calculate total payments received for this project
+      const paidInvoices = await database.invoice.findMany({
+        where: { 
+          projectId: invoice.projectId,
+          status: { in: ['PAID', 'PARTIAL', 'SENT'] }
+        },
+        select: { paidAmount: true }
+      });
+      
+      const totalPayments = paidInvoices.reduce((sum: number, inv: any) => sum + (inv.paidAmount || 0), 0);
+      
+      const project = await database.project.findUnique({
+        where: { id: invoice.projectId },
+        select: { contractValue: true }
+      });
+      
+      if (project) {
+        await database.project.update({
+          where: { id: invoice.projectId },
+          data: {
+            paymentReceived: totalPayments,
+            remainingBalance: (project.contractValue || 0) - totalPayments
+          }
+        });
+      }
+    }
+
     return successResponse({ id: result.id, amount: result.amount });
   }
 };

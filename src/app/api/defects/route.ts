@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
   try {
     const { db } = await import('@/lib/db');
     const body = await request.json();
-    const { projectId, title, description, severity, location, assignedTo } = body;
+    const { projectId, title, description, severity, location, assignedTo, siteReportId } = body;
     
     if (!projectId || !title) return error('المشروع والعنوان مطلوبان');
     
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     if (!project) return error('المشروع غير موجود', 'NOT_FOUND', 404);
     
     const defect = await db.defect.create({
-      data: { projectId, title, description, severity: severity || 'medium', status: 'OPEN', location, assignedTo }
+      data: { projectId, title, description, severity: severity || 'medium', status: 'OPEN', location, assignedTo, siteReportId: siteReportId || undefined }
     });
     return success(defect);
   } catch (e) {

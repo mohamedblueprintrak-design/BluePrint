@@ -71,7 +71,7 @@ Authorization: Bearer <your-token>
           fullName: { type: 'string' },
           role: { 
             type: 'string', 
-            enum: ['ADMIN', 'MANAGER', 'ENGINEER', 'ACCOUNTANT', 'VIEWER'] 
+            enum: ['ADMIN', 'MANAGER', 'PROJECT_MANAGER', 'ENGINEER', 'DRAFTSMAN', 'ACCOUNTANT', 'HR', 'VIEWER'] 
           },
           isActive: { type: 'boolean' },
           createdAt: { type: 'string', format: 'date-time' },

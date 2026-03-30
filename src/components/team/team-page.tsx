@@ -43,6 +43,7 @@ const roleLabels = {
   [UserRole.ADMIN]: 'مدير',
   [UserRole.MANAGER]: 'مشرف',
   [UserRole.ENGINEER]: 'مهندس',
+  [UserRole.DRAFTSMAN]: 'راسم',
   [UserRole.ACCOUNTANT]: 'محاسب',
   [UserRole.HR]: 'موارد بشرية',
   [UserRole.PROJECT_MANAGER]: 'مدير مشروع',
@@ -54,6 +55,7 @@ const roleVariants = {
   [UserRole.ADMIN]: 'destructive' as const,
   [UserRole.MANAGER]: 'default' as const,
   [UserRole.ENGINEER]: 'secondary' as const,
+  [UserRole.DRAFTSMAN]: 'secondary' as const,
   [UserRole.ACCOUNTANT]: 'secondary' as const,
   [UserRole.HR]: 'secondary' as const,
   [UserRole.PROJECT_MANAGER]: 'default' as const,
@@ -65,6 +67,7 @@ const roleIcons = {
   [UserRole.ADMIN]: Shield,
   [UserRole.MANAGER]: UserCog,
   [UserRole.ENGINEER]: HardHat,
+  [UserRole.DRAFTSMAN]: HardHat,
   [UserRole.ACCOUNTANT]: Users,
   [UserRole.HR]: Users,
   [UserRole.PROJECT_MANAGER]: UserCog,
@@ -316,6 +319,7 @@ export default function TeamPage() {
                 <SelectItem value="manager">مشرف</SelectItem>
                 <SelectItem value="project_manager">مدير مشروع</SelectItem>
                 <SelectItem value="engineer">مهندس</SelectItem>
+                <SelectItem value="draftsman">راسم</SelectItem>
                 <SelectItem value="accountant">محاسب</SelectItem>
                 <SelectItem value="hr">موارد بشرية</SelectItem>
                 <SelectItem value="viewer">مشاهد</SelectItem>
@@ -448,6 +452,7 @@ export default function TeamPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="engineer">مهندس</SelectItem>
+                  <SelectItem value="draftsman">راسم</SelectItem>
                   <SelectItem value="manager">مشرف</SelectItem>
                   <SelectItem value="project_manager">مدير مشروع</SelectItem>
                   <SelectItem value="admin">مدير</SelectItem>

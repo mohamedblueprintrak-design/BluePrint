@@ -48,6 +48,7 @@ import {
 const ROLES = [
   { id: 'admin', name: 'مدير', nameEn: 'Admin', permissions: ['all'] },
   { id: 'engineer', name: 'مهندس', nameEn: 'Engineer', permissions: ['projects', 'tasks', 'documents'] },
+  { id: 'draftsman', name: 'راسم', nameEn: 'Draftsman', permissions: ['projects', 'tasks', 'documents'] },
   { id: 'accountant', name: 'محاسب', nameEn: 'Accountant', permissions: ['invoices', 'clients', 'reports'] },
   { id: 'hr', name: 'موارد بشرية', nameEn: 'HR', permissions: ['hr', 'attendance', 'leaves'] },
   { id: 'project_manager', name: 'مدير مشروع', nameEn: 'Project Manager', permissions: ['projects', 'tasks', 'site-reports'] },
@@ -112,6 +113,7 @@ export function AdminPage() {
     const roles: Record<string, { label: string; color: string }> = {
       admin: { label: 'مدير', color: 'bg-red-500' },
       engineer: { label: 'مهندس', color: 'bg-blue-500' },
+      draftsman: { label: 'راسم', color: 'bg-indigo-500' },
       accountant: { label: 'محاسب', color: 'bg-green-500' },
       hr: { label: 'موارد بشرية', color: 'bg-purple-500' },
       project_manager: { label: 'مدير مشروع', color: 'bg-cyan-500' },
