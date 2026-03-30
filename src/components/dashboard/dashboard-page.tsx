@@ -696,7 +696,7 @@ export function DashboardPage() {
             ) : (
               <ScrollArea className="h-64">
                 <div className="space-y-3">
-                  {recentTasks.length > 0 ? recentTasks.map((task: Record<string, unknown>) => (
+                  {recentTasks.length > 0 ? recentTasks.map((task: any) => (
                     <div key={task.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800/50 transition-colors">
                       <div className={`w-2 h-2 rounded-full ${
                         task.priority === 'urgent' ? 'bg-red-500' :
@@ -753,7 +753,7 @@ export function DashboardPage() {
             ) : (
               <ScrollArea className="h-64">
                 <div className="space-y-3">
-                  {pendingInvoices.length > 0 ? pendingInvoices.map((invoice: Record<string, unknown>) => (
+                  {pendingInvoices.length > 0 ? pendingInvoices.map((invoice: any) => (
                     <div key={invoice.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800/50 transition-colors">
                       <div className="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center">
                         <FileText className="w-5 h-5 text-cyan-400" />

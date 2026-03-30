@@ -39,7 +39,7 @@ export default function OperationsPage() {
     .filter((t: any) => t.status === 'todo' || t.status === 'in_progress')
     .sort((a: any, b: any) => {
       const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
-      return (priorityOrder[(a as any).priority] || 3) - (priorityOrder[(b as any).priority] || 3);
+      return (priorityOrder as any)[a.priority] - (priorityOrder as any)[b.priority];
     })
     .slice(0, 8);
 

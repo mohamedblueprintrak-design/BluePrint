@@ -20,6 +20,7 @@ export interface TaskFilters {
   priority?: string;
   assignedTo?: string;
   projectId?: string;
+  parentId?: string;
   search?: string;
   dueDateFrom?: Date;
   dueDateTo?: Date;
@@ -147,6 +148,7 @@ class TaskService {
     if (filters?.priority) where.priority = filters.priority;
     if (filters?.assignedTo) where.assignedTo = filters.assignedTo;
     if (filters?.projectId) where.projectId = filters.projectId;
+    if (filters?.parentId) where.parentId = filters.parentId;
 
     if (filters?.search) {
       where.OR = [

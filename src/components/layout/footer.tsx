@@ -1,0 +1,30 @@
+'use client';
+
+import { useApp } from '@/context/app-context';
+
+export function Footer() {
+  const { language } = useApp();
+  const isRTL = language === 'ar';
+
+  return (
+    <footer
+      className="border-t border-slate-800 bg-slate-950 mt-auto"
+      dir={isRTL ? 'rtl' : 'ltr'}
+    >
+      <div className="px-4 md:px-6 py-3">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-1">
+          <p className="text-xs text-slate-500">
+            {isRTL
+              ? '© 2024 BluePrint. جميع الحقوق محفوظة.'
+              : '© 2024 BluePrint. All rights reserved.'}
+          </p>
+          <p className="text-xs text-slate-600">
+            {isRTL
+              ? 'بدعم من منصة BluePrint للهندسة بالذكاء الاصطناعي'
+              : 'Powered by BluePrint AI Engineering Platform'}
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+}

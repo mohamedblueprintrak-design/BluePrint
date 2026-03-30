@@ -597,7 +597,9 @@ export function TasksPage() {
                 <div className={`w-2 h-2 rounded-full ${priorityConfig.dotColor}`} />
                 {/* 1A: Mandatory indicator */}
                 {isMandatory && (
-                  <Star className="w-3.5 h-3.5 text-red-400 fill-red-400 shrink-0" title={language === 'ar' ? 'إلزامي' : 'Required'} />
+                  <span className="w-3.5 h-3.5 text-red-400 shrink-0" title={language === 'ar' ? 'إلزامي' : 'Required'}>
+                    <Star className="w-3.5 h-3.5 text-red-400 fill-red-400" />
+                  </span>
                 )}
                 <span className="text-white font-medium line-clamp-2 text-sm">
                   {task.title}

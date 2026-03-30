@@ -431,7 +431,7 @@ export function GanttChart({
     return tasks
       .filter(t => t.slaDays && t.slaStartDate && t.startDate)
       .map(t => {
-        const slaStart = new Date(t.slaStartDate);
+        const slaStart = new Date(t.slaStartDate || '');
         const deadline = new Date(slaStart);
         deadline.setDate(deadline.getDate() + t.slaDays!);
         

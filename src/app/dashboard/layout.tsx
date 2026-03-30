@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
+import { Footer } from '@/components/layout/footer';
+import { MobileBottomNav } from '@/components/mobile-bottom-nav';
 import { cn } from '@/lib/utils';
 import { useApp } from '@/context/app-context';
 
@@ -73,7 +75,7 @@ export default function DashboardLayout({
         {/* Main Content Area */}
         <main 
           className={cn(
-            "transition-all duration-300 min-h-screen",
+            "transition-all duration-300 min-h-screen flex flex-col",
             sidebarCollapsed 
               ? (isRTL ? "mr-20" : "ml-20")
               : (isRTL ? "mr-64" : "ml-64")
@@ -83,10 +85,16 @@ export default function DashboardLayout({
           <Header />
           
           {/* Page Content */}
-          <div className="p-4 md:p-6">
+          <div className="p-4 md:p-6 flex-1">
             {children}
           </div>
+          
+          {/* Footer - sticky to bottom */}
+          <Footer />
         </main>
+        
+        {/* Mobile Bottom Navigation - hidden on desktop */}
+        <MobileBottomNav />
       </div>
     </AuthGuard>
   );

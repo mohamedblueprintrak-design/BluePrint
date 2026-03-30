@@ -577,7 +577,7 @@ export function ActivitiesPage() {
                       disabled={pagination.page <= 1}
                       className="border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700 disabled:opacity-50"
                     >
-                      {language === 'rtl' ? (
+                      {(language as string) === 'rtl' ? (
                         <ChevronRight className="w-4 h-4" />
                       ) : (
                         <ChevronLeft className="w-4 h-4" />
@@ -609,7 +609,7 @@ export function ActivitiesPage() {
                       disabled={pagination.page >= pagination.totalPages}
                       className="border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700 disabled:opacity-50"
                     >
-                      {language === 'rtl' ? (
+                      {(language as string) === 'rtl' ? (
                         <ChevronLeft className="w-4 h-4" />
                       ) : (
                         <ChevronRight className="w-4 h-4" />

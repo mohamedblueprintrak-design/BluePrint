@@ -33,7 +33,8 @@ import {
   User, Shield, BookOpen, Bot, FileSpreadsheet,
   PanelLeftClose, PanelLeft, Zap, Calculator, ShoppingCart,
   AlertTriangle, Receipt, X, ChevronDown, ChevronUp,
-  FolderOpen, Settings2, LayoutDashboard
+  FolderOpen, Settings2, LayoutDashboard, Wrench, Gavel,
+  Calendar, Bell, HelpCircle, Crown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -199,6 +200,14 @@ const getRoutes = (_language: 'ar' | 'en'): Record<string, string> => ({
   'admin': '/dashboard/admin',
   'activities': '/dashboard/activities',
   'profile': '/dashboard/profile',
+  'pricing': '/dashboard/pricing',
+  'team': '/dashboard/team',
+  'equipment': '/dashboard/equipment',
+  'bidding': '/dashboard/bidding',
+  'calendar': '/dashboard/calendar',
+  'notifications': '/dashboard/notifications',
+  'automations': '/dashboard/automations',
+  'help': '/dashboard/help',
 });
 
 // Sidebar Content Component - shared between desktop and mobile
@@ -248,6 +257,9 @@ function SidebarContent({
     { id: 'boq', label: language === 'ar' ? 'جدول الكميات' : 'BOQ', icon: FileSpreadsheet, href: '/dashboard/boq' },
     { id: 'siteDiary', label: t.siteDiary, icon: FileSpreadsheet, href: '/dashboard/site-diary' },
     { id: 'defects', label: language === 'ar' ? 'العيوب والمخالفات' : 'Defects', icon: AlertTriangle, href: '/dashboard/defects' },
+    { id: 'equipment', label: language === 'ar' ? 'المعدات' : 'Equipment', icon: Wrench, href: '/dashboard/equipment' },
+    { id: 'bidding', label: language === 'ar' ? 'العطاءات' : 'Bidding', icon: Gavel, href: '/dashboard/bidding' },
+    { id: 'automations', label: language === 'ar' ? 'الأتمتة' : 'Automations', icon: Zap, href: '/dashboard/automations' },
   ];
 
   // Management items - collapsible
@@ -256,6 +268,9 @@ function SidebarContent({
     { id: 'documents', label: t.documents, icon: FileText, href: '/dashboard/documents' },
     { id: 'knowledge', label: t.knowledge, icon: BookOpen, href: '/dashboard/knowledge' },
     { id: 'hr', label: t.hr, icon: Users, href: '/dashboard/hr' },
+    { id: 'team', label: language === 'ar' ? 'الفريق' : 'Team', icon: Users, href: '/dashboard/team' },
+    { id: 'calendar', label: language === 'ar' ? 'التقويم' : 'Calendar', icon: Calendar, href: '/dashboard/calendar' },
+    { id: 'notifications', label: language === 'ar' ? 'الإشعارات' : 'Notifications', icon: Bell, href: '/dashboard/notifications' },
   ];
 
   // AI & Settings
@@ -265,6 +280,8 @@ function SidebarContent({
 
   const settingsItems: SidebarItem[] = [
     { id: 'settings', label: t.settings, icon: Settings, href: '/dashboard/settings' },
+    { id: 'help', label: language === 'ar' ? 'المساعدة' : 'Help', icon: HelpCircle, href: '/dashboard/help' },
+    { id: 'pricing', label: language === 'ar' ? 'الأسعار' : 'Pricing', icon: Crown, href: '/dashboard/pricing' },
   ];
 
   const adminItems: SidebarItem[] = [

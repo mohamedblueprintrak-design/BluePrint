@@ -529,7 +529,7 @@ export default function ClientInteractionPanel({
                   }`}
                 >
                   <span className={itype.color}>
-                    {React.cloneElement(itype.icon as React.ReactElement, {
+                    {React.cloneElement(itype.icon as React.ReactElement<any>, {
                       className: 'h-3.5 w-3.5',
                     })}
                   </span>

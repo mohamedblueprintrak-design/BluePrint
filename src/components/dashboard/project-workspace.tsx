@@ -73,6 +73,7 @@ import {
   RotateCcw,
   Ban,
 } from 'lucide-react';
+import ClientInteractionPanel from '@/components/clients/client-interaction-panel';
 
 // ===== Types =====
 interface ProjectWorkspaceProps {
@@ -284,11 +285,11 @@ const defectStatusConfig: Record<string, { color: string; bg: string; labelAr: s
 };
 
 const boqCategoryConfig: Record<string, { color: string; bg: string; labelAr: string; labelEn: string }> = {
-  civil: { color: 'text-amber-400', bg: 'bg-amber-500/15', labelAr: 'مدني', en: 'Civil' },
-  structural: { color: 'text-orange-400', bg: 'bg-orange-500/15', labelAr: 'إنشائي', en: 'Structural' },
-  mep: { color: 'text-cyan-400', bg: 'bg-cyan-500/15', labelAr: 'خدمات', en: 'MEP' },
-  finishing: { color: 'text-violet-400', bg: 'bg-violet-500/15', labelAr: 'تشطيبات', en: 'Finishing' },
-  external: { color: 'text-emerald-400', bg: 'bg-emerald-500/15', labelAr: 'أشغال خارجية', en: 'External' },
+  civil: { color: 'text-amber-400', bg: 'bg-amber-500/15', labelAr: 'مدني', labelEn: 'Civil' },
+  structural: { color: 'text-orange-400', bg: 'bg-orange-500/15', labelAr: 'إنشائي', labelEn: 'Structural' },
+  mep: { color: 'text-cyan-400', bg: 'bg-cyan-500/15', labelAr: 'خدمات', labelEn: 'MEP' },
+  finishing: { color: 'text-violet-400', bg: 'bg-violet-500/15', labelAr: 'تشطيبات', labelEn: 'Finishing' },
+  external: { color: 'text-emerald-400', bg: 'bg-emerald-500/15', labelAr: 'أشغال خارجية', labelEn: 'External' },
 };
 
 const interactionTypeConfig: Record<string, { color: string; bg: string; border: string; labelAr: string; labelEn: string; icon: React.ReactNode }> = {
@@ -446,8 +447,28 @@ export default function ProjectWorkspace({ projectId, onBack }: ProjectWorkspace
   const [interactions, setInteractions] = useState<ClientInteraction[]>([]);
   const [invoices, setInvoices] = useState<InvoiceData[]>([]);
   const [tasks, setTasks] = useState<TaskData[]>([]);
-  const [siteReports] = useState<SiteReportData[]>([]);
-  const [defects] = useState<DefectData[]>([]);
+  const [siteReports, setSiteReports] = useState<SiteReportData[]>([]);
+  const [defects, setDefects] = useState<DefectData[]>([]);
+  const [boqVariance, setBoqVariance] = useState<{
+    items: Array<{
+      boqItemId: string;
+      itemNumber: string | null;
+      description: string;
+      category: string | null;
+      budget: number;
+      actual: number;
+      variance: number;
+      variancePercent: number;
+      isOverBudget: boolean;
+      flagged: boolean;
+    }>;
+    totalBudget: number;
+    totalActual: number;
+    totalVariance: number;
+    totalVariancePercent: number;
+    flaggedCount: number;
+    overBudgetCount: number;
+  } | null>(null);
   const [boqItems, setBoqItems] = useState<BOQItemData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -490,6 +511,8 @@ export default function ProjectWorkspace({ projectId, onBack }: ProjectWorkspace
           `/api/invoices?projectId=${projectId}`,
           `/api/tasks?projectId=${projectId}`,
           `/api/boq?projectId=${projectId}`,
+          `/api/site-reports?projectId=${projectId}`,
+          `/api/defects?projectId=${projectId}`,
         ];
         const responses = await Promise.allSettled(
           endpoints.map((url) =>
@@ -536,6 +559,31 @@ export default function ProjectWorkspace({ projectId, onBack }: ProjectWorkspace
         if (responses[5].status === 'fulfilled' && responses[5].value.ok) {
           const data = await responses[5].value.json();
           setBoqItems(data.data || data.boqItems || []);
+        }
+
+        // Site Reports
+        if (responses[6].status === 'fulfilled' && responses[6].value.ok) {
+          const data = await responses[6].value.json();
+          setSiteReports(data.data || data.reports || []);
+        }
+
+        // Defects
+        if (responses[7].status === 'fulfilled' && responses[7].value.ok) {
+          const data = await responses[7].value.json();
+          setDefects(data.data || data.defects || []);
+        }
+
+        // BOQ Cost Variance
+        try {
+          const costRes = await fetch(`/api/projects/${projectId}/cost-summary`, {
+            headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' } as Record<string, string>,
+          });
+          if (costRes.ok) {
+            const costData = await costRes.json();
+            setBoqVariance(costData.data || null);
+          }
+        } catch {
+          // Silently fail - variance is optional
         }
       } catch (err) {
         console.error('Failed to fetch workspace data:', err);
@@ -2438,6 +2486,131 @@ export default function ProjectWorkspace({ projectId, onBack }: ProjectWorkspace
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* BOQ Cost Variance Analysis */}
+                {boqVariance && boqVariance.items.length > 0 && (
+                  <Card className="bg-slate-900/50 border-slate-800">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <TrendingUp className="h-5 w-5 text-rose-400" />
+                          <CardTitle className="text-base text-white">
+                            {isAr ? 'تحليل تباين التكاليف' : 'Cost Variance Analysis'}
+                          </CardTitle>
+                        </div>
+                        {boqVariance.flaggedCount > 0 && (
+                          <Badge className="bg-red-500/15 text-red-400 text-xs gap-1">
+                            <AlertTriangle className="h-3 w-3" />
+                            {boqVariance.flaggedCount} {isAr ? 'بنود محذرة' : 'flagged'}
+                          </Badge>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {/* Variance Summary Cards */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                        <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/30">
+                          <p className="text-[10px] text-slate-500">{isAr ? 'إجمالي الميزانية' : 'Total Budget'}</p>
+                          <p className="text-sm font-bold text-violet-400 mt-1">{formatCurrency(boqVariance.totalBudget)}</p>
+                        </div>
+                        <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/30">
+                          <p className="text-[10px] text-slate-500">{isAr ? 'إجمالي الفعلي' : 'Total Actual'}</p>
+                          <p className="text-sm font-bold text-amber-400 mt-1">{formatCurrency(boqVariance.totalActual)}</p>
+                        </div>
+                        <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/30">
+                          <p className="text-[10px] text-slate-500">{isAr ? 'التباين الكلي' : 'Total Variance'}</p>
+                          <p className={`text-sm font-bold mt-1 ${boqVariance.totalVariance >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                            {formatCurrency(boqVariance.totalVariance)}
+                          </p>
+                        </div>
+                        <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/30">
+                          <p className="text-[10px] text-slate-500">{isAr ? 'نسبة التباين' : 'Variance %'}</p>
+                          <p className={`text-sm font-bold mt-1 ${Math.abs(boqVariance.totalVariancePercent) > 20 ? 'text-red-400' : 'text-emerald-400'}`}>
+                            {boqVariance.totalVariancePercent.toFixed(1)}%
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Variance Items Table */}
+                      <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                        <table className="w-full text-sm">
+                          <thead className="sticky top-0 bg-slate-900">
+                            <tr className="border-b border-slate-700/50">
+                              <th className="text-start p-2.5 text-slate-400 font-medium text-xs">
+                                {isAr ? 'البنود' : 'Item'}
+                              </th>
+                              <th className="text-end p-2.5 text-slate-400 font-medium text-xs">
+                                {isAr ? 'الميزانية' : 'Budget'}
+                              </th>
+                              <th className="text-end p-2.5 text-slate-400 font-medium text-xs">
+                                {isAr ? 'الفعلي' : 'Actual'}
+                              </th>
+                              <th className="text-end p-2.5 text-slate-400 font-medium text-xs">
+                                {isAr ? 'التباين' : 'Variance'}
+                              </th>
+                              <th className="text-end p-2.5 text-slate-400 font-medium text-xs">
+                                %
+                              </th>
+                              <th className="text-center p-2.5 text-slate-400 font-medium text-xs">
+                                {isAr ? 'الحالة' : 'Status'}
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {boqVariance.items.map((item) => {
+                              const isFlagged = item.flagged;
+                              const isOver = item.isOverBudget;
+                              return (
+                                <tr
+                                  key={item.boqItemId}
+                                  className={`border-b border-slate-700/30 ${
+                                    isFlagged ? 'bg-red-500/5 border-l-2 border-l-red-500/60' : ''
+                                  }`}
+                                >
+                                  <td className="p-2.5">
+                                    <div className="flex items-center gap-2">
+                                      {isFlagged && (
+                                        <AlertTriangle className={`h-3 w-3 shrink-0 ${isOver ? 'text-red-400' : 'text-amber-400'}`} />
+                                      )}
+                                      <span className="text-white text-xs truncate max-w-[200px]" title={item.description}>
+                                        {item.description}
+                                      </span>
+                                    </div>
+                                  </td>
+                                  <td className="p-2.5 text-end text-slate-300 text-xs">
+                                    {formatCurrency(item.budget)}
+                                  </td>
+                                  <td className="p-2.5 text-end text-xs text-white">
+                                    {formatCurrency(item.actual)}
+                                  </td>
+                                  <td className={`p-2.5 text-end text-xs font-medium ${item.variance >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                    {formatCurrency(item.variance)}
+                                  </td>
+                                  <td className={`p-2.5 text-end text-xs font-medium ${isFlagged ? 'text-red-400' : 'text-emerald-400'}`}>
+                                    {item.variancePercent > 0 ? '+' : ''}{item.variancePercent}%
+                                  </td>
+                                  <td className="p-2.5 text-center">
+                                    {isFlagged ? (
+                                      <Badge variant="secondary" className="bg-red-500/10 text-red-400 text-[10px]">
+                                        {isOver
+                                          ? (isAr ? 'تجاوز' : 'Over Budget')
+                                          : (isAr ? 'تحذير' : 'Warning')}
+                                      </Badge>
+                                    ) : (
+                                      <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-400 text-[10px]">
+                                        {isAr ? 'مقبول' : 'OK'}
+                                      </Badge>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </TabsContent>
 
@@ -2866,6 +3039,16 @@ export default function ProjectWorkspace({ projectId, onBack }: ProjectWorkspace
                       );
                     })
                   )}
+                </div>
+
+                {/* Client Interaction Enhancement Panel */}
+                <Separator className="my-6 bg-slate-800" />
+                <div>
+                  <h3 className="text-sm font-medium text-slate-400 mb-3 flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    {isAr ? 'لوحة تفاعلات العميل' : 'Client Interaction Panel'}
+                  </h3>
+                  <ClientInteractionPanel projectId={projectId} clientId={project.client?.id} />
                 </div>
               </div>
             </TabsContent>

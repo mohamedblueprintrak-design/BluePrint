@@ -253,7 +253,7 @@ async function handleVersionIncrement(
   }
 
   const updated = await prisma.document.update({
-    where: { id },
+    where: { id: document.id },
     data: {
       version: newVersion,
       revision: newRevision,

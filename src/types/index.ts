@@ -285,6 +285,7 @@ export interface Task {
   estimatedHours?: number;
   actualHours?: number;
   tags?: string[];
+  parentId?: string;
   createdAt: Date;
   updatedAt: Date;
   subtasks?: SubTask[];

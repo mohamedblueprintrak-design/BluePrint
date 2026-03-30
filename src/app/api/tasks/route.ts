@@ -36,6 +36,7 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const projectId = searchParams.get('projectId') || undefined;
+  const parentId = searchParams.get('parentId') || undefined;
   const status = searchParams.get('status') || undefined;
   const priority = searchParams.get('priority') || undefined;
 
@@ -43,6 +44,7 @@ export async function GET(request: NextRequest) {
   if (isDemoUser(user.id)) {
     let tasks = [...DEMO_DATA.tasks];
     if (projectId) tasks = tasks.filter(t => t.projectId === projectId);
+    if (parentId) tasks = tasks.filter((t: any) => t.parentId === parentId);
     if (status) tasks = tasks.filter(t => t.status === status);
     if (priority) tasks = tasks.filter(t => t.priority === priority);
     return successResponse(tasks);
@@ -54,12 +56,12 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const cacheKey = buildCacheKey('tasks', 'list', user.organizationId || '', 'pid', projectId || '', 's', status || '', 'pr', priority || '');
+    const cacheKey = buildCacheKey('tasks', 'list', user.organizationId || '', 'pid', projectId || '', 'parentId', parentId || '', 's', status || '', 'pr', priority || '');
     const result = await cachedQuery(
       cacheKey,
       () => taskService.getTasks(
         user.organizationId!,
-        { projectId, status, priority },
+        { projectId, parentId, status, priority },
         {}
       ),
       CACHE_TTL.TASKS

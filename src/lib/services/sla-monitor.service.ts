@@ -186,7 +186,7 @@ export async function checkSLABreaches(): Promise<SLAMonitorReport> {
         status,
         escalationLevel: level,
         assignedTo: task.assignedTo,
-        governmentEntity: task.governmentEntity,
+        governmentEntity: task.governmentEntity ?? null,
       };
 
       report.results.push(result);
@@ -642,7 +642,7 @@ export async function getAutoTaskSuggestions(taskId: string): Promise<SuggestedT
           taskType: TaskType.MANDATORY,
           slaDays: 3,
           priority: 'HIGH',
-          governmentEntity: task.governmentEntity,
+          governmentEntity: task.governmentEntity ?? null,
         },
         {
           title: 'Schedule FEWA Site Inspection',
@@ -650,7 +650,7 @@ export async function getAutoTaskSuggestions(taskId: string): Promise<SuggestedT
           taskType: TaskType.STANDARD,
           slaDays: 7,
           priority: 'HIGH',
-          governmentEntity: task.governmentEntity,
+          governmentEntity: task.governmentEntity ?? null,
         }
       );
     }
@@ -664,7 +664,7 @@ export async function getAutoTaskSuggestions(taskId: string): Promise<SuggestedT
           taskType: TaskType.MANDATORY,
           slaDays: 5,
           priority: 'URGENT',
-          governmentEntity: task.governmentEntity,
+          governmentEntity: task.governmentEntity ?? null,
         },
         {
           title: 'Submit Fire Safety Equipment List',
@@ -672,7 +672,7 @@ export async function getAutoTaskSuggestions(taskId: string): Promise<SuggestedT
           taskType: TaskType.MANDATORY,
           slaDays: 3,
           priority: 'HIGH',
-          governmentEntity: task.governmentEntity,
+          governmentEntity: task.governmentEntity ?? null,
         }
       );
     }
@@ -686,7 +686,7 @@ export async function getAutoTaskSuggestions(taskId: string): Promise<SuggestedT
           taskType: TaskType.MANDATORY,
           slaDays: 3,
           priority: 'URGENT',
-          governmentEntity: task.governmentEntity,
+          governmentEntity: task.governmentEntity ?? null,
         },
         {
           title: 'Obtain Owner NOC',
@@ -694,7 +694,7 @@ export async function getAutoTaskSuggestions(taskId: string): Promise<SuggestedT
           taskType: TaskType.MANDATORY,
           slaDays: 5,
           priority: 'HIGH',
-          governmentEntity: task.governmentEntity,
+          governmentEntity: task.governmentEntity ?? null,
         }
       );
     }
@@ -708,7 +708,7 @@ export async function getAutoTaskSuggestions(taskId: string): Promise<SuggestedT
       taskType: TaskType.INTERNAL,
       slaDays: 2,
       priority: 'HIGH',
-      governmentEntity: task.governmentEntity,
+      governmentEntity: task.governmentEntity || undefined,
     },
     {
       title: 'Follow-up Submission',
@@ -716,7 +716,7 @@ export async function getAutoTaskSuggestions(taskId: string): Promise<SuggestedT
       taskType: TaskType.STANDARD,
       slaDays: task.slaDays ? Math.max(task.slaDays + 7, 14) : 14,
       priority: 'HIGH',
-      governmentEntity: task.governmentEntity,
+      governmentEntity: task.governmentEntity || undefined,
     }
   );
 

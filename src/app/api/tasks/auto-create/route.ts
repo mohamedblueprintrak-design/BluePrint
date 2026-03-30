@@ -179,6 +179,52 @@ const PHASE_TEMPLATES: Record<string, TaskTemplate[]> = {
       color: '#10b981',
     },
   ],
+  CONTRACTING: [
+    {
+      title: 'Contract Review',
+      titleAr: 'مراجعة العقد',
+      description: 'Review contract terms, conditions, and scope of work',
+      descriptionAr: 'مراجعة شروط العقد والأحكام ونطاق العمل',
+      taskType: 'MANDATORY',
+      slaDays: 5,
+      order: 1,
+      dependencies: [],
+      color: '#f59e0b',
+    },
+    {
+      title: 'Contract Negotiation',
+      titleAr: 'التفاوض على العقد',
+      description: 'Negotiate contract terms with contractor',
+      descriptionAr: 'التفاوض على شروط العقد مع المقاول',
+      taskType: 'STANDARD',
+      slaDays: 10,
+      order: 2,
+      dependencies: [1],
+      color: '#6366f1',
+    },
+    {
+      title: 'Contract Signing',
+      titleAr: 'توقيع العقد',
+      description: 'Finalize and sign the contract with all parties',
+      descriptionAr: 'إتمام وتوقيع العقد مع جميع الأطراف',
+      taskType: 'CLIENT',
+      slaDays: 7,
+      order: 3,
+      dependencies: [2],
+      color: '#10b981',
+    },
+    {
+      title: 'Mobilization Plan',
+      titleAr: 'خطة التعبئة',
+      description: 'Prepare contractor mobilization and site handover plan',
+      descriptionAr: 'إعداد خطة تعبئة المقاول وتسليم الموقع',
+      taskType: 'STANDARD',
+      slaDays: 7,
+      order: 4,
+      dependencies: [3],
+      color: '#0ea5e9',
+    },
+  ],
   GOVERNMENT: [
     {
       title: 'Municipality Approval',
@@ -250,7 +296,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate phase category
-    const validCategories = ['ARCHITECTURAL', 'STRUCTURAL', 'MEP', 'GOVERNMENT'];
+    const validCategories = ['ARCHITECTURAL', 'STRUCTURAL', 'MEP', 'GOVERNMENT', 'CONTRACTING'];
     if (!validCategories.includes(phaseCategory)) {
       return errorResponse(`Invalid phaseCategory. Must be one of: ${validCategories.join(', ')}`);
     }
@@ -314,7 +360,7 @@ export async function POST(request: NextRequest) {
           workflowTemplate: phaseCategory,
           isMandatory: template.taskType === 'GOVERNMENTAL' || template.taskType === 'MANDATORY',
           status: 'TODO',
-          dependencies: template.dependencies.length > 0 ? template.dependencies : null,
+          dependencies: template.dependencies.length > 0 ? template.dependencies : undefined,
           assignedTo: project.managerId || null,
         },
       });

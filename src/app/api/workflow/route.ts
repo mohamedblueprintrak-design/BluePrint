@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { getUserFromRequest } from '../utils/demo-config';
 import { successResponse, errorResponse, unauthorizedResponse, serverErrorResponse } from '../utils/response';
+import { validatePhaseTransition } from '@/lib/services/phase-dependency.service';
 
 // GET /api/workflow?projectId=xxx - List workflow phases for a project
 export async function GET(request: NextRequest) {
@@ -58,6 +59,16 @@ export async function PUT(request: NextRequest) {
 
     if (!id) {
       return errorResponse('Phase ID is required');
+    }
+
+    // Server-side dependency enforcement: validate phase transition
+    if (updateData.status) {
+      const validation = await validatePhaseTransition(id, updateData.status);
+      if (!validation.allowed) {
+        return errorResponse(
+          validation.reason || 'Phase transition is not allowed due to dependency constraints'
+        );
+      }
     }
 
     // Convert date strings if present
