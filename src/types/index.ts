@@ -905,6 +905,7 @@ export interface RegisterForm {
   confirmPassword: string;
   fullName: string;
   organizationName?: string;
+  role?: string;
 }
 
 export interface ProjectForm {

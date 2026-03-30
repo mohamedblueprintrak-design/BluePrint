@@ -196,6 +196,7 @@ export interface SignupRequest {
   password: string;
   fullName: string;
   organizationName?: string;
+  role?: string;
 }
 
 /**

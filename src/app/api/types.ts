@@ -11,7 +11,7 @@ export interface DemoUser {
   email: string;
   password: string;
   fullName: string;
-  role: 'admin' | 'manager' | 'engineer' | 'viewer';
+  role: 'admin' | 'manager' | 'engineer' | 'draftsman' | 'accountant' | 'viewer';
   isActive: boolean;
   avatar: string | null;
   language: string;

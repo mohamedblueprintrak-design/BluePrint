@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Building2, Mail, Lock, User, AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Building2, Mail, Lock, User, AlertCircle, Loader2, Eye, EyeOff, UserCircle } from 'lucide-react';
 
 export function LoginPage() {
   const { login, register, isLoading } = useAuth();
@@ -26,7 +26,9 @@ export function LoginPage() {
     email: '',
     password: '',
     confirmPassword: '',
-    fullName: ''
+    fullName: '',
+    organizationName: '',
+    role: ''
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -73,7 +75,7 @@ export function LoginPage() {
       const result = await register(registerForm);
       if (result.success) {
         setSuccess(language === 'ar' ? 'تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول' : 'Account created successfully! You can now login');
-        setRegisterForm({ username: '', email: '', password: '', confirmPassword: '', fullName: '' });
+        setRegisterForm({ username: '', email: '', password: '', confirmPassword: '', fullName: '', organizationName: '', role: '' });
         // Switch to login tab after successful registration
         setTimeout(() => {
           const loginTab = document.querySelector('[value="login"]') as HTMLElement;
@@ -345,6 +347,49 @@ export function LoginPage() {
                     </div>
                   </div>
 
+                            {/* Organization Name */}
+                            <div className="space-y-2">
+                              <label className="text-sm font-medium text-slate-300">
+                                {language === 'ar' ? 'اسم الشركة / المكتب' : 'Company / Office Name'}
+                              </label>
+                              <div className="relative">
+                                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                                <Input
+                                  type="text"
+                                  placeholder={language === 'ar' ? 'مثال: شركة الأمل للمقاولات' : 'e.g. Al Amal Construction'}
+                                  value={registerForm.organizationName || ''}
+                                  onChange={(e) => setRegisterForm({ ...registerForm, organizationName: e.target.value })}
+                                  className="pl-10 bg-slate-800/50 border-slate-700"
+                                />
+                              </div>
+                              <p className="text-xs text-slate-500">
+                                {language === 'ar' ? 'أول حد يسجل باسم الشركة هيبقى المدير (Admin)' : 'First person to register with company name becomes Admin'}
+                              </p>
+                            </div>
+
+                            {/* Role Selection */}
+                            <div className="space-y-2">
+                              <label className="text-sm font-medium text-slate-300">
+                                {language === 'ar' ? 'دورك في المكتب' : 'Your Role'}
+                              </label>
+                              <select
+                                value={registerForm.role || ''}
+                                onChange={(e) => setRegisterForm({ ...registerForm, role: e.target.value })}
+                                className="w-full px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              >
+                                <option value="">{language === 'ar' ? '-- اختر دورك --' : '-- Select your role --'}</option>
+                                <option value="ADMIN">{language === 'ar' ? 'مدير / صاحب المكتب' : 'Manager / Office Owner'}</option>
+                                <option value="MANAGER">{language === 'ar' ? 'مدير مشاريع' : 'Project Manager'}</option>
+                                <option value="ENGINEER">{language === 'ar' ? 'مهندس' : 'Engineer'}</option>
+                                <option value="DRAFTSMAN">{language === 'ar' ? 'رسام' : 'Draftsman'}</option>
+                                <option value="ACCOUNTANT">{language === 'ar' ? 'محاسب' : 'Accountant'}</option>
+                                <option value="HR">{language === 'ar' ? 'موارد بشرية' : 'HR'}</option>
+                              </select>
+                              <p className="text-xs text-slate-500">
+                                {language === 'ar' ? 'لو مديرك هيضيفك للفريق، اختار دورك هنا' : 'If your manager will add you to the team, select your role here'}
+                              </p>
+                            </div>
+
                   <Button
                     type="submit"
                     className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 transition-all duration-300 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
@@ -363,27 +408,36 @@ export function LoginPage() {
 
         {/* Demo Credentials */}
         <div className="mt-4 p-4 rounded-lg bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/20">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-slate-400 mb-1">
-                {language === 'ar' ? 'بيانات التجربة:' : 'Demo credentials:'}
-              </p>
-              <p className="text-sm font-medium text-blue-400">
-                admin / Admin@123456
-              </p>
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setLoginForm({ username: 'admin', password: 'Admin@123456' });
-              }}
-              className="text-xs text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
-            >
-              {language === 'ar' ? 'استخدام' : 'Use'}
-            </Button>
-          </div>
+                            <div className="space-y-2 pt-2 border-t border-slate-700/50">
+                              <p className="text-xs text-slate-500 text-center">
+                                {language === 'ar' ? 'تجربة سريعة - ادخل بدور مختلف' : 'Quick demo - Login as different role'}
+                              </p>
+                              <div className="grid grid-cols-2 gap-2">
+                                {[
+                                  { role: language === 'ar' ? 'مدير' : 'Admin', user: 'admin', pass: 'Admin@123456', color: 'text-red-400 border-red-500/30 hover:bg-red-500/10' },
+                                  { role: language === 'ar' ? 'مدير مشاريع' : 'Manager', user: 'manager', pass: 'Admin@123456', color: 'text-amber-400 border-amber-500/30 hover:bg-amber-500/10' },
+                                  { role: language === 'ar' ? 'مهندس' : 'Engineer', user: 'engineer', pass: 'Admin@123456', color: 'text-blue-400 border-blue-500/30 hover:bg-blue-500/10' },
+                                  { role: language === 'ar' ? 'رسام' : 'Draftsman', user: 'draftsman', pass: 'Admin@123456', color: 'text-purple-400 border-purple-500/30 hover:bg-purple-500/10' },
+                                  { role: language === 'ar' ? 'محاسب' : 'Accountant', user: 'accountant', pass: 'Admin@123456', color: 'text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10' },
+                                  { role: language === 'ar' ? 'مشاهد' : 'Viewer', user: 'viewer', pass: 'Admin@123456', color: 'text-slate-400 border-slate-500/30 hover:bg-slate-500/10' },
+                                ].map((demo) => (
+                                  <button
+                                    key={demo.user}
+                                    type="button"
+                                    onClick={() => {
+                                      setLoginForm({ username: demo.user, password: demo.pass });
+                                    }}
+                                    className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${demo.color}`}
+                                  >
+                                    <UserCircle className="h-3.5 w-3.5" />
+                                    {demo.role}
+                                  </button>
+                                ))}
+                              </div>
+                              <p className="text-xs text-slate-600 text-center">
+                                {language === 'ar' ? 'الباسورد: Admin@123456' : 'Password: Admin@123456'}
+                              </p>
+                            </div>
         </div>
       </div>
     </div>

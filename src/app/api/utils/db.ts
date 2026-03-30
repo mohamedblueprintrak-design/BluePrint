@@ -50,6 +50,51 @@ export const DEMO_USERS: DemoUser[] = DEMO_MODE_ENABLED ? [
     theme: 'dark',
     organizationId: 'demo-org-001',
     organization: { id: 'demo-org-001', name: 'BluePrint Demo', currency: 'AED' }
+  },
+  {
+    id: 'demo-draftsman-001',
+    username: 'draftsman',
+    email: 'draftsman@blueprint.ae',
+    // SECURITY: Bcrypt hash - see demo-config.ts for generated credentials
+    password: '$2b$10$YZdZJmN1.WxNvHuPeTvlgfzYBKG/kE9vjbDv52f4vUeVccE4dmqc6',
+    fullName: 'عمر الرسام',
+    role: 'draftsman',
+    isActive: true,
+    avatar: null,
+    language: 'ar',
+    theme: 'dark',
+    organizationId: 'demo-org-001',
+    organization: { id: 'demo-org-001', name: 'BluePrint Demo', currency: 'AED' }
+  },
+  {
+    id: 'demo-accountant-001',
+    username: 'accountant',
+    email: 'accountant@blueprint.ae',
+    // SECURITY: Bcrypt hash - see demo-config.ts for generated credentials
+    password: '$2b$10$AeAeKnO2.XyOwIvQfUwmhgYBKG/kE9vjbDv52f4vUeVccE4dmqc6',
+    fullName: 'فاطمة المحاسبة',
+    role: 'accountant',
+    isActive: true,
+    avatar: null,
+    language: 'ar',
+    theme: 'dark',
+    organizationId: 'demo-org-001',
+    organization: { id: 'demo-org-001', name: 'BluePrint Demo', currency: 'AED' }
+  },
+  {
+    id: 'demo-viewer-001',
+    username: 'viewer',
+    email: 'viewer@blueprint.ae',
+    // SECURITY: Bcrypt hash - see demo-config.ts for generated credentials
+    password: '$2b$10$BfBfLoP3.YzPxJwGrXvnihYBKG/kE9vjbDv52f4vUeVccE4dmqc6',
+    fullName: 'أحمد المشاهد',
+    role: 'viewer',
+    isActive: true,
+    avatar: null,
+    language: 'ar',
+    theme: 'dark',
+    organizationId: 'demo-org-001',
+    organization: { id: 'demo-org-001', name: 'BluePrint Demo', currency: 'AED' }
   }
 ] : [];
 

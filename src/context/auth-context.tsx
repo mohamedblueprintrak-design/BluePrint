@@ -280,7 +280,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: data.email,
           password: data.password,
           fullName: data.fullName,
-          organizationName: data.organizationName
+          organizationName: data.organizationName,
+          role: data.role
         }),
         signal: controller.signal
       });
