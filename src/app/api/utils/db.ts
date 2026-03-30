@@ -13,7 +13,7 @@ export const DEMO_USERS: DemoUser[] = DEMO_MODE_ENABLED ? [
     // SECURITY: Bcrypt hash - never expose the plain password in production
     password: '$2b$10$UWaUflszu.zDeurvMcyIjezYBKG/kE9vjbDv52f4vUeVccE4dmqc6',
     fullName: 'مدير النظام',
-    role: 'admin',
+    role: 'ADMIN',
     isActive: true,
     avatar: null,
     language: 'ar',
@@ -28,7 +28,7 @@ export const DEMO_USERS: DemoUser[] = DEMO_MODE_ENABLED ? [
     // SECURITY: Bcrypt hash - see demo-config.ts for generated credentials
     password: '$2b$10$VYbYHkL9.UvLtFsNcyTjdezYBKG/kE9vjbDv52f4vUeVccE4dmqc6',
     fullName: 'مدير المشاريع',
-    role: 'manager',
+    role: 'MANAGER',
     isActive: true,
     avatar: null,
     language: 'ar',
@@ -43,7 +43,7 @@ export const DEMO_USERS: DemoUser[] = DEMO_MODE_ENABLED ? [
     // SECURITY: Bcrypt hash - see demo-config.ts for generated credentials
     password: '$2b$10$XZcZIlM0.VwMuGtOdTukefzYBKG/kE9vjbDv52f4vUeVccE4dmqc6',
     fullName: 'مهندس الموقع',
-    role: 'engineer',
+    role: 'ENGINEER',
     department: 'ARCHITECTURAL',
     isActive: true,
     avatar: null,
@@ -59,7 +59,7 @@ export const DEMO_USERS: DemoUser[] = DEMO_MODE_ENABLED ? [
     // SECURITY: Bcrypt hash - see demo-config.ts for generated credentials
     password: '$2b$10$YZdZJmN1.WxNvHuPeTvlgfzYBKG/kE9vjbDv52f4vUeVccE4dmqc6',
     fullName: 'عمر الرسام',
-    role: 'draftsman',
+    role: 'DRAFTSMAN',
     isActive: true,
     avatar: null,
     language: 'ar',
@@ -74,7 +74,7 @@ export const DEMO_USERS: DemoUser[] = DEMO_MODE_ENABLED ? [
     // SECURITY: Bcrypt hash - see demo-config.ts for generated credentials
     password: '$2b$10$AeAeKnO2.XyOwIvQfUwmhgYBKG/kE9vjbDv52f4vUeVccE4dmqc6',
     fullName: 'فاطمة المحاسبة',
-    role: 'accountant',
+    role: 'ACCOUNTANT',
     isActive: true,
     avatar: null,
     language: 'ar',
@@ -89,7 +89,7 @@ export const DEMO_USERS: DemoUser[] = DEMO_MODE_ENABLED ? [
     // SECURITY: Bcrypt hash - see demo-config.ts for generated credentials
     password: '$2b$10$BfBfLoP3.YzPxJwGrXvnihYBKG/kE9vjbDv52f4vUeVccE4dmqc6',
     fullName: 'أحمد المشاهد',
-    role: 'viewer',
+    role: 'VIEWER',
     isActive: true,
     avatar: null,
     language: 'ar',
@@ -103,7 +103,7 @@ export const DEMO_USERS: DemoUser[] = DEMO_MODE_ENABLED ? [
     email: 'struct_eng@blueprint.ae',
     password: '$2b$10$CgCgMpP4.AzQyKxHsYwoigYBKG/kE9vjbDv52f4vUeVccE4dmqc6',
     fullName: 'خالد الإنشائي',
-    role: 'engineer',
+    role: 'ENGINEER',
     department: 'STRUCTURAL',
     isActive: true,
     avatar: null,
@@ -118,7 +118,7 @@ export const DEMO_USERS: DemoUser[] = DEMO_MODE_ENABLED ? [
     email: 'elec_eng@blueprint.ae',
     password: '$2b$10$DhDhNqQ5.BaRzLyItZxpjhYBKG/kE9vjbDv52f4vUeVccE4dmqc6',
     fullName: 'محمد الكهربائي',
-    role: 'engineer',
+    role: 'ENGINEER',
     department: 'ELECTRICAL',
     isActive: true,
     avatar: null,
