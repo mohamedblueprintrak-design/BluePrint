@@ -38,7 +38,7 @@ import {
   Shield,
   ShieldCheck,
   ShieldOff,
-  Smartphone,
+  _Smartphone,
   Key,
   Copy,
   Check,
@@ -62,7 +62,7 @@ interface SetupResponse {
   manualEntryKey: string;
 }
 
-interface EnableResponse {
+interface _EnableResponse {
   backupCodes: string[];
 }
 
@@ -129,10 +129,6 @@ export function TwoFactorSetup({ onStatusChange }: TwoFactorSetupProps) {
   };
 
   // Fetch 2FA status
-  useEffect(() => {
-    fetchStatus();
-  }, []);
-
   const fetchStatus = async () => {
     try {
       const token = localStorage.getItem('token');

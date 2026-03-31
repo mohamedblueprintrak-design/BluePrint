@@ -9,6 +9,7 @@
 
 import { db, isDatabaseAvailable } from '@/lib/db';
 import { TaskType, TaskStatus, TaskPriority } from '@prisma/client';
+import { log } from '@/lib/logger';
 
 // ============================================
 // Types
@@ -274,7 +275,7 @@ export const PREDEFINED_TEMPLATES: Record<string, TemplateTaskData[]> = {
  */
 export async function initializeTemplates(): Promise<void> {
   if (!isDatabaseAvailable()) {
-    console.log('Database not available, skipping template initialization');
+    log.info('Database not available, skipping template initialization');
     return;
   }
 
@@ -287,7 +288,7 @@ export async function initializeTemplates(): Promise<void> {
     });
 
     if (existing) {
-      console.log(`Template ${code} already exists, skipping`);
+      log.debug(`Template ${code} already exists, skipping`);
       continue;
     }
 
@@ -322,7 +323,7 @@ export async function initializeTemplates(): Promise<void> {
       },
     });
 
-    console.log(`Created template: ${template.name} (${code})`);
+    log.info(`Created template: ${template.name} (${code})`);
   }
 }
 

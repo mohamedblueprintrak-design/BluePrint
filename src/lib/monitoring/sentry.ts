@@ -32,14 +32,14 @@ if (SENTRY_DSN) {
     
     // Integrations
     integrations: [
-      // @ts-ignore - BrowserTracing not in Sentry types
+       
       new Sentry.BrowserTracing({
         tracePropagationTargets: [
           'localhost',
           /^https:\/\/.*\.blueprint\.dev/,
         ],
       }),
-      // @ts-ignore - Replay not in Sentry types
+       
       new Sentry.Replay({
         maskAllText: false,
         blockAllMedia: false,
@@ -177,7 +177,7 @@ export function captureDatabaseError(
 // Performance monitoring helper
 export function startTransaction(name: string, op: string) {
   if (!SENTRY_DSN) return null;
-  // @ts-ignore - startTransaction not in Sentry types
+   
   return Sentry.startTransaction({ name, op });
 }
 

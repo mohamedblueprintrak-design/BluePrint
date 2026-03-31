@@ -3,6 +3,8 @@
  * Used for rate limiting, session storage, and API caching
  */
 
+import { log } from '@/lib/logger';
+
 // Types
 interface CacheOptions {
   ttl?: number; // Time to live in seconds
@@ -142,7 +144,7 @@ async function getCache(): Promise<MemoryCache | any> {
         socket: {
           reconnectStrategy: (retries: number) => {
             if (retries > 10) {
-              console.error('Redis connection failed after 10 retries');
+              log.error('Redis connection failed after 10 retries');
               return new Error('Redis connection failed');
             }
             return Math.min(retries * 100, 3000);
@@ -151,20 +153,20 @@ async function getCache(): Promise<MemoryCache | any> {
       });
 
       redisClient.on('error', (err: Error) => {
-        console.error('Redis Client Error:', err);
+        log.error('Redis Client Error', err);
       });
 
       await redisClient.connect();
-      console.log('✅ Redis connected successfully');
+      log.info('Redis connected successfully');
       return redisClient;
     } catch (error) {
-      console.warn('⚠️ Redis connection failed, falling back to memory cache:', error);
+      log.warn('Redis connection failed, falling back to memory cache', error);
       redisClient = null;
     }
   }
 
   // Fall back to memory cache
-  console.log('📦 Using in-memory cache (development mode or Redis unavailable)');
+  log.info('Using in-memory cache (development mode or Redis unavailable)');
   memoryCache = new MemoryCache();
   return memoryCache;
 }
@@ -190,7 +192,7 @@ export const CacheService = {
       
       return JSON.parse(value);
     } catch (error) {
-      console.error('Cache get error:', error);
+      log.error('Cache get error', error);
       return null;
     }
   },
@@ -210,7 +212,7 @@ export const CacheService = {
       
       await cache.setEx(fullKey, ttl, JSON.stringify(value));
     } catch (error) {
-      console.error('Cache set error:', error);
+      log.error('Cache set error', error);
     }
   },
 
@@ -228,7 +230,7 @@ export const CacheService = {
       
       await cache.del(fullKey);
     } catch (error) {
-      console.error('Cache delete error:', error);
+      log.error('Cache delete error', error);
     }
   },
 
@@ -280,7 +282,7 @@ export const CacheService = {
         total: current,
       };
     } catch (error) {
-      console.error('Rate limit check error:', error);
+      log.error('Rate limit check error', error);
       // Allow on error (fail open)
       return {
         allowed: true,
@@ -335,7 +337,7 @@ export const CacheService = {
         }
       } while (cursor !== 0);
     } catch (error) {
-      console.error('Clear prefix error:', error);
+      log.error('Clear prefix error', error);
     }
   },
 };

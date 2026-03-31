@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logger';
 import * as jose from 'jose'
 import { getJWTSecret } from '@/app/api/utils/auth';;
 import { cachedQuery, invalidateCache, buildCacheKey, CACHE_TTL } from '@/lib/cache/query-cache';
@@ -11,7 +12,7 @@ async function getDb() {
       const dbModule = await import('@/lib/db');
       db = dbModule.db;
     } catch (_e) {
-      console.log('Database not available, using demo mode');
+      log.info('Database not available, using demo mode');
       db = null;
     }
   }
@@ -69,7 +70,7 @@ async function getUserFromToken(request: NextRequest) {
       });
       return user;
     } catch (_dbError) {
-      console.log('Database not available, using demo mode');
+      log.info('Database not available, using demo mode');
       return {
         id: 'demo-admin-001',
         organizationId: 'demo-org-001',
@@ -663,7 +664,7 @@ export async function GET(request: NextRequest) {
         return errorResponse('إجراء غير معروف. Use one of: financial-summary, project-status, task-metrics, client-analytics, expense-breakdown');
     }
   } catch (error) {
-    console.error('Reports API Error:', error);
+    log.error('Reports API Error', error);
     const message = error instanceof Error ? error.message : 'خطأ في الخادم';
     return errorResponse(message, 'SERVER_ERROR', 500);
   }

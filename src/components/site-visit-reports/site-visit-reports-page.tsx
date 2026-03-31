@@ -496,7 +496,7 @@ export function SiteVisitReportsPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                {inputField(isRTL ? 'وصف إضافي' : 'Other Description', 'otherDescription', isRTL ? 'وصف إضافي...', : 'Additional description...', 'textarea')}
+                {inputField(isRTL ? 'وصف إضافي' : 'Other Description', 'otherDescription', isRTL ? 'وصف إضافي...' : 'Additional description...', 'textarea')}
               </div>
             </TabsContent>
 
@@ -565,7 +565,7 @@ function SiteSection({ title, titleAr, description, photos, isRTL }: { title: st
           <Camera className="w-4 h-4 text-slate-400" />
           {title}
         </h3>
-        {hasPhotos && <Badge variant="outline" className="bg-slate-800 border-slate-700 text-slate-400 text-xs">{photos.length} {isRTL ? 'صورة' : 'photos'}</Badge>
+        {hasPhotos && <Badge variant="outline" className="bg-slate-800 border-slate-700 text-slate-400 text-xs">{photos.length} {isRTL ? 'صورة' : 'photos'}</Badge>}
       </div>
       {description ? (
         <p className="text-sm text-slate-300 bg-slate-800/40 p-3 rounded-lg leading-relaxed">{description}</p>

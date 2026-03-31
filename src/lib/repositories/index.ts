@@ -48,7 +48,7 @@ let clientRepo: ClientRepository | null = null;
  */
 export function getUserRepository(): UserRepository {
   if (!userRepo) {
-    userRepo = new UserRepository(prisma);
+    userRepo = new UserRepository(db);
   }
   return userRepo;
 }
@@ -58,7 +58,7 @@ export function getUserRepository(): UserRepository {
  */
 export function getProjectRepository(): ProjectRepository {
   if (!projectRepo) {
-    projectRepo = new ProjectRepository(prisma);
+    projectRepo = new ProjectRepository(db);
   }
   return projectRepo;
 }
@@ -68,7 +68,7 @@ export function getProjectRepository(): ProjectRepository {
  */
 export function getClientRepository(): ClientRepository {
   if (!clientRepo) {
-    clientRepo = new ClientRepository(prisma);
+    clientRepo = new ClientRepository(db);
   }
   return clientRepo;
 }

@@ -12,6 +12,7 @@ import { Server as IOServer, Socket } from 'socket.io';
 import { verify } from 'jsonwebtoken';
 import { db } from '@/lib/db';
 import { env } from '@/lib/env';
+import { log } from '@/lib/logger';
 import {
   WebSocketEventType,
   WebSocketMessage,
@@ -122,7 +123,7 @@ export function initializeWebSocket(
 
       next();
     } catch (error) {
-      console.error('WebSocket authentication error:', error);
+      log.error('WebSocket authentication error', error);
       next(new Error('Authentication failed'));
     }
   });
@@ -142,7 +143,7 @@ export function initializeWebSocket(
 function handleConnection(socket: Socket<any, any, any, SocketData>) {
   const { userId, organizationId, userName } = socket.data;
 
-  console.log(`[WebSocket] User connected: ${userName} (${userId})`);
+  log.info(`[WebSocket] User connected: ${userName} (${userId})`);
 
   // Track connected user
   const userConnection: ConnectedUser = {
@@ -210,7 +211,7 @@ function setupEventHandlers(socket: Socket<any, any, any, SocketData>) {
       // Update notification count
       await sendNotificationCount(socket, socket.data.userId);
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+      log.error('Error marking notification as read', error);
     }
   });
 
@@ -257,7 +258,7 @@ function setupEventHandlers(socket: Socket<any, any, any, SocketData>) {
 function handleDisconnection(socket: Socket<any, any, any, SocketData>) {
   const { userId, userName } = socket.data;
 
-  console.log(`[WebSocket] User disconnected: ${userName} (${userId})`);
+  log.info(`[WebSocket] User disconnected: ${userName} (${userId})`);
 
   // Remove from tracking
   connectedUsers.delete(socket.id);
@@ -287,7 +288,7 @@ function joinRoom(socket: Socket<any, any, any, SocketData>, type: RoomType, id:
     userConnection.rooms.add(roomName);
   }
 
-  console.log(`[WebSocket] ${socket.data.userName} joined room: ${roomName}`);
+  log.debug(`[WebSocket] ${socket.data.userName} joined room: ${roomName}`);
 }
 
 function leaveRoom(socket: Socket<any, any, any, SocketData>, type: RoomType, id: string) {
@@ -299,7 +300,7 @@ function leaveRoom(socket: Socket<any, any, any, SocketData>, type: RoomType, id
     userConnection.rooms.delete(roomName);
   }
 
-  console.log(`[WebSocket] ${socket.data.userName} left room: ${roomName}`);
+  log.debug(`[WebSocket] ${socket.data.userName} left room: ${roomName}`);
 }
 
 function getRoomName(type: RoomType, id: string): string {
@@ -422,7 +423,7 @@ async function sendNotificationCount(
     });
     socket.emit('notification_count', { count });
   } catch (error) {
-    console.error('Error getting notification count:', error);
+    log.error('Error getting notification count', error);
   }
 }
 
@@ -440,7 +441,7 @@ async function sendNotificationCountToUser(userId: string): Promise<void> {
     const userRoom = getRoomName('user', userId);
     io.to(userRoom).emit('notification_count', { count });
   } catch (error) {
-    console.error('Error getting notification count:', error);
+    log.error('Error getting notification count', error);
   }
 }
 

@@ -149,9 +149,11 @@ export async function PUT(request: NextRequest) {
 
     if (sendNotification !== false && leaveUser?.email) {
       try {
-        // Default to notifying - NotificationSettings table not in Prisma schema
-        // TODO: Add NotificationSettings model to schema when notification preferences are implemented
-        const shouldNotify = true;
+        // Check user notification preferences
+        const notificationSettings = leaveUser.id
+          ? await db.notificationSettings.findUnique({ where: { userId: leaveUser.id } })
+          : null;
+        const shouldNotify = notificationSettings?.emailNotifications !== false;
 
         if (shouldNotify) {
           const startDate = leaveRequest.startDate.toLocaleDateString('ar-AE', { year: 'numeric', month: 'long', day: 'numeric' });

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { log } from '@/lib/logger';
 import bcrypt from 'bcryptjs';
 import { HandlerContext, ApiSuccessResponse, ApiErrorResponse } from '../types';
 import { successResponse, errorResponse, unauthorizedResponse, forbiddenResponse } from '../utils/response';
@@ -90,7 +91,7 @@ export const postHandlers = {
           });
         }
       } catch (_dbError) {
-        console.log('Database not available, using demo mode');
+        log.info('Database not available, using demo mode');
       }
     }
 
@@ -118,7 +119,7 @@ export const postHandlers = {
           });
         }
       } catch (_dbError) {
-        console.log('Could not update last login');
+        log.warn('Could not update last login');
       }
     }
 

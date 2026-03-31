@@ -160,9 +160,11 @@ export async function POST(request: NextRequest) {
         });
 
         if (client?.email) {
-          // Default to notifying - NotificationSettings table not in Prisma schema
-          // TODO: Add NotificationSettings model to schema when notification preferences are implemented
-          let shouldNotify = true;
+          // Check user notification preferences
+          const notificationSettings = client?.organizationId
+            ? await db.notificationSettings.findUnique({ where: { userId: createdInvoice.organizationId } })
+            : null;
+          const shouldNotify = notificationSettings?.emailNotifications !== false;
 
           if (shouldNotify) {
             const formattedDueDate = dueDate 

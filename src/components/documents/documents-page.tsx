@@ -133,11 +133,9 @@ export function DocumentsPage() {
   const createDocumentMutation = useCreateDocument();
   const deleteDocumentMutation = useDeleteDocument();
 
-  // Extract documents from API response
-  const documents = documentsData?.data || [];
-
   // Calculate stats
   const stats = useMemo(() => {
+    const documents = documentsData?.data || [];
     const totalDocuments = documents.length;
     const totalSize = documents.reduce((sum: number, doc: Document) => sum + (doc.fileSize || 0), 0);
     
@@ -149,7 +147,10 @@ export function DocumentsPage() {
     ).length;
 
     return { totalDocuments, totalSize, recentUploads };
-  }, [documents]);
+  }, [documentsData?.data]);
+
+  // Extract documents from API response
+  const documents = documentsData?.data || [];
 
   // Filter documents
   const filteredDocuments = documents.filter((doc: Document) => {

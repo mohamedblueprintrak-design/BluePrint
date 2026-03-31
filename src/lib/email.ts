@@ -3,6 +3,7 @@
 // For production, configure SMTP
 
 import nodemailer from 'nodemailer';
+import { log } from '@/lib/logger';
 
 export interface EmailOptions {
   to: string;
@@ -49,21 +50,8 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
   const transporter = createTransporter();
 
   if (!transporter) {
-    // Development mode - log to console
-    console.log('📧 Email (dev mode):');
-    console.log('='.repeat(50));
-    console.log(`From: ${emailFrom}`);
-    console.log(`To: ${to}`);
-    console.log(`Subject: ${subject}`);
-    console.log('-'.repeat(50));
-    console.log('HTML Body:');
-    console.log(html);
-    if (text) {
-      console.log('-'.repeat(50));
-      console.log('Text Body:');
-      console.log(text);
-    }
-    console.log('='.repeat(50));
+    // Development mode - log to structured logger
+    log.info('Email (dev mode)', { from: emailFrom, to, subject, html, text });
     return true;
   }
 
@@ -77,11 +65,11 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
       text: text || undefined,
     });
 
-    console.log('✅ Email sent successfully:', info.messageId);
+    log.info('Email sent successfully', { messageId: info.messageId, to, subject });
     return true;
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('❌ Failed to send email:', message);
+    log.error('Failed to send email', error, { to, subject });
     return false;
   }
 }
