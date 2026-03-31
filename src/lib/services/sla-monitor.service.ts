@@ -13,6 +13,7 @@
 
 import { db, isDatabaseAvailable } from '@/lib/db';
 import { TaskStatus, TaskType, SLABreachStatus } from '@prisma/client';
+import { log } from '@/lib/logger';
 
 // ============================================
 // Types
@@ -116,7 +117,7 @@ export async function checkSLABreaches(): Promise<SLAMonitorReport> {
   };
 
   if (!isDatabaseAvailable()) {
-    console.log('SLA Monitor: Database not available, skipping check');
+    log.info('SLA Monitor: Database not available, skipping check');
     return report;
   }
 
@@ -200,7 +201,7 @@ export async function checkSLABreaches(): Promise<SLAMonitorReport> {
 
     return report;
   } catch (error) {
-    console.error('SLA Monitor Error:', error);
+    log.error('SLA Monitor Error', error);
     throw error;
   }
 }
@@ -247,7 +248,7 @@ async function createOrUpdateSLABreach(
       });
     }
   } catch (error) {
-    console.error('Error creating SLA breach record:', error);
+    log.error('Error creating SLA breach record', error);
   }
 }
 
@@ -307,11 +308,11 @@ async function sendEscalatedNotifications(
 
     await Promise.all(notificationPromises);
 
-    console.log(
+    log.info(
       `SLA Notification sent for task ${task.id}: Level ${escalationLevel} (${result.status})`
     );
   } catch (error) {
-    console.error('Error sending SLA notifications:', error);
+    log.error('Error sending SLA notifications', error);
   }
 }
 
@@ -435,11 +436,11 @@ async function sendSLANotifications(
 
     await Promise.all(notificationPromises);
 
-    console.log(
+    log.info(
       `SLA Notification sent for task ${task.id}: ${result.status}`
     );
   } catch (error) {
-    console.error('Error sending SLA notifications:', error);
+    log.error('Error sending SLA notifications', error);
   }
 }
 

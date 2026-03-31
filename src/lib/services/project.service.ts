@@ -478,7 +478,7 @@ class ProjectService {
     organizationId: string,
     tx?: Parameters<Parameters<typeof db.$transaction>[0]>[0]
   ): Promise<string> {
-    const client = tx || prisma;
+    const client = tx || db;
     
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
       const projectNumber = await this.generateProjectNumber(organizationId, client);
@@ -512,7 +512,7 @@ class ProjectService {
    */
   private async generateProjectNumber(
     organizationId: string,
-    client: typeof prisma | Omit<typeof prisma, '$on' | '$connect' | '$disconnect' | '$transaction' | '$extends'>
+    client: typeof db | Omit<typeof db, '$on' | '$connect' | '$disconnect' | '$transaction' | '$extends'>
   ): Promise<string> {
     const year = new Date().getFullYear();
     const yearStart = new Date(year, 0, 1);

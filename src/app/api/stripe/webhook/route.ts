@@ -12,6 +12,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logger';
 import { constructWebhookEvent, mapStripeStatus } from '@/lib/stripe';
 import { db } from '@/lib/db';
 import Stripe from 'stripe';
@@ -29,14 +30,14 @@ export async function POST(request: NextRequest) {
   try {
     event = constructWebhookEvent(body, signature);
     if (!event) {
-      console.error('Webhook signature verification failed: null event');
+      log.error('Webhook signature verification failed: null event');
       return NextResponse.json(
         { error: 'Webhook signature verification failed' },
         { status: 400 }
       );
     }
   } catch (err) {
-    console.error('Webhook signature verification failed:', err);
+    log.error('Webhook signature verification failed', err);
     return NextResponse.json(
       { error: 'Webhook signature verification failed' },
       { status: 400 }
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Log the event for payment audit trail
-  console.log(`Stripe webhook received: ${event.type}`);
+  log.info(`Stripe webhook received: ${event.type}`);
 
   try {
     // Handle different event types
@@ -74,12 +75,12 @@ export async function POST(request: NextRequest) {
         break;
 
       default:
-        console.log(`Unhandled webhook event type: ${event.type}`);
+        log.info(`Unhandled webhook event type: ${event.type}`);
     }
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('Error processing webhook:', error);
+    log.error('Error processing webhook', error);
     return NextResponse.json(
       { error: 'Webhook processing failed' },
       { status: 500 }
@@ -94,7 +95,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const { organizationId, planId } = session.metadata || {};
 
   if (!organizationId || !planId) {
-    console.error('Missing metadata in checkout session');
+    log.error('Missing metadata in checkout session');
     return;
   }
 
@@ -140,10 +141,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       },
     });
 
-    console.log(`Checkout completed for organization: ${organizationId}`);
+    log.info(`Checkout completed for organization: ${organizationId}`);
   } catch (dbError) {
-    console.warn('Database not available, logging event only');
-    console.warn('Checkout completed:', { organizationId, planId, sessionId: session.id });
+    log.warn('Database not available, logging event only');
+    log.warn('Checkout completed', { organizationId, planId, sessionId: session.id });
   }
 }
 
@@ -153,7 +154,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   const { organizationId, planId } = subscription.metadata || {};
 
-  console.log('Subscription created:', {
+  log.info('Subscription created', {
     id: subscription.id,
     status: subscription.status,
     organizationId,
@@ -185,10 +186,10 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       },
     });
 
-    console.log(`Subscription updated: ${subscription.id}, status: ${status}`);
+    log.info(`Subscription updated: ${subscription.id}, status: ${status}`);
   } catch (dbError) {
-    console.warn('Database not available, logging event only');
-    console.log('Subscription updated:', { subscriptionId: subscription.id, status });
+    log.warn('Database not available, logging event only');
+    log.info('Subscription updated', { subscriptionId: subscription.id, status });
   }
 }
 
@@ -209,10 +210,10 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
       },
     });
 
-    console.log(`Subscription canceled: ${subscription.id}`);
+    log.info(`Subscription canceled: ${subscription.id}`);
   } catch (dbError) {
-    console.warn('Database not available, logging event only');
-    console.log('Subscription canceled:', { subscriptionId: subscription.id });
+    log.warn('Database not available, logging event only');
+    log.info('Subscription canceled', { subscriptionId: subscription.id });
   }
 }
 
@@ -238,10 +239,10 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
       },
     });
 
-    console.log(`Invoice paid: ${invoice.id}, amount: ${invoice.amount_paid}`);
+    log.info(`Invoice paid: ${invoice.id}, amount: ${invoice.amount_paid}`);
   } catch (dbError) {
-    console.warn('Database not available, logging event only');
-    console.log('Invoice paid:', { invoiceId: invoice.id, amount: invoice.amount_paid });
+    log.warn('Database not available, logging event only');
+    log.info('Invoice paid', { invoiceId: invoice.id, amount: invoice.amount_paid });
   }
 }
 
@@ -265,9 +266,9 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
       });
     }
 
-    console.log(`Invoice payment failed: ${invoice.id}`);
+    log.info(`Invoice payment failed: ${invoice.id}`);
   } catch (dbError) {
-    console.warn('Database not available, logging event only');
-    console.log('Invoice payment failed:', { invoiceId: invoice.id });
+    log.warn('Database not available, logging event only');
+    log.info('Invoice payment failed', { invoiceId: invoice.id });
   }
 }
