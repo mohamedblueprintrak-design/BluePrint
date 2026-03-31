@@ -7,7 +7,7 @@ import { getJWTSecret } from '@/app/api/utils/auth';;
 async function getUser(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
   const tokenCookie = request.cookies.get('bp_token')?.value;
-  let token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : tokenCookie;
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : tokenCookie;
   if (!token) return null;
   try {
     const { payload } = await jose.jwtVerify(token, getJWTSecret());

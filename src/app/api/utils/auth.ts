@@ -113,7 +113,7 @@ export async function getUserFromToken(request: NextRequest, demoUsers: DemoUser
  * Generate a JWT token for a user
  */
 export async function generateToken(userId: string): Promise<string> {
-  return await new jose.SignJWT({ userId })
+  return new jose.SignJWT({ userId })
     .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime('8h')
     .setIssuedAt()

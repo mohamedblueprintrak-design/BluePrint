@@ -194,8 +194,6 @@ export function HRPage() {
   const { data: leaveRequestsData, isLoading: leaveLoading, refetch: refetchLeaves } = useLeaveRequests(statusFilter === 'all' ? undefined : statusFilter);
   const approveLeaveMutation = useApproveLeaveRequest();
 
-  const leaveRequests = leaveRequestsData?.data || [];
-
   // Attendance Stats
   const attendanceStats = {
     presentToday: SAMPLE_ATTENDANCE.filter(a => a.status === 'present').length,
@@ -220,6 +218,7 @@ export function HRPage() {
 
   // Filter Leave Requests
   const filteredLeaveRequests = useMemo(() => {
+    const leaveRequests = leaveRequestsData?.data || [];
     let filtered = leaveRequests;
     
     if (statusFilter !== 'all') {
@@ -234,7 +233,7 @@ export function HRPage() {
     }
     
     return filtered;
-  }, [leaveRequests, statusFilter, searchQuery]);
+  }, [leaveRequestsData?.data, statusFilter, searchQuery]);
 
   // Handle Approve Leave
   const handleApproveLeave = async (requestId: string) => {

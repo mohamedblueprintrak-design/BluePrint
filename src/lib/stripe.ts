@@ -245,7 +245,7 @@ export async function createStripeCustomer(
   metadata?: Record<string, string>
 ): Promise<Stripe.Customer | null> {
   return safeStripeOp(async (s) => {
-    return await s.customers.create({
+    return s.customers.create({
       email,
       name,
       metadata: {
@@ -267,7 +267,7 @@ export async function createCheckoutSession(params: {
   metadata?: Record<string, string>;
 }): Promise<Stripe.Checkout.Session | null> {
   return safeStripeOp(async (s) => {
-    return await s.checkout.sessions.create({
+    return s.checkout.sessions.create({
       customer: params.customerId,
       mode: 'subscription',
       payment_method_types: ['card'],
@@ -301,7 +301,7 @@ export async function createBillingPortalSession(
   returnUrl: string
 ): Promise<Stripe.BillingPortal.Session | null> {
   return safeStripeOp(async (s) => {
-    return await s.billingPortal.sessions.create({
+    return s.billingPortal.sessions.create({
       customer: customerId,
       return_url: returnUrl,
     });
@@ -313,7 +313,7 @@ export async function createBillingPortalSession(
  */
 export async function getSubscription(subscriptionId: string): Promise<Stripe.Subscription | null> {
   return safeStripeOp(async (s) => {
-    return await s.subscriptions.retrieve(subscriptionId);
+    return s.subscriptions.retrieve(subscriptionId);
   });
 }
 
@@ -326,11 +326,11 @@ export async function cancelSubscription(
 ): Promise<Stripe.Subscription | null> {
   return safeStripeOp(async (s) => {
     if (cancelAtPeriodEnd) {
-      return await s.subscriptions.update(subscriptionId, {
+      return s.subscriptions.update(subscriptionId, {
         cancel_at_period_end: true,
       });
     }
-    return await s.subscriptions.cancel(subscriptionId);
+    return s.subscriptions.cancel(subscriptionId);
   });
 }
 
@@ -349,7 +349,7 @@ export async function createPaymentIntent(params: {
   metadata?: Record<string, string>;
 }): Promise<Stripe.PaymentIntent | null> {
   return safeStripeOp(async (s) => {
-    return await s.paymentIntents.create({
+    return s.paymentIntents.create({
       amount: Math.round(params.amount * 100), // Convert to cents
       currency: params.currency.toLowerCase(),
       customer: params.customerId,
@@ -380,7 +380,7 @@ export async function updatePaymentIntent(
     if (params.metadata) {
       updateData.metadata = params.metadata;
     }
-    return await s.paymentIntents.update(paymentIntentId, updateData);
+    return s.paymentIntents.update(paymentIntentId, updateData);
   });
 }
 
@@ -391,7 +391,7 @@ export async function retrievePaymentIntent(
   paymentIntentId: string
 ): Promise<Stripe.PaymentIntent | null> {
   return safeStripeOp(async (s) => {
-    return await s.paymentIntents.retrieve(paymentIntentId);
+    return s.paymentIntents.retrieve(paymentIntentId);
   });
 }
 
@@ -420,7 +420,7 @@ export async function updateCustomer(
   }
 ): Promise<Stripe.Customer | null> {
   return safeStripeOp(async (s) => {
-    return await s.customers.update(customerId, params);
+    return s.customers.update(customerId, params);
   });
 }
 
@@ -448,7 +448,7 @@ export async function attachPaymentMethod(
   customerId: string
 ): Promise<Stripe.PaymentMethod | null> {
   return safeStripeOp(async (s) => {
-    return await s.paymentMethods.attach(paymentMethodId, {
+    return s.paymentMethods.attach(paymentMethodId, {
       customer: customerId,
     });
   });
@@ -461,7 +461,7 @@ export async function detachPaymentMethod(
   paymentMethodId: string
 ): Promise<Stripe.PaymentMethod | null> {
   return safeStripeOp(async (s) => {
-    return await s.paymentMethods.detach(paymentMethodId);
+    return s.paymentMethods.detach(paymentMethodId);
   });
 }
 
@@ -473,7 +473,7 @@ export async function setDefaultPaymentMethod(
   paymentMethodId: string
 ): Promise<Stripe.Customer | null> {
   return safeStripeOp(async (s) => {
-    return await s.customers.update(customerId, {
+    return s.customers.update(customerId, {
       invoice_settings: {
         default_payment_method: paymentMethodId,
       },
@@ -495,7 +495,7 @@ export async function createSubscription(params: {
   metadata?: Record<string, string>;
 }): Promise<Stripe.Subscription | null> {
   return safeStripeOp(async (s) => {
-    return await s.subscriptions.create({
+    return s.subscriptions.create({
       customer: params.customerId,
       items: [{ price: params.priceId }],
       trial_period_days: params.trialPeriodDays,
@@ -538,7 +538,7 @@ export async function updateSubscription(
       updateData.items = [{ id: itemId, price: params.newPriceId }];
     }
 
-    return await s.subscriptions.update(subscriptionId, updateData);
+    return s.subscriptions.update(subscriptionId, updateData);
   });
 }
 
@@ -549,7 +549,7 @@ export async function reactivateSubscription(
   subscriptionId: string
 ): Promise<Stripe.Subscription | null> {
   return safeStripeOp(async (s) => {
-    return await s.subscriptions.update(subscriptionId, {
+    return s.subscriptions.update(subscriptionId, {
       cancel_at_period_end: false,
     });
   });
@@ -568,7 +568,7 @@ export async function createInvoice(params: {
   metadata?: Record<string, string>;
 }): Promise<Stripe.Invoice | null> {
   return safeStripeOp(async (s) => {
-    return await s.invoices.create({
+    return s.invoices.create({
       customer: params.customerId,
       description: params.description,
       metadata: params.metadata,
@@ -581,7 +581,7 @@ export async function createInvoice(params: {
  */
 export async function finalizeInvoice(invoiceId: string): Promise<Stripe.Invoice | null> {
   return safeStripeOp(async (s) => {
-    return await s.invoices.finalizeInvoice(invoiceId);
+    return s.invoices.finalizeInvoice(invoiceId);
   });
 }
 
@@ -590,7 +590,7 @@ export async function finalizeInvoice(invoiceId: string): Promise<Stripe.Invoice
  */
 export async function payInvoice(invoiceId: string): Promise<Stripe.Invoice | null> {
   return safeStripeOp(async (s) => {
-    return await s.invoices.pay(invoiceId);
+    return s.invoices.pay(invoiceId);
   });
 }
 
@@ -615,7 +615,7 @@ export async function listInvoices(
  */
 export async function retrieveInvoice(invoiceId: string): Promise<Stripe.Invoice | null> {
   return safeStripeOp(async (s) => {
-    return await s.invoices.retrieve(invoiceId);
+    return s.invoices.retrieve(invoiceId);
   });
 }
 
@@ -624,7 +624,7 @@ export async function retrieveInvoice(invoiceId: string): Promise<Stripe.Invoice
  */
 export async function voidInvoice(invoiceId: string): Promise<Stripe.Invoice | null> {
   return safeStripeOp(async (s) => {
-    return await s.invoices.voidInvoice(invoiceId);
+    return s.invoices.voidInvoice(invoiceId);
   });
 }
 
@@ -645,7 +645,7 @@ export async function getBillingPortalConfiguration(): Promise<Stripe.BillingPor
     }
 
     // Create a new configuration if none exists
-    return await s.billingPortal.configurations.create({
+    return s.billingPortal.configurations.create({
       features: {
         payment_method_update: {
           enabled: true,
@@ -695,7 +695,7 @@ export async function createBillingPortalSessionWithConfig(
       sessionParams.configuration = configurationId;
     }
 
-    return await s.billingPortal.sessions.create(sessionParams);
+    return s.billingPortal.sessions.create(sessionParams);
   });
 }
 

@@ -34,7 +34,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import {
   Building2, Plus, Search, Edit, Trash2,
-  Eye, MapPin, DollarSign, Users, Sparkles, AlertCircle
+  Eye, MapPin, DollarSign, Users, AlertCircle
 } from 'lucide-react';
 
 const PROJECT_TYPES = [
@@ -69,7 +69,6 @@ export function ProjectsPage() {
   const createProject = useCreateProject();
   const deleteProject = useDeleteProject();
   
-  const projects = projectsData?.data || [];
   const clients = clientsData?.data || [];
   
   // Form state
@@ -82,8 +81,9 @@ export function ProjectsPage() {
     description: ''
   });
 
-  // Filter projects
+  // Filtered projects
   const filteredProjects = useMemo(() => {
+    const projects = projectsData?.data || [];
     return projects.filter((project: any) => {
       const matchesSearch = project.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                             project.projectNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -92,16 +92,19 @@ export function ProjectsPage() {
       const matchesType = typeFilter === 'all' || project.projectType === typeFilter;
       return matchesSearch && matchesStatus && matchesType;
     });
-  }, [projects, searchQuery, statusFilter, typeFilter]);
+  }, [projectsData?.data, searchQuery, statusFilter, typeFilter]);
 
   // Stats
-  const stats = useMemo(() => ({
-    total: projects.length,
-    active: projects.filter((p: any) => p.status === 'active').length,
-    completed: projects.filter((p: any) => p.status === 'completed').length,
-    pending: projects.filter((p: any) => p.status === 'pending').length,
-    totalValue: projects.reduce((sum: number, p: any) => sum + (p.contractValue || 0), 0)
-  }), [projects]);
+  const stats = useMemo(() => {
+    const projects = projectsData?.data || [];
+    return {
+      total: projects.length,
+      active: projects.filter((p: any) => p.status === 'active').length,
+      completed: projects.filter((p: any) => p.status === 'completed').length,
+      pending: projects.filter((p: any) => p.status === 'pending').length,
+      totalValue: projects.reduce((sum: number, p: any) => sum + (p.contractValue || 0), 0)
+    };
+  }, [projectsData?.data]);
 
   const handleCreateProject = async () => {
     if (!formData.name) {

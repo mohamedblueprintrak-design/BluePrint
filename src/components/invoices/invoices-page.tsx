@@ -85,7 +85,6 @@ export function InvoicesPage() {
   const { data: projectsData } = useProjects();
   const createInvoice = useCreateInvoice();
 
-  const invoices = invoicesData?.data || [];
   const clients = clientsData?.data || [];
   const projects = projectsData?.data || [];
 
@@ -115,6 +114,7 @@ export function InvoicesPage() {
 
   // Filter invoices
   const filteredInvoices = useMemo(() => {
+    const invoices = invoicesData?.data || [];
     return invoices.filter((invoice: any) => {
       const matchesSearch = 
         invoice.invoiceNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -133,10 +133,11 @@ export function InvoicesPage() {
       
       return matchesSearch && matchesStatus && matchesClient && matchesDateRange;
     });
-  }, [invoices, searchQuery, statusFilter, clientFilter, dateFromFilter, dateToFilter]);
+  }, [invoicesData?.data, searchQuery, statusFilter, clientFilter, dateFromFilter, dateToFilter]);
 
   // Calculate stats
   const stats = useMemo(() => {
+    const invoices = invoicesData?.data || [];
     const totalInvoiced = invoices.reduce((sum: number, inv: any) => sum + (inv.total || 0), 0);
     const totalPaid = invoices.reduce((sum: number, inv: any) => sum + (inv.paidAmount || 0), 0);
     const pending = invoices
@@ -146,7 +147,7 @@ export function InvoicesPage() {
       .filter((inv: any) => inv.status === 'overdue')
       .reduce((sum: number, inv: any) => sum + ((inv.total || 0) - (inv.paidAmount || 0)), 0);
     return { totalInvoiced, totalPaid, pending, overdue };
-  }, [invoices]);
+  }, [invoicesData?.data]);
 
   // Add invoice item
   const addInvoiceItem = () => {

@@ -32,14 +32,14 @@ if (SENTRY_DSN) {
     
     // Integrations
     integrations: [
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       new Sentry.BrowserTracing({
         tracePropagationTargets: [
           'localhost',
           /^https:\/\/.*\.blueprint\.dev/,
         ],
       }),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       new Sentry.Replay({
         maskAllText: false,
         blockAllMedia: false,
@@ -177,7 +177,7 @@ export function captureDatabaseError(
 // Performance monitoring helper
 export function startTransaction(name: string, op: string) {
   if (!SENTRY_DSN) return null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   return Sentry.startTransaction({ name, op });
 }
 

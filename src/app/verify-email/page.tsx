@@ -7,7 +7,7 @@
  * Handles email verification via token
  */
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,17 +23,7 @@ function VerifyEmailContent() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'idle'>('idle');
   const [message, setMessage] = useState('');
 
-  useEffect(() => {
-    if (!token) {
-      setStatus('error');
-      setMessage('رمز التحقق غير موجود');
-      return;
-    }
-
-    verifyEmail(token);
-  }, [token]);
-
-  const verifyEmail = async (verificationToken: string) => {
+  const verifyEmail = useCallback(async (verificationToken: string) => {
     setStatus('loading');
 
     try {
@@ -56,7 +46,17 @@ function VerifyEmailContent() {
       setStatus('error');
       setMessage('حدث خطأ في الاتصال بالخادم');
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    if (!token) {
+      setStatus('error');
+      setMessage('رمز التحقق غير موجود');
+      return;
+    }
+
+    verifyEmail(token);
+  }, [token, verifyEmail]);
 
   const handleResend = async () => {
     router.push('/login?action=resend-verification');

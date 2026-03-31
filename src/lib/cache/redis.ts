@@ -68,7 +68,7 @@ export async function initRedis(): Promise<RedisClientType | null> {
  */
 export async function getRedis(): Promise<RedisClientType | null> {
   if (!redisClient || !isConnected) {
-    return await initRedis();
+    return initRedis();
   }
   return redisClient;
 }
