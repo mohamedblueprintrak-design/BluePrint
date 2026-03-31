@@ -3,7 +3,8 @@
  * خدمة تسجيل الأنشطة والتدقيق
  */
 
-import { prisma } from '../db';
+import { db } from '@/lib/db';
+import { log } from '@/lib/logger';
 
 export interface AuditLogData {
   userId?: string;
@@ -25,7 +26,7 @@ export interface AuditLogData {
  */
 export async function logAudit(data: AuditLogData): Promise<void> {
   try {
-    await prisma.activity.create({
+    await db.activity.create({
       data: {
         userId: data.userId,
         organizationId: data.organizationId,
@@ -42,7 +43,7 @@ export async function logAudit(data: AuditLogData): Promise<void> {
       },
     });
   } catch (error) {
-    console.error('Failed to log audit entry:', error);
+    log.error('Failed to log audit entry', error);
     // Don't throw - audit logging should not break the main flow
   }
 }
@@ -58,7 +59,7 @@ export async function getEntityAuditLogs(
     offset?: number;
   }
 ) {
-  return prisma.activity.findMany({
+  return db.activity.findMany({
     where: {
       entityType,
       entityId,
@@ -93,7 +94,7 @@ export async function getUserAuditLogs(
     action?: string;
   }
 ) {
-  return prisma.activity.findMany({
+  return db.activity.findMany({
     where: {
       userId,
       ...(options?.entityType && { entityType: options.entityType }),
@@ -130,7 +131,7 @@ export async function getOrganizationAuditLogs(
     endDate?: Date;
   }
 ) {
-  return prisma.activity.findMany({
+  return db.activity.findMany({
     where: {
       organizationId,
       ...(options?.userId && { userId: options.userId }),
@@ -170,7 +171,7 @@ export async function cleanupOldAuditLogs(daysToKeep: number = 365): Promise<num
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
   
-  const result = await prisma.activity.deleteMany({
+  const result = await db.activity.deleteMany({
     where: {
       createdAt: {
         lt: cutoffDate,

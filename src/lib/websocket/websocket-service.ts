@@ -10,7 +10,7 @@ import { Server as HTTPServer } from 'http';
 import { Server as HTTPSServer } from 'https';
 import { Server as IOServer, Socket } from 'socket.io';
 import { verify } from 'jsonwebtoken';
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 import { env } from '@/lib/env';
 import {
   WebSocketEventType,
@@ -93,7 +93,7 @@ export function initializeWebSocket(
       };
 
       // Get user from database
-      const user = await prisma.user.findUnique({
+      const user = await db.user.findUnique({
         where: { id: decoded.userId },
         select: {
           id: true,
@@ -202,7 +202,7 @@ function setupEventHandlers(socket: Socket<any, any, any, SocketData>) {
   // Mark notification as read
   socket.on('mark_notification_read', async (notificationId: string) => {
     try {
-      await prisma.notification.update({
+      await db.notification.update({
         where: { id: notificationId },
         data: { isRead: true, readAt: new Date() },
       });
@@ -417,7 +417,7 @@ async function sendNotificationCount(
   userId: string
 ): Promise<void> {
   try {
-    const count = await prisma.notification.count({
+    const count = await db.notification.count({
       where: { userId, isRead: false },
     });
     socket.emit('notification_count', { count });
@@ -433,7 +433,7 @@ async function sendNotificationCountToUser(userId: string): Promise<void> {
   if (!io) return;
 
   try {
-    const count = await prisma.notification.count({
+    const count = await db.notification.count({
       where: { userId, isRead: false },
     });
 

@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { getUserFromRequest } from '@/app/api/utils/demo-config';
 import { successResponse, unauthorizedResponse, serverErrorResponse, notFoundResponse, validationErrorResponse } from '@/app/api/utils/response';
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -9,7 +9,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (!user) return unauthorizedResponse();
 
   try {
-    const document = await prisma.document.findUnique({
+    const document = await db.document.findUnique({
       where: { id },
       select: { id: true, title: true, version: true, revision: true, projectId: true, organizationId: true },
     });
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     // Default: list all versions
-    const versions = await prisma.document.findMany({
+    const versions = await db.document.findMany({
       where: {
         projectId: document.projectId,
         title: document.title,
@@ -86,7 +86,7 @@ async function handleVersionComparison(
   v2Id: string
 ) {
   const [version1, version2] = await Promise.all([
-    prisma.document.findUnique({
+    db.document.findUnique({
       where: { id: v1Id },
       select: {
         id: true,
@@ -103,7 +103,7 @@ async function handleVersionComparison(
         metadata: true,
       },
     }),
-    prisma.document.findUnique({
+    db.document.findUnique({
       where: { id: v2Id },
       select: {
         id: true,
@@ -191,7 +191,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (!user || !user.organizationId) return unauthorizedResponse();
 
   try {
-    const document = await prisma.document.findUnique({
+    const document = await db.document.findUnique({
       where: { id },
     });
 
@@ -252,7 +252,7 @@ async function handleVersionIncrement(
     }
   }
 
-  const updated = await prisma.document.update({
+  const updated = await db.document.update({
     where: { id: document.id },
     data: {
       version: newVersion,
@@ -290,7 +290,7 @@ async function handleRollback(
   }
 
   // Fetch the target version
-  const targetVersion = await prisma.document.findUnique({
+  const targetVersion = await db.document.findUnique({
     where: { id: versionId },
     select: {
       id: true,
@@ -317,7 +317,7 @@ async function handleRollback(
   const rollbackRevision = 'A';
 
   // Create new document record with rolled-back content
-  const rolledBack = await prisma.document.update({
+  const rolledBack = await db.document.update({
     where: { id: document.id },
     data: {
       title: targetVersion.title,
@@ -375,7 +375,7 @@ async function handleLock(
     return validationErrorResponse('Document is already locked');
   }
 
-  const updated = await prisma.document.update({
+  const updated = await db.document.update({
     where: { id: document.id },
     data: {
       metadata: {
@@ -410,7 +410,7 @@ async function handleUnlock(
     return validationErrorResponse('Document is not currently locked');
   }
 
-  const updated = await prisma.document.update({
+  const updated = await db.document.update({
     where: { id: document.id },
     data: {
       metadata: {

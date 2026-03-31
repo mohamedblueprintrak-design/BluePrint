@@ -21,7 +21,7 @@ import {
   notFoundResponse
 } from '../utils/response';
 import { taskService, TaskAccessError } from '@/lib/services/task.service';
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 import { cachedQuery, invalidateCache, buildCacheKey, CACHE_TTL } from '@/lib/cache/query-cache';
 
 /**
@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
     // Create notification for assignee
     if (assignedTo) {
       try {
-        await prisma.notification.create({
+        await db.notification.create({
           data: {
             userId: assignedTo,
             title: 'مهمة جديدة',

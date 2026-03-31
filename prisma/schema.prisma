@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite" // TODO: Change to "postgresql" for production deployment
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -321,6 +321,121 @@ enum SLABreachStatus {
   RESOLVED      // تم الحل
 }
 
+/// Government approval status
+enum GovernmentApprovalStatus {
+  PENDING
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+/// Utility connection status (electrical, plumbing, HVAC)
+enum UtilityConnectionStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+/// Material transaction type
+enum MaterialTransactionType {
+  IN
+  OUT
+  ADJUSTMENT
+}
+
+/// Two-factor challenge type
+enum TwoFactorChallengeType {
+  TOTP
+  BACKUP
+  SMS
+}
+
+/// Transmittal delivery method
+enum TransmittalDeliveryMethod {
+  EMAIL
+  HAND
+  COURIER
+  POST
+}
+
+/// Transmittal response type
+enum TransmittalResponseType {
+  ACKNOWLEDGED
+  APPROVED
+  APPROVED_WITH_COMMENTS
+  REJECTED
+  REVISE_RESUBMIT
+}
+
+/// Notification type
+enum NotificationType {
+  SYSTEM
+  TASK
+  PROJECT
+  INVOICE
+  APPROVAL
+  MENTION
+  DEADLINE
+  SLA_WARNING
+  SLA_BREACH
+}
+
+/// Document type
+enum DocumentType {
+  GENERAL
+  CONTRACT
+  DRAWING
+  REPORT
+  INVOICE
+  TRANSMITTAL
+  SPECIFICATION
+  CALCULATION
+  PHOTO
+}
+
+/// Document category
+enum DocumentCategory {
+  TECHNICAL
+  FINANCIAL
+  LEGAL
+  ADMINISTRATIVE
+}
+
+/// Risk category
+enum RiskCategory {
+  TECHNICAL
+  FINANCIAL
+  SCHEDULE
+  EXTERNAL
+  ORGANIZATIONAL
+  SAFETY
+  ENVIRONMENTAL
+}
+
+/// Risk response strategy
+enum RiskResponseStrategy {
+  AVOID
+  MITIGATE
+  TRANSFER
+  ACCEPT
+}
+
+/// BOQ item category
+enum BOQCategory {
+  CIVIL
+  STRUCTURAL
+  MEP
+  FINISHING
+  EXTERNAL
+  INFRASTRUCTURE
+}
+
+/// Subscription interval
+enum SubscriptionInterval {
+  MONTH
+  YEAR
+}
+
 // ============================================
 // المنظمة والاشتراكات (SaaS Core)
 // ============================================
@@ -361,7 +476,7 @@ model Plan {
   descriptionAr   String?   // Arabic description
   price           Float
   currency        String    @default("AED")
-  interval        String    @default("month") // month, year
+  interval        SubscriptionInterval @default(MONTH)
   stripeProductId String?
   stripePriceId   String?
   features        String    @default("{}")
@@ -525,7 +640,7 @@ model TwoFactorChallenge {
   id        String   @id @default(cuid())
   userId    String
   code      String
-  type      String   @default("totp") // totp, backup, sms
+  type      TwoFactorChallengeType @default(TOTP)
   expiresAt DateTime
   usedAt    DateTime?
   createdAt DateTime @default(now())
@@ -563,13 +678,13 @@ model Project {
   managerId           String?   // Project manager (User ID)
   clientId            String?   // Client reference
   budget              Float?    // Project budget
-  governmentApprovalStatus String? @default("PENDING")  // PENDING, SUBMITTED, APPROVED, REJECTED
+  governmentApprovalStatus GovernmentApprovalStatus @default(PENDING)
   governmentApprovalDate  DateTime?                 // Date of government approval
   licenseNumber       String?                       // License/permit number
   municipalityNotes   String?                       // Notes from municipality
-  electricalStatus    String? @default("NOT_STARTED")  // NOT_STARTED, IN_PROGRESS, COMPLETED
-  plumbingStatus      String? @default("NOT_STARTED")  // NOT_STARTED, IN_PROGRESS, COMPLETED
-  hvacStatus          String? @default("NOT_STARTED")  // NOT_STARTED, IN_PROGRESS, COMPLETED
+  electricalStatus    UtilityConnectionStatus @default(NOT_STARTED)
+  plumbingStatus      UtilityConnectionStatus @default(NOT_STARTED)
+  hvacStatus          UtilityConnectionStatus @default(NOT_STARTED)
   deletedAt           DateTime? // Soft delete
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
@@ -612,7 +727,7 @@ model BOQItem {
   quantity      Float     @default(0)
   unitPrice     Float     @default(0)
   totalPrice    Float     @default(0)
-  category      String?   // civil, structural, mep, finishing, external, infrastructure
+  category      BOQCategory?
   notes         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -829,7 +944,7 @@ model Risk {
   projectId       String?
   title           String
   description     String?
-  category        String    @default("technical") // technical, financial, schedule, external, organizational
+  category        RiskCategory @default(TECHNICAL)
   probability     Int       @default(1) // 1-5 (Low to High)
   impact          Int       @default(1) // 1-5 (Low to High)
   riskScore       Int       @default(1) // probability * impact
@@ -842,7 +957,7 @@ model Risk {
   mitigationPlan  String?
   contingencyPlan String?
   triggerEvents   Json?
-  responseStrategy String?  // avoid, mitigate, transfer, accept
+  responseStrategy RiskResponseStrategy?
   residualRisk    Int?      // Risk score after mitigation
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -886,7 +1001,7 @@ model Transmittal {
   dueDate           DateTime?
   status            TransmittalStatus @default(DRAFT)
   priority          PriorityLevel @default(NORMAL)
-  deliveryMethod    String    @default("email") // email, hand, courier, post
+  deliveryMethod    TransmittalDeliveryMethod @default(EMAIL)
   trackingNumber    String?   // For courier/post
   acknowledgedDate  DateTime?
   acknowledgedBy    String?
@@ -920,7 +1035,7 @@ model TransmittalResponse {
   id              String    @id @default(cuid())
   transmittalId   String
   responseDate    DateTime  @default(now())
-  responseType    String    // acknowledged, approved, approved_with_comments, rejected, revise_resubmit
+  responseType    TransmittalResponseType
   respondentName  String
   respondentEmail String?
   comments        String?
@@ -1096,7 +1211,7 @@ model MaterialTransaction {
   id              String    @id @default(cuid())
   materialId      String
   projectId       String?
-  transactionType String    @default("in") // in, out, adjustment - TODO: migrate to enum
+  transactionType MaterialTransactionType @default(IN)
   quantity        Float     @default(0)
   unitPrice       Float?
   totalValue      Float?
@@ -1182,7 +1297,7 @@ model Notification {
   userId            String
   title             String
   message           String?
-  notificationType  String    @default("system") // system, task, project, invoice, approval, mention
+  notificationType  NotificationType @default(SYSTEM)
   referenceType     String?
   referenceId       String?
   isRead            Boolean   @default(false)
@@ -1314,8 +1429,8 @@ model Document {
   documentNumber  String?
   title           String
   description     String?
-  documentType    String    @default("general") // general, contract, drawing, report, invoice, transmittal
-  category        String?   // technical, financial, legal, administrative
+  documentType    DocumentType @default(GENERAL)
+  category        DocumentCategory?
   fileName        String
   filePath        String
   fileSize        Int?

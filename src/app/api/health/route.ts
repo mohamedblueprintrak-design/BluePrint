@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 import { checkRedisHealth, isRedisAvailable } from '@/lib/cache/redis';
 import { getPerformanceStats, getRouteStats } from '@/lib/monitoring/performance';
 
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
   // Check database connection
   try {
     const dbStart = Date.now();
-    await prisma.$queryRaw`SELECT 1`;
+    await db.$queryRaw`SELECT 1`;
     const dbLatency = Date.now() - dbStart;
     
     health.checks.database = {
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
     
     // Get connection count if possible
     try {
-      const connections = await prisma.$queryRaw`SELECT count(*) FROM pg_stat_activity` as Array<{ count: bigint }>;
+      const connections = await db.$queryRaw`SELECT count(*) FROM pg_stat_activity` as Array<{ count: bigint }>;
       health.checks.database.connections = Number(connections[0]?.count || 0);
     } catch {
       // Ignore connection count errors

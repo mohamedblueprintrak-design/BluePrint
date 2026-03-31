@@ -10,7 +10,7 @@
  * - Explicit field mapping to prevent Mass Assignment
  */
 
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 import { logAudit } from './audit.service';
 import { CacheService } from '@/lib/cache';
 import { log } from '@/lib/logger';
@@ -117,7 +117,7 @@ class ClientService {
       cacheKey,
       async () => {
         log.service('ClientService', 'getClients', { organizationId });
-        return prisma.client.findMany({
+        return db.client.findMany({
           where: { organizationId },
           orderBy: { createdAt: 'desc' },
         });
@@ -136,7 +136,7 @@ class ClientService {
       cacheKey,
       async () => {
         log.service('ClientService', 'getActiveClients', { organizationId });
-        return prisma.client.findMany({
+        return db.client.findMany({
           where: { organizationId, isActive: true },
           orderBy: { name: 'asc' },
           select: {
@@ -156,7 +156,7 @@ class ClientService {
    * SECURITY: Verifies client belongs to organization before returning
    */
   async getClientById(id: string, organizationId: string): Promise<Client | null> {
-    return prisma.client.findFirst({
+    return db.client.findFirst({
       where: { id, organizationId },
     });
   }
@@ -172,7 +172,7 @@ class ClientService {
   ): Promise<Client> {
     log.service('ClientService', 'createClient', { organizationId, name: data.name });
 
-    const client = await prisma.client.create({
+    const client = await db.client.create({
       data: {
         name: data.name,
         email: data.email,
@@ -217,7 +217,7 @@ class ClientService {
     userId: string
   ): Promise<Client> {
     // SECURITY: Verify client belongs to organization
-    const oldClient = await prisma.client.findFirst({
+    const oldClient = await db.client.findFirst({
       where: { id, organizationId },
     });
 
@@ -241,7 +241,7 @@ class ClientService {
     if (data.notes !== undefined) updateData.notes = data.notes;
     if (data.isActive !== undefined) updateData.isActive = data.isActive;
 
-    const client = await prisma.client.update({
+    const client = await db.client.update({
       where: { id },
       data: updateData,
     });
@@ -274,7 +274,7 @@ class ClientService {
     userId: string
   ): Promise<void> {
     // SECURITY: Verify client belongs to organization
-    const client = await prisma.client.findFirst({
+    const client = await db.client.findFirst({
       where: { id, organizationId },
     });
 
@@ -283,7 +283,7 @@ class ClientService {
     }
 
     // Soft delete
-    await prisma.client.update({
+    await db.client.update({
       where: { id },
       data: { isActive: false, deletedAt: new Date() },
     });
@@ -314,8 +314,8 @@ class ClientService {
       async () => {
         log.service('ClientService', 'getClientStats', { organizationId });
         const [total, active] = await Promise.all([
-          prisma.client.count({ where: { organizationId } }),
-          prisma.client.count({ where: { organizationId, isActive: true } }),
+          db.client.count({ where: { organizationId } }),
+          db.client.count({ where: { organizationId, isActive: true } }),
         ]);
 
         return {
@@ -334,7 +334,7 @@ class ClientService {
   async searchClients(query: string, organizationId: string): Promise<Client[]> {
     log.service('ClientService', 'searchClients', { query, organizationId });
     
-    return prisma.client.findMany({
+    return db.client.findMany({
       where: {
         organizationId,
         isActive: true,
@@ -352,7 +352,7 @@ class ClientService {
    * Check if client has active projects
    */
   async hasActiveProjects(clientId: string): Promise<boolean> {
-    const count = await prisma.project.count({
+    const count = await db.project.count({
       where: { clientId, status: 'ACTIVE' },
     });
     return count > 0;

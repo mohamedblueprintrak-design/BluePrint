@@ -5,7 +5,7 @@
  * Business logic layer for invoice operations
  */
 
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 import { logAudit } from './audit.service';
 import type { Invoice } from '@prisma/client';
 
@@ -109,7 +109,7 @@ class InvoiceService {
     }
 
     const [invoices, total] = await Promise.all([
-      prisma.invoice.findMany({
+      db.invoice.findMany({
         where,
         skip,
         take: limit,
@@ -122,7 +122,7 @@ class InvoiceService {
           },
         },
       }),
-      prisma.invoice.count({ where }),
+      db.invoice.count({ where }),
     ]);
 
     return {
@@ -140,7 +140,7 @@ class InvoiceService {
    * Get invoice by ID
    */
   async getInvoiceById(id: string, organizationId: string): Promise<Invoice | null> {
-    return prisma.invoice.findFirst({
+    return db.invoice.findFirst({
       where: { id, organizationId },
       include: {
         client: true,
@@ -154,7 +154,7 @@ class InvoiceService {
   private async generateInvoiceNumber(organizationId: string): Promise<string> {
     const year = new Date().getFullYear();
     for (let attempt = 0; attempt < 3; attempt++) {
-      const count = await prisma.invoice.count({
+      const count = await db.invoice.count({
         where: {
           organizationId,
           invoiceNumber: { startsWith: `INV-${year}` },
@@ -162,7 +162,7 @@ class InvoiceService {
       });
       const invoiceNumber = `INV-${year}-${String(count + 1).padStart(5, '0')}`;
       // Check if this number already exists (race condition guard)
-      const exists = await prisma.invoice.findUnique({
+      const exists = await db.invoice.findUnique({
         where: { invoiceNumber },
       });
       if (!exists) return invoiceNumber;
@@ -187,7 +187,7 @@ class InvoiceService {
     const taxAmount = subtotal * (taxRate / 100);
     const total = subtotal + taxAmount;
 
-    const invoice = await prisma.invoice.create({
+    const invoice = await db.invoice.create({
       data: {
         invoiceNumber,
         clientId: data.clientId,
@@ -228,7 +228,7 @@ class InvoiceService {
     organizationId: string,
     userId: string
   ): Promise<Invoice> {
-    const oldInvoice = await prisma.invoice.findFirst({
+    const oldInvoice = await db.invoice.findFirst({
       where: { id, organizationId },
     });
 
@@ -254,7 +254,7 @@ class InvoiceService {
       updateData.total = subtotal + taxAmount;
     }
 
-    const invoice = await prisma.invoice.update({
+    const invoice = await db.invoice.update({
       where: { id },
       data: updateData,
     });
@@ -278,7 +278,7 @@ class InvoiceService {
    * Delete invoice
    */
   async deleteInvoice(id: string, organizationId: string, userId: string): Promise<void> {
-    const invoice = await prisma.invoice.findFirst({
+    const invoice = await db.invoice.findFirst({
       where: { id, organizationId },
     });
 
@@ -286,7 +286,7 @@ class InvoiceService {
       throw new Error('Invoice not found');
     }
 
-    await prisma.invoice.update({
+    await db.invoice.update({
       where: { id },
       data: { deletedAt: new Date() },
     });
@@ -319,7 +319,7 @@ class InvoiceService {
     organizationId: string,
     userId: string
   ): Promise<Invoice> {
-    const invoice = await prisma.invoice.findFirst({
+    const invoice = await db.invoice.findFirst({
       where: { id, organizationId },
     });
 
@@ -343,13 +343,13 @@ class InvoiceService {
    */
   async getInvoiceStats(organizationId: string): Promise<InvoiceStats> {
     const [statusCounts, aggregates] = await Promise.all([
-      prisma.invoice.groupBy({
+      db.invoice.groupBy({
         by: ['status'],
         where: { organizationId },
         _count: true,
         _sum: { total: true, paidAmount: true },
       }),
-      prisma.invoice.aggregate({
+      db.invoice.aggregate({
         where: { organizationId },
         _sum: { total: true, paidAmount: true },
       }),
@@ -367,7 +367,7 @@ class InvoiceService {
     };
 
     // Get overdue count
-    stats.overdue = await prisma.invoice.count({
+    stats.overdue = await db.invoice.count({
       where: {
         organizationId,
         status: { notIn: ['PAID', 'DRAFT', 'CANCELLED'] },

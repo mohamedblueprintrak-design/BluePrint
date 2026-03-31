@@ -12,7 +12,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import fs from 'fs/promises';
 import path from 'path';
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 import { env } from '@/lib/env';
 
 const execAsync = promisify(exec);

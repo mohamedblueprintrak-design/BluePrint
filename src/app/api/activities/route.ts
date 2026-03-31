@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '../utils/demo-config';
 import { successResponse, unauthorizedResponse, serverErrorResponse } from '../utils/response';
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 
 /**
  * Format a date for CSV output
@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
     }
 
     const [activities, total] = await Promise.all([
-      prisma.activity.findMany({
+      db.activity.findMany({
         where,
         include: {
           user: {
@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
         skip: (page - 1) * limit,
         take: limit,
       }),
-      prisma.activity.count({ where })
+      db.activity.count({ where })
     ]);
 
     const mappedActivities = activities.map(a => ({
@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
     // CSV Export
     if (exportFormat === 'csv') {
       // For CSV export, fetch all matching records (up to 10000) without pagination
-      const allActivities = await prisma.activity.findMany({
+      const allActivities = await db.activity.findMany({
         where,
         include: {
           user: {

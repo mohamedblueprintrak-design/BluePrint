@@ -10,7 +10,7 @@
  * - Race condition protection for project number generation
  */
 
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 import { getProjectRepository } from '@/lib/repositories';
 import { logAudit } from './audit.service';
 import type { Project, ProjectStatus } from '@prisma/client';
@@ -158,7 +158,7 @@ class ProjectService {
     }
 
     const [projects, total] = await Promise.all([
-      prisma.project.findMany({
+      db.project.findMany({
         where,
         skip,
         take: limit,
@@ -170,7 +170,7 @@ class ProjectService {
           manager: { select: { id: true, fullName: true } },
         },
       }),
-      prisma.project.count({ where }),
+      db.project.count({ where }),
     ]);
 
     return {
@@ -189,7 +189,7 @@ class ProjectService {
    * SECURITY: Validates organization ownership
    */
   async getProjectById(id: string, organizationId: string) {
-    return prisma.project.findFirst({
+    return db.project.findFirst({
       where: { id, organizationId },
       include: {
         client: true,
@@ -227,7 +227,7 @@ class ProjectService {
   ): Promise<Project> {
     // SECURITY: Validate client belongs to organization
     if (data.clientId) {
-      const client = await prisma.client.findFirst({
+      const client = await db.client.findFirst({
         where: { id: data.clientId, organizationId },
         select: { id: true },
       });
@@ -242,7 +242,7 @@ class ProjectService {
       await this.generateProjectNumberWithRetry(organizationId);
 
     // Use transaction to ensure atomicity
-    const project = await prisma.$transaction(async (tx) => {
+    const project = await db.$transaction(async (tx) => {
       // Double-check project number uniqueness
       const existingProject = await tx.project.findUnique({
         where: { projectNumber },
@@ -318,7 +318,7 @@ class ProjectService {
     userId: string
   ): Promise<Project> {
     // SECURITY: Verify project belongs to organization
-    const oldProject = await prisma.project.findFirst({
+    const oldProject = await db.project.findFirst({
       where: { id, organizationId },
     });
 
@@ -328,7 +328,7 @@ class ProjectService {
 
     // SECURITY: If changing client, verify new client belongs to organization
     if (data.clientId && data.clientId !== oldProject.clientId) {
-      const client = await prisma.client.findFirst({
+      const client = await db.client.findFirst({
         where: { id: data.clientId, organizationId },
         select: { id: true },
       });
@@ -359,7 +359,7 @@ class ProjectService {
       updateData.progressPercentage = Math.max(0, Math.min(100, data.progressPercentage));
     }
 
-    const project = await prisma.project.update({
+    const project = await db.project.update({
       where: { id },
       data: updateData,
     });
@@ -386,7 +386,7 @@ class ProjectService {
    */
   async deleteProject(id: string, organizationId: string, userId: string): Promise<void> {
     // SECURITY: Verify project belongs to organization
-    const project = await prisma.project.findFirst({
+    const project = await db.project.findFirst({
       where: { id, organizationId },
     });
 
@@ -394,7 +394,7 @@ class ProjectService {
       throw new ProjectAccessError('Project not found or access denied');
     }
 
-    await prisma.project.update({
+    await db.project.update({
       where: { id },
       data: { deletedAt: new Date() },
     });
@@ -416,16 +416,16 @@ class ProjectService {
    */
   async getProjectStats(organizationId: string): Promise<ProjectStats> {
     const [statusCounts, valueAggregate, progressAggregate] = await Promise.all([
-      prisma.project.groupBy({
+      db.project.groupBy({
         by: ['status'],
         where: { organizationId },
         _count: true,
       }),
-      prisma.project.aggregate({
+      db.project.aggregate({
         where: { organizationId },
         _sum: { contractValue: true },
       }),
-      prisma.project.aggregate({
+      db.project.aggregate({
         where: { organizationId, status: 'ACTIVE' },
         _avg: { progressPercentage: true },
       }),
@@ -476,7 +476,7 @@ class ProjectService {
    */
   private async generateProjectNumberWithRetry(
     organizationId: string,
-    tx?: Parameters<Parameters<typeof prisma.$transaction>[0]>[0]
+    tx?: Parameters<Parameters<typeof db.$transaction>[0]>[0]
   ): Promise<string> {
     const client = tx || prisma;
     
@@ -554,7 +554,7 @@ class ProjectService {
    */
   async updateProgress(id: string, organizationId: string): Promise<number | null> {
     // SECURITY: Verify project belongs to organization
-    const project = await prisma.project.findFirst({
+    const project = await db.project.findFirst({
       where: { id, organizationId },
       select: { id: true },
     });
@@ -563,7 +563,7 @@ class ProjectService {
       return null;
     }
 
-    const tasks = await prisma.task.findMany({
+    const tasks = await db.task.findMany({
       where: { projectId: id },
       select: { progress: true },
     });
@@ -573,7 +573,7 @@ class ProjectService {
     const totalProgress = tasks.reduce((sum, task) => sum + (task.progress || 0), 0);
     const averageProgress = Math.round(totalProgress / tasks.length);
 
-    await prisma.project.update({
+    await db.project.update({
       where: { id },
       data: { progressPercentage: averageProgress },
     });
@@ -614,7 +614,7 @@ class ProjectService {
     userId: string
   ): Promise<Project> {
     // SECURITY: Verify manager exists and belongs to organization
-    const manager = await prisma.user.findFirst({
+    const manager = await db.user.findFirst({
       where: { id: managerId, organizationId },
       select: { id: true },
     });

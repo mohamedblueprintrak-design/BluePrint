@@ -8,7 +8,7 @@
  * to prevent IDOR (Insecure Direct Object Reference) attacks.
  */
 
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 import { logAudit } from './audit.service';
 import type { Task, TaskPriority, TaskStatus } from '@prisma/client';
 
@@ -168,7 +168,7 @@ class TaskService {
     where.project = { organizationId };
 
     const [tasks, total] = await Promise.all([
-      prisma.task.findMany({
+      db.task.findMany({
         where,
         skip,
         take: limit,
@@ -181,7 +181,7 @@ class TaskService {
           },
         },
       }),
-      prisma.task.count({ where }),
+      db.task.count({ where }),
     ]);
 
     return {
@@ -206,7 +206,7 @@ class TaskService {
   async getTaskById(id: string, organizationId: string): Promise<Task | null> {
     // SECURITY: Use findFirst with organization filter instead of findUnique
     // This prevents IDOR by ensuring the task belongs to the organization
-    const task = await prisma.task.findFirst({
+    const task = await db.task.findFirst({
       where: {
         id,
         project: { organizationId },
@@ -239,7 +239,7 @@ class TaskService {
   ): Promise<Task> {
     // SECURITY: Verify project belongs to organization before creating task
     if (data.projectId) {
-      const project = await prisma.project.findFirst({
+      const project = await db.project.findFirst({
         where: {
           id: data.projectId,
           organizationId,
@@ -254,7 +254,7 @@ class TaskService {
 
     // SECURITY: Verify parent task belongs to organization if specified
     if (data.parentId) {
-      const parentTask = await prisma.task.findFirst({
+      const parentTask = await db.task.findFirst({
         where: {
           id: data.parentId,
           project: { organizationId },
@@ -267,7 +267,7 @@ class TaskService {
       }
     }
 
-    const task = await prisma.task.create({
+    const task = await db.task.create({
       data: {
         title: data.title,
         description: data.description,
@@ -321,7 +321,7 @@ class TaskService {
     userId: string
   ): Promise<Task> {
     // SECURITY: Get existing task with organization validation
-    const oldTask = await prisma.task.findFirst({
+    const oldTask = await db.task.findFirst({
       where: {
         id,
         project: { organizationId },
@@ -334,7 +334,7 @@ class TaskService {
 
     // SECURITY: If changing project, verify new project belongs to organization
     if (data.projectId && data.projectId !== oldTask.projectId) {
-      const newProject = await prisma.project.findFirst({
+      const newProject = await db.project.findFirst({
         where: {
           id: data.projectId,
           organizationId,
@@ -369,7 +369,7 @@ class TaskService {
     if (data.dependencies !== undefined) updateData.dependencies = data.dependencies;
     if (data.order !== undefined) updateData.order = data.order;
 
-    const task = await prisma.task.update({
+    const task = await db.task.update({
       where: { id },
       data: updateData as any,
     });
@@ -400,7 +400,7 @@ class TaskService {
    */
   async deleteTask(id: string, organizationId: string, userId: string): Promise<void> {
     // SECURITY: Get task with organization validation
-    const task = await prisma.task.findFirst({
+    const task = await db.task.findFirst({
       where: {
         id,
         project: { organizationId },
@@ -412,7 +412,7 @@ class TaskService {
     }
 
     // Delete the task
-    await prisma.task.delete({
+    await db.task.delete({
       where: { id },
     });
 
@@ -474,7 +474,7 @@ class TaskService {
    */
   async getTasksForGantt(projectId: string, organizationId: string): Promise<GanttTaskDTO[]> {
     // SECURITY: Verify project belongs to organization
-    const project = await prisma.project.findFirst({
+    const project = await db.project.findFirst({
       where: {
         id: projectId,
         organizationId,
@@ -486,7 +486,7 @@ class TaskService {
       throw new TaskAccessError('Project not found or access denied');
     }
 
-    return prisma.task.findMany({
+    return db.task.findMany({
       where: { projectId },
       orderBy: [{ order: 'asc' }, { startDate: 'asc' }],
       select: {
@@ -520,14 +520,14 @@ class TaskService {
     overdue: number;
   }> {
     const [statusCounts, overdueCount] = await Promise.all([
-      prisma.task.groupBy({
+      db.task.groupBy({
         by: ['status'],
         where: {
           project: { organizationId },
         },
         _count: true,
       }),
-      prisma.task.count({
+      db.task.count({
         where: {
           project: { organizationId },
           dueDate: { lt: new Date() },

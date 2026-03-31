@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { getUserFromRequest } from '@/app/api/utils/demo-config';
 import { successResponse, unauthorizedResponse, serverErrorResponse, validationErrorResponse, notFoundResponse } from '@/app/api/utils/response';
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -9,7 +9,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (!user) return unauthorizedResponse();
 
   try {
-    const items = await prisma.siteLogItem.findMany({
+    const items = await db.siteLogItem.findMany({
       where: { siteReportId: id },
       include: {
         boqItem: { select: { id: true, description: true, category: true, unit: true } },
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const qty = parseFloat(quantity) || 0;
     const price = parseFloat(unitPrice) || 0;
 
-    const item = await prisma.siteLogItem.create({
+    const item = await db.siteLogItem.create({
       data: {
         siteReportId: id,
         description,
@@ -102,7 +102,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     // Verify the log item belongs to this site report
-    const existingItem = await prisma.siteLogItem.findUnique({
+    const existingItem = await db.siteLogItem.findUnique({
       where: { id: itemId },
       select: { siteReportId: true, boqItemId: true, quantity: true, unitPrice: true },
     });
@@ -129,7 +129,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       updateData.totalPrice = finalQty * finalPrice;
     }
 
-    const item = await prisma.siteLogItem.update({
+    const item = await db.siteLogItem.update({
       where: { id: itemId },
       data: updateData,
       include: {
@@ -180,7 +180,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
 
     // Verify the log item belongs to this site report
-    const existingItem = await prisma.siteLogItem.findUnique({
+    const existingItem = await db.siteLogItem.findUnique({
       where: { id: itemId },
       select: { siteReportId: true, description: true },
     });
@@ -189,7 +189,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       return notFoundResponse('Log item not found in this site report');
     }
 
-    await prisma.siteLogItem.delete({
+    await db.siteLogItem.delete({
       where: { id: itemId },
     });
 

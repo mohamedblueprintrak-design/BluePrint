@@ -33,7 +33,7 @@ export {
   type UpdateClientData 
 } from './client.repository';
 
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 import { UserRepository } from './user.repository';
 import { ProjectRepository } from './project.repository';
 import { ClientRepository } from './client.repository';

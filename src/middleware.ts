@@ -328,6 +328,33 @@ export async function middleware(request: NextRequest) {
   }
   
   // ============================================
+  // CSRF Protection for Mutations
+  // ============================================
+  const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method);
+  const csrfExemptPaths = ['/api/stripe/webhook', '/api/health'];
+  const isCsrfExempt = csrfExemptPaths.some(p => pathname.startsWith(p));
+
+  if (pathname.startsWith('/api/') && isMutation && !isCsrfExempt) {
+    const csrfCookie = request.cookies.get('csrf_token');
+    const csrfHeader = request.headers.get('x-csrf-token');
+
+    if (!csrfCookie?.value || !csrfHeader || csrfCookie.value !== csrfHeader) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'CSRF_INVALID',
+            message: process.env.NODE_ENV === 'development'
+              ? 'CSRF token missing or invalid. Include X-CSRF-Token header matching csrf_token cookie.'
+              : 'Invalid request. Please refresh the page and try again.',
+          },
+        },
+        { status: 403 }
+      );
+    }
+  }
+
+  // ============================================
   // Handle CORS Preflight (OPTIONS) Requests
   // ============================================
   if (pathname.startsWith('/api/') && request.method === 'OPTIONS') {

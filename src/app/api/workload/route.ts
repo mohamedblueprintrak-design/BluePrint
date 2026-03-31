@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { getUserFromRequest } from '../utils/demo-config';
 import { successResponse, unauthorizedResponse, serverErrorResponse } from '../utils/response';
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 
 // ============================================
 // Capacity Planning Constants
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Get all users in the organization
-    const users = await prisma.user.findMany({
+    const users = await db.user.findMany({
       where: {
         organizationId: user.organizationId,
         isActive: true,
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
 
     // Get task counts and details per user
     const now = new Date();
-    const tasks = await prisma.task.findMany({
+    const tasks = await db.task.findMany({
       where: {
         assignedTo: { in: users.map(u => u.id) },
         status: { not: 'CANCELLED' },

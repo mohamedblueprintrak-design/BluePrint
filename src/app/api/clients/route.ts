@@ -14,7 +14,7 @@ import {
   serverErrorResponse,
   validationErrorResponse
 } from '../utils/response';
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 import { cachedQuery, invalidateCache, buildCacheKey, CACHE_TTL } from '@/lib/cache/query-cache';
 
 /**
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     const cacheKey = buildCacheKey('clients', 'list', user.organizationId || '');
     const clients = await cachedQuery(
       cacheKey,
-      () => prisma.client.findMany({
+      () => db.client.findMany({
         where: { 
           isActive: true,
           organizationId: user.organizationId 
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
       return validationErrorResponse('اسم العميل مطلوب');
     }
 
-    const client = await prisma.client.create({
+    const client = await db.client.create({
       data: {
         name,
         email,
@@ -148,7 +148,7 @@ export async function PUT(request: NextRequest) {
     // Remove fields that don't exist in schema
     const { clientType, totalInvoiced, totalPaid, website, ...validData } = data as Record<string, unknown>;
 
-    const client = await prisma.client.update({
+    const client = await db.client.update({
       where: { id, organizationId: user.organizationId },
       data: validData
     });
@@ -185,7 +185,7 @@ export async function DELETE(request: NextRequest) {
       return validationErrorResponse('معرف العميل مطلوب');
     }
 
-    await prisma.client.update({
+    await db.client.update({
       where: { id, organizationId: user.organizationId },
       data: { isActive: false }
     });

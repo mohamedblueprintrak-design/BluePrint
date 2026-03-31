@@ -3,7 +3,7 @@
  * اختبارات الخدمات
  */
 
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 
 // Mock Prisma
 jest.mock('@/lib/db', () => ({
@@ -79,60 +79,60 @@ describe('Project Service', () => {
         { id: 'p2', name: 'Project 2', status: 'completed' },
       ];
 
-      (prisma.project.findMany as jest.Mock).mockResolvedValue(mockProjects);
+      (db.project.findMany as jest.Mock).mockResolvedValue(mockProjects);
 
-      const result = await prisma.project.findMany();
+      const result = await db.project.findMany();
 
       expect(result).toHaveLength(2);
       expect(result[0].name).toBe('Project 1');
     });
 
     it('should filter by organization', async () => {
-      (prisma.project.findMany as jest.Mock).mockResolvedValue([]);
+      (db.project.findMany as jest.Mock).mockResolvedValue([]);
 
-      await prisma.project.findMany({
+      await db.project.findMany({
         where: { organizationId: 'org-1' },
       });
 
-      expect(prisma.project.findMany).toHaveBeenCalledWith({
+      expect(db.project.findMany).toHaveBeenCalledWith({
         where: { organizationId: 'org-1' },
       });
     });
 
     it('should filter by status', async () => {
-      (prisma.project.findMany as jest.Mock).mockResolvedValue([]);
+      (db.project.findMany as jest.Mock).mockResolvedValue([]);
 
-      await prisma.project.findMany({
+      await db.project.findMany({
         where: { status: 'active' },
       });
 
-      expect(prisma.project.findMany).toHaveBeenCalledWith({
+      expect(db.project.findMany).toHaveBeenCalledWith({
         where: { status: 'active' },
       });
     });
 
     it('should support pagination', async () => {
-      (prisma.project.findMany as jest.Mock).mockResolvedValue([]);
+      (db.project.findMany as jest.Mock).mockResolvedValue([]);
 
-      await prisma.project.findMany({
+      await db.project.findMany({
         skip: 10,
         take: 10,
       });
 
-      expect(prisma.project.findMany).toHaveBeenCalledWith({
+      expect(db.project.findMany).toHaveBeenCalledWith({
         skip: 10,
         take: 10,
       });
     });
 
     it('should support sorting', async () => {
-      (prisma.project.findMany as jest.Mock).mockResolvedValue([]);
+      (db.project.findMany as jest.Mock).mockResolvedValue([]);
 
-      await prisma.project.findMany({
+      await db.project.findMany({
         orderBy: { createdAt: 'desc' },
       });
 
-      expect(prisma.project.findMany).toHaveBeenCalledWith({
+      expect(db.project.findMany).toHaveBeenCalledWith({
         orderBy: { createdAt: 'desc' },
       });
     });
@@ -147,9 +147,9 @@ describe('Project Service', () => {
         tasks: [],
       };
 
-      (prisma.project.findUnique as jest.Mock).mockResolvedValue(mockProject);
+      (db.project.findUnique as jest.Mock).mockResolvedValue(mockProject);
 
-      const result = await prisma.project.findUnique({
+      const result = await db.project.findUnique({
         where: { id: 'p1' },
         include: { tasks: true },
       });
@@ -158,9 +158,9 @@ describe('Project Service', () => {
     });
 
     it('should return null for non-existent project', async () => {
-      (prisma.project.findUnique as jest.Mock).mockResolvedValue(null);
+      (db.project.findUnique as jest.Mock).mockResolvedValue(null);
 
-      const result = await prisma.project.findUnique({
+      const result = await db.project.findUnique({
         where: { id: 'non-existent' },
       });
 
@@ -177,9 +177,9 @@ describe('Project Service', () => {
         organizationId: 'org-1',
       };
 
-      (prisma.project.create as jest.Mock).mockResolvedValue(newProject);
+      (db.project.create as jest.Mock).mockResolvedValue(newProject);
 
-      const result = await prisma.project.create({
+      const result = await db.project.create({
         data: {
           name: 'New Project',
           organizationId: 'org-1',
@@ -198,9 +198,9 @@ describe('Project Service', () => {
         status: 'active',
       };
 
-      (prisma.project.update as jest.Mock).mockResolvedValue(updatedProject);
+      (db.project.update as jest.Mock).mockResolvedValue(updatedProject);
 
-      const result = await prisma.project.update({
+      const result = await db.project.update({
         where: { id: 'p1' },
         data: { status: 'active' },
       });
@@ -211,9 +211,9 @@ describe('Project Service', () => {
 
   describe('deleteProject', () => {
     it('should delete project', async () => {
-      (prisma.project.delete as jest.Mock).mockResolvedValue({ id: 'p1' });
+      (db.project.delete as jest.Mock).mockResolvedValue({ id: 'p1' });
 
-      const result = await prisma.project.delete({
+      const result = await db.project.delete({
         where: { id: 'p1' },
       });
 
@@ -234,57 +234,57 @@ describe('Task Service', () => {
         { id: 't2', title: 'Task 2', status: 'done' },
       ];
 
-      (prisma.task.findMany as jest.Mock).mockResolvedValue(mockTasks);
+      (db.task.findMany as jest.Mock).mockResolvedValue(mockTasks);
 
-      const result = await prisma.task.findMany();
+      const result = await db.task.findMany();
 
       expect(result).toHaveLength(2);
     });
 
     it('should filter by project', async () => {
-      (prisma.task.findMany as jest.Mock).mockResolvedValue([]);
+      (db.task.findMany as jest.Mock).mockResolvedValue([]);
 
-      await prisma.task.findMany({
+      await db.task.findMany({
         where: { projectId: 'p1' },
       });
 
-      expect(prisma.task.findMany).toHaveBeenCalledWith({
+      expect(db.task.findMany).toHaveBeenCalledWith({
         where: { projectId: 'p1' },
       });
     });
 
     it('should filter by assigned user', async () => {
-      (prisma.task.findMany as jest.Mock).mockResolvedValue([]);
+      (db.task.findMany as jest.Mock).mockResolvedValue([]);
 
-      await prisma.task.findMany({
+      await db.task.findMany({
         where: { assignedTo: 'user-1' },
       });
 
-      expect(prisma.task.findMany).toHaveBeenCalledWith({
+      expect(db.task.findMany).toHaveBeenCalledWith({
         where: { assignedTo: 'user-1' },
       });
     });
 
     it('should filter by status', async () => {
-      (prisma.task.findMany as jest.Mock).mockResolvedValue([]);
+      (db.task.findMany as jest.Mock).mockResolvedValue([]);
 
-      await prisma.task.findMany({
+      await db.task.findMany({
         where: { status: 'in_progress' },
       });
 
-      expect(prisma.task.findMany).toHaveBeenCalledWith({
+      expect(db.task.findMany).toHaveBeenCalledWith({
         where: { status: 'in_progress' },
       });
     });
 
     it('should filter by priority', async () => {
-      (prisma.task.findMany as jest.Mock).mockResolvedValue([]);
+      (db.task.findMany as jest.Mock).mockResolvedValue([]);
 
-      await prisma.task.findMany({
+      await db.task.findMany({
         where: { priority: 'high' },
       });
 
-      expect(prisma.task.findMany).toHaveBeenCalledWith({
+      expect(db.task.findMany).toHaveBeenCalledWith({
         where: { priority: 'high' },
       });
     });
@@ -292,14 +292,14 @@ describe('Task Service', () => {
 
   describe('getTaskStats', () => {
     it('should return task statistics', async () => {
-      (prisma.task.count as jest.Mock)
+      (db.task.count as jest.Mock)
         .mockResolvedValueOnce(10) // total
         .mockResolvedValueOnce(5)  // completed
         .mockResolvedValueOnce(3); // in progress
 
-      const total = await prisma.task.count();
-      const completed = await prisma.task.count({ where: { status: 'done' } });
-      const inProgress = await prisma.task.count({ where: { status: 'in_progress' } });
+      const total = await db.task.count();
+      const completed = await db.task.count({ where: { status: 'done' } });
+      const inProgress = await db.task.count({ where: { status: 'in_progress' } });
 
       expect(total).toBe(10);
       expect(completed).toBe(5);
@@ -320,29 +320,29 @@ describe('Client Service', () => {
         { id: 'c2', name: 'Client 2', email: 'client2@test.com' },
       ];
 
-      (prisma.client.findMany as jest.Mock).mockResolvedValue(mockClients);
+      (db.client.findMany as jest.Mock).mockResolvedValue(mockClients);
 
-      const result = await prisma.client.findMany();
+      const result = await db.client.findMany();
 
       expect(result).toHaveLength(2);
     });
 
     it('should filter by active status', async () => {
-      (prisma.client.findMany as jest.Mock).mockResolvedValue([]);
+      (db.client.findMany as jest.Mock).mockResolvedValue([]);
 
-      await prisma.client.findMany({
+      await db.client.findMany({
         where: { isActive: true },
       });
 
-      expect(prisma.client.findMany).toHaveBeenCalledWith({
+      expect(db.client.findMany).toHaveBeenCalledWith({
         where: { isActive: true },
       });
     });
 
     it('should search by name or email', async () => {
-      (prisma.client.findMany as jest.Mock).mockResolvedValue([]);
+      (db.client.findMany as jest.Mock).mockResolvedValue([]);
 
-      await prisma.client.findMany({
+      await db.client.findMany({
         where: {
           OR: [
             { name: { contains: 'test' } },
@@ -351,7 +351,7 @@ describe('Client Service', () => {
         },
       });
 
-      expect(prisma.client.findMany).toHaveBeenCalled();
+      expect(db.client.findMany).toHaveBeenCalled();
     });
   });
 });
@@ -368,33 +368,33 @@ describe('Invoice Service', () => {
         { id: 'inv2', invoiceNumber: 'INV-002', total: 2000, status: 'pending' },
       ];
 
-      (prisma.invoice.findMany as jest.Mock).mockResolvedValue(mockInvoices);
+      (db.invoice.findMany as jest.Mock).mockResolvedValue(mockInvoices);
 
-      const result = await prisma.invoice.findMany();
+      const result = await db.invoice.findMany();
 
       expect(result).toHaveLength(2);
     });
 
     it('should filter by client', async () => {
-      (prisma.invoice.findMany as jest.Mock).mockResolvedValue([]);
+      (db.invoice.findMany as jest.Mock).mockResolvedValue([]);
 
-      await prisma.invoice.findMany({
+      await db.invoice.findMany({
         where: { clientId: 'c1' },
       });
 
-      expect(prisma.invoice.findMany).toHaveBeenCalledWith({
+      expect(db.invoice.findMany).toHaveBeenCalledWith({
         where: { clientId: 'c1' },
       });
     });
 
     it('should filter by status', async () => {
-      (prisma.invoice.findMany as jest.Mock).mockResolvedValue([]);
+      (db.invoice.findMany as jest.Mock).mockResolvedValue([]);
 
-      await prisma.invoice.findMany({
+      await db.invoice.findMany({
         where: { status: 'paid' },
       });
 
-      expect(prisma.invoice.findMany).toHaveBeenCalledWith({
+      expect(db.invoice.findMany).toHaveBeenCalledWith({
         where: { status: 'paid' },
       });
     });
@@ -402,12 +402,12 @@ describe('Invoice Service', () => {
 
   describe('getRevenueStats', () => {
     it('should calculate revenue statistics', async () => {
-      (prisma.invoice.aggregate as jest.Mock).mockResolvedValue({
+      (db.invoice.aggregate as jest.Mock).mockResolvedValue({
         _sum: { total: 50000, paidAmount: 35000 },
         _count: { id: 25 },
       });
 
-      const result = await prisma.invoice.aggregate({
+      const result = await db.invoice.aggregate({
         _sum: { total: true, paidAmount: true },
         _count: { id: true },
       });
@@ -433,9 +433,9 @@ describe('Notification Service', () => {
         isRead: false,
       };
 
-      (prisma.notification.create as jest.Mock).mockResolvedValue(mockNotification);
+      (db.notification.create as jest.Mock).mockResolvedValue(mockNotification);
 
-      const result = await prisma.notification.create({
+      const result = await db.notification.create({
         data: {
           userId: 'user-1',
           title: 'Test Notification',
@@ -449,9 +449,9 @@ describe('Notification Service', () => {
 
   describe('getUnreadCount', () => {
     it('should return unread notification count', async () => {
-      (prisma.notification.count as jest.Mock).mockResolvedValue(5);
+      (db.notification.count as jest.Mock).mockResolvedValue(5);
 
-      const count = await prisma.notification.count({
+      const count = await db.notification.count({
         where: { userId: 'user-1', isRead: false },
       });
 
@@ -461,13 +461,13 @@ describe('Notification Service', () => {
 
   describe('markAsRead', () => {
     it('should mark notification as read', async () => {
-      (prisma.notification.update as jest.Mock).mockResolvedValue({
+      (db.notification.update as jest.Mock).mockResolvedValue({
         id: 'notif-1',
         isRead: true,
         readAt: new Date(),
       });
 
-      const result = await prisma.notification.update({
+      const result = await db.notification.update({
         where: { id: 'notif-1' },
         data: { isRead: true, readAt: new Date() },
       });
@@ -492,9 +492,9 @@ describe('Activity Service', () => {
         description: 'Created project X',
       };
 
-      (prisma.activity.create as jest.Mock).mockResolvedValue(mockActivity);
+      (db.activity.create as jest.Mock).mockResolvedValue(mockActivity);
 
-      const result = await prisma.activity.create({
+      const result = await db.activity.create({
         data: {
           userId: 'user-1',
           action: 'create',
@@ -514,9 +514,9 @@ describe('Activity Service', () => {
         { id: 'act-2', action: 'update', description: 'Updated task' },
       ];
 
-      (prisma.activity.findMany as jest.Mock).mockResolvedValue(mockActivities);
+      (db.activity.findMany as jest.Mock).mockResolvedValue(mockActivities);
 
-      const result = await prisma.activity.findMany({
+      const result = await db.activity.findMany({
         take: 10,
         orderBy: { createdAt: 'desc' },
       });
@@ -528,15 +528,15 @@ describe('Activity Service', () => {
 
 describe('Service Error Handling', () => {
   it('should handle database errors gracefully', async () => {
-    (prisma.project.findMany as jest.Mock).mockRejectedValue(new Error('Database error'));
+    (db.project.findMany as jest.Mock).mockRejectedValue(new Error('Database error'));
 
-    await expect(prisma.project.findMany()).rejects.toThrow('Database error');
+    await expect(db.project.findMany()).rejects.toThrow('Database error');
   });
 
   it('should handle not found errors', async () => {
-    (prisma.project.findUnique as jest.Mock).mockResolvedValue(null);
+    (db.project.findUnique as jest.Mock).mockResolvedValue(null);
 
-    const result = await prisma.project.findUnique({
+    const result = await db.project.findUnique({
       where: { id: 'non-existent' },
     });
 

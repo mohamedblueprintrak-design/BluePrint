@@ -16,8 +16,9 @@ import { SignJWT, jwtVerify } from 'jose';
 import { hash, compare } from 'bcryptjs';
 import { randomBytes, randomInt } from 'crypto';
 import { generateSecret, generateURI, verifySync } from 'otplib';
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 import { env } from '@/lib/env';
+import { log } from '@/lib/logger';
 import { 
   UserRole, 
   Permission, 
@@ -241,7 +242,7 @@ class AuthenticationService {
       // Find user by email OR username
       let user;
       if (data.email) {
-        user = await prisma.user.findUnique({
+        user = await db.user.findUnique({
           where: { email: data.email.toLowerCase() },
           include: {
             organization: {
@@ -250,7 +251,7 @@ class AuthenticationService {
           },
         });
       } else if (data.username) {
-        user = await prisma.user.findUnique({
+        user = await db.user.findUnique({
           where: { username: data.username },
           include: {
             organization: {
@@ -307,7 +308,7 @@ class AuthenticationService {
       const refreshToken = await this.generateRefreshToken(user.id);
       
       // Update last login
-      await prisma.user.update({
+      await db.user.update({
         where: { id: user.id },
         data: { lastLoginAt: new Date() },
       });
@@ -339,7 +340,7 @@ class AuthenticationService {
         refreshToken,
       };
     } catch (error) {
-      console.error('Login error:', error);
+      log.error('Login error', error);
       return {
         success: false,
         error: 'An unexpected error occurred',
@@ -364,7 +365,7 @@ class AuthenticationService {
       }
       
       // Check if email already exists
-      const existingEmail = await prisma.user.findUnique({
+      const existingEmail = await db.user.findUnique({
         where: { email: data.email.toLowerCase() },
       });
       
@@ -377,7 +378,7 @@ class AuthenticationService {
       }
       
       // Check if username already exists
-      const existingUsername = await prisma.user.findUnique({
+      const existingUsername = await db.user.findUnique({
         where: { username: data.username },
       });
       
@@ -395,7 +396,7 @@ class AuthenticationService {
       // Create organization if name provided
       let organizationId: string | null = null;
       if (data.organizationName) {
-        const org = await prisma.organization.create({
+        const org = await db.organization.create({
           data: {
             name: data.organizationName,
             slug: data.organizationName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
@@ -405,7 +406,7 @@ class AuthenticationService {
       }
       
       // Create user
-      const user = await prisma.user.create({
+      const user = await db.user.create({
         data: {
           email: data.email.toLowerCase(),
           username: data.username,
@@ -460,7 +461,7 @@ class AuthenticationService {
         refreshToken,
       };
     } catch (error) {
-      console.error('Signup error:', error);
+      log.error('Signup error', error);
       return {
         success: false,
         error: 'An unexpected error occurred',
@@ -483,7 +484,7 @@ class AuthenticationService {
         };
       }
       
-      const user = await prisma.user.findUnique({
+      const user = await db.user.findUnique({
         where: { id: payload.userId },
         include: {
           organization: {
@@ -527,7 +528,7 @@ class AuthenticationService {
         refreshToken: newRefreshToken,
       };
     } catch (error) {
-      console.error('Token refresh error:', error);
+      log.error('Token refresh error', error);
       return {
         success: false,
         error: 'An unexpected error occurred',
@@ -560,7 +561,7 @@ class AuthenticationService {
       }
       
       // Get user
-      const user = await prisma.user.findUnique({
+      const user = await db.user.findUnique({
         where: { id: userId },
       });
       
@@ -584,7 +585,7 @@ class AuthenticationService {
       
       // Update password
       const hashedPassword = await this.hashPassword(data.newPassword);
-      await prisma.user.update({
+      await db.user.update({
         where: { id: userId },
         data: { password: hashedPassword },
       });
@@ -603,7 +604,7 @@ class AuthenticationService {
         success: true,
       };
     } catch (error) {
-      console.error('Password change error:', error);
+      log.error('Password change error', error);
       return {
         success: false,
         error: 'An unexpected error occurred',
@@ -617,7 +618,7 @@ class AuthenticationService {
    */
   async requestPasswordReset(data: PasswordResetRequest): Promise<AuthResponse> {
     try {
-      const user = await prisma.user.findUnique({
+      const user = await db.user.findUnique({
         where: { email: data.email.toLowerCase() },
       });
       
@@ -629,7 +630,7 @@ class AuthenticationService {
       const resetToken = await this.generatePasswordResetToken(user.id);
       
       // Store token in database for invalidation after use
-      await prisma.passwordResetToken.create({
+      await db.passwordResetToken.create({
         data: {
           email: user.email,
           token: resetToken,
@@ -659,7 +660,7 @@ class AuthenticationService {
       
       return { success: true };
     } catch (error) {
-      console.error('Password reset request error:', error);
+      log.error('Password reset request error', error);
       return { success: true }; // Don't reveal errors
     }
   }
@@ -696,7 +697,7 @@ class AuthenticationService {
       }
       
       // Check if token has already been used
-      const existingToken = await prisma.passwordResetToken.findUnique({
+      const existingToken = await db.passwordResetToken.findUnique({
         where: { token: data.token },
       });
       if (existingToken?.usedAt) {
@@ -709,8 +710,8 @@ class AuthenticationService {
 
       const hashedPassword = await this.hashPassword(data.newPassword);
       
-      await prisma.$transaction([
-        prisma.user.update({
+      await db.$transaction([
+        db.user.update({
           where: { id: payload.userId },
           data: { 
             password: hashedPassword,
@@ -718,7 +719,7 @@ class AuthenticationService {
           },
         }),
         // Invalidate the token after successful password reset
-        prisma.passwordResetToken.update({
+        db.passwordResetToken.update({
           where: { token: data.token },
           data: { usedAt: new Date() },
         }),
@@ -726,7 +727,7 @@ class AuthenticationService {
       
       return { success: true };
     } catch (error) {
-      console.error('Password reset confirmation error:', error);
+      log.error('Password reset confirmation error', error);
       return {
         success: false,
         error: 'An unexpected error occurred',
@@ -809,7 +810,7 @@ class AuthenticationService {
    * Get user by ID
    */
   async getUserById(userId: string) {
-    return prisma.user.findUnique({
+    return db.user.findUnique({
       where: { id: userId },
       select: {
         id: true,
@@ -846,7 +847,7 @@ class AuthenticationService {
       return null;
     }
     
-    const user = await prisma.user.findUnique({
+    const user = await db.user.findUnique({
       where: { id: payload.userId },
       select: { isActive: true },
     });
@@ -867,7 +868,7 @@ class AuthenticationService {
    */
   async generateEmailVerificationToken(email: string, userId?: string): Promise<string> {
     // Delete any existing tokens for this email
-    await prisma.emailVerificationToken.deleteMany({
+    await db.emailVerificationToken.deleteMany({
       where: { email: email.toLowerCase() },
     });
 
@@ -875,7 +876,7 @@ class AuthenticationService {
     const token = randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-    await prisma.emailVerificationToken.create({
+    await db.emailVerificationToken.create({
       data: {
         email: email.toLowerCase(),
         token,
@@ -907,7 +908,7 @@ class AuthenticationService {
 
       return true;
     } catch (error) {
-      console.error('Failed to send verification email:', error);
+      log.error('Failed to send verification email', error);
       return false;
     }
   }
@@ -917,7 +918,7 @@ class AuthenticationService {
    */
   async verifyEmail(token: string): Promise<AuthResponse> {
     try {
-      const verificationToken = await prisma.emailVerificationToken.findUnique({
+      const verificationToken = await db.emailVerificationToken.findUnique({
         where: { token },
       });
 
@@ -946,7 +947,7 @@ class AuthenticationService {
       }
 
       // Find user by email
-      const user = await prisma.user.findUnique({
+      const user = await db.user.findUnique({
         where: { email: verificationToken.email },
       });
 
@@ -959,12 +960,12 @@ class AuthenticationService {
       }
 
       // Mark email as verified
-      await prisma.$transaction([
-        prisma.user.update({
+      await db.$transaction([
+        db.user.update({
           where: { id: user.id },
           data: { emailVerified: new Date() },
         }),
-        prisma.emailVerificationToken.update({
+        db.emailVerificationToken.update({
           where: { id: verificationToken.id },
           data: { usedAt: new Date() },
         }),
@@ -1003,7 +1004,7 @@ class AuthenticationService {
         },
       };
     } catch (error) {
-      console.error('Email verification error:', error);
+      log.error('Email verification error', error);
       return {
         success: false,
         error: 'An unexpected error occurred',
@@ -1017,7 +1018,7 @@ class AuthenticationService {
    */
   async resendVerificationEmail(email: string): Promise<AuthResponse> {
     try {
-      const user = await prisma.user.findUnique({
+      const user = await db.user.findUnique({
         where: { email: email.toLowerCase() },
       });
 
@@ -1038,7 +1039,7 @@ class AuthenticationService {
 
       return { success: true };
     } catch (error) {
-      console.error('Resend verification error:', error);
+      log.error('Resend verification error', error);
       return { success: true }; // Don't reveal errors
     }
   }
@@ -1055,7 +1056,7 @@ class AuthenticationService {
     // Generate a proper Base32 secret compatible with authenticator apps
     const secret = generateSecret();
     
-    const user = await prisma.user.findUnique({
+    const user = await db.user.findUnique({
       where: { id: userId },
       select: { email: true },
     });
@@ -1073,17 +1074,17 @@ class AuthenticationService {
     });
 
     // Store secret temporarily (will be activated after verification)
-    const existingSecret = await prisma.twoFactorSecret.findUnique({
+    const existingSecret = await db.twoFactorSecret.findUnique({
       where: { userId },
     });
 
     if (existingSecret) {
-      await prisma.twoFactorSecret.update({
+      await db.twoFactorSecret.update({
         where: { userId },
         data: { secret, isEnabled: false, verifiedAt: null },
       });
     } else {
-      await prisma.twoFactorSecret.create({
+      await db.twoFactorSecret.create({
         data: { userId, secret, backupCodes: '[]', isEnabled: false },
       });
     }
@@ -1117,7 +1118,7 @@ class AuthenticationService {
       });
       return result.valid;
     } catch (error) {
-      console.error('TOTP verification error:', error);
+      log.error('TOTP verification error', error);
       return false;
     }
   }
@@ -1127,7 +1128,7 @@ class AuthenticationService {
    */
   async enableTwoFactor(userId: string, verificationCode: string): Promise<AuthResponse & { backupCodes?: string[] }> {
     try {
-      const twoFactorSecret = await prisma.twoFactorSecret.findUnique({
+      const twoFactorSecret = await db.twoFactorSecret.findUnique({
         where: { userId },
       });
 
@@ -1153,7 +1154,7 @@ class AuthenticationService {
       const backupCodes = this.generateBackupCodes();
 
       // Enable 2FA
-      await prisma.twoFactorSecret.update({
+      await db.twoFactorSecret.update({
         where: { userId },
         data: {
           isEnabled: true,
@@ -1163,7 +1164,7 @@ class AuthenticationService {
       });
 
       // Get user for email
-      const user = await prisma.user.findUnique({
+      const user = await db.user.findUnique({
         where: { id: userId },
         select: { email: true, fullName: true, username: true },
       });
@@ -1193,7 +1194,7 @@ class AuthenticationService {
         backupCodes,
       };
     } catch (error) {
-      console.error('Enable 2FA error:', error);
+      log.error('Enable 2FA error', error);
       return {
         success: false,
         error: 'An unexpected error occurred',
@@ -1207,7 +1208,7 @@ class AuthenticationService {
    */
   async disableTwoFactor(userId: string, password: string): Promise<AuthResponse> {
     try {
-      const user = await prisma.user.findUnique({
+      const user = await db.user.findUnique({
         where: { id: userId },
       });
 
@@ -1230,7 +1231,7 @@ class AuthenticationService {
       }
 
       // Disable 2FA
-      await prisma.twoFactorSecret.deleteMany({
+      await db.twoFactorSecret.deleteMany({
         where: { userId },
       });
 
@@ -1246,7 +1247,7 @@ class AuthenticationService {
 
       return { success: true };
     } catch (error) {
-      console.error('Disable 2FA error:', error);
+      log.error('Disable 2FA error', error);
       return {
         success: false,
         error: 'An unexpected error occurred',
@@ -1260,7 +1261,7 @@ class AuthenticationService {
    */
   async verifyTwoFactorCode(userId: string, code: string): Promise<boolean> {
     try {
-      const twoFactorSecret = await prisma.twoFactorSecret.findUnique({
+      const twoFactorSecret = await db.twoFactorSecret.findUnique({
         where: { userId },
       });
 
@@ -1277,7 +1278,7 @@ class AuthenticationService {
       if (backupCodeIndex !== -1) {
         // Remove used backup code
         backupCodes.splice(backupCodeIndex, 1);
-        await prisma.twoFactorSecret.update({
+        await db.twoFactorSecret.update({
           where: { userId },
           data: { backupCodes: JSON.stringify(backupCodes) },
         });
@@ -1287,7 +1288,7 @@ class AuthenticationService {
       // Verify TOTP code
       return this.verifyTotpCode(twoFactorSecret.secret, code);
     } catch (error) {
-      console.error('Verify 2FA error:', error);
+      log.error('Verify 2FA error', error);
       return false;
     }
   }
@@ -1297,7 +1298,7 @@ class AuthenticationService {
    */
   async hasTwoFactorEnabled(userId: string): Promise<boolean> {
     try {
-      const twoFactorSecret = await prisma.twoFactorSecret.findUnique({
+      const twoFactorSecret = await db.twoFactorSecret.findUnique({
         where: { userId },
         select: { isEnabled: true },
       });
@@ -1312,7 +1313,7 @@ class AuthenticationService {
    */
   async regenerateBackupCodes(userId: string, password: string): Promise<AuthResponse & { backupCodes?: string[] }> {
     try {
-      const user = await prisma.user.findUnique({
+      const user = await db.user.findUnique({
         where: { id: userId },
       });
 
@@ -1337,7 +1338,7 @@ class AuthenticationService {
       // Generate new backup codes
       const backupCodes = this.generateBackupCodes();
 
-      await prisma.twoFactorSecret.update({
+      await db.twoFactorSecret.update({
         where: { userId },
         data: { backupCodes: JSON.stringify(backupCodes) },
       });
@@ -1357,12 +1358,90 @@ class AuthenticationService {
         backupCodes,
       };
     } catch (error) {
-      console.error('Regenerate backup codes error:', error);
+      log.error('Regenerate backup codes error', error);
       return {
         success: false,
         error: 'An unexpected error occurred',
         code: 'INTERNAL_ERROR',
       };
+    }
+  }
+
+  // ============================================
+  // Token Revocation / Session Invalidation
+  // إلغاء الذاكرة المؤقتة / انتهاء صلاحية الجلسة
+  // ============================================
+
+  /**
+   * Revoke a specific token (add to blacklist via sessions table)
+   * Uses the sessions table to track revoked tokens
+   */
+  async revokeToken(userId: string, tokenJti?: string): Promise<void> {
+    try {
+      // Delete all sessions for the user (force re-login)
+      await db.session.deleteMany({
+        where: { userId },
+      });
+    } catch (error) {
+      // Use the existing logger if available
+      log.error('[AuthService] Failed to revoke token', error);
+    }
+  }
+
+  /**
+   * Revoke all user sessions except current one
+   */
+  async revokeOtherSessions(userId: string, currentToken: string): Promise<void> {
+    try {
+      await db.session.deleteMany({
+        where: {
+          userId,
+          token: { not: currentToken },
+        },
+      });
+    } catch (error) {
+      log.error('[AuthService] Failed to revoke other sessions', error);
+    }
+  }
+
+  /**
+   * Check if a token/session is revoked
+   */
+  async isTokenRevoked(token: string): Promise<boolean> {
+    try {
+      const session = await db.session.findUnique({
+        where: { token },
+      });
+      
+      // If no session exists or it's expired, token is effectively revoked
+      if (!session) return true;
+      if (new Date(session.expiresAt) < new Date()) return true;
+      
+      return false;
+    } catch {
+      // If we can't verify, allow the request (fail open for availability)
+      return false;
+    }
+  }
+
+  /**
+   * Invalidate all sessions for users of an organization
+   * (useful after org-level settings changes)
+   */
+  async revokeOrganizationSessions(organizationId: string): Promise<void> {
+    try {
+      const userIds = await db.user.findMany({
+        where: { organizationId },
+        select: { id: true },
+      });
+      
+      await db.session.deleteMany({
+        where: {
+          userId: { in: userIds.map(u => u.id) },
+        },
+      });
+    } catch (error) {
+      log.error('[AuthService] Failed to revoke org sessions', error);
     }
   }
 }

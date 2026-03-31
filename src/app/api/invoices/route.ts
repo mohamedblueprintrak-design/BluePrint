@@ -15,7 +15,7 @@ import {
   validationErrorResponse
 } from '../utils/response';
 import { invoiceService } from '@/lib/services';
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 import { cachedQuery, invalidateCache, buildCacheKey, CACHE_TTL } from '@/lib/cache/query-cache';
 
 // Demo invoices
@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
     // Send email notification if client has email and sendNotification is true
     if (sendNotification !== false && clientId) {
       try {
-        const client = await prisma.client.findUnique({
+        const client = await db.client.findUnique({
           where: { id: clientId },
         });
 

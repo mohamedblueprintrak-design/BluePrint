@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 import { getUserFromRequest } from '../../utils/demo-config';
 import { unauthorizedResponse } from '../../utils/response';
 
@@ -18,7 +18,7 @@ export async function PATCH(
 
     try {
       // @ts-expect-error automation model not in schema
-      const automation = await prisma.automation.update({
+      const automation = await db.automation.update({
         where: { id },
         data: { status },
       });
@@ -52,7 +52,7 @@ export async function GET(
     const { id } = await params;
     
     // @ts-expect-error automation model not in schema
-    const automation = await prisma.automation.findUnique({
+    const automation = await db.automation.findUnique({
       where: { id },
     });
 
@@ -80,7 +80,7 @@ export async function DELETE(
     
     try {
       // @ts-expect-error automation model not in schema
-      await prisma.automation.delete({
+      await db.automation.delete({
         where: { id },
       });
     } catch (dbError) {
