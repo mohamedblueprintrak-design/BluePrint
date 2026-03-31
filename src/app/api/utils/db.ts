@@ -3,7 +3,7 @@ import { DemoUser } from '../types';
 // Demo users for testing without database
 // SECURITY: Password is hashed with bcrypt. Never use plain text passwords.
 // Demo mode should only be enabled explicitly via DEMO_MODE=true environment variable
-const DEMO_MODE_ENABLED = process.env.DEMO_MODE === 'true' || process.env.NODE_ENV === 'development';
+const DEMO_MODE_ENABLED = process.env.DEMO_MODE !== 'false';
 
 export const DEMO_USERS: DemoUser[] = DEMO_MODE_ENABLED ? [
   {

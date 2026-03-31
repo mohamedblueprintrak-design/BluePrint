@@ -594,7 +594,18 @@ export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
   const token = authHeader?.replace('Bearer ', '');
 
+  // Also try to get token from httpOnly cookie (set during login)
+  let cookieToken: string | null = null;
   if (!token) {
+    const tokenCookie = request.cookies.get('token');
+    if (tokenCookie?.value) {
+      cookieToken = tokenCookie.value;
+    }
+  }
+
+  const activeToken = token || cookieToken;
+
+  if (!activeToken) {
     return unauthorizedResponse();
   }
 
@@ -602,7 +613,7 @@ export async function GET(request: NextRequest) {
   try {
     const { jwtVerify } = await import('jose');
     const secret = getJWTSecret();
-    const { payload } = await jwtVerify(token, secret, {
+    const { payload } = await jwtVerify(activeToken, secret, {
       issuer: 'blueprint-saas',
       audience: 'blueprint-users',
     });
@@ -632,7 +643,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Regular database auth
-  const payload = await authService.verifyToken(token);
+  const payload = await authService.verifyToken(activeToken);
   if (!payload) {
     return errorResponse('رمز غير صالح أو منتهي الصلاحية', 'INVALID_TOKEN', 401);
   }
