@@ -892,13 +892,11 @@ model Task {
   progress      Float     @default(0) // 0-100
   
   // ============================================
-  // NEW: Duration fields (unified in minutes)
+  // Duration fields (unified in minutes)
   // وحدات الوقت موحدة (الدقائق كوحدة أساسية)
   // ============================================
   estimatedMinutes Int?    // المدة التقديرية بالدقائق
   actualMinutes    Int?    // المدة الفعلية بالدقائق
-  estimatedHours   Float?  // للتوافق مع الكود القديم
-  actualHours      Float?  // للتوافق مع الكود القديم
   
   // ============================================
   // NEW: SLA fields for government approvals

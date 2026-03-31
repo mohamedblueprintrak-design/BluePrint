@@ -215,15 +215,9 @@ async function handleLogin(
       path: '/',
     });
     
-    // Also set a non-httpOnly cookie for client-side auth state check
-    // This allows the client to know if user is logged in without exposing the token
-    response.cookies.set('auth_state', 'authenticated', {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 2, // 2 hours
-      path: '/',
-    });
+    // SECURITY: auth_state cookie removed - client auth detection
+    // is now handled by calling GET /api/auth (httpOnly cookies sent automatically)
+    // This eliminates a potential information leakage vector.
     
     return response;
   }
@@ -296,7 +290,7 @@ async function handleLogin(
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict', // Changed from 'lax' for better security
-        maxAge: data.rememberMe ? 60 * 60 * 24 * 30 : 60 * 60 * 24 * 7, // 30 days or 7 days
+        maxAge: data.rememberMe ? 60 * 60 * 24 * 7 : 60 * 60 * 24 * 7, // 7 days (reduced from 30d for security)
         path: '/',
       });
       
@@ -309,14 +303,7 @@ async function handleLogin(
         path: '/',
       });
       
-      // Also set a non-httpOnly cookie for client-side auth state check
-      response.cookies.set('auth_state', 'authenticated', {
-        httpOnly: false,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 60 * 60 * 2, // 2 hours
-        path: '/',
-      });
+      // SECURITY: auth_state cookie removed - see login handler above
     }
   } catch (cookieError) {
     console.error('Failed to set auth cookies:', cookieError);
