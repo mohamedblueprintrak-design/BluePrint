@@ -129,7 +129,7 @@ export function ClientsPage() {
         notes: '' 
       });
       refetch();
-    } catch (_error) {
+    } catch {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ أثناء إنشاء العميل' : 'Failed to create client',
@@ -148,7 +148,7 @@ export function ClientsPage() {
         description: language === 'ar' ? 'تم حذف العميل بنجاح' : 'Client deleted successfully'
       });
       refetch();
-    } catch (_error) {
+    } catch {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ أثناء حذف العميل' : 'Failed to delete client',

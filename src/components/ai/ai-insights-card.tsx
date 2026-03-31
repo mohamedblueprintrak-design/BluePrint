@@ -12,8 +12,7 @@ import {
   ChevronDown,
   ChevronUp,
   Loader2,
-  Lightbulb,
-  TrendingUp,
+    TrendingUp,
   AlertTriangle,
   CheckCircle,
   Copy,
@@ -26,7 +25,7 @@ interface AIInsightsCardProps {
   title?: string;
   context: string;
   taskType?: AITaskType;
-  autoGenerate?: boolean;
+  _autoGenerate?: boolean;
   className?: string;
   compact?: boolean;
 }
@@ -35,7 +34,7 @@ export function AIInsightsCard({
   title = 'رؤى ذكية',
   context,
   taskType = 'data-analysis',
-  autoGenerate = false,
+  _autoGenerate = false,
   className,
   compact = false
 }: AIInsightsCardProps) {

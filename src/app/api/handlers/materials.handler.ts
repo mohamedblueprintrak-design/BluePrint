@@ -10,6 +10,20 @@ import {
   getEffectiveLimit 
 } from '../utils/pagination';
 
+/** Material row from database */
+interface MaterialRow {
+  id: string;
+  materialCode?: unknown;
+  name: string;
+  category?: unknown;
+  unit?: unknown;
+  unitPrice?: number;
+  currentStock?: number;
+  minStock?: number;
+  maxStock?: number;
+  location?: unknown;
+}
+
 /**
  * GET handlers for materials actions
  */
@@ -53,14 +67,14 @@ export const getHandlers = {
     const materialLimit = getEffectiveLimit(usePagination, pagination.limit);
     const materialSkip = usePagination ? calculateSkip(pagination.page, pagination.limit) : 0;
     
-    const materials: any[] = await database.material.findMany({
+    const materials = await database.material.findMany({
       where: materialWhere,
       orderBy: { name: 'asc' },
       skip: materialSkip,
       take: materialLimit
     });
     
-    const mappedMaterials = materials.map((m: any) => ({
+    const mappedMaterials = materials.map((m: MaterialRow) => ({
       id: m.id,
       materialCode: m.materialCode,
       name: m.name,
@@ -99,7 +113,7 @@ export const postHandlers = {
     const count = await database.material.count({ where: { organizationId: context.user.organizationId } });
     const materialCode = `MAT-${(count + 1).toString().padStart(4, '0')}`;
 
-    const material: any = await database.material.create({
+    const material = await database.material.create({
       data: { 
         materialCode, 
         name: name as string, 

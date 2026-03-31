@@ -154,7 +154,7 @@ export function VouchersPage() {
           variant: 'destructive'
         });
       }
-    } catch (_err) {
+    } catch {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ أثناء إنشاء السند' : 'An error occurred while creating the voucher',
@@ -182,7 +182,7 @@ export function VouchersPage() {
           variant: 'destructive'
         });
       }
-    } catch (_err) {
+    } catch {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ أثناء حذف السند' : 'An error occurred while deleting the voucher',

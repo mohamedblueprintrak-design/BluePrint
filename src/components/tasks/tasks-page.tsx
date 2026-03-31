@@ -303,7 +303,7 @@ export function TasksPage() {
       setShowAddDialog(false);
       setFormData(initialFormData);
       refetch();
-    } catch (_error) {
+    } catch {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ أثناء إنشاء المهمة' : 'Failed to create task',
@@ -351,7 +351,7 @@ export function TasksPage() {
           variant: 'destructive'
         });
       }
-    } catch (_error) {
+    } catch {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ أثناء إنشاء المهام' : 'Failed to auto-create tasks',
@@ -378,7 +378,7 @@ export function TasksPage() {
       });
       
       refetch();
-    } catch (_error) {
+    } catch {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ أثناء تحديث المهمة' : 'Failed to update task',
@@ -400,7 +400,7 @@ export function TasksPage() {
       setShowTaskDetail(false);
       setSelectedTask(null);
       refetch();
-    } catch (_error) {
+    } catch {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ أثناء حذف المهمة' : 'Failed to delete task',

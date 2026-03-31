@@ -29,11 +29,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import {
-  MapPin, Plus, Search, Eye, Edit, Camera, Building2,
+  MapPin, Plus, Search, Eye, Camera, Building2,
   Calendar, User, FileText, CheckCircle, Clock, AlertCircle,
-  Loader2, Landmark, ClipboardList, ImagePlus, ChevronDown,
-  Trash2, Printer
-} from 'lucide-react';
+  Loader2, Landmark, ClipboardList, ImagePlus,
+  Trash2} from 'lucide-react';
 
 const MUNICIPALITIES = [
   { value: 'RAK', label: 'رأس الخيمة', labelEn: 'Ras Al Khaimah' },
@@ -102,9 +101,9 @@ const emptyForm = {
 
 export function SiteVisitReportsPage() {
   const { language } = useApp();
-  const { t, formatDate } = useTranslation(language);
+  const { t: _t, formatDate } = useTranslation(language);
   const { toast } = useToast();
-  const { projects } = useProjects();
+  const { data: projectsData } = useProjects();
   const isRTL = language === 'ar';
 
   const [reports, setReports] = useState<SiteVisitReport[]>([]);
@@ -474,7 +473,7 @@ export function SiteVisitReportsPage() {
                       <SelectValue placeholder={isRTL ? 'اختر المشروع' : 'Select project'} />
                     </SelectTrigger>
                     <SelectContent>
-                      {projects?.map((p: any) => (
+                      {projectsData?.data?.map((p: any) => (
                         <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                       ))}
                     </SelectContent>

@@ -72,7 +72,7 @@ export const postHandlers = {
     }
 
     // Try demo users first
-    let foundUser: any = DEMO_USERS.find(u => 
+    let foundUser = DEMO_USERS.find(u => 
       u.username === username || u.email === username
     ) || null;
     
@@ -90,7 +90,7 @@ export const postHandlers = {
             }
           });
         }
-      } catch (_dbError) {
+      } catch {
         log.info('Database not available, using demo mode');
       }
     }
@@ -118,7 +118,7 @@ export const postHandlers = {
             data: { lastLoginAt: new Date() }
           });
         }
-      } catch (_dbError) {
+      } catch {
         log.warn('Could not update last login');
       }
     }

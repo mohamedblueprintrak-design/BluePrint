@@ -62,7 +62,8 @@ export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [_selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [viewMode, setViewMode] = useState<'month' | 'list'>('month');
-  const [_toast, setToast] = useToast();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { toast: _toast } = useToast();
 
   // Fetch events
   useEffect(() => {
@@ -320,28 +321,25 @@ export default function CalendarPage() {
                 {upcomingEvents.length === 0 ? (
                   <p className="text-gray-500 text-sm">لا توجد أحداث في الأيام القادمة</p>
                 ) : (
-                  upcomingEvents.map((event) => {
-                    const Icon = eventTypeIcons[event.eventType];
-                    return (
-                      <div
-                        key={event.id}
-                        className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"
-                      >
-                        <div className={`w-2 h-2 rounded-full mt-2 ${eventTypeColors[event.eventType]}`} />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-900 text-sm truncate">
-                            {event.title}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {new Date(event.startDate).toLocaleDateString('ar-SA')}
-                          </p>
-                          <Badge variant="outline" className="mt-1">
-                            {eventTypeLabels[event.eventType]}
-                          </Badge>
-                        </div>
+                  upcomingEvents.map((event) => (
+                    <div
+                      key={event.id}
+                      className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"
+                    >
+                      <div className={`w-2 h-2 rounded-full mt-2 ${eventTypeColors[event.eventType]}`} />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900 text-sm truncate">
+                          {event.title}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(event.startDate).toLocaleDateString('ar-SA')}
+                        </p>
+                        <Badge variant="outline" className="mt-1">
+                          {eventTypeLabels[event.eventType]}
+                        </Badge>
                       </div>
-                    );
-                  })
+                    </div>
+                  ))
                 )}
               </div>
             </CardContent>

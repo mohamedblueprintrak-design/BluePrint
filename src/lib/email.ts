@@ -68,7 +68,7 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
     log.info('Email sent successfully', { messageId: info.messageId, to, subject });
     return true;
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const _message = error instanceof Error ? error.message : 'Unknown error';
     log.error('Failed to send email', error, { to, subject });
     return false;
   }

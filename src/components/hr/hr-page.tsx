@@ -244,7 +244,7 @@ export function HRPage() {
         description: isRTL ? 'تم الموافقة على طلب الإجازة' : 'Leave request has been approved',
       });
       refetchLeaves();
-    } catch (_error) {
+    } catch {
       toast({
         title: t.error,
         description: isRTL ? 'حدث خطأ أثناء الموافقة' : 'Failed to approve request',
@@ -271,7 +271,7 @@ export function HRPage() {
       setSelectedRequest(null);
       setRejectionReason('');
       refetchLeaves();
-    } catch (_error) {
+    } catch {
       toast({
         title: t.error,
         description: isRTL ? 'حدث خطأ أثناء الرفض' : 'Failed to reject request',

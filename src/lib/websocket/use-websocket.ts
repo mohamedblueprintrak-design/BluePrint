@@ -10,8 +10,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import {
-  WebSocketEventType,
-  NotificationPayload,
+    NotificationPayload,
   ProjectPayload,
   TaskPayload,
   UserPresencePayload,
@@ -165,6 +164,7 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
       socket.disconnect();
       socketRef.current = null;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, url]);
 
   // ============================================

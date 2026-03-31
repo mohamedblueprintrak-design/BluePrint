@@ -23,8 +23,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
-  Calendar, Plus, Clock, MapPin, Users, Video, FileText,
-  ChevronLeft, ChevronRight, CheckCircle
+  Calendar, Plus, Clock, MapPin, Users, Video,
+    CheckCircle
 } from 'lucide-react';
 
 const MOCK_MEETINGS = [

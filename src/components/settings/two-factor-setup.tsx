@@ -11,7 +11,7 @@
  * 4. Disable 2FA
  */
 
-import { useState, useEffect } from 'react';
+import { useState} from 'react';
 import { useApp } from '@/context/app-context';
 import {
   Card,
@@ -38,7 +38,6 @@ import {
   Shield,
   ShieldCheck,
   ShieldOff,
-  _Smartphone,
   Key,
   Copy,
   Check,
@@ -129,7 +128,7 @@ export function TwoFactorSetup({ onStatusChange }: TwoFactorSetupProps) {
   };
 
   // Fetch 2FA status
-  const fetchStatus = async () => {
+  const _fetchStatus = async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('/api/auth/2fa', {
@@ -170,7 +169,7 @@ export function TwoFactorSetup({ onStatusChange }: TwoFactorSetupProps) {
           variant: 'destructive',
         });
       }
-    } catch (error) {
+    } catch {
       toast({
         title: texts.errorSetup,
         variant: 'destructive',
@@ -215,7 +214,7 @@ export function TwoFactorSetup({ onStatusChange }: TwoFactorSetupProps) {
           variant: 'destructive',
         });
       }
-    } catch (error) {
+    } catch {
       toast({
         title: texts.errorVerify,
         variant: 'destructive',
@@ -260,7 +259,7 @@ export function TwoFactorSetup({ onStatusChange }: TwoFactorSetupProps) {
           variant: 'destructive',
         });
       }
-    } catch (error) {
+    } catch {
       toast({
         title: texts.errorDisable,
         variant: 'destructive',

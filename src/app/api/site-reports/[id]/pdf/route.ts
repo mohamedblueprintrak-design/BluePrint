@@ -8,8 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/app/api/utils/demo-config';
 import {
-  successResponse,
-  unauthorizedResponse,
+    unauthorizedResponse,
   serverErrorResponse,
   notFoundResponse,
 } from '@/app/api/utils/response';

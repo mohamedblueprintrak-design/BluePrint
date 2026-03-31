@@ -7,20 +7,19 @@
 
 import { useState, useEffect } from 'react';
 import { 
-  Send, Plus, Edit2, Trash2, FileText, 
-  CheckCircle, Clock, AlertTriangle, Mail,
-  Printer, Download, Eye, XCircle
+  Send, Plus, Trash2, FileText, 
+  CheckCircle, AlertTriangle,
+   XCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
+  } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -33,13 +32,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
-
 // Types
 interface TransmittalItem {
   id: string;
@@ -157,7 +149,7 @@ export function TransmittalSystem({
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  const isRTL = lang === 'ar';
+  const _isRTL = lang === 'ar';
 
   // Fetch transmittals
   useEffect(() => {
@@ -269,7 +261,7 @@ export function TransmittalSystem({
   }
 
   return (
-    <div className={`space-y-6 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className={`space-y-6 ${_isRTL ? 'rtl' : 'ltr'}`} dir={_isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -523,7 +515,7 @@ function TransmittalDetails({
   onClose: () => void;
   onDelete: () => void;
 }) {
-  const isRTL = lang === 'ar';
+  const _isRTL = lang === 'ar';
 
   return (
     <div className="space-y-6">

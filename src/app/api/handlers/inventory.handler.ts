@@ -3,6 +3,67 @@ import { HandlerContext, ApiSuccessResponse, ApiErrorResponse } from '../types';
 import { successResponse, errorResponse, unauthorizedResponse, notFoundResponse } from '../utils/response';
 import { getDb } from '../utils/db';
 
+/** BOQ item row from database */
+interface BOQItemRow {
+  id: string;
+  projectId: string;
+  itemNumber?: unknown;
+  description?: unknown;
+  unit?: unknown;
+  quantity?: unknown;
+  unitPrice?: unknown;
+  totalPrice?: unknown;
+  category?: unknown;
+  notes?: unknown;
+  createdAt: unknown;
+}
+
+/** Purchase order row with supplier relation */
+interface PurchaseOrderRow {
+  id: string;
+  poNumber: string;
+  supplierId?: unknown;
+  supplier?: { name?: string } | null;
+  projectId?: unknown;
+  orderDate?: unknown;
+  expectedDate?: unknown;
+  items?: string | null;
+  subtotal?: number;
+  taxAmount?: number;
+  total?: number;
+  status?: string;
+  notes?: unknown;
+  createdAt: unknown;
+}
+
+/** Budget row from database */
+interface BudgetRow {
+  id: string;
+  projectId: string;
+  category?: unknown;
+  description?: unknown;
+  budgetAmount?: number;
+  actualAmount?: number;
+  variance?: number;
+  createdAt: unknown;
+}
+
+/** Defect row from database */
+interface DefectRow {
+  id: string;
+  projectId: string;
+  title?: unknown;
+  description?: unknown;
+  severity?: unknown;
+  status?: string;
+  location?: unknown;
+  imageId?: unknown;
+  assignedTo?: unknown;
+  resolvedAt?: unknown;
+  resolutionNotes?: unknown;
+  createdAt: unknown;
+}
+
 /**
  * GET handlers for inventory actions
  */
@@ -25,12 +86,12 @@ export const getHandlers = {
     });
     if (!boqProject) return notFoundResponse('المشروع غير موجود');
     
-    const boqItems: any[] = await database.bOQItem.findMany({
+    const boqItems = await database.bOQItem.findMany({
       where: { projectId },
       orderBy: { itemNumber: 'asc' }
     });
     
-    return successResponse(boqItems.map((item: any) => ({
+    return successResponse(boqItems.map((item: BOQItemRow) => ({
       id: item.id,
       projectId: item.projectId,
       itemNumber: item.itemNumber,
@@ -54,7 +115,7 @@ export const getHandlers = {
     const database = await getDb();
     if (!database) return successResponse([]);
     
-    const purchaseOrders: any[] = await database.purchaseOrder.findMany({
+    const purchaseOrders = await database.purchaseOrder.findMany({
       where: { 
         supplier: { organizationId: context.user.organizationId } 
       },
@@ -62,7 +123,7 @@ export const getHandlers = {
       orderBy: { createdAt: 'desc' }
     });
     
-    return successResponse(purchaseOrders.map((po: any) => ({
+    return successResponse(purchaseOrders.map((po: PurchaseOrderRow) => ({
       id: po.id,
       poNumber: po.poNumber,
       supplierId: po.supplierId,
@@ -98,12 +159,12 @@ export const getHandlers = {
     });
     if (!budgetProject) return notFoundResponse('المشروع غير موجود');
     
-    const budgets: any[] = await database.budget.findMany({
+    const budgets = await database.budget.findMany({
       where: { projectId },
       orderBy: { category: 'asc' }
     });
     
-    return successResponse(budgets.map((b: any) => ({
+    return successResponse(budgets.map((b: BudgetRow) => ({
       id: b.id,
       projectId: b.projectId,
       category: b.category,
@@ -133,12 +194,12 @@ export const getHandlers = {
     });
     if (!defectProject) return notFoundResponse('المشروع غير موجود');
     
-    const defects: any[] = await database.defect.findMany({
+    const defects = await database.defect.findMany({
       where: { projectId },
       orderBy: { createdAt: 'desc' }
     });
     
-    return successResponse(defects.map((d: any) => ({
+    return successResponse(defects.map((d: DefectRow) => ({
       id: d.id,
       projectId: d.projectId,
       title: d.title,
@@ -179,7 +240,7 @@ export const postHandlers = {
     });
     if (!boqProject) return notFoundResponse('المشروع غير موجود');
 
-    const boqItem: any = await database.bOQItem.create({
+    const boqItem = await database.bOQItem.create({
       data: {
         projectId: projectId as string,
         itemNumber: itemNumber as string,
@@ -219,7 +280,7 @@ export const postHandlers = {
     const count = await database.purchaseOrder.count();
     const poNumber = `PO-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
 
-    const purchaseOrder: any = await database.purchaseOrder.create({
+    const purchaseOrder = await database.purchaseOrder.create({
       data: {
         poNumber,
         supplierId: supplierId as string,
@@ -258,7 +319,7 @@ export const postHandlers = {
     });
     if (!budgetProject) return notFoundResponse('المشروع غير موجود');
 
-    const budget: any = await database.budget.create({
+    const budget = await database.budget.create({
       data: {
         projectId: projectId as string,
         category: category as string,
@@ -292,7 +353,7 @@ export const postHandlers = {
     });
     if (!defectProject) return notFoundResponse('المشروع غير موجود');
 
-    const defect: any = await database.defect.create({
+    const defect = await database.defect.create({
       data: {
         projectId: projectId as string,
         title: title as string,
@@ -417,7 +478,7 @@ export const putHandlers = {
     if (!database) return errorResponse('قاعدة البيانات غير متاحة');
 
     // Verify budget belongs to user's organization through project
-    const budget: any = await database.budget.findFirst({
+    const budget: BudgetRow | null = await database.budget.findFirst({
       where: { id: id as string, project: { organizationId: context.user.organizationId } }
     });
     if (!budget) return notFoundResponse('الميزانية غير موجودة');
@@ -426,7 +487,7 @@ export const putHandlers = {
     if (data.budgetAmount !== undefined || data.actualAmount !== undefined) {
       const budgetAmount = data.budgetAmount !== undefined ? parseFloat(data.budgetAmount as string) : budget.budgetAmount;
       const actualAmount = data.actualAmount !== undefined ? parseFloat(data.actualAmount as string) : budget.actualAmount;
-      data.variance = budgetAmount - actualAmount;
+      data.variance = (budgetAmount || 0) - (actualAmount || 0);
     }
 
     await database.budget.update({ where: { id: id as string }, data });

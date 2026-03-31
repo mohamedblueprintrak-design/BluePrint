@@ -10,6 +10,22 @@ import {
   getEffectiveLimit 
 } from '../utils/pagination';
 
+/** Task row from database with project/assignee relations */
+interface TaskRow {
+  id: string;
+  title: string;
+  description?: unknown;
+  status: string;
+  priority?: string;
+  dueDate?: unknown;
+  progress?: number;
+  project?: { name?: string } | null;
+  projectId?: string;
+  assignee?: { fullName?: string; username?: string } | null;
+  assignedToId?: string;
+  createdAt: unknown;
+}
+
 /**
  * GET handlers for tasks actions
  */
@@ -38,7 +54,7 @@ export const getHandlers = {
     const taskStatus = context.searchParams.get('status');
     
     // Build where clause with search
-    const tasksQuery: Record<string, any> = {
+    const tasksQuery: Record<string, unknown> = {
       project: { organizationId: context.user.organizationId }
     };
     if (taskProjectId) tasksQuery.projectId = taskProjectId;
@@ -59,7 +75,7 @@ export const getHandlers = {
     const taskLimit = getEffectiveLimit(usePagination, pagination.limit);
     const taskSkip = usePagination ? calculateSkip(pagination.page, pagination.limit) : 0;
     
-    const tasks: any[] = await database.task.findMany({
+    const tasks = await database.task.findMany({
       where: tasksQuery,
       include: { project: true, assignee: true },
       orderBy: { createdAt: 'desc' },
@@ -67,7 +83,7 @@ export const getHandlers = {
       take: taskLimit
     });
     
-    const mappedTasks = tasks.map((t: any) => ({
+    const mappedTasks = tasks.map((t: TaskRow) => ({
       id: t.id,
       title: t.title,
       description: t.description,
@@ -113,7 +129,7 @@ export const postHandlers = {
       if (!taskProject) return notFoundResponse('المشروع غير موجود');
     }
 
-    const task: any = await database.task.create({
+    const task = await database.task.create({
       data: {
         title: title as string,
         description: description as string,
@@ -167,7 +183,7 @@ export const putHandlers = {
     });
     if (!task) return notFoundResponse('المهمة غير موجودة');
 
-    const updateData: Record<string, any> = {};
+    const updateData: Record<string, unknown> = {};
     if (status) {
       updateData.status = status;
       if (status === 'done') updateData.completedAt = new Date();

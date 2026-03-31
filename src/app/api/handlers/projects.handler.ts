@@ -10,6 +10,27 @@ import {
   getEffectiveLimit
 } from '../utils/pagination';
 
+/** Project row from database with client relation */
+interface ProjectRow {
+  id: string;
+  name: string;
+  projectNumber?: string;
+  location?: unknown;
+  status: string;
+  contractValue?: number;
+  clientId?: string;
+  client?: { name?: string } | null;
+  progressPercentage?: number;
+  createdAt: unknown;
+}
+
+/** Project detail row with related entities */
+interface ProjectDetailRow extends ProjectRow {
+  boqItems: Array<{ totalPrice?: number }>;
+  defects: Array<{ status: string }>;
+  files: unknown[];
+}
+
 /**
  * GET handlers for projects actions
  */
@@ -52,7 +73,7 @@ export const getHandlers = {
     const projectLimit = getEffectiveLimit(usePagination, pagination.limit);
     const projectSkip = usePagination ? calculateSkip(pagination.page, pagination.limit) : 0;
     
-    const allProjects: any[] = await database.project.findMany({ 
+    const allProjects = await database.project.findMany({ 
       where: projectWhere,
       include: { client: true }, 
       orderBy: { createdAt: 'desc' },
@@ -60,7 +81,7 @@ export const getHandlers = {
       take: projectLimit
     });
     
-    const mappedProjects = allProjects.map((p: any) => ({
+    const mappedProjects = allProjects.map((p: ProjectRow) => ({
       id: p.id,
       name: p.name,
       projectNumber: p.projectNumber,
@@ -91,7 +112,7 @@ export const getHandlers = {
     const database = await getDb();
     if (!database) return notFoundResponse('المشروع غير موجود');
     
-    const project: any = await database.project.findFirst({
+    const project: ProjectDetailRow | null = await database.project.findFirst({
       where: { id: projectId, organizationId: context.user.organizationId },
       include: {
         client: true,
@@ -103,7 +124,7 @@ export const getHandlers = {
         milestones: true,
         files: true
       }
-    });
+    }) as ProjectDetailRow | null;
     
     if (!project) return notFoundResponse('المشروع غير موجود');
     
@@ -139,7 +160,7 @@ export const postHandlers = {
     const count = await database.project.count({ where: { organizationId: context.user.organizationId } });
     const projectNumber = `PRJ-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
 
-    const project: any = await database.project.create({
+    const project = await database.project.create({
       data: {
         name: name as string,
         projectNumber,

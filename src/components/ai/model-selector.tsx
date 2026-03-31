@@ -20,11 +20,8 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Settings2, 
-  Sparkles, 
-  Eye, 
-  Code, 
-  Zap,
-  Crown,
+    Eye, 
+  Code,
   Check
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -174,7 +171,7 @@ export function ModelSelector({
 function ModelList({
   selectedModel,
   onSelect,
-  taskType
+  taskType: _taskType
 }: {
   selectedModel: string;
   onSelect: (modelId: string) => void;
@@ -244,6 +241,7 @@ function ModelList({
 // Quick model switcher for chat
 export function QuickModelSwitch() {
   const { preferredModel, setPreferredModel } = useAI();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const currentModel = getModelInfo(preferredModel || 'gemini-2.0-flash');
 
   const quickModels = [

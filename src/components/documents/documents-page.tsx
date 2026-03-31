@@ -331,7 +331,7 @@ export function DocumentsPage() {
         title: language === 'ar' ? 'جاري التحميل' : 'Downloading',
         description: doc.originalName || doc.filename
       });
-    } catch (_err) {
+    } catch {
       toast({
         title: language === 'ar' ? 'خطأ' : 'Error',
         description: language === 'ar' ? 'فشل في تحميل الملف' : 'Failed to download file',

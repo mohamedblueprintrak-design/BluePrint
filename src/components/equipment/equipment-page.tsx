@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -28,8 +28,6 @@ import {
   Search,
   Edit,
   Trash2,
-  MapPin,
-  Calendar,
   DollarSign,
   Settings,
   AlertTriangle,
@@ -206,7 +204,7 @@ export default function EquipmentPage() {
       } else {
         throw new Error('Failed to save equipment');
       }
-    } catch (error) {
+    } catch {
       toast({
         title: 'خطأ',
         description: 'حدث خطأ أثناء حفظ البيانات',
@@ -225,7 +223,7 @@ export default function EquipmentPage() {
         toast({ title: 'تم الحذف', description: 'تم حذف المعدة بنجاح' });
         fetchEquipment();
       }
-    } catch (error) {
+    } catch {
       toast({
         title: 'خطأ',
         description: 'حدث خطأ أثناء الحذف',

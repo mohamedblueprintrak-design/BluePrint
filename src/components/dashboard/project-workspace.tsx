@@ -329,7 +329,7 @@ const categoryConfig: Record<string, { ar: string; en: string; icon: React.React
   CONTRACTING: { ar: 'العقود', en: 'Contracting', icon: <FileText className="h-4 w-4" /> },
 };
 
-const mepSubGroupLabels: Record<string, { ar: string; en: string }> = {
+const _mepSubGroupLabels: Record<string, { ar: string; en: string }> = {
   NOC: { ar: 'الكهرباء - شهادة عدم المانعة', en: 'Electrical - NOC' },
   ELECTRICAL: { ar: 'الكهرباء - الأعمال الكهربائية', en: 'Electrical - Electrical Work' },
   AC_CALCULATIONS: { ar: 'الكهرباء - حسابات التكييف', en: 'Electrical - AC Calculations' },
@@ -356,7 +356,7 @@ const mepSubGroupLabels: Record<string, { ar: string; en: string }> = {
   MEP_COORDINATION: { ar: 'تنسيق MEP', en: 'MEP Coordination' },
 };
 
-const mepGroupOrder = ['NOC', 'ELECTRICAL', 'AC_CALCULATIONS', 'SOLAR_HEATING', 'LOAD_SCHEDULE', 'PANEL_SCHEDULE', 'ELEC_SPECIFICATIONS', 'LIGHTING', 'DRAINAGE', 'SITE_DRAINAGE', 'RAIN_DRAINAGE', 'TANK_DETAILS', 'WATER_SUPPLY', 'SITE_WATER', 'GROUND_FLOOR_WATER', 'ROOF_WATER', 'ETISALAT', 'ETISALAT_GF', 'HVAC', 'CD_FIRE_SYSTEM', 'CD_EMERGENCY_LIGHTING', 'CD_FIRE_FITTING', 'CD_SCHEMATIC', 'MEP_COORDINATION'];
+const _mepGroupOrder = ['NOC', 'ELECTRICAL', 'AC_CALCULATIONS', 'SOLAR_HEATING', 'LOAD_SCHEDULE', 'PANEL_SCHEDULE', 'ELEC_SPECIFICATIONS', 'LIGHTING', 'DRAINAGE', 'SITE_DRAINAGE', 'RAIN_DRAINAGE', 'TANK_DETAILS', 'WATER_SUPPLY', 'SITE_WATER', 'GROUND_FLOOR_WATER', 'ROOF_WATER', 'ETISALAT', 'ETISALAT_GF', 'HVAC', 'CD_FIRE_SYSTEM', 'CD_EMERGENCY_LIGHTING', 'CD_FIRE_FITTING', 'CD_SCHEMATIC', 'MEP_COORDINATION'];
 
 const invoiceStatusConfig: Record<string, { color: string; bg: string; labelAr: string; labelEn: string }> = {
   DRAFT: { color: 'text-slate-400', bg: 'bg-slate-500/15', labelAr: 'مسودة', labelEn: 'Draft' },

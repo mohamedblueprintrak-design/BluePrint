@@ -150,7 +150,7 @@ export function generateSecurePassword(length: number = 16): string {
  * Check if password has been compromised (basic check)
  * In production, integrate with HaveIBeenPwned API
  */
-export async function checkPasswordBreached(password: string): Promise<boolean> {
+export async function checkPasswordBreached(_password: string): Promise<boolean> {
   // Placeholder - in production, use HaveIBeenPwned API
   // https://haveibeenpwned.com/API/v3#PwnedPasswords
   return false;

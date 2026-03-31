@@ -44,8 +44,8 @@ const JWT_AUDIENCE = 'blueprint-users';
 const ACCESS_TOKEN_EXPIRY = '2h';
 const REFRESH_TOKEN_EXPIRY = '7d';
 const PASSWORD_RESET_EXPIRY = '1h';
-const EMAIL_VERIFICATION_EXPIRY = '24h';
-const TWO_FACTOR_CODE_EXPIRY = 5 * 60 * 1000; // 5 minutes in milliseconds
+const _EMAIL_VERIFICATION_EXPIRY = '24h';
+const _TWO_FACTOR_CODE_EXPIRY = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 /**
  * Authentication Service Class
@@ -179,7 +179,7 @@ class AuthenticationService {
         iat: payload.iat,
         exp: payload.exp,
       };
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -1376,7 +1376,7 @@ class AuthenticationService {
    * Revoke a specific token (add to blacklist via sessions table)
    * Uses the sessions table to track revoked tokens
    */
-  async revokeToken(userId: string, tokenJti?: string): Promise<void> {
+  async revokeToken(userId: string, _tokenJti?: string): Promise<void> {
     try {
       // Delete all sessions for the user (force re-login)
       await db.session.deleteMany({

@@ -7,7 +7,7 @@
  * DELETE - Detach payment method
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest} from 'next/server';
 import {
   listPaymentMethods,
   attachPaymentMethod,

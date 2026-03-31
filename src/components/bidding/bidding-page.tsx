@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -26,14 +26,10 @@ import {
   FileText,
   Plus,
   Search,
-  Eye,
-  Calendar,
-  MapPin,
   DollarSign,
   Trophy,
   Clock,
   CheckCircle,
-  XCircle,
 } from 'lucide-react';
 import type { Bid, BidType, BidStatus } from '@/types';
 
@@ -178,7 +174,7 @@ export default function BiddingPage() {
       } else {
         throw new Error('Failed to save bid');
       }
-    } catch (error) {
+    } catch {
       toast({
         title: 'خطأ',
         description: 'حدث خطأ أثناء حفظ البيانات',
@@ -204,7 +200,7 @@ export default function BiddingPage() {
         fetchBids();
         setIsDetailOpen(false);
       }
-    } catch (error) {
+    } catch {
       toast({
         title: 'خطأ',
         description: 'حدث خطأ أثناء تحديث الحالة',
@@ -214,7 +210,7 @@ export default function BiddingPage() {
   };
 
   // Get type icon
-  const getTypeIcon = (type: BidType) => {
+  const getTypeIcon = (_type: BidType) => {
     return <FileText className="w-5 h-5" />;
   };
 

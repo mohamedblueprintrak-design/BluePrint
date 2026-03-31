@@ -14,13 +14,11 @@ import { db } from '@/lib/db';
 import { env } from '@/lib/env';
 import { log } from '@/lib/logger';
 import {
-  WebSocketEventType,
-  WebSocketMessage,
+    
   SocketData,
   NotificationPayload,
   ProjectPayload,
   TaskPayload,
-  UserPresencePayload,
   RoomType,
 } from './types';
 

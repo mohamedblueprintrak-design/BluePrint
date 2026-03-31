@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { checkRedisHealth, isRedisAvailable } from '@/lib/cache/redis';
+import { checkRedisHealth} from '@/lib/cache/redis';
 import { getPerformanceStats, getRouteStats } from '@/lib/monitoring/performance';
 
 interface HealthCheckResult {

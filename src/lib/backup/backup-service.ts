@@ -12,8 +12,6 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import fs from 'fs/promises';
 import path from 'path';
-import { db } from '@/lib/db';
-import { env } from '@/lib/env';
 
 const execAsync = promisify(exec);
 
@@ -457,7 +455,7 @@ class BackupService {
       }
 
       return backups.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-    } catch (error) {
+    } catch {
       return [];
     }
   }
@@ -577,7 +575,7 @@ class BackupService {
   private async ensureBackupDir(): Promise<void> {
     try {
       await fs.mkdir(this.backupDir, { recursive: true });
-    } catch (error) {
+    } catch {
       // Directory already exists
     }
   }

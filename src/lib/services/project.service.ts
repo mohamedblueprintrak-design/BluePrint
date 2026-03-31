@@ -11,6 +11,7 @@
  */
 
 import { db } from '@/lib/db';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { getProjectRepository } from '@/lib/repositories';
 import { logAudit } from './audit.service';
 import type { Project, ProjectStatus } from '@prisma/client';
@@ -515,8 +516,8 @@ class ProjectService {
     client: typeof db | Omit<typeof db, '$on' | '$connect' | '$disconnect' | '$transaction' | '$extends'>
   ): Promise<string> {
     const year = new Date().getFullYear();
-    const yearStart = new Date(year, 0, 1);
-    const yearEnd = new Date(year + 1, 0, 1);
+    const _yearStart = new Date(year, 0, 1);
+    const _yearEnd = new Date(year + 1, 0, 1);
     
     // Find the highest project number for this year and organization
     const latestProject = await client.project.findFirst({

@@ -5,7 +5,6 @@ import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
 import { useContracts, useClients, useProjects } from '@/hooks/use-data';
 import { FloatingAIButton } from '@/components/ai/floating-ai-button';
-import { AIInsightsCard } from '@/components/ai/ai-insights-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useApp } from '@/context/app-context';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,7 +31,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
-  Landmark, Plus, Search, Filter, Send, Eye, Clock,
+  Landmark, Plus, Search, Send, Eye, Clock,
   CheckCircle, XCircle, AlertTriangle, FileText, Building
 } from 'lucide-react';
 

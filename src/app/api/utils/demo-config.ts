@@ -270,7 +270,7 @@ export async function getUserFromRequest(request: NextRequest): Promise<Authenti
           isActive: dbUser.isActive
         };
       }
-    } catch (dbError) {
+    } catch {
       console.warn('Database not available for user lookup');
     }
     

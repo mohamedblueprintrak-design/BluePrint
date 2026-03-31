@@ -7,7 +7,7 @@
  */
 
 import { NextRequest } from 'next/server';
-import { getUserFromRequest, isDemoUser, DEMO_DATA } from './utils/demo-config';
+import { getUserFromRequest, isDemoUser} from './utils/demo-config';
 import { successResponse, errorResponse } from './utils/response';
 import { projectService, clientService, taskService, invoiceService } from '@/lib/services';
 

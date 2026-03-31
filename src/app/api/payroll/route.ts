@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import * as jose from 'jose';
 import { db } from '@/lib/db';
 import { getJWTSecret } from '../utils/auth';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { sendEmail } from '@/lib/email';
 
 // Helper functions

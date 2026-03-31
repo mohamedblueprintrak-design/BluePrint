@@ -160,7 +160,7 @@ export function AdminPage() {
           variant: 'destructive'
         });
       }
-    } catch (_error) {
+    } catch {
       toast({
         title: language === 'ar' ? 'خطأ' : 'Error',
         description: language === 'ar' ? 'فشل في إضافة المستخدم' : 'Failed to add user',
@@ -197,7 +197,7 @@ export function AdminPage() {
           variant: 'destructive'
         });
       }
-    } catch (_error) {
+    } catch {
       toast({
         title: language === 'ar' ? 'خطأ' : 'Error',
         description: language === 'ar' ? 'فشل في تحديث المستخدم' : 'Failed to update user',
@@ -225,7 +225,7 @@ export function AdminPage() {
           variant: 'destructive'
         });
       }
-    } catch (_error) {
+    } catch {
       toast({
         title: language === 'ar' ? 'خطأ' : 'Error',
         description: language === 'ar' ? 'فشل في تحديث الحالة' : 'Failed to update status',
@@ -254,7 +254,7 @@ export function AdminPage() {
           variant: 'destructive'
         });
       }
-    } catch (_error) {
+    } catch {
       toast({
         title: language === 'ar' ? 'خطأ' : 'Error',
         description: language === 'ar' ? 'فشل في حذف المستخدم' : 'Failed to delete user',

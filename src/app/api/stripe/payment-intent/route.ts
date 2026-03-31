@@ -6,12 +6,11 @@
  * GET - Retrieve payment intent status
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest} from 'next/server';
 import {
   createPaymentIntent,
   retrievePaymentIntent,
-  updatePaymentIntent,
-  isStripeConfigured,
+    isStripeConfigured,
 } from '@/lib/stripe';
 import { successResponse, errorResponse } from '../../utils/response';
 

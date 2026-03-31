@@ -18,7 +18,7 @@ import { db } from '@/lib/db';
 import Stripe from 'stripe';
 
 // Webhook secret from environment
-const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
+const _WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
 
 export async function POST(request: NextRequest) {
   // Get raw body for signature verification
@@ -142,7 +142,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     });
 
     log.info(`Checkout completed for organization: ${organizationId}`);
-  } catch (dbError) {
+  } catch {
     log.warn('Database not available, logging event only');
     log.warn('Checkout completed', { organizationId, planId, sessionId: session.id });
   }
@@ -166,7 +166,7 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
  * Handle customer.subscription.updated event
  */
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
-  const { organizationId } = subscription.metadata || {};
+  const { _organizationId } = subscription.metadata || {};
   const status = mapStripeStatus(subscription.status);
   
   // Access properties safely
@@ -187,7 +187,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     });
 
     log.info(`Subscription updated: ${subscription.id}, status: ${status}`);
-  } catch (dbError) {
+  } catch {
     log.warn('Database not available, logging event only');
     log.info('Subscription updated', { subscriptionId: subscription.id, status });
   }
@@ -197,7 +197,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
  * Handle customer.subscription.deleted event
  */
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
-  const { organizationId } = subscription.metadata || {};
+  const { _organizationId } = subscription.metadata || {};
 
   try {
     // Update subscription status to canceled
@@ -211,7 +211,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     });
 
     log.info(`Subscription canceled: ${subscription.id}`);
-  } catch (dbError) {
+  } catch {
     log.warn('Database not available, logging event only');
     log.info('Subscription canceled', { subscriptionId: subscription.id });
   }
@@ -240,7 +240,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
     });
 
     log.info(`Invoice paid: ${invoice.id}, amount: ${invoice.amount_paid}`);
-  } catch (dbError) {
+  } catch {
     log.warn('Database not available, logging event only');
     log.info('Invoice paid', { invoiceId: invoice.id, amount: invoice.amount_paid });
   }
@@ -251,7 +251,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
  */
 async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
   const inv = invoice as any;
-  const { organizationId } = inv.metadata || {};
+  const { _organizationId } = inv.metadata || {};
 
   try {
     // Update subscription status to past_due
@@ -267,7 +267,7 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
     }
 
     log.info(`Invoice payment failed: ${invoice.id}`);
-  } catch (dbError) {
+  } catch {
     log.warn('Database not available, logging event only');
     log.info('Invoice payment failed', { invoiceId: invoice.id });
   }

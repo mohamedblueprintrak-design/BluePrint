@@ -4,7 +4,6 @@ import React from 'react';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
 import { Construction, Sparkles } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 const pageInfo: Record<string, { icon: React.ReactNode; ar: string; en: string; descAr: string; descEn: string }> = {
   'finance': { icon: <Sparkles className="h-10 w-10" />, ar: 'المالية', en: 'Finance', descAr: 'إدارة الحسابات والتقارير المالية', descEn: 'Financial management and reporting' },

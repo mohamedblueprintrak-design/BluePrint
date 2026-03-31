@@ -104,7 +104,7 @@ async function initRedis(): Promise<boolean> {
     await redisClient.connect();
     redisAvailable = true;
     return true;
-  } catch (error) {
+  } catch {
     console.warn('⚠️ Redis not available, using memory store for rate limiting');
     redisClient = false;
     redisAvailable = false;
@@ -311,7 +311,7 @@ export function checkRateLimitByType(
   type: RateLimitType = 'api'
 ): RateLimitResult {
   const config = RATE_LIMIT_CONFIGS[type];
-  const key = getRateLimitKey(ip, type);
+  const _key = getRateLimitKey(ip, type);
   
   // Use Redis if available
   if (redisAvailable && redisClient) {

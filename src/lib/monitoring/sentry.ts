@@ -59,7 +59,7 @@ if (SENTRY_DSN) {
     
     // Filter transactions
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    beforeSend(event: any, hint: any) {
+    beforeSend(event: any, _hint: any) {
       // Filter out sensitive data
       if (event.request?.headers) {
         delete event.request.headers.authorization;

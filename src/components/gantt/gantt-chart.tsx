@@ -414,7 +414,7 @@ export function GanttChart({
   }, [draggedTask, tasks, onTaskUpdate, handleDragMove]);
 
   // Format date for display
-  const formatDate = (date: Date | null) => {
+  const _formatDate = (date: Date | null) => {
     if (!date) return '-';
     return date.toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US', { month: 'short', day: 'numeric' });
   };
@@ -679,11 +679,11 @@ export function GanttChart({
             ))}
 
             {/* Task Rows */}
-            {flattenedTasks.map((item, rowIdx) => {
+            {flattenedTasks.map((item, _rowIdx) => {
               // Phase header row - just a separator
               if ((item as any).type === 'phase-header') {
                 const category = (item as any).category;
-                const colorInfo = PHASE_CATEGORY_COLORS[category];
+                const _colorInfo = PHASE_CATEGORY_COLORS[category];
                 return (
                   <div
                     key={`phase-bar-${category}`}

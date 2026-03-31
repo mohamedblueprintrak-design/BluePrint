@@ -741,7 +741,7 @@ export async function validatePromotionCode(code: string): Promise<{
         : coupon;
       
       return { valid: true, coupon: fullCoupon as Stripe.Coupon };
-    } catch (error) {
+    } catch {
       return { valid: false, message: 'رمز الخصم غير صالح' };
     }
   });

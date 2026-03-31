@@ -201,7 +201,7 @@ export function InventoryPage() {
         supplier: '',
       });
       refetch();
-    } catch (_error) {
+    } catch {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ أثناء إنشاء المادة' : 'Failed to create material',

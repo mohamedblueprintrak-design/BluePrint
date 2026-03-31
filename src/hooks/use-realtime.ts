@@ -166,7 +166,7 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
     } catch {
       // Silent fail for SSE parsing
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, []); // فارغة عمداً - نستخدم refs
 
   // قطع الاتصال - بدون dependencies
@@ -186,7 +186,7 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
     reconnectAttemptsRef.current = 0;
     isConnectingRef.current = false;
     setState(prev => ({ ...prev, isConnected: false, error: null }));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, []);
 
   // Options refs لتجنب dependency issues

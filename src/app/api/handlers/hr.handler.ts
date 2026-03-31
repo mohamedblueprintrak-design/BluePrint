@@ -4,6 +4,36 @@ import { successResponse, errorResponse, unauthorizedResponse, forbiddenResponse
 import { getDb } from '../utils/db';
 import { canApproveLeave } from '../utils/auth';
 
+/** Leave request row with user/approver relations */
+interface LeaveRequestRow {
+  id: string;
+  userId: string;
+  user?: { fullName?: string; username?: string } | null;
+  leaveType: string;
+  startDate: unknown;
+  endDate: unknown;
+  daysCount: number;
+  reason?: unknown;
+  status: string;
+  approver?: { fullName?: string; username?: string } | null;
+  approvedAt?: unknown;
+  rejectionReason?: unknown;
+  createdAt: unknown;
+}
+
+/** Attendance row with user relation */
+interface AttendanceRow {
+  id: string;
+  userId: string;
+  user?: { fullName?: string; username?: string } | null;
+  date: unknown;
+  checkIn?: unknown;
+  checkOut?: unknown;
+  status: string;
+  workHours?: number;
+  overtimeHours?: number;
+}
+
 /**
  * GET handlers for HR actions
  */
@@ -18,7 +48,7 @@ export const getHandlers = {
     const database = await getDb();
     if (!database) return successResponse([]);
     
-    const leaveRequests: any[] = await database.leaveRequest.findMany({
+    const leaveRequests = await database.leaveRequest.findMany({
       where: { 
         ...(leaveStatus && { status: leaveStatus }),
         user: { organizationId: context.user.organizationId }
@@ -30,7 +60,7 @@ export const getHandlers = {
       orderBy: { createdAt: 'desc' }
     });
     
-    return successResponse(leaveRequests.map((l: any) => ({
+    return successResponse(leaveRequests.map((l: LeaveRequestRow) => ({
       id: l.id,
       userId: l.userId,
       userName: l.user?.fullName || l.user?.username,
@@ -72,13 +102,13 @@ export const getHandlers = {
     const database = await getDb();
     if (!database) return successResponse([]);
     
-    const attendance: any[] = await database.attendance.findMany({
+    const attendance = await database.attendance.findMany({
       where: attendanceWhere,
       include: { user: true },
       orderBy: { date: 'desc' }
     });
     
-    return successResponse(attendance.map((a: any) => ({
+    return successResponse(attendance.map((a: AttendanceRow) => ({
       id: a.id,
       userId: a.userId,
       userName: a.user?.fullName || a.user?.username,
@@ -112,7 +142,7 @@ export const postHandlers = {
 
     const daysCount = Math.ceil((new Date(endDate as string).getTime() - new Date(startDate as string).getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
-    const leaveRequest: any = await database.leaveRequest.create({
+    const leaveRequest = await database.leaveRequest.create({
       data: {
         userId: context.user.id,
         leaveType: leaveType as string,
@@ -124,7 +154,7 @@ export const postHandlers = {
     });
 
     // Notify admins in the same organization
-    const admins: any[] = await database.user.findMany({ 
+    const admins = await database.user.findMany({ 
       where: { role: 'ADMIN', organizationId: context.user.organizationId } 
     });
     for (const admin of admins) {

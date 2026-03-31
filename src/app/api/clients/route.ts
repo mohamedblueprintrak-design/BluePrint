@@ -146,7 +146,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Remove fields that don't exist in schema
-    const { clientType, totalInvoiced, totalPaid, website, ...validData } = data as Record<string, unknown>;
+    const { _clientType, _totalInvoiced, _totalPaid, _website, ...validData } = data as Record<string, unknown>;
 
     const client = await db.client.update({
       where: { id, organizationId: user.organizationId },

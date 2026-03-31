@@ -8,7 +8,7 @@
  * DELETE - Cancel subscription
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest} from 'next/server';
 import {
   getSubscription,
   createSubscription,
@@ -184,7 +184,7 @@ export async function DELETE(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { subscriptionId, immediately = false, reason } = body;
+    const { subscriptionId, immediately = false, _reason } = body;
 
     if (!subscriptionId) {
       return errorResponse('معرف الاشتراك مطلوب', 'MISSING_SUBSCRIPTION_ID', 400);

@@ -6,7 +6,7 @@
  * DELETE /api/backup/[id] - Delete a backup
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest} from 'next/server';
 import { backupService } from '@/lib/backup';
 import { successResponse, errorResponse, unauthorizedResponse } from '../../utils/response';
 import { getUserFromRequest } from '../../utils/demo-config';

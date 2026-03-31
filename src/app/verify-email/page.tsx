@@ -42,7 +42,7 @@ function VerifyEmailContent() {
         setStatus('error');
         setMessage(data.error?.message || 'فشل التحقق من البريد الإلكتروني');
       }
-    } catch (error) {
+    } catch {
       setStatus('error');
       setMessage('حدث خطأ في الاتصال بالخادم');
     }

@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
         ? 'المصادقة الثنائية مفعلة' 
         : 'المصادقة الثنائية غير مفعلة',
     });
-  } catch (error) {
+  } catch {
     return errorResponse('حدث خطأ في جلب حالة المصادقة الثنائية', 'FETCH_ERROR', 500);
   }
 }

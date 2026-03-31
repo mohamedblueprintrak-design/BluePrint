@@ -134,7 +134,7 @@ export function ProjectsPage() {
       setShowAddDialog(false);
       setFormData({ name: '', location: '', projectType: '', clientId: '', contractValue: '', description: '' });
       refetch();
-    } catch (_error) {
+    } catch {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ أثناء إنشاء المشروع' : 'Failed to create project',
@@ -153,7 +153,7 @@ export function ProjectsPage() {
         description: language === 'ar' ? 'تم حذف المشروع بنجاح' : 'Project deleted successfully'
       });
       refetch();
-    } catch (_error) {
+    } catch {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ أثناء حذف المشروع' : 'Failed to delete project',

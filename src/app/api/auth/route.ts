@@ -168,7 +168,7 @@ export async function POST(request: NextRequest) {
  */
 async function handleLogin(
   data: { email?: string; username?: string; password: string; rememberMe?: boolean; twoFactorCode?: string }, 
-  request: NextRequest
+  _request: NextRequest
 ): Promise<NextResponse> {
   // Accept either email or username for login
   const loginIdentifier = data.email || data.username;
@@ -328,7 +328,7 @@ async function handleSignup(
     role?: string;
     department?: string;
   },
-  request: NextRequest
+  _request: NextRequest
 ): Promise<NextResponse> {
   // Validate required fields
   if (!data.email || !data.username || !data.password || !data.fullName) {
@@ -466,7 +466,7 @@ async function handleLogout(request: NextRequest): Promise<NextResponse> {
  */
 async function handleRefreshToken(
   data: { refreshToken?: string },
-  request: NextRequest
+  _request: NextRequest
 ): Promise<NextResponse> {
   // Try to get refresh token from body or cookie
   let refreshToken = data.refreshToken;
@@ -514,7 +514,7 @@ async function handleRefreshToken(
  */
 async function handleForgotPassword(
   data: { email: string },
-  request: NextRequest
+  _request: NextRequest
 ): Promise<NextResponse> {
   if (!data.email) {
     return errorResponse('البريد الإلكتروني مطلوب', 'VALIDATION_ERROR', 400);
@@ -542,7 +542,7 @@ async function handleForgotPassword(
  */
 async function handleResetPassword(
   data: { token: string; newPassword: string; confirmPassword: string },
-  request: NextRequest
+  _request: NextRequest
 ): Promise<NextResponse> {
   if (!data.token || !data.newPassword || !data.confirmPassword) {
     return errorResponse('جميع الحقول مطلوبة', 'VALIDATION_ERROR', 400);

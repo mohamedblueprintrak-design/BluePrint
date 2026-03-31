@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
       });
       
       return success({ id: order.id, poNumber: order.poNumber });
-    } catch (dbError) {
+    } catch {
       return success({
         id: `po-${Date.now()}`,
         poNumber,
@@ -142,7 +142,7 @@ export async function PUT(request: NextRequest) {
     try {
       const order = await db.purchaseOrder.update({ where: { id }, data: updateData });
       return success(order);
-    } catch (dbError) {
+    } catch {
       return success({ id, ...updateData, updatedAt: new Date().toISOString() });
     }
   } catch (e) {

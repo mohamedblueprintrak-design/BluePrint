@@ -239,7 +239,7 @@ export function InvoicesPage() {
       setShowAddDialog(false);
       resetForm();
       refetch();
-    } catch (_error) {
+    } catch {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ أثناء إنشاء الفاتورة' : 'Failed to create invoice',

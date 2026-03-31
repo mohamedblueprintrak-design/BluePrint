@@ -6,9 +6,6 @@ import { useApp } from '@/context/app-context';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,8 +14,7 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import {
   Building2, Users, Bot, ArrowRight, ArrowLeft,
-  CheckCircle2, Rocket, Briefcase, FileText,
-  Settings, Sparkles, Target, BarChart3
+  CheckCircle2, Rocket, Briefcase, FileText, Sparkles, Target, BarChart3
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -38,7 +34,7 @@ const STEPS = [
 ];
 
 export function OnboardingWizard({ isOpen, onClose }: OnboardingWizardProps) {
-  const router = useRouter();
+  const _router = useRouter();
   const { language } = useApp();
   const isRTL = language === 'ar';
   

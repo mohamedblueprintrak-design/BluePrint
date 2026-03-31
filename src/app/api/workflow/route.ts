@@ -55,7 +55,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, status, assigneeId, notes, progress } = body;
+    const { id, status, assigneeId, notes, _progress } = body;
 
     if (!id) {
       return errorResponse('Phase ID is required');

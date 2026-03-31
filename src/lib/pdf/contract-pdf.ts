@@ -178,7 +178,7 @@ export function generateContractPDF(
   doc.setTextColor(...COLORS.secondary);
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  const typeLabel = CONTRACT_TYPE_LABELS[contract.contractType]?.[lang] || contract.contractType;
+  const _typeLabel = CONTRACT_TYPE_LABELS[contract.contractType]?.[lang] || contract.contractType;
   doc.text(`${t.contractNumber}: ${contract.contractNumber}`, pageWidth / 2, yPos, { align: 'center' });
 
   yPos += 15;

@@ -393,7 +393,7 @@ function getSLANotificationMessage(result: SLACheckResult, task: any): string {
  * Send SLA notifications to relevant users (legacy compatibility)
  * إرسال إشعارات SLA للمستخدمين المعنيين
  */
-async function sendSLANotifications(
+async function _sendSLANotifications(
   task: any,
   result: SLACheckResult
 ): Promise<void> {

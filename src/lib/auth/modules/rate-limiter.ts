@@ -85,7 +85,7 @@ class MemoryStore implements RateLimitStore {
     return this.store.get(key) || null;
   }
 
-  async set(key: string, value: RateLimitEntry, ttl: number): Promise<void> {
+  async set(key: string, value: RateLimitEntry, _ttl: number): Promise<void> {
     this.store.set(key, value);
   }
 
@@ -186,7 +186,7 @@ class RateLimiter {
         this.store = new RedisStore(redisClient);
         this.useRedis = true;
         console.log('✅ Rate limiter using Redis store');
-      } catch (error) {
+      } catch {
         console.warn('⚠️ Redis not available, falling back to memory store');
         this.store = new MemoryStore();
       }

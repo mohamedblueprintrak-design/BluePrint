@@ -18,8 +18,7 @@ import {
   Building2, Users, Bot, ArrowRight, ArrowLeft,
   Sparkles, CheckCircle2, Rocket, ListTodo, UserPlus,
   FileText, LayoutDashboard, DollarSign, BarChart3,
-  Settings, ClipboardList, Calculator
-} from 'lucide-react';
+  Settings, ClipboardList} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const WELCOME_MODAL_SEEN_KEY = 'blueprint_welcome_modal_seen';

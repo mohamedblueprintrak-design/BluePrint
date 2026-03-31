@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     let stripeCustomerId: string | undefined;
 
     try {
-      const organization = await db.organization.findUnique({
+      const _organization = await db.organization.findUnique({
         where: { id: organizationId },
       });
 
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
       if (customer) {
         stripeCustomerId = customer.id;
       }
-    } catch (dbError) {
+    } catch {
       // If database is not available, create customer anyway
       console.log('Database not available, creating Stripe customer directly');
       const customer = await createStripeCustomer(email, name, {

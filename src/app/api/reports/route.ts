@@ -2,16 +2,65 @@ import { NextRequest, NextResponse } from 'next/server';
 import { log } from '@/lib/logger';
 import * as jose from 'jose'
 import { getJWTSecret } from '@/app/api/utils/auth';;
-import { cachedQuery, invalidateCache, buildCacheKey, CACHE_TTL } from '@/lib/cache/query-cache';
+import { cachedQuery, buildCacheKey, CACHE_TTL } from '@/lib/cache/query-cache';
+
+/** Invoice row from database with payments */
+interface ReportInvoice {
+  issueDate?: unknown;
+  dueDate?: unknown;
+  total?: number;
+  paidAmount?: number;
+  payments?: unknown[];
+}
+
+/** Payment row from database */
+interface ReportPayment {
+  paymentDate?: unknown;
+  amount?: number;
+  invoice?: { dueDate?: unknown } | null;
+}
+
+/** Project row from database */
+interface ReportProject {
+  status?: string;
+}
+
+/** Task row from database */
+interface ReportTask {
+  status?: string;
+  priority?: string;
+  dueDate?: unknown;
+}
+
+/** Client row with invoices from database */
+interface ReportClient {
+  name: string;
+  invoices: Array<{ total?: number; paidAmount?: number }>;
+}
+
+/** Client revenue summary */
+interface ClientRevenueEntry {
+  name: string;
+  invoiced: number;
+  paid: number;
+}
+
+/** Expense row from database */
+interface ReportExpense {
+  category?: string;
+  amount?: number;
+  project?: { name?: string } | null;
+}
 
 // Dynamic database import to avoid failures when DB is not available
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let db: any = null;
 async function getDb() {
   if (!db) {
     try {
       const dbModule = await import('@/lib/db');
       db = dbModule.db;
-    } catch (_e) {
+    } catch {
       log.info('Database not available, using demo mode');
       db = null;
     }
@@ -22,7 +71,7 @@ async function getDb() {
 // Security: JWT secret must come from environment only
 
 // Helper functions
-function successResponse(data: any, meta?: any) {
+function successResponse(data: unknown, meta?: Record<string, unknown>) {
   const response = { success: true, data };
   if (meta) Object.assign(response, { meta });
   return NextResponse.json(response);
@@ -69,7 +118,7 @@ async function getUserFromToken(request: NextRequest) {
         include: { organization: true }
       });
       return user;
-    } catch (_dbError) {
+    } catch {
       log.info('Database not available, using demo mode');
       return {
         id: 'demo-admin-001',
@@ -298,7 +347,7 @@ export async function GET(request: NextRequest) {
                 }
               },
               include: { payments: true }
-            });
+            }) as ReportInvoice[];
 
             // Get payments within date range
             const payments = await database.payment.findMany({
@@ -309,7 +358,7 @@ export async function GET(request: NextRequest) {
                 },
                 invoice: { organizationId: user.organizationId }
               }
-            });
+            }) as ReportPayment[];
 
             // Generate month labels
             const labels = generateMonthLabels(start!, end!);
@@ -328,19 +377,19 @@ export async function GET(request: NextRequest) {
               const monthEnd = new Date(parseInt(year), monthIndex + 1, 0, 23, 59, 59, 999);
 
               // Invoiced this month
-              const monthInvoices = invoices.filter((inv: any) => {
-                const issueDate = new Date(inv.issueDate);
+              const monthInvoices = invoices.filter((inv: ReportInvoice) => {
+                const issueDate = new Date(inv.issueDate as string);
                 return issueDate >= monthStart && issueDate <= monthEnd;
               });
-              const invoiced = monthInvoices.reduce((sum: number, inv: any) => sum + (inv.total || 0), 0);
+              const invoiced = monthInvoices.reduce((sum: number, inv: ReportInvoice) => sum + (inv.total || 0), 0);
               invoicedData.push(invoiced);
 
               // Paid this month
-              const monthPayments = payments.filter((p: any) => {
-                const paymentDate = new Date(p.paymentDate);
+              const monthPayments = payments.filter((p: ReportPayment) => {
+                const paymentDate = new Date(p.paymentDate as string);
                 return paymentDate >= monthStart && paymentDate <= monthEnd;
               });
-              const paid = monthPayments.reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
+              const paid = monthPayments.reduce((sum: number, p: ReportPayment) => sum + (p.amount || 0), 0);
               paidData.push(paid);
 
               // Pending at end of month
@@ -348,11 +397,11 @@ export async function GET(request: NextRequest) {
               pendingData.push(Math.max(0, pending));
 
               // Overdue (invoices past due date with unpaid amount)
-              const overdueInvoices = monthInvoices.filter((inv: any) => {
-                const dueDate = new Date(inv.dueDate);
-                return dueDate < monthEnd && inv.paidAmount < inv.total;
+              const overdueInvoices = monthInvoices.filter((inv: ReportInvoice) => {
+                const dueDate = new Date(inv.dueDate as string);
+                return dueDate < monthEnd && (inv.paidAmount || 0) < (inv.total || 0);
               });
-              const overdue = overdueInvoices.reduce((sum: number, inv: any) => sum + (inv.total - inv.paidAmount), 0);
+              const overdue = overdueInvoices.reduce((sum: number, inv: ReportInvoice) => sum + ((inv.total || 0) - (inv.paidAmount || 0)), 0);
               overdueData.push(overdue);
             });
 
@@ -390,7 +439,7 @@ export async function GET(request: NextRequest) {
 
         const projects = await database.project.findMany({
           where: { organizationId: user.organizationId }
-        });
+        }) as ReportProject[];
 
         const statusCounts = {
           active: 0,
@@ -399,7 +448,7 @@ export async function GET(request: NextRequest) {
           'on-hold': 0
         };
 
-        projects.forEach((p: any) => {
+        projects.forEach((p) => {
           const status = p.status?.toLowerCase().replace('_', '-') || 'pending';
           if (statusCounts.hasOwnProperty(status)) {
             statusCounts[status as keyof typeof statusCounts]++;
@@ -436,14 +485,14 @@ export async function GET(request: NextRequest) {
           where: {
             project: { organizationId: user.organizationId }
           }
-        });
+        }) as ReportTask[];
 
         const statusCounts = { todo: 0, in_progress: 0, review: 0, done: 0 };
         const priorityCounts = { critical: 0, high: 0, medium: 0, low: 0 };
         let overdueCount = 0;
         const now = new Date();
 
-        tasks.forEach((t: any) => {
+        tasks.forEach((t) => {
           // Status
           const status = t.status?.toLowerCase().replace(' ', '_') || 'todo';
           if (statusCounts.hasOwnProperty(status)) {
@@ -459,7 +508,7 @@ export async function GET(request: NextRequest) {
           }
 
           // Overdue
-          if (t.dueDate && new Date(t.dueDate) < now && t.status !== 'done') {
+          if (t.dueDate && new Date(t.dueDate as string) < now && t.status !== 'done') {
             overdueCount++;
           }
         });
@@ -519,18 +568,18 @@ export async function GET(request: NextRequest) {
               include: { payments: true }
             }
           }
-        });
+        }) as ReportClient[];
 
         // Calculate revenue per client
-        const clientRevenues = clients.map((c: any) => {
-          const totalInvoiced = c.invoices.reduce((sum: number, inv: any) => sum + (inv.total || 0), 0);
-          const totalPaid = c.invoices.reduce((sum: number, inv: any) => sum + (inv.paidAmount || 0), 0);
+        const clientRevenues = clients.map((c) => {
+          const totalInvoiced = c.invoices.reduce((sum: number, inv) => sum + (inv.total || 0), 0);
+          const totalPaid = c.invoices.reduce((sum: number, inv) => sum + (inv.paidAmount || 0), 0);
           return {
             name: c.name,
             invoiced: totalInvoiced,
             paid: totalPaid
           };
-        }).sort((a: any, b: any) => b.invoiced - a.invoiced).slice(0, 5);
+        }).sort((a: ClientRevenueEntry, b: ClientRevenueEntry) => b.invoiced - a.invoiced).slice(0, 5);
 
         // Payment trends analysis
         const allPayments = await database.payment.findMany({
@@ -539,14 +588,14 @@ export async function GET(request: NextRequest) {
             invoice: { client: { organizationId: user.organizationId } }
           },
           include: { invoice: true }
-        });
+        }) as ReportPayment[];
 
         const paymentTrends = { onTime: 0, late1to7: 0, late8to30: 0, late30Plus: 0 };
         
-        allPayments.forEach((p: any) => {
+        allPayments.forEach((p: ReportPayment) => {
           if (p.invoice?.dueDate) {
-            const dueDate = new Date(p.invoice.dueDate);
-            const paymentDate = new Date(p.paymentDate);
+            const dueDate = new Date(p.invoice.dueDate as string);
+            const paymentDate = new Date(p.paymentDate as string);
             const daysLate = Math.floor((paymentDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
             
             if (daysLate <= 0) paymentTrends.onTime++;
@@ -558,18 +607,18 @@ export async function GET(request: NextRequest) {
           }
         });
 
-        const totalRevenue = clientRevenues.reduce((sum: number, c: any) => sum + c.invoiced, 0);
+        const totalRevenue = clientRevenues.reduce((sum: number, c) => sum + c.invoiced, 0);
         const topClientPercentage = totalRevenue > 0 && clientRevenues.length > 0 
           ? Math.round((clientRevenues[0].invoiced / totalRevenue) * 100 * 10) / 10 
           : 0;
 
         return successResponse({
           topClientsByRevenue: {
-            labels: clientRevenues.map((c: any) => c.name),
+            labels: clientRevenues.map((c) => c.name),
             datasets: [
               { 
                 label: 'Revenue (AED)', 
-                data: clientRevenues.map((c: any) => c.invoiced),
+                data: clientRevenues.map((c) => c.invoiced),
                 backgroundColor: ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6']
               }
             ]
@@ -586,7 +635,7 @@ export async function GET(request: NextRequest) {
           },
           summary: {
             totalClients: clients.length,
-            activeClients: clients.filter((c: any) => c.invoices.length > 0).length,
+            activeClients: clients.filter((c) => c.invoices.length > 0).length,
             averagePaymentTime: 12.5, // Would need more complex calculation
             totalRevenue,
             topClientPercentage
@@ -605,11 +654,11 @@ export async function GET(request: NextRequest) {
             project: { organizationId: user.organizationId }
           },
           include: { project: true }
-        });
+        }) as ReportExpense[];
 
         // By category
         const categoryTotals: Record<string, number> = {};
-        expenses.forEach((e: any) => {
+        expenses.forEach((e) => {
           const category = e.category || 'Other';
           categoryTotals[category] = (categoryTotals[category] || 0) + (e.amount || 0);
         });
@@ -619,7 +668,7 @@ export async function GET(request: NextRequest) {
 
         // By project
         const projectTotals: Record<string, number> = {};
-        expenses.forEach((e: any) => {
+        expenses.forEach((e) => {
           const projectName = e.project?.name || 'Unassigned';
           projectTotals[projectName] = (projectTotals[projectName] || 0) + (e.amount || 0);
         });
@@ -628,7 +677,7 @@ export async function GET(request: NextRequest) {
           .sort(([, a], [, b]) => b - a)
           .slice(0, 5);
 
-        const totalExpenses = expenses.reduce((sum: number, e: any) => sum + (e.amount || 0), 0);
+        const totalExpenses = expenses.reduce((sum: number, e) => sum + (e.amount || 0), 0);
 
         return successResponse({
           byCategory: {

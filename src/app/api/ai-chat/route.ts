@@ -4,13 +4,13 @@ import ZAI from 'z-ai-web-dev-sdk';
 import { getJWTSecret } from '../utils/auth';
 
 // API Response types
-interface CompletionChoice {
+interface _CompletionChoice {
   message?: {
     content?: string;
   };
 }
 
-interface CompletionUsage {
+interface _CompletionUsage {
   total_tokens?: number;
 }
 
@@ -472,7 +472,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Handle skill-specific requests
-async function handleSkillRequest(skill: string, params: Record<string, unknown> | undefined, user: { id: string; username: string }): Promise<NextResponse> {
+async function handleSkillRequest(skill: string, params: Record<string, unknown> | undefined, _user: { id: string; username: string }): Promise<NextResponse> {
   switch (skill) {
     case 'web_search': {
       const { query, num = 5 } = (params || {}) as { query?: string; num?: number };

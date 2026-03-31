@@ -154,7 +154,7 @@ export function SuppliersPage() {
       setShowAddDialog(false);
       resetForm();
       refetch();
-    } catch (_error) {
+    } catch {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ أثناء إنشاء المورد' : 'Failed to create supplier',
@@ -174,7 +174,7 @@ export function SuppliersPage() {
         description: language === 'ar' ? 'تم حذف المورد بنجاح' : 'Supplier deleted successfully'
       });
       refetch();
-    } catch (_error) {
+    } catch {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ أثناء حذف المورد' : 'Failed to delete supplier',

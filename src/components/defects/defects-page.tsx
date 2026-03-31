@@ -198,7 +198,7 @@ export function DefectsPage() {
       setShowAddDialog(false);
       setFormData({ title: '', description: '', severity: 'medium', location: '', projectId: '', assignedTo: '', status: 'Open', resolutionNotes: '' });
       clearFile();
-    } catch (_error) {
+    } catch {
       toast({
         title: t.error,
         description: language === 'ar' ? 'فشل في إضافة العيب' : 'Failed to add defect',
@@ -229,7 +229,7 @@ export function DefectsPage() {
       });
       setEditingDefect(null);
       setFormData({ title: '', description: '', severity: 'medium', location: '', projectId: '', assignedTo: '', status: 'Open', resolutionNotes: '' });
-    } catch (_error) {
+    } catch {
       toast({
         title: t.error,
         description: language === 'ar' ? 'فشل في تحديث العيب' : 'Failed to update defect',
@@ -249,7 +249,7 @@ export function DefectsPage() {
         title: t.successSave,
         description: language === 'ar' ? 'تم حذف العيب بنجاح' : 'Defect deleted successfully'
       });
-    } catch (_error) {
+    } catch {
       toast({
         title: t.error,
         description: language === 'ar' ? 'فشل في حذف العيب' : 'Failed to delete defect',

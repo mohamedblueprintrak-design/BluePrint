@@ -10,6 +10,19 @@ import {
   getEffectiveLimit 
 } from '../utils/pagination';
 
+/** Supplier row from database */
+interface SupplierRow {
+  id: string;
+  name: string;
+  supplierType?: unknown;
+  email?: unknown;
+  phone?: unknown;
+  address?: unknown;
+  contactPerson?: unknown;
+  rating?: number;
+  isApproved?: boolean;
+}
+
 /**
  * GET handlers for suppliers actions
  */
@@ -53,14 +66,14 @@ export const getHandlers = {
     const supplierLimit = getEffectiveLimit(usePagination, pagination.limit);
     const supplierSkip = usePagination ? calculateSkip(pagination.page, pagination.limit) : 0;
     
-    const suppliers: any[] = await database.supplier.findMany({
+    const suppliers = await database.supplier.findMany({
       where: supplierWhere,
       orderBy: { createdAt: 'desc' },
       skip: supplierSkip,
       take: supplierLimit
     });
     
-    const mappedSuppliers = suppliers.map((s: any) => ({
+    const mappedSuppliers = suppliers.map((s: SupplierRow) => ({
       id: s.id,
       name: s.name,
       supplierType: s.supplierType,
@@ -95,7 +108,7 @@ export const postHandlers = {
     const database = await getDb();
     if (!database) return errorResponse('قاعدة البيانات غير متاحة');
 
-    const supplier: any = await database.supplier.create({
+    const supplier = await database.supplier.create({
       data: { 
         name: name as string, 
         supplierType: (supplierType as string) || 'supplier', 

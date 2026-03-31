@@ -1,5 +1,6 @@
 'use client';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { useState } from 'react';
 import { useApp } from '@/context/app-context';
 import { SuppliersPage } from '@/components/suppliers/suppliers-page';

@@ -10,6 +10,20 @@ import {
   getEffectiveLimit 
 } from '../utils/pagination';
 
+/** Contract row from database with client relation */
+interface ContractRow {
+  id: string;
+  contractNumber: string;
+  title: string;
+  contractType: string;
+  contractValue?: number;
+  startDate?: unknown;
+  endDate?: unknown;
+  status: string;
+  client?: { name?: string } | null;
+  clientId?: string;
+}
+
 /**
  * GET handlers for contracts actions
  */
@@ -52,7 +66,7 @@ export const getHandlers = {
     const contractLimit = getEffectiveLimit(usePagination, pagination.limit);
     const contractSkip = usePagination ? calculateSkip(pagination.page, pagination.limit) : 0;
     
-    const contracts: any[] = await database.contract.findMany({
+    const contracts = await database.contract.findMany({
       where: contractWhere,
       include: { client: true },
       orderBy: { createdAt: 'desc' },
@@ -60,7 +74,7 @@ export const getHandlers = {
       take: contractLimit
     });
     
-    const mappedContracts = contracts.map((c: any) => ({
+    const mappedContracts = contracts.map((c: ContractRow) => ({
       id: c.id,
       contractNumber: c.contractNumber,
       title: c.title,
@@ -102,7 +116,7 @@ export const postHandlers = {
       finalContractNumber = `CNT-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
     }
 
-    const contract: any = await database.contract.create({
+    const contract = await database.contract.create({
       data: {
         contractNumber: finalContractNumber,
         title: title as string,

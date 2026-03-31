@@ -29,14 +29,14 @@ import {
 } from '@/components/ui/tooltip';
 import {
   Home, Users, Building2, FileText, DollarSign, CheckSquare, 
-  Briefcase, Package, FileCheck, BarChart3, Settings, 
+  Package, FileCheck, BarChart3, Settings, 
   LogOut, Menu, Search, Moon, Sun, Globe,
   User, Shield, BookOpen, Bot, FileSpreadsheet,
-  PanelLeftClose, PanelLeft, Zap, Calculator, ShoppingCart,
-  AlertTriangle, Receipt, X, ChevronDown, ChevronUp,
-  LayoutDashboard, Wrench, Gavel, Compass, Handshake, Landmark,
+  PanelLeftClose, PanelLeft, Zap, ShoppingCart,
+    X, ChevronDown, ChevronUp,
+    Gavel, Compass, Handshake, Landmark,
   ClipboardList, Lightbulb, UserCog, Calendar, Bell, HelpCircle, Crown,
-  Send, Mail, Video, Briefcase as BriefcaseIcon, MapPin
+  Mail, Video, Briefcase as BriefcaseIcon, MapPin
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';

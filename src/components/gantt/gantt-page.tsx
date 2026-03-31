@@ -9,9 +9,8 @@ import { useState } from 'react';
 import { GanttChart } from '@/components/gantt/gantt-chart';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  Calendar, List, Filter, Download, 
+     Download, 
   BarChart3, CheckCircle, Clock, AlertTriangle
 } from 'lucide-react';
 
@@ -22,7 +21,7 @@ interface GanttPageProps {
 
 export function GanttPage({ projectId, lang = 'ar' }: GanttPageProps) {
   const [refreshKey, setRefreshKey] = useState(0);
-  const [stats, setStats] = useState({
+  const [stats, _setStats] = useState({
     total: 0,
     completed: 0,
     inProgress: 0,

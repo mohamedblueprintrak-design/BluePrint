@@ -242,7 +242,7 @@ export async function validateAndParseExcel(
     // exceljs has built-in protection against XXE attacks
     workbook = new Workbook();
     await workbook.xlsx.load(buffer as unknown as ArrayBuffer);
-  } catch (error) {
+  } catch {
     return {
       valid: false,
       error: getErrorMessage('PARSE_ERROR', language),

@@ -136,7 +136,7 @@ export function BudgetsPage() {
       });
       setShowAddDialog(false);
       setFormData({ projectId: '', category: '', description: '', budgetAmount: 0, actualAmount: 0 });
-    } catch (_error) {
+    } catch {
       toast({
         title: t.error,
         description: language === 'ar' ? 'فشل في إضافة الميزانية' : 'Failed to add budget',
@@ -164,7 +164,7 @@ export function BudgetsPage() {
       });
       setEditingBudget(null);
       setFormData({ projectId: '', category: '', description: '', budgetAmount: 0, actualAmount: 0 });
-    } catch (_error) {
+    } catch {
       toast({
         title: t.error,
         description: language === 'ar' ? 'فشل في تحديث الميزانية' : 'Failed to update budget',
@@ -184,7 +184,7 @@ export function BudgetsPage() {
         title: t.successSave,
         description: language === 'ar' ? 'تم حذف الميزانية بنجاح' : 'Budget deleted successfully'
       });
-    } catch (_error) {
+    } catch {
       toast({
         title: t.error,
         description: language === 'ar' ? 'فشل في حذف الميزانية' : 'Failed to delete budget',

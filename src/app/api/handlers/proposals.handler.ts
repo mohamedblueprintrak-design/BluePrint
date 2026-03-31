@@ -10,6 +10,20 @@ import {
   getEffectiveLimit 
 } from '../utils/pagination';
 
+/** Proposal row from database with client relation */
+interface ProposalRow {
+  id: string;
+  proposalNumber: string;
+  client?: { name?: string } | null;
+  clientId?: string;
+  title?: unknown;
+  totalAmount?: number;
+  status: string;
+  issueDate?: unknown;
+  validUntil?: unknown;
+  createdAt: unknown;
+}
+
 /**
  * GET handlers for proposals actions
  */
@@ -52,7 +66,7 @@ export const getHandlers = {
     const proposalLimit = getEffectiveLimit(usePagination, pagination.limit);
     const proposalSkip = usePagination ? calculateSkip(pagination.page, pagination.limit) : 0;
     
-    const proposals: any[] = await database.proposal.findMany({
+    const proposals = await database.proposal.findMany({
       where: proposalWhere,
       include: { client: true },
       orderBy: { createdAt: 'desc' },
@@ -60,7 +74,7 @@ export const getHandlers = {
       take: proposalLimit
     });
     
-    const mappedProposals = proposals.map((p: any) => ({
+    const mappedProposals = proposals.map((p: ProposalRow) => ({
       id: p.id,
       proposalNumber: p.proposalNumber,
       client: p.client?.name,
@@ -101,7 +115,7 @@ export const postHandlers = {
       finalProposalNumber = `PRP-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
     }
 
-    const proposal: any = await database.proposal.create({
+    const proposal = await database.proposal.create({
       data: {
         proposalNumber: finalProposalNumber,
         clientId,

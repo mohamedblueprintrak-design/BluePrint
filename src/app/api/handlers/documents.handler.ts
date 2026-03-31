@@ -10,6 +10,19 @@ import {
   getEffectiveLimit 
 } from '../utils/pagination';
 
+/** Document row from database with uploader relation */
+interface DocumentRow {
+  id: string;
+  filename: string;
+  originalName?: unknown;
+  fileType?: unknown;
+  fileSize?: unknown;
+  category?: unknown;
+  description?: unknown;
+  uploader?: { fullName?: string; username?: string } | null;
+  createdAt: unknown;
+}
+
 /**
  * GET handlers for documents actions
  */
@@ -53,7 +66,7 @@ export const getHandlers = {
     const documentLimit = getEffectiveLimit(usePagination, pagination.limit);
     const documentSkip = usePagination ? calculateSkip(pagination.page, pagination.limit) : 0;
     
-    const documents: any[] = await database.document.findMany({
+    const documents = await database.document.findMany({
       where: documentWhere,
       include: { uploader: true },
       orderBy: { createdAt: 'desc' },
@@ -61,7 +74,7 @@ export const getHandlers = {
       take: documentLimit
     });
     
-    const mappedDocuments = documents.map((d: any) => ({
+    const mappedDocuments = documents.map((d: DocumentRow) => ({
       id: d.id,
       filename: d.filename,
       originalName: d.originalName,

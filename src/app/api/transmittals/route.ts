@@ -28,7 +28,7 @@ async function getUserFromToken(request: NextRequest) {
 }
 
 // Generate transmittal number
-async function generateTransmittalNumber(organizationId?: string): Promise<string> {
+async function generateTransmittalNumber(_organizationId?: string): Promise<string> {
   const year = new Date().getFullYear();
   const month = String(new Date().getMonth() + 1).padStart(2, '0');
   const prefix = 'TRN';
@@ -319,7 +319,7 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { id, items, responses, ...data } = body;
+    const { id, _items, _responses, ...data } = body;
 
     if (!id) return errorResponse('معرف الإرسال مطلوب');
 

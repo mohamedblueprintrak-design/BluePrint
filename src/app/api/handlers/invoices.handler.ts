@@ -10,6 +10,54 @@ import {
   getEffectiveLimit 
 } from '../utils/pagination';
 
+/** Invoice row with client/project relations */
+interface InvoiceRow {
+  id: string;
+  invoiceNumber: string;
+  client?: { name?: string } | null;
+  clientId?: string;
+  project?: { name?: string } | null;
+  projectId?: string;
+  total?: number;
+  paidAmount?: number;
+  status: string;
+  issueDate?: unknown;
+  dueDate?: unknown;
+  createdAt: unknown;
+}
+
+/** Payment row from database */
+interface PaymentRow {
+  id: string;
+  invoiceId: string;
+  amount?: number;
+  paymentDate?: unknown;
+  paymentMethod?: string;
+  referenceNumber?: unknown;
+  notes?: unknown;
+  createdAt: unknown;
+}
+
+/** Invoice row from database for payment processing */
+interface InvoicePaymentRow {
+  id: string;
+  paidAmount?: number;
+  total?: number;
+  status: string;
+  projectId?: string;
+}
+
+/** Transaction client interface for invoice payment processing */
+interface PaymentTransactionClient {
+  invoice: {
+    findFirst: (args: { where: Record<string, unknown> }) => Promise<InvoicePaymentRow | null>;
+    update: (args: { where: Record<string, unknown>; data: Record<string, unknown> }) => Promise<unknown>;
+  };
+  payment: {
+    create: (args: { data: Record<string, unknown> }) => Promise<{ id: string; amount?: number }>;
+  };
+}
+
 /**
  * GET handlers for invoices actions
  */
@@ -52,7 +100,7 @@ export const getHandlers = {
     const invoiceLimit = getEffectiveLimit(usePagination, pagination.limit);
     const invoiceSkip = usePagination ? calculateSkip(pagination.page, pagination.limit) : 0;
     
-    const invoices: any[] = await database.invoice.findMany({
+    const invoices = await database.invoice.findMany({
       where: invoiceWhere,
       include: { client: true, project: true },
       orderBy: { createdAt: 'desc' },
@@ -60,7 +108,7 @@ export const getHandlers = {
       take: invoiceLimit
     });
     
-    const mappedInvoices = invoices.map((i: any) => ({
+    const mappedInvoices = invoices.map((i: InvoiceRow) => ({
       id: i.id,
       invoiceNumber: i.invoiceNumber,
       client: i.client?.name,
@@ -99,12 +147,12 @@ export const getHandlers = {
     });
     if (!invoice) return notFoundResponse('الفاتورة غير موجودة');
     
-    const payments: any[] = await database.payment.findMany({
+    const payments = await database.payment.findMany({
       where: { invoiceId },
       orderBy: { paymentDate: 'desc' }
     });
     
-    return successResponse(payments.map((p: any) => ({
+    return successResponse(payments.map((p: PaymentRow) => ({
       id: p.id,
       invoiceId: p.invoiceId,
       amount: p.amount,
@@ -138,7 +186,7 @@ export const postHandlers = {
     const taxAmount = ((subtotal as number) || 0) * ((taxRate as number) || 5) / 100;
     const total = ((subtotal as number) || 0) + taxAmount - ((discountAmount as number) || 0);
 
-    const invoice: any = await database.invoice.create({
+    const invoice = await database.invoice.create({
       data: {
         invoiceNumber,
         clientId,
@@ -179,7 +227,7 @@ export const postHandlers = {
     // Verify invoice belongs to user's organization and record payment atomically
     let result;
     try {
-      result = await database.$transaction(async (tx: any) => {
+      result = await database.$transaction(async (tx: PaymentTransactionClient) => {
         const paymentInvoice = await tx.invoice.findFirst({
           where: { id: invoiceId as string, organizationId: orgId }
         });
@@ -198,7 +246,7 @@ export const postHandlers = {
 
         // Update invoice paidAmount within the transaction
         const newPaidAmount = (paymentInvoice.paidAmount || 0) + parseFloat(amount as string);
-        const newStatus = newPaidAmount >= paymentInvoice.total ? 'paid' : 
+        const newStatus = newPaidAmount >= (paymentInvoice.total || 0) ? 'paid' : 
                           newPaidAmount > 0 ? 'partial' : paymentInvoice.status;
         
         await tx.invoice.update({
@@ -211,8 +259,8 @@ export const postHandlers = {
 
         return payment;
       });
-    } catch (error: any) {
-      if (error.message === 'Invoice not found') {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.message === 'Invoice not found') {
         return notFoundResponse('الفاتورة غير موجودة');
       }
       return errorResponse('حدث خطأ أثناء معالجة الدفع');
@@ -234,7 +282,7 @@ export const postHandlers = {
         select: { paidAmount: true }
       });
       
-      const totalPayments = paidInvoices.reduce((sum: number, inv: any) => sum + (inv.paidAmount || 0), 0);
+      const totalPayments = paidInvoices.reduce((sum: number, inv: InvoiceRow) => sum + (inv.paidAmount || 0), 0);
       
       const project = await database.project.findUnique({
         where: { id: invoice.projectId },

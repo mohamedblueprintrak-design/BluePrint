@@ -119,8 +119,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   
   // Quick Add Dialog state
   const [quickAddDialog, setQuickAddDialog] = useState<QuickAddDialog>(null);
-  const openQuickAddDialog = (dialog: Exclude<QuickAddDialog, null>) => setQuickAddDialog(dialog);
-  const closeQuickAddDialog = () => setQuickAddDialog(null);
+  const _openQuickAddDialog = (dialog: Exclude<QuickAddDialog, null>) => setQuickAddDialog(dialog);
+  const _closeQuickAddDialog = () => setQuickAddDialog(null);
 
   // Theme effects
   useEffect(() => {

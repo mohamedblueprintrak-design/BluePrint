@@ -16,7 +16,7 @@ async function signToken(payload: { userId: string; email: string; role: string 
 }
 
 // POST /api/seed - Seed database with demo data
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   if (process.env.NODE_ENV === 'production') {
     return NextResponse.json(
       { error: 'Seed endpoint is disabled in production' },
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    const viewer = await db.user.create({
+    const _viewer = await db.user.create({
       data: {
         username: 'lisa.taylor',
         email: 'lisa.taylor@blueprint.com',

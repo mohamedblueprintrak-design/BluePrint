@@ -235,7 +235,7 @@ async function verifyToken(token: string): Promise<JwtPayload | null> {
       iat: payload.iat,
       exp: payload.exp,
     };
-  } catch (error) {
+  } catch {
     return null;
   }
 }

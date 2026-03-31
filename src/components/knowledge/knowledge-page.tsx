@@ -535,7 +535,7 @@ export function KnowledgePage() {
         description: language === 'ar' ? 'تم نسخ المعلومات إلى الحافظة' : 'Information copied to clipboard'
       });
       setTimeout(() => setCopiedId(null), 2000);
-    } catch (_error) {
+    } catch {
       toast({
         title: t.error,
         description: language === 'ar' ? 'فشل في نسخ المحتوى' : 'Failed to copy content',

@@ -8,13 +8,11 @@ import { useToast } from '@/hooks/use-toast';
 import {
   Bell,
   Check,
-  X,
-  AlertCircle,
+    AlertCircle,
   CheckCircle,
   Info,
   AlertTriangle,
   Trash2,
-  Filter,
 } from 'lucide-react';
 import type { Notification, NotificationType } from '@/types';
 
@@ -27,7 +25,7 @@ const notificationTypeConfig: Record<string, { icon: any; color: string; bgColor
 };
 
 // Category labels
-const categoryLabels: Record<string, string> = {
+const _categoryLabels: Record<string, string> = {
   project: 'مشروع',
   finance: 'مالي',
   task: 'مهمة',

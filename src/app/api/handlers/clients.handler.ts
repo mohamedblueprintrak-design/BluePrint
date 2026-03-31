@@ -10,6 +10,21 @@ import {
   getEffectiveLimit 
 } from '../utils/pagination';
 
+/** Client row from database */
+interface ClientRow {
+  id: string;
+  name: string;
+  email?: unknown;
+  phone?: unknown;
+  address?: unknown;
+  contactPerson?: unknown;
+  taxNumber?: unknown;
+  clientType?: string;
+  creditLimit?: number;
+  totalInvoiced?: number;
+  totalPaid?: number;
+}
+
 /**
  * GET handlers for clients actions
  */
@@ -53,14 +68,14 @@ export const getHandlers = {
     const clientLimit = getEffectiveLimit(usePagination, pagination.limit);
     const clientSkip = usePagination ? calculateSkip(pagination.page, pagination.limit) : 0;
     
-    const clients: any[] = await database.client.findMany({
+    const clients = await database.client.findMany({
       where: clientWhere,
       orderBy: { createdAt: 'desc' },
       skip: clientSkip,
       take: clientLimit
     });
     
-    const mappedClients = clients.map((c: any) => ({
+    const mappedClients = clients.map((c: ClientRow) => ({
       id: c.id,
       name: c.name,
       email: c.email,
@@ -97,7 +112,7 @@ export const postHandlers = {
     const database = await getDb();
     if (!database) return errorResponse('قاعدة البيانات غير متاحة');
 
-    const client: any = await database.client.create({
+    const client = await database.client.create({
       data: { 
         name: name as string, 
         email: email as string, 

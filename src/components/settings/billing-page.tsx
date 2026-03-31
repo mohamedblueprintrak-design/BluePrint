@@ -41,8 +41,6 @@ import {
   AlertTriangle,
   Loader2,
   Crown,
-  Sparkles,
-  Building2,
   Calendar,
   Wallet,
   FileText,
@@ -50,7 +48,6 @@ import {
   ArrowDownRight,
   ExternalLink,
   Plus,
-  Trash2,
   CheckCircle,
   XCircle,
   Clock,
@@ -123,7 +120,7 @@ export function BillingPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showPlans, setShowPlans] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [showAddCardDialog, setShowAddCardDialog] = useState(false);
+  const [_showAddCardDialog, _setShowAddCardDialog] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const isRTL = language === 'ar';
@@ -281,7 +278,7 @@ export function BillingPage() {
         toast({ title: texts.planCanceled });
         fetchBillingData();
       }
-    } catch (error) {
+    } catch {
       toast({
         title: language === 'ar' ? 'حدث خطأ' : 'An error occurred',
         variant: 'destructive',
@@ -309,7 +306,7 @@ export function BillingPage() {
         toast({ title: texts.planReactivated });
         fetchBillingData();
       }
-    } catch (error) {
+    } catch {
       toast({
         title: language === 'ar' ? 'حدث خطأ' : 'An error occurred',
         variant: 'destructive',
@@ -333,7 +330,7 @@ export function BillingPage() {
       if (data.success && data.data.url) {
         window.open(data.data.url, '_blank');
       }
-    } catch (error) {
+    } catch {
       toast({
         title: language === 'ar' ? 'حدث خطأ' : 'An error occurred',
         variant: 'destructive',

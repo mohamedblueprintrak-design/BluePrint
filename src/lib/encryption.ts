@@ -149,7 +149,7 @@ export function decrypt(encryptedData: string): string {
     ]);
     
     return decrypted.toString('utf8');
-  } catch (error) {
+  } catch {
     throw new Error('Decryption failed: Invalid ciphertext or authentication tag');
   }
 }

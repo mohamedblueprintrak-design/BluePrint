@@ -20,8 +20,7 @@ import {
   ExternalLink,
   FileText,
   Settings,
-  Users,
-  Shield,
+    Shield,
 } from 'lucide-react';
 
 const helpCategories = [

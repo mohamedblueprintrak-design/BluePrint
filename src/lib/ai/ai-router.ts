@@ -6,7 +6,7 @@
  * وتنفيذ الطلب وإرجاع النتيجة
  */
 
-import { AITaskType, getBestModelForTask, getModelInfo, ModelConfig } from './model-config';
+import { AITaskType, getBestModelForTask, getModelInfo} from './model-config';
 
 // أنواع المدخلات
 export interface AIRequest {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useAuth } from '@/context/auth-context';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
@@ -60,7 +60,7 @@ export function ProfilePage() {
   });
 
   // Reset form to current profile values when editing is cancelled
-  const resetFormToProfile = useCallback(() => {
+  const _resetFormToProfile = useCallback(() => {
     if (profileUser) {
       setProfileForm({
         fullName: profileUser.fullName || '',
@@ -127,7 +127,7 @@ export function ProfilePage() {
           variant: 'destructive'
         });
       }
-    } catch (_error) {
+    } catch {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ' : 'An error occurred',
@@ -172,7 +172,7 @@ export function ProfilePage() {
           variant: 'destructive'
         });
       }
-    } catch (_error) {
+    } catch {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ' : 'An error occurred',
@@ -228,7 +228,7 @@ export function ProfilePage() {
           variant: 'destructive'
         });
       }
-    } catch (_error) {
+    } catch {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ' : 'An error occurred',
@@ -259,7 +259,7 @@ export function ProfilePage() {
           variant: 'destructive'
         });
       }
-    } catch (_error) {
+    } catch {
       toast({
         title: t.error,
         description: language === 'ar' ? 'حدث خطأ' : 'An error occurred',
@@ -274,7 +274,7 @@ export function ProfilePage() {
     // Save preference to backend
     try {
       await updateProfile.mutateAsync({ language: newLanguage });
-    } catch (_error) {
+    } catch {
       // Silently fail - UI already updated
     }
   };
@@ -285,7 +285,7 @@ export function ProfilePage() {
     // Save preference to backend
     try {
       await updateProfile.mutateAsync({ theme: newTheme });
-    } catch (_error) {
+    } catch {
       // Silently fail - UI already updated
     }
   };

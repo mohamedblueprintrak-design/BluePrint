@@ -24,7 +24,7 @@ export async function PATCH(
       });
 
       return NextResponse.json({ data: automation });
-    } catch (dbError) {
+    } catch {
       // Demo mode - return success anyway
       return NextResponse.json({
         data: {
@@ -83,7 +83,7 @@ export async function DELETE(
       await db.automation.delete({
         where: { id },
       });
-    } catch (dbError) {
+    } catch {
       // Demo mode - ignore database error
     }
 

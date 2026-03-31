@@ -7,7 +7,6 @@ import { AIProvider } from "@/lib/ai/ai-context";
 import { WebSocketProvider } from "@/lib/websocket/websocket-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw, Home } from "lucide-react";
 

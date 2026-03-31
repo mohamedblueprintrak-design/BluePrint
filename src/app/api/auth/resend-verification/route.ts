@@ -5,7 +5,7 @@
  * POST /api/auth/resend-verification - Resend verification email
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest} from 'next/server';
 import { authService } from '@/lib/auth/auth-service';
 import { successResponse, errorResponse } from '../../utils/response';
 
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     return successResponse({
       message: 'إذا كان هناك حساب بهذا البريد ولم يتم التحقق منه، سيتم إرسال رابط التحقق',
     });
-  } catch (error) {
+  } catch {
     // Still return success to prevent enumeration
     return successResponse({
       message: 'إذا كان هناك حساب بهذا البريد ولم يتم التحقق منه، سيتم إرسال رابط التحقق',

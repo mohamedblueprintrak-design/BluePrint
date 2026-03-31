@@ -105,7 +105,7 @@ class MemoryCache {
     // Delete the first (oldest-inserted) entries to make room
     let evicted = 0;
     const toEvict = Math.max(1, Math.floor(this.maxSize * 0.1)); // evict 10%
-    for (const [key, entry] of this.store.entries()) {
+    for (const [key, _entry] of this.store.entries()) {
       if (evicted >= toEvict) break;
       this.store.delete(key);
       evicted++;

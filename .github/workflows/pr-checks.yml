@@ -1,0 +1,236 @@
+# =============================================================================
+# BluePrint PR Checks — Fast pre-merge validation
+# Runs only on pull requests for quick feedback on lint + type-check
+# =============================================================================
+
+name: PR Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main]
+
+concurrency:
+  group: pr-checks-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  pull-requests: write
+  checks: write
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Job 1: Install Dependencies
+  # ---------------------------------------------------------------------------
+  install:
+    name: 📦 Install
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        continue-on-error: true
+
+      - name: Install dependencies
+        run: |
+          if command -v bun &>/dev/null && [ -f bun.lock ]; then
+            bun install --frozen-lockfile
+          else
+            npm ci
+          fi
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Cache node_modules
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            node_modules
+            .next/cache
+          key: pr-checks-${{ runner.os }}-${{ hashFiles('package-lock.json', 'bun.lock') }}-${{ github.sha }}
+
+  # ---------------------------------------------------------------------------
+  # Job 2: Lint (fast)
+  # ---------------------------------------------------------------------------
+  lint:
+    name: 🔍 Lint
+    runs-on: ubuntu-latest
+    needs: install
+    if: github.event.pull_request.draft == false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Restore node_modules cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            .next/cache
+          key: pr-checks-${{ runner.os }}-${{ hashFiles('package-lock.json', 'bun.lock') }}-${{ github.sha }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        continue-on-error: true
+
+      - name: Run ESLint
+        id: eslint
+        run: |
+          echo "::group::ESLint Output"
+          npx eslint . --max-warnings=100 --format json 2>&1 | tee eslint-results.json || true
+          echo "::endgroup::"
+
+      - name: Run ESLint (check exit code)
+        id: eslint-check
+        run: |
+          npx eslint . --max-warnings=100
+        continue-on-error: true
+
+      - name: Create lint check status
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          script: |
+            const conclusion = '${{ steps-eslint-check.outcome }}' === 'success' ? 'success' : 'failure';
+            await github.rest.checks.create({
+              ...context.repo,
+              name: 'Lint',
+              head_sha: context.payload.pull_request.head.sha,
+              status: 'completed',
+              conclusion: conclusion,
+              output: {
+                title: conclusion === 'success' ? 'Lint passed' : 'Lint failed',
+                summary: conclusion === 'success'
+                  ? 'No ESLint errors found.'
+                  : 'ESLint found errors. Check the CI logs for details.',
+              }
+            });
+
+  # ---------------------------------------------------------------------------
+  # Job 3: Type Check (fast)
+  # ---------------------------------------------------------------------------
+  type-check:
+    name: 🏷️ Type Check
+    runs-on: ubuntu-latest
+    needs: install
+    if: github.event.pull_request.draft == false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Restore node_modules cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            .next/cache
+          key: pr-checks-${{ runner.os }}-${{ hashFiles('package-lock.json', 'bun.lock') }}-${{ github.sha }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        continue-on-error: true
+
+      - name: Run TypeScript compiler
+        id: tsc
+        run: npx tsc --noEmit
+        continue-on-error: true
+
+      - name: Create type-check status
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          script: |
+            const conclusion = '${{ steps.tsc.outcome }}' === 'success' ? 'success' : 'failure';
+            await github.rest.checks.create({
+              ...context.repo,
+              name: 'Type Check',
+              head_sha: context.payload.pull_request.head.sha,
+              status: 'completed',
+              conclusion: conclusion,
+              output: {
+                title: conclusion === 'success' ? 'Type check passed' : 'Type check failed',
+                summary: conclusion === 'success'
+                  ? 'No TypeScript errors found.'
+                  : 'TypeScript found type errors. Check the CI logs for details.',
+              }
+            });
+
+  # ---------------------------------------------------------------------------
+  # Job 4: PR Status Summary
+  # ---------------------------------------------------------------------------
+  pr-status:
+    name: 📋 PR Status Summary
+    runs-on: ubuntu-latest
+    needs: [lint, type-check]
+    if: github.event.pull_request.draft == false && always()
+    steps:
+      - name: Evaluate results
+        id: results
+        run: |
+          LINT="${{ needs.lint.result }}"
+          TSC="${{ needs.type-check.result }}"
+
+          echo "lint_result=$LINT" >> $GITHUB_OUTPUT
+          echo "tsc_result=$TSC" >> $GITHUB_OUTPUT
+
+          if [ "$LINT" = "success" ] && [ "$TSC" = "success" ]; then
+            echo "all_passed=true" >> $GITHUB_OUTPUT
+          else
+            echo "all_passed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Post PR comment with results
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const results = {
+              lint: '${{ steps.results.outputs.lint_result }}',
+              typeCheck: '${{ steps.results.outputs.tsc_result }}',
+            };
+
+            const icons = { success: '✅', failure: '❌', skipped: '⏭️', cancelled: '⚠️' };
+            const labels = { success: 'Passed', failure: 'Failed', skipped: 'Skipped', cancelled: 'Cancelled' };
+
+            const body = `## PR Check Results\n\n` +
+              `| Check | Status |\n|-------|--------|\n` +
+              `| 🔍 Lint | ${icons[results.lint]} ${labels[results.lint]} |\n` +
+              `| 🏷️ Type Check | ${icons[results.typeCheck]} ${labels[results.typeCheck]} |\n\n` +
+              (results.lint === 'success' && results.typeCheck === 'success'
+                ? `> ✨ **All fast checks passed!** Ready for full CI pipeline review.`
+                : `> ⚠️ Some checks failed. Please fix the issues above before merging.`);
+
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: context.payload.pull_request.number,
+              body: body,
+            });
+
+      - name: Fail if any check failed
+        if: steps.results.outputs.all_passed == 'false'
+        run: |
+          echo "PR checks failed:"
+          echo "  - Lint: ${{ steps.results.outputs.lint_result }}"
+          echo "  - Type Check: ${{ steps.results.outputs.tsc_result }}"
+          exit 1

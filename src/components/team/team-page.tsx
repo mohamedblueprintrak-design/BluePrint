@@ -27,8 +27,7 @@ import {
   Search,
   Edit,
   Trash2,
-  Mail,
-  Phone,
+    Phone,
   Building,
   Calendar,
   Shield,
@@ -179,7 +178,7 @@ export default function TeamPage() {
       } else {
         throw new Error('Failed to save member');
       }
-    } catch (error) {
+    } catch {
       toast({
         title: 'خطأ',
         description: 'حدث خطأ أثناء حفظ البيانات',
@@ -198,7 +197,7 @@ export default function TeamPage() {
         toast({ title: 'تم الحذف', description: 'تم حذف العضو بنجاح' });
         fetchMembers();
       }
-    } catch (error) {
+    } catch {
       toast({
         title: 'خطأ',
         description: 'حدث خطأ أثناء الحذف',

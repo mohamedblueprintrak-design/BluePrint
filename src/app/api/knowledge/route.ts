@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
     });
     
     return success(articles);
-  } catch (_e) {
+  } catch {
     // Fallback to demo articles when DB is not available
     let filtered = DEMO_ARTICLES.filter(a => a.isPublished);
     if (category) filtered = filtered.filter(a => a.category === category);
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
         }
       });
       return success(article);
-    } catch (dbError) {
+    } catch {
       // Fallback to demo mode when DB is unavailable
       return success({
         id: `kb-${Date.now()}`,
@@ -139,7 +139,7 @@ export async function PUT(request: NextRequest) {
     try {
       const article = await db.knowledgeArticle.update({ where: { id }, data: updateData });
       return success(article);
-    } catch (dbError) {
+    } catch {
       return success({ id, ...updateData, updatedAt: new Date().toISOString() });
     }
   } catch (e) {

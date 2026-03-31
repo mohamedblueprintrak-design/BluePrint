@@ -46,6 +46,7 @@ type Period = '7d' | '30d' | '90d' | 'year';
 export function DashboardPage() {
   const router = useRouter();
   const { language } = useApp();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { user, hasRole, hasPermission } = useAuth();
   const canSeeFinancials = hasRole(['ADMIN', 'MANAGER', 'ACCOUNTANT', 'PROJECT_MANAGER'] as any);
   const { t, formatCurrency, formatDate } = useTranslation(language);

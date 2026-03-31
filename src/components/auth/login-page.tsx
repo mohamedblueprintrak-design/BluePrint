@@ -18,7 +18,7 @@ export function LoginPage() {
   const { login, register, isLoading } = useAuth();
   const { language, setLanguage } = useApp();
   const { t } = useTranslation(language || 'ar'); // Default to 'ar' if language is undefined
-  const router = useRouter();
+  const _router = useRouter();
   
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
   const [registerForm, setRegisterForm] = useState({
@@ -52,7 +52,7 @@ export function LoginPage() {
       } else {
         setError(result.error?.message || t.loginError);
       }
-    } catch (err) {
+    } catch {
       setError(language === 'ar' ? 'حدث خطأ في الاتصال' : 'Connection error occurred');
     }
   };
@@ -85,7 +85,7 @@ export function LoginPage() {
       } else {
         setError(result.error?.message || (language === 'ar' ? 'خطأ في التسجيل' : 'Registration failed'));
       }
-    } catch (err) {
+    } catch {
       setError(language === 'ar' ? 'حدث خطأ في الاتصال' : 'Connection error occurred');
     }
   };

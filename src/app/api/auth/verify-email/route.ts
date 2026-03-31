@@ -6,7 +6,7 @@
  * POST /api/auth/verify-email - Resend verification email
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest} from 'next/server';
 import { authService } from '@/lib/auth/auth-service';
 import { successResponse, errorResponse } from '../../utils/response';
 
@@ -55,13 +55,13 @@ export async function POST(request: NextRequest) {
       return errorResponse('صيغة البريد الإلكتروني غير صحيحة', 'INVALID_EMAIL', 400);
     }
 
-    const result = await authService.resendVerificationEmail(email);
+    const _result = await authService.resendVerificationEmail(email);
 
     // Always return success to prevent email enumeration
     return successResponse({
       message: 'إذا كان هناك حساب بهذا البريد، سيتم إرسال رابط التحقق',
     });
-  } catch (error) {
+  } catch {
     return errorResponse('حدث خطأ غير متوقع', 'INTERNAL_ERROR', 500);
   }
 }

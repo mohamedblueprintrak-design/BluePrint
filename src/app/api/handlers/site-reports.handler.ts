@@ -3,6 +3,25 @@ import { HandlerContext, ApiSuccessResponse, ApiErrorResponse } from '../types';
 import { successResponse, errorResponse, unauthorizedResponse, notFoundResponse } from '../utils/response';
 import { getDb } from '../utils/db';
 
+/** Site report row from database with project relation */
+interface SiteReportRow {
+  id: string;
+  projectId: string;
+  project?: { name?: string } | null;
+  reportDate: unknown;
+  reportNumber?: unknown;
+  weather?: unknown;
+  temperature?: unknown;
+  workersCount?: unknown;
+  workDescription?: unknown;
+  workArea?: unknown;
+  issues?: unknown;
+  safetyIssues?: unknown;
+  nextSteps?: unknown;
+  summary?: unknown;
+  status: string;
+}
+
 /**
  * GET handlers for site-reports actions
  */
@@ -16,14 +35,14 @@ export const getHandlers = {
     const database = await getDb();
     if (!database) return successResponse([]);
     
-    const siteReports: any[] = await database.siteReport.findMany({
+    const siteReports = await database.siteReport.findMany({
       where: { project: { organizationId: context.user.organizationId } },
       include: { project: true },
       orderBy: { reportDate: 'desc' },
       take: 50
     });
     
-    return successResponse(siteReports.map((r: any) => ({
+    return successResponse(siteReports.map((r: SiteReportRow) => ({
       id: r.id,
       projectId: r.projectId,
       project: r.project?.name,
@@ -68,7 +87,7 @@ export const postHandlers = {
     const count = await database.siteReport.count({ where: { projectId: projectId as string } });
     const reportNumber = `SR-${new Date().getFullYear()}-${(count + 1).toString().padStart(3, '0')}`;
 
-    const report: any = await database.siteReport.create({
+    const report = await database.siteReport.create({
       data: {
         projectId: projectId as string,
         reportDate: new Date(),

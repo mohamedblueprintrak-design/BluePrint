@@ -11,7 +11,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -63,14 +62,10 @@ import {
   Copy,
   Trash2,
   Plus,
-  Download,
-  CheckCircle,
+    CheckCircle,
   Zap,
-  Users,
   HardDrive,
   FileText,
-  Fingerprint,
-  History,
   Link2,
   Webhook,
   Cloud,
@@ -256,7 +251,7 @@ export function SettingsPage() {
   });
 
   // Billing Settings State
-  const [billingSettings] = useState<BillingSettings>({
+  const [_billingSettings] = useState<BillingSettings>({
     plan: {
       name: language === 'ar' ? 'الخطة الاحترافية' : 'Professional Plan',
       price: 299,
@@ -434,7 +429,7 @@ export function SettingsPage() {
     setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
   };
 
-  const handleToggleTwoFactor = () => {
+  const _handleToggleTwoFactor = () => {
     setSecuritySettings(prev => ({
       ...prev,
       twoFactorEnabled: !prev.twoFactorEnabled,
