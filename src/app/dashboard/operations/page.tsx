@@ -88,7 +88,7 @@ export default function OperationsPage() {
       bgColor: 'bg-blue-500/20'
     },
     { 
-      href: '/dashboard/site-diary', 
+      href: '/dashboard/site-management', 
       icon: ClipboardList, 
       label: language === 'ar' ? 'تقارير الموقع' : 'Site Reports', 
       color: 'text-green-400',
@@ -109,14 +109,14 @@ export default function OperationsPage() {
       bgColor: 'bg-cyan-500/20'
     },
     { 
-      href: '/dashboard/invoices', 
+      href: '/dashboard/finance', 
       icon: DollarSign, 
       label: language === 'ar' ? 'الفواتير' : 'Invoices', 
       color: 'text-amber-400',
       bgColor: 'bg-amber-500/20'
     },
     { 
-      href: '/dashboard/boq', 
+      href: '/dashboard/financials', 
       icon: FileSpreadsheet, 
       label: language === 'ar' ? 'جدول الكميات' : 'BOQ', 
       color: 'text-rose-400',

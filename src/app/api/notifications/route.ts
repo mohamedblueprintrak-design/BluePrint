@@ -52,7 +52,7 @@ const DEMO_NOTIFICATIONS = [
     referenceId: 'demo-inv-001',
     isRead: false,
     priority: 'normal',
-    actionUrl: '/dashboard/invoices?id=demo-inv-001',
+    actionUrl: '/dashboard/finance?id=demo-inv-001',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2)
   },
   {
@@ -65,7 +65,7 @@ const DEMO_NOTIFICATIONS = [
     referenceId: 'demo-mat-001',
     isRead: false,
     priority: 'urgent',
-    actionUrl: '/dashboard/inventory?material=demo-mat-001',
+    actionUrl: '/dashboard/assets?material=demo-mat-001',
     createdAt: new Date(Date.now() - 1000 * 60 * 15)
   },
   {
@@ -91,7 +91,7 @@ const DEMO_NOTIFICATIONS = [
     referenceId: 'demo-inv-002',
     isRead: true,
     priority: 'normal',
-    actionUrl: '/dashboard/invoices?id=demo-inv-002',
+    actionUrl: '/dashboard/finance?id=demo-inv-002',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3)
   },
   {
@@ -104,7 +104,7 @@ const DEMO_NOTIFICATIONS = [
     referenceId: 'demo-defect-001',
     isRead: false,
     priority: 'high',
-    actionUrl: '/dashboard/defects?id=demo-defect-001',
+    actionUrl: '/dashboard/site-management?id=demo-defect-001',
     createdAt: new Date(Date.now() - 1000 * 60 * 45)
   }
 ];

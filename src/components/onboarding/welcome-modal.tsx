@@ -257,7 +257,7 @@ export function WelcomeModal({ isOpen, onClose }: WelcomeModalProps) {
           description: isRTL
             ? 'راجع قوائم الكميات للمشاريع'
             : 'Review bills of quantities for projects',
-          path: '/dashboard/boq',
+          path: '/dashboard/financials',
           color: 'text-orange-400',
           bgColor: 'bg-orange-500/20',
           borderColor: 'border-orange-500/30 hover:border-orange-500',
@@ -275,7 +275,7 @@ export function WelcomeModal({ isOpen, onClose }: WelcomeModalProps) {
           description: isRTL
             ? 'أنشئ فاتورتك الأولى وأرسلها للعملاء'
             : 'Create your first invoice and send it to clients',
-          path: '/dashboard/invoices',
+          path: '/dashboard/finance',
           color: 'text-blue-400',
           bgColor: 'bg-blue-500/20',
           borderColor: 'border-blue-500/30 hover:border-blue-500',
@@ -287,7 +287,7 @@ export function WelcomeModal({ isOpen, onClose }: WelcomeModalProps) {
           description: isRTL
             ? 'تابع ميزانيات المشاريع والنفقات'
             : 'Track project budgets and expenses',
-          path: '/dashboard/budgets',
+          path: '/dashboard/financials',
           color: 'text-green-400',
           bgColor: 'bg-green-500/20',
           borderColor: 'border-green-500/30 hover:border-green-500',

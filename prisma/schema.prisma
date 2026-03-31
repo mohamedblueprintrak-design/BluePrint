@@ -703,6 +703,7 @@ model Project {
   workflowPhases      WorkflowPhase[]
   clientInteractions  ClientInteraction[]
   municipalityCorrespondence MunicipalityCorrespondence[]
+  siteVisitReports    SiteVisitReport[]
 
   client              Client?   @relation(fields: [clientId], references: [id])
   manager             User?     @relation("ProjectManager", fields: [managerId], references: [id])
@@ -1716,4 +1717,53 @@ model MunicipalityCorrespondence {
   @@index([projectId])
   @@index([status])
   @@index([correspondenceType])
+}
+
+// ============================================
+// تقرير زيارة الموقع (Site Visit Report)
+// نموذج تقرير الموقع الخاص بالبلدية
+// Based on RAK Municipality Site Report Template
+// ============================================
+
+model SiteVisitReport {
+  id              String   @id @default(cuid())
+  projectId       String
+  reportDate      DateTime @default(now())
+
+  // Project Information / بيانات المشروع
+  plotNumber        String?
+  clientName        String?
+  consultantName    String?
+  caseType          String?   // نوع المعاملة
+  otherDescription  String?
+
+  // Municipality Info / بلدية
+  municipality      String   @default("RAK")  // RAK, DUBAI, ABU_DHABI, SHARJAH, AJMAN, UAQ, FUJAIRAH
+  department        String?  // إدارة التراخيص / Permit Department
+
+  // Site Sections / أقسام الموقع
+  generalDescription       String?
+  boundaryGateDescription  String?   // الحائط / البوابات
+  neighbourSetbackDescription String? // الجوار / الارتدادات
+  buildingDescription      String?   // المباني
+
+  // Photos / صور (JSON arrays)
+  boundaryGatePhotos       Json?
+  neighbourSetbackPhotos   Json?
+  buildingPhotos           Json?
+
+  // Metadata
+  preparedById     String?
+  approvedById     String?
+  status           String   @default("DRAFT") // DRAFT, SUBMITTED, APPROVED, REJECTED
+  notes            String?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  project          Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([municipality])
+  @@index([status])
 }

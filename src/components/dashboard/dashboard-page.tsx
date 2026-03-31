@@ -658,7 +658,7 @@ export function DashboardPage() {
               <Button 
                 variant="outline" 
                 className="h-24 flex flex-col gap-2 bg-slate-800/50 border-slate-700 hover:bg-cyan-500/20 hover:border-cyan-500 transition-all duration-300 group"
-                onClick={() => router.push('/dashboard/invoices')}
+                onClick={() => router.push('/dashboard/finance')}
               >
                 <div className="p-2 rounded-lg bg-cyan-500/20 group-hover:bg-cyan-500/30 transition-colors">
                   <DollarSign className="w-5 h-5 text-cyan-400" />
@@ -729,7 +729,7 @@ export function DashboardPage() {
           </Card>
 
           {/* Open Defects */}
-          <Card className="bg-slate-900/50 border-slate-800 hover:border-red-500/50 transition-colors cursor-pointer" onClick={() => router.push('/dashboard/defects')}>
+          <Card className="bg-slate-900/50 border-slate-800 hover:border-red-500/50 transition-colors cursor-pointer" onClick={() => router.push('/dashboard/site-management')}>
             <CardHeader>
               <CardTitle className="text-white text-lg flex items-center gap-2">
                 <div className="p-1.5 rounded-lg bg-red-500/20">
@@ -840,7 +840,7 @@ export function DashboardPage() {
               <DollarSign className="w-5 h-5 text-cyan-400" />
               {t.pendingInvoices}
             </CardTitle>
-            <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard/invoices')} className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10">
+            <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard/finance')} className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10">
               {t.view} {language === 'ar' ? 'الكل' : 'All'}
             </Button>
           </CardHeader>

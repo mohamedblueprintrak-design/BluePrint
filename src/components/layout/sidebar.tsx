@@ -36,7 +36,7 @@ import {
   AlertTriangle, Receipt, X, ChevronDown, ChevronUp,
   LayoutDashboard, Wrench, Gavel, Compass, Handshake, Landmark,
   ClipboardList, Lightbulb, UserCog, Calendar, Bell, HelpCircle, Crown,
-  Send, Mail, Video, Briefcase as BriefcaseIcon
+  Send, Mail, Video, Briefcase as BriefcaseIcon, MapPin
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -184,18 +184,15 @@ const getRoutes = (_language: 'ar' | 'en'): Record<string, string> => ({
   'clients': '/dashboard/clients',
   'proposals': '/dashboard/proposals',
   'contracts': '/dashboard/contracts',
-  'invoices': '/dashboard/invoices',
-  'vouchers': '/dashboard/vouchers',
-  'budgets': '/dashboard/budgets',
+  'finance': '/dashboard/finance',
+  'financials': '/dashboard/financials',
+  'procurement': '/dashboard/procurement',
+  'assets': '/dashboard/assets',
   'tasks': '/dashboard/tasks',
   'hr': '/dashboard/hr',
-  'suppliers': '/dashboard/suppliers',
-  'purchaseOrders': '/dashboard/purchase-orders',
-  'inventory': '/dashboard/inventory',
-  'boq': '/dashboard/boq',
-  'siteDiary': '/dashboard/site-diary',
-  'defects': '/dashboard/defects',
+  'siteManagement': '/dashboard/site-management',
   'documents': '/dashboard/documents',
+  'siteVisitReports': '/dashboard/site-visit-reports',
   'knowledge': '/dashboard/knowledge',
   'aiChat': '/dashboard/ai-chat',
   'reports': '/dashboard/reports',
@@ -205,13 +202,11 @@ const getRoutes = (_language: 'ar' | 'en'): Record<string, string> => ({
   'profile': '/dashboard/profile',
   'pricing': '/dashboard/pricing',
   'team': '/dashboard/team',
-  'equipment': '/dashboard/equipment',
   'bidding': '/dashboard/bidding',
   'calendar': '/dashboard/calendar',
   'notifications': '/dashboard/notifications',
   'automations': '/dashboard/automations',
   'help': '/dashboard/help',
-  'transmittals': '/dashboard/transmittals',
   'correspondence': '/dashboard/correspondence',
   'meetings': '/dashboard/meetings',
   'workload': '/dashboard/workload',
@@ -259,11 +254,11 @@ function SidebarContent({
   const designItems: SidebarItem[] = [
     { id: 'projects', label: t.projects, icon: Building2, href: '/dashboard/projects' },
     { id: 'tasks', label: t.tasks, icon: CheckSquare, href: '/dashboard/tasks', visibleRoles: ALL_EXCEPT_VIEWER },
-    { id: 'boq', label: language === 'ar' ? 'جدول الكميات' : 'BOQ', icon: FileSpreadsheet, href: '/dashboard/boq', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.DRAFTSMAN, UserRole.ACCOUNTANT] },
-    { id: 'documents', label: t.documents, icon: FileText, href: '/dashboard/documents', visibleRoles: [UserRole.ADMIN, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.DRAFTSMAN, UserRole.SECRETARY] },
-    { id: 'defects', label: language === 'ar' ? 'العيوب والمخالفات' : 'Defects', icon: AlertTriangle, href: '/dashboard/defects', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER] },
-    { id: 'siteDiary', label: t.siteDiary, icon: FileSpreadsheet, href: '/dashboard/site-diary', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER] },
-    { id: 'equipment', label: language === 'ar' ? 'المعدات' : 'Equipment', icon: Wrench, href: '/dashboard/equipment', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER] },
+    { id: 'financials', label: language === 'ar' ? 'الميزانيات والكميات' : 'Budgets & BOQ', icon: FileSpreadsheet, href: '/dashboard/financials', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.DRAFTSMAN, UserRole.ACCOUNTANT] },
+    { id: 'documents', label: language === 'ar' ? 'المستندات والمراسلات' : 'Documents', icon: FileText, href: '/dashboard/documents', visibleRoles: [UserRole.ADMIN, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.DRAFTSMAN, UserRole.SECRETARY] },
+    { id: 'siteManagement', label: language === 'ar' ? 'إدارة الموقع' : 'Site Mgmt', icon: ClipboardList, href: '/dashboard/site-management', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER] },
+    { id: 'assets', label: language === 'ar' ? 'الأصول والمخزون' : 'Assets', icon: Package, href: '/dashboard/assets', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER] },
+    { id: 'siteVisitReports', label: language === 'ar' ? 'تقارير الموقع' : 'Site Reports', icon: MapPin, href: '/dashboard/site-visit-reports', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.SECRETARY] },
   ];
 
   // ─── Section 2: العملاء والتعاقدات (Clients & Contracts) ───
@@ -272,16 +267,12 @@ function SidebarContent({
     { id: 'proposals', label: t.proposals, icon: FileText, href: '/dashboard/proposals', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER] },
     { id: 'bidding', label: language === 'ar' ? 'العطاءات' : 'Bidding', icon: Gavel, href: '/dashboard/bidding', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER] },
     { id: 'contracts', label: t.contracts, icon: FileCheck, href: '/dashboard/contracts', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER] },
-    { id: 'invoices', label: t.invoices, icon: DollarSign, href: '/dashboard/invoices', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.ACCOUNTANT] },
-    { id: 'suppliers', label: t.suppliers, icon: Briefcase, href: '/dashboard/suppliers', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER] },
+    { id: 'finance', label: language === 'ar' ? 'الفواتير والسندات' : 'Invoices', icon: DollarSign, href: '/dashboard/finance', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.ACCOUNTANT] },
+    { id: 'procurement', label: language === 'ar' ? 'المشتريات والموردون' : 'Procurement', icon: ShoppingCart, href: '/dashboard/procurement', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER] },
   ];
 
   // ─── Section 3: المحاسبة والمالية (Finance & Accounting) ───
   const financeItems: SidebarItem[] = [
-    { id: 'budgets', label: language === 'ar' ? 'الميزانيات' : 'Budgets', icon: Calculator, href: '/dashboard/budgets', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.ACCOUNTANT] },
-    { id: 'vouchers', label: language === 'ar' ? 'السندات' : 'Vouchers', icon: Receipt, href: '/dashboard/vouchers', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.ACCOUNTANT] },
-    { id: 'purchaseOrders', label: language === 'ar' ? 'طلبات الشراء' : 'Purchase Orders', icon: ShoppingCart, href: '/dashboard/purchase-orders', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER] },
-    { id: 'inventory', label: t.inventory, icon: Package, href: '/dashboard/inventory', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER] },
     { id: 'reports', label: t.reports, icon: BarChart3, href: '/dashboard/reports', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.ACCOUNTANT] },
   ];
 
@@ -289,7 +280,6 @@ function SidebarContent({
   const secretarialItems: SidebarItem[] = [
     { id: 'calendar', label: language === 'ar' ? 'التقويم' : 'Calendar', icon: Calendar, href: '/dashboard/calendar', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.SECRETARY] },
     { id: 'meetings', label: language === 'ar' ? 'الاجتماعات' : 'Meetings', icon: Video, href: '/dashboard/meetings', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.SECRETARY] },
-    { id: 'transmittals', label: language === 'ar' ? 'المراسلات الداخلية' : 'Transmittals', icon: Send, href: '/dashboard/transmittals', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.DRAFTSMAN, UserRole.SECRETARY] },
     { id: 'correspondence', label: language === 'ar' ? 'المراسلات البلدية' : 'Municipality', icon: Mail, href: '/dashboard/correspondence', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.SECRETARY] },
     { id: 'notifications', label: language === 'ar' ? 'الإشعارات' : 'Notifications', icon: Bell, href: '/dashboard/notifications' },
   ];
