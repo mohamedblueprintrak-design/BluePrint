@@ -265,7 +265,7 @@ export async function verifyPassword(
     // Handle standard bcrypt format ($2b$ or $2a$)
     if (hash.startsWith('$2b$') || hash.startsWith('$2a$')) {
       try {
-        const bcrypt = await import('bcrypt');
+        const bcrypt = await import('bcryptjs');
         return await bcrypt.default.compare(password, hash);
       } catch {
         console.warn(

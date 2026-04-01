@@ -1,31 +1,19 @@
 /**
- * WebSocket Module
- * وحدة WebSocket للإشعارات الفورية
+ * WebSocket Client Module
+ * وحدة WebSocket للإشعارات الفورية (Client-side only)
  *
- * Exports all WebSocket-related functionality
+ * Exports WebSocket client-side functionality (hooks and context).
+ * Server-side WebSocket functionality is in websocket-service.ts,
+ * imported directly by server code (not through this barrel).
  */
 
 // Types
 export * from './types';
 
-// Service
-export {
-  initializeWebSocket,
-  sendNotificationToUser,
-  sendNotificationToOrganization,
-  broadcastProjectUpdate,
-  broadcastTaskUpdate,
-  broadcastSystemAlert,
-  isUserOnline,
-  getOnlineUsersInOrganization,
-  getWebSocketServer,
-  getConnectionStats,
-} from './websocket-service';
-
-// React Hook
+// React Hook (client-only)
 export { useWebSocket, useGlobalWebSocket } from './use-websocket';
 
-// Context
+// Context (client-only)
 export {
   WebSocketProvider,
   useWebSocketContext,

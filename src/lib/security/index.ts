@@ -5,7 +5,6 @@
  * Import individual modules as needed:
  * ```ts
  * import { encrypt, decrypt } from '@/lib/security';
- * import { rateLimiters, createRateLimitResponse } from '@/lib/security';
  * import { AuditLogger, auditLog } from '@/lib/security';
  * ```
  */
@@ -45,16 +44,6 @@ export {
   type ValidatorFn,
 } from './validation';
 
-// ─── CSRF Protection ─────────────────────────────────────────────────────────
-export {
-  generateCsrfToken as generateCSRFToken,
-  validateCsrfToken as validateCSRFToken,
-  requiresCsrfProtection,
-  isCsrfExempt,
-  CSRF_COOKIE_NAME,
-  CSRF_HEADER_NAME,
-} from './csrf';
-
 // ─── Security Headers ────────────────────────────────────────────────────────
 export {
   getSecurityHeaders,
@@ -70,16 +59,6 @@ export {
   type SecurityHeadersOptions,
   type CSPBuilder,
 } from './security-headers';
-
-// ─── Rate Limiting ───────────────────────────────────────────────────────────
-export {
-  RateLimiter,
-  rateLimiters,
-  createRateLimitResponse,
-  getClientIP,
-  type RateLimitConfig,
-  type RateLimitResult,
-} from './rate-limiter';
 
 // ─── Audit Logging ───────────────────────────────────────────────────────────
 export {

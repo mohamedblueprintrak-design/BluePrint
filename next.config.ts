@@ -2,7 +2,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
-  output: 'standalone',
   reactStrictMode: false,
 
   typescript: {
@@ -13,21 +12,46 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
 
-  // CRITICAL FIX: These packages cause "Cannot read properties of undefined (reading 'call')"
-  // webpack error on Windows with Next.js 15.x Webpack.
-  // serverExternalPackages tells webpack to NOT bundle them server-side,
-  // which prevents chunk resolution failures.
-  serverExternalPackages: ['bcrypt', 'winston', 'redis', 'jspdf', 'jspdf-autotable'],
+  // CRITICAL FIX: These packages are server-only and must NOT be bundled for the client.
+  // If webpack tries to bundle them client-side, chunk resolution fails with
+  // "Cannot read properties of undefined (reading 'call')" during RSC deserialization.
+  serverExternalPackages: [
+    'bcryptjs',       // Password hashing (was incorrectly listed as 'bcrypt')
+    'winston',        // Logging framework
+    'winston-daily-rotate-file', // Winston transport
+    'redis',          // Redis client (used by rate limiter)
+    'socket.io',      // Server-side WebSocket library
+    'jsonwebtoken',   // JWT signing/verification
+    'nodemailer',     // Email sending
+    'sharp',          // Image processing
+    '@prisma/client', // Prisma database client
+    'jspdf',          // PDF generation (CJS, problematic in client bundle)
+    'jspdf-autotable',// PDF table generation
+  ],
 
   // CRITICAL FIX: Webpack configuration to prevent chunk loading failures
+  // - Ensures server-only modules are not bundled for client
+  // - Prevents undefined module factories in RSC chunk loading
   webpack: (config, { isServer }) => {
     // Prevent webpack from trying to bundle server-only modules on client
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      fs: false,
-      net: false,
-      tls: false,
-      child_process: false,
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        child_process: false,
+        dns: false,
+        path: false,
+        crypto: false,
+      };
+    }
+
+    // Ensure consistent chunk IDs to prevent RSC module resolution failures
+    config.optimization = {
+      ...config.optimization,
+      chunkIds: 'named',
+      moduleIds: 'named',
     };
 
     return config;

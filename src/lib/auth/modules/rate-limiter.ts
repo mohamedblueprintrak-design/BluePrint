@@ -176,21 +176,32 @@ class RateLimiter {
   private useRedis: boolean = false;
 
   constructor() {
-    // Try to use Redis in production
+    // Use in-memory store by default
+    // Redis initialization is handled asynchronously in initRedisStore()
+    this.store = new MemoryStore();
+
+    // Try to use Redis in production (async, won't block constructor)
     if (isProduction && process.env.REDIS_URL) {
-      try {
-        // Import Redis dynamically
-        const { createClient } = require('redis');
-        const redisClient = createClient({ url: process.env.REDIS_URL });
-        redisClient.connect();
-        this.store = new RedisStore(redisClient);
-        this.useRedis = true;
-        console.log('✅ Rate limiter using Redis store');
-      } catch {
-        console.warn('⚠️ Redis not available, falling back to memory store');
-        this.store = new MemoryStore();
-      }
-    } else {
+      this.initRedisStore().catch(() => {
+        console.warn('⚠️ Redis not available, using memory store');
+      });
+    }
+  }
+
+  /**
+   * Initialize Redis store asynchronously
+   * Uses dynamic import() instead of require() to avoid webpack static analysis issues
+   */
+  private async initRedisStore() {
+    try {
+      const { createClient } = await import('redis');
+      const redisClient = createClient({ url: process.env.REDIS_URL });
+      await redisClient.connect();
+      this.store = new RedisStore(redisClient);
+      this.useRedis = true;
+      console.log('✅ Rate limiter using Redis store');
+    } catch {
+      console.warn('⚠️ Redis not available, falling back to memory store');
       this.store = new MemoryStore();
     }
   }
