@@ -404,31 +404,25 @@ export async function POST(request: NextRequest) {
     }
 
     // Second pass: resolve dependencies to actual task IDs
-    for (let i = 0; i < templates.length; i++) {
-      const template = templates[i];
+    // Build a map from template order → created task ID for O(1) lookups
+    const orderToId: Record<number, string> = {};
+    for (const ct of createdTasks) {
+      orderToId[ct.order as number] = ct.id as string;
+    }
+
+    for (const template of templates) {
       if (existingTitles.has(template.title)) continue;
       if (template.dependencies.length === 0) continue;
 
-      const createdTaskId = createdIds.shift();
+      const createdTaskId = orderToId[template.order];
       if (!createdTaskId) continue;
 
-      // Map order numbers to task IDs
+      // Map dependency order numbers to actual created task IDs
       const dependencyIds: string[] = [];
-      const templateTasks = PHASE_TEMPLATES[phaseCategory];
-      // Track created index for dependency mapping
-
       for (const depOrder of template.dependencies) {
-        // Find the template at that order
-        const depTemplate = templateTasks.find(t => t.order === depOrder);
-        if (depTemplate && !existingTitles.has(depTemplate.title)) {
-          // This corresponds to a created task at createdIdx position
-          // We need to find the right mapping
-          const matchingCreatedIdx = templates
-            .filter(t => !existingTitles.has(t.title))
-            .findIndex(t => t.order === depOrder);
-          if (matchingCreatedIdx >= 0 && matchingCreatedIdx < createdTasks.length) {
-            dependencyIds.push(createdTasks[matchingCreatedIdx].id as string);
-          }
+        const depId = orderToId[depOrder];
+        if (depId) {
+          dependencyIds.push(depId);
         }
       }
 

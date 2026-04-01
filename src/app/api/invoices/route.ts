@@ -37,7 +37,7 @@ const DEMO_INVOICES = [
     status: 'partial',
     issueDate: new Date('2025-01-15'),
     dueDate: new Date('2025-02-15'),
-    createdAt: new Date()
+    createdAt: new Date('2025-01-15')
   },
   {
     id: 'demo-inv-002',
@@ -56,7 +56,7 @@ const DEMO_INVOICES = [
     status: 'sent',
     issueDate: new Date('2025-01-20'),
     dueDate: new Date('2025-02-20'),
-    createdAt: new Date()
+    createdAt: new Date('2025-01-20')
   }
 ];
 

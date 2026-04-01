@@ -19,7 +19,11 @@ export default function GlobalError({
 
   return (
     <html lang="ar" dir="rtl">
-      <body className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
+      <body className="min-h-screen bg-slate-950 flex items-center justify-center p-4 font-sans antialiased">
         <Card className="max-w-lg w-full bg-slate-900/80 border-red-500/50">
           <CardContent className="p-8">
             <div className="flex flex-col items-center text-center">

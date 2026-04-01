@@ -100,7 +100,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Set up token refresh interval
   useEffect(() => {
-    // Only run refresh if user is authenticated (has a session)
+    if (!user) return;
+
     // Refresh every 4 minutes to keep the httpOnly cookie alive
     const refreshInterval = setInterval(async () => {
       try {
@@ -125,7 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, TOKEN_REFRESH_INTERVAL);
 
     return () => clearInterval(refreshInterval);
-  }, []);
+  }, [user]);
 
   const login = async (data: LoginForm): Promise<ApiResponse> => {
     setIsLoading(true);

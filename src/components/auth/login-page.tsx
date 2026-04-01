@@ -67,8 +67,8 @@ export function LoginPage() {
       return;
     }
 
-    if (registerForm.password.length < 6) {
-      setError(language === 'ar' ? 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' : 'Password must be at least 6 characters');
+    if (registerForm.password.length < 8) {
+      setError(language === 'ar' ? 'كلمة المرور يجب أن تكون 8 أحرف على الأقل' : 'Password must be at least 8 characters');
       return;
     }
 

@@ -15,8 +15,8 @@ export function Footer() {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-1">
           <p className="text-xs text-slate-500">
             {isRTL
-              ? '© 2024 BluePrint. جميع الحقوق محفوظة.'
-              : '© 2024 BluePrint. All rights reserved.'}
+              ? `© ${new Date().getFullYear()} BluePrint. جميع الحقوق محفوظة.`
+              : `© ${new Date().getFullYear()} BluePrint. All rights reserved.`}
           </p>
           <p className="text-xs text-slate-600">
             {isRTL

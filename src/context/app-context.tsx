@@ -23,8 +23,6 @@ interface AppContextType {
   setCurrency: (currency: Currency) => void;
   
   // Sidebar
-  sidebarOpen: boolean;
-  setSidebarOpen: (open: boolean) => void;
   sidebarCollapsed: boolean;
   setSidebarCollapsed: (collapsed: boolean) => void;
   
@@ -102,7 +100,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
   
   // Sidebar state
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsedState] = useState(() => {
     const value = getInitialValue<string>(STORAGE_KEYS.sidebarCollapsed, 'false');
     return value === 'true';
@@ -193,8 +190,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     isRTL,
     currency,
     setCurrency,
-    sidebarOpen,
-    setSidebarOpen,
     sidebarCollapsed,
     setSidebarCollapsed,
     currentPage,
@@ -211,7 +206,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     theme, setTheme, isDark,
     language, setLanguage, isRTL,
     currency, setCurrency,
-    sidebarOpen, sidebarCollapsed, setSidebarCollapsed,
+    sidebarCollapsed, setSidebarCollapsed,
     currentPage,
     commandPaletteOpen,
     notificationsPanelOpen,
