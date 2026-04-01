@@ -64,19 +64,15 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+// Dashboard shell — uses useApp() so must be INSIDE Providers
+function DashboardShell({ children }: { children: React.ReactNode }) {
   const { sidebarCollapsed, isRTL } = useApp();
 
   return (
-    <Providers>
-      <AuthGuard>
-        <div className="min-h-screen bg-slate-950">
-          {/* Sidebar */}
-          <Sidebar />
+    <AuthGuard>
+      <div className="min-h-screen bg-slate-950">
+        {/* Sidebar */}
+        <Sidebar />
         
         {/* Main Content Area */}
         <main 
@@ -104,7 +100,18 @@ export default function DashboardLayout({
         {/* Mobile Bottom Navigation - hidden on desktop */}
         <MobileBottomNav />
       </div>
-      </AuthGuard>
+    </AuthGuard>
+  );
+}
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <Providers>
+      <DashboardShell>{children}</DashboardShell>
     </Providers>
   );
 }
