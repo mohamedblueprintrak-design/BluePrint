@@ -6,7 +6,6 @@ import { useApp } from '@/context/app-context';
 import { useAuth } from '@/context/auth-context';
 import { useTranslation } from '@/lib/translations';
 import { useDashboard, useProjects, useTasks, useInvoices } from '@/hooks/use-data';
-import { WelcomeModal } from '@/components/onboarding/welcome-modal';
 import { OnboardingWizard } from '@/components/onboarding/onboarding-wizard';
 import { FloatingAIButton } from '@/components/ai/floating-ai-button';
 import { AIInsightsCard } from '@/components/ai/ai-insights-card';
@@ -57,30 +56,27 @@ export function DashboardPage() {
   const { t, formatCurrency, formatDate } = useTranslation(language);
   
   const [period, setPeriod] = useState<Period>('30d');
-  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [showOnboardingWizard, setShowOnboardingWizard] = useState(false);
   
-  // Check if welcome modal should be shown - only on client side
+  // Check if onboarding wizard should be shown - only on client side
   useEffect(() => {
-    // Use a flag to prevent multiple checks
     let isMounted = true;
     
-    const checkWelcomeModal = () => {
+    const checkOnboarding = () => {
       try {
-        // Never show welcome modal in demo mode - go straight to dashboard
+        // Never show onboarding in demo mode - go straight to dashboard
         const isDemo = localStorage.getItem('blueprint_demo_mode') === 'true';
         if (isDemo) return;
-        const hasSeenModal = localStorage.getItem('blueprint_welcome_modal_seen');
-        if (!hasSeenModal && isMounted) {
-          setShowWelcomeModal(true);
+        const hasCompleted = localStorage.getItem('blueprint_onboarding_completed');
+        if (!hasCompleted && isMounted) {
+          setShowOnboardingWizard(true);
         }
       } catch {
         // localStorage might not be available
       }
     };
     
-    // Small delay to ensure component is mounted
-    const timer = setTimeout(checkWelcomeModal, 100);
+    const timer = setTimeout(checkOnboarding, 100);
     
     return () => {
       isMounted = false;
@@ -307,11 +303,7 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-      {/* Welcome Modal */}
-      <WelcomeModal 
-        isOpen={showWelcomeModal} 
-        onClose={() => { setShowWelcomeModal(false); setShowOnboardingWizard(true); }} 
-      />
+      {/* Onboarding Wizard */}
       <OnboardingWizard isOpen={showOnboardingWizard} onClose={() => setShowOnboardingWizard(false)} />
       
       {/* Welcome Banner */}
