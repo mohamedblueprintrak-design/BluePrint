@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -28,7 +29,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import {
-  Home, Users, Building2, FileText, DollarSign, CheckSquare, 
+  Home, Users, FileText, DollarSign, CheckSquare, 
   Package, FileCheck, BarChart3, Settings, 
   LogOut, Menu, Search, Moon, Sun, Globe,
   User, Shield, BookOpen, Bot, FileSpreadsheet,
@@ -333,7 +334,7 @@ function SidebarContent({
         <div className="flex items-center justify-between h-16 px-4 border-b border-slate-800">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-white" />
+              <Image src="/logo.png" alt="BluePrint" width={32} height={32} className="rounded-md object-contain" />
             </div>
             <div>
               <h1 className="text-lg font-bold text-white">{t.appName}</h1>
@@ -641,7 +642,7 @@ export function Sidebar() {
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-40 md:hidden">
           <div className="flex items-center gap-2 px-4 py-2 bg-slate-900/90 rounded-full border border-slate-800">
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-              <Building2 className="w-4 h-4 text-white" />
+              <Image src="/logo.png" alt="BluePrint" width={28} height={28} className="rounded-md object-contain" />
             </div>
             <span className="text-sm font-bold text-white">BluePrint</span>
           </div>
@@ -665,7 +666,7 @@ export function Sidebar() {
       <div className="flex items-center justify-between h-16 px-4 border-b border-slate-800">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shrink-0">
-            <Building2 className="w-5 h-5 text-white" />
+            <Image src="/logo.png" alt="BluePrint" width={32} height={32} className="rounded-md object-contain" />
           </div>
           {!sidebarCollapsed && (
             <div className="overflow-hidden transition-all duration-300">

@@ -4,6 +4,7 @@ import { Noto_Sans_Arabic } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Providers } from "@/components/providers";
+import { ServiceWorkerRegistration } from "@/components/pwa/service-worker-registration";
 
 // Geist Sans - Primary font for English/Latin text
 const geistSans = Geist({
@@ -32,10 +33,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
-  ],
+  themeColor: "#0f172a",
 };
 
 // Metadata for SEO
@@ -96,9 +94,12 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: "/logo.svg",
-    shortcut: "/logo.svg",
-    apple: "/logo.svg",
+    icon: [
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+      { url: "/logo.png", sizes: "127x109", type: "image/png" },
+    ],
+    shortcut: "/logo.png",
+    apple: "/apple-touch-icon.png",
   },
   manifest: "/manifest.json",
 };
@@ -119,6 +120,12 @@ export default function RootLayout({
         {/* Preconnect to external resources */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* PWA support for iOS */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="BluePrint" />
+        {/* Theme color for mobile browsers */}
+        <meta name="theme-color" content="#0f172a" />
       </head>
       <body
         className={`
@@ -137,6 +144,7 @@ export default function RootLayout({
           {children}
         </Providers>
         <Toaster />
+        <ServiceWorkerRegistration />
       </body>
     </html>
   );

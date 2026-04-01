@@ -1,26 +1,27 @@
 const CACHE_NAME = 'blueprint-cache-v1';
 
-// SECURITY: Only cache static assets, never cache authenticated routes
-// Use network-first strategy to ensure fresh content
+// Only cache the shell and essential static assets
 const STATIC_CACHE_URLS = [
-  '/static/manifest.json'
+  '/login',
+  '/manifest.json',
+  '/logo.png',
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        return cache.addAll(STATIC_CACHE_URLS);
+        // Don't fail install if some URLs can't be cached
+        return cache.addAll(STATIC_CACHE_URLS).catch(() => {});
       })
   );
-  // Activate immediately without waiting
   self.skipWaiting();
 });
 
 self.addEventListener('fetch', (event) => {
   const { request } = event;
 
-  // SECURITY: Never cache API requests or authenticated content
+  // Never cache API requests or authenticated content
   if (request.url.includes('/api/') || request.url.includes('/dashboard') || request.url.includes('/auth')) {
     event.respondWith(fetch(request));
     return;
@@ -44,7 +45,6 @@ self.addEventListener('fetch', (event) => {
   }
 
   // For navigation requests: network-first strategy
-  // This ensures users always get fresh content after logout
   event.respondWith(
     fetch(request)
       .then(response => {
@@ -55,7 +55,6 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => {
-        // Fallback to cache if network fails
         return caches.match(request);
       })
   );
@@ -74,6 +73,5 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
-  // Claim all clients immediately
   self.clients.claim();
 });

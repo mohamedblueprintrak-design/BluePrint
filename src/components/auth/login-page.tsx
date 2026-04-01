@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Building2, Mail, Lock, User, AlertCircle, Loader2, Eye, EyeOff, UserCircle } from 'lucide-react';
+import Image from 'next/image';
 
 export function LoginPage() {
   const { login, register, isLoading } = useAuth();
@@ -102,8 +103,8 @@ export function LoginPage() {
         {/* Logo & Language Toggle */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-              <Building2 className="w-7 h-7 text-white" />
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center p-1">
+              <Image src="/logo.png" alt="BluePrint" width={48} height={48} className="rounded-lg object-contain" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-white">{t.appName}</h1>
