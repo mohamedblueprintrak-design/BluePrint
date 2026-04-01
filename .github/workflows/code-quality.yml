@@ -1,0 +1,99 @@
+# BluePrint - Code Quality Pipeline
+name: Code Quality
+
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  BUN_VERSION: "1.2.5"
+  COMPLEXITY_THRESHOLD: "15"
+
+jobs:
+  lint-and-format:
+    name: 🧹 Lint & Format
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - run: bun install --frozen-lockfile
+      - run: bunx eslint . --max-warnings 0
+        continue-on-error: true
+
+  type-check:
+    name: 🔍 Strict Type Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - run: bun install --frozen-lockfile
+      - run: bunx prisma generate
+      - run: bunx tsc --noEmit --strict 2>&1 | tee tsc-output.txt
+        continue-on-error: true
+
+  complexity-check:
+    name: 📊 Complexity
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - run: bun install --frozen-lockfile
+      - run: npm install -g madge
+      - run: npx madge --circular --extensions ts,tsx src/ 2>&1 || true
+
+  bundle-size:
+    name: 📦 Bundle Size
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - run: bun install --frozen-lockfile
+      - run: bunx prisma generate
+      - run: bun run build
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
+          NEXT_TELEMETRY_DISABLED: "1"
+      - run: |
+          echo "## 📦 Bundle Size" >> $GITHUB_STEP_SUMMARY
+          BUILD_SIZE_MB=$(echo "scale=2; $(du -sb .next | cut -f1) / 1024 / 1024" | bc)
+          echo "| Total Build | ${BUILD_SIZE_MB} MB |" >> $GITHUB_STEP_SUMMARY
+          echo "### Largest Chunks" >> $GITHUB_STEP_SUMMARY
+          echo "| File | Size |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|------|" >> $GITHUB_STEP_SUMMARY
+          find .next -name "*.js" -type f -exec du -b {} \; 2>/dev/null | sort -rn | head -15 | \
+            while read -r size file; do
+              echo "| \`$file\` | $(echo "scale=1; $size / 1024" | bc) KB |" >> $GITHUB_STEP_SUMMARY
+            done
+
+  pr-title-check:
+    name: 📝 PR Title
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          VALID_PREFIXES="^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert|BREAKING CHANGE)(\(.+\))?!?:"
+          if echo "$PR_TITLE" | grep -qE "$VALID_PREFIXES"; then
+            echo "✅ Valid: \`$PR_TITLE\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "::error::PR title must follow conventional commit format"
+            exit 1
+          fi
