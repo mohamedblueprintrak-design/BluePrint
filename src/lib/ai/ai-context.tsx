@@ -172,8 +172,7 @@ export function AIProvider({ children }: { children: ReactNode }) {
     }
     
     // اختيار النموذج الأفضل
-    const { getBestModelForTask: getBest } = require('./model-config');
-    return getBest(task, hasImage);
+    return getBestModelForTask(task, hasImage);
   }, [state.preferredModel]);
 
   // تعيين حالة التحميل
