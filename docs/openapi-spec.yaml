@@ -1,0 +1,4297 @@
+openapi: 3.1.0
+
+# ─────────────────────────────────────────────────────────────────────────────
+# BluePrint SaaS API — Construction Project Management Platform
+# ─────────────────────────────────────────────────────────────────────────────
+
+info:
+  title: BluePrint SaaS API
+  description: >
+    Comprehensive API for the BluePrint construction project management platform.
+    Covers project lifecycle, task management, financial operations, procurement,
+    quality control, human resources, and AI-powered features.
+  x-description-ar: >
+    واجهة برمجة تطبيقات شاملة لمنصة إدارة المشاريع الإنشائية BluePrint.
+    تغطي دورة حياة المشروع، إدارة المهام، العمليات المالية، المشتريات، مراقبة الجودة، الموارد البشرية، والميزات المدعومة بالذكاء الاصطناعي.
+  version: 1.0.0
+  contact:
+    name: BluePrint API Support
+    email: api@blueprint.sa
+    url: https://docs.blueprint.sa
+  license:
+    name: Proprietary
+    url: https://blueprint.sa/license
+
+servers:
+  - url: http://localhost:3000/api
+    description: Local development server
+  - url: https://api.blueprint.sa/v1
+    description: Production server
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Authentication
+    description: User authentication and session management
+    x-description-ar: مصادقة المستخدم وإدارة الجلسات
+  - name: Health
+    description: System health monitoring
+    x-description-ar: مراقبة صحة النظام
+  - name: Projects
+    description: Construction project management
+    x-description-ar: إدارة المشاريع الإنشائية
+  - name: Tasks
+    description: Task and milestone management
+    x-description-ar: إدارة المهام والمعالم
+  - name: Clients
+    description: Client management
+    x-description-ar: إدارة العملاء
+  - name: Invoices
+    description: Invoice and billing management
+    x-description-ar: إدارة الفواتير والفوترة
+  - name: Contracts
+    description: Contract management
+    x-description-ar: إدارة العقود
+  - name: Proposals
+    description: Project proposals and estimates
+    x-description-ar: مقترحات المشاريع والتقديرات
+  - name: BOQ
+    description: Bill of Quantities
+    x-description-ar: قائمة الكميات
+  - name: Transmittals
+    description: Document transmittals
+    x-description-ar: إحالات المستندات
+  - name: Defects
+    description: Quality defect tracking
+    x-description-ar: تتبع عيوب الجودة
+  - name: Site Reports
+    description: Daily/weekly site reports
+    x-description-ar: تقارير الموقع اليومية/الأسبوعية
+  - name: Risks
+    description: Risk assessment and management
+    x-description-ar: تقييم وإدارة المخاطر
+  - name: Attendance
+    description: Employee attendance tracking
+    x-description-ar: تتبع حضور الموظفين
+  - name: Leaves
+    description: Leave request management
+    x-description-ar: إدارة طلبات الإجازات
+  - name: Materials
+    description: Material inventory and tracking
+    x-description-ar: جرد وتتبع المواد
+  - name: Purchase Orders
+    description: Purchase order management
+    x-description-ar: إدارة أوامر الشراء
+  - name: Knowledge Base
+    description: Knowledge base articles
+    x-description-ar: مقالات قاعدة المعرفة
+  - name: Notifications
+    description: User notifications
+    x-description-ar: إشعارات المستخدم
+  - name: AI Chat
+    description: AI-powered chat and assistance
+    x-description-ar: الدردشة والمساعدة المدعومة بالذكاء الاصطناعي
+  - name: Reports
+    description: Report generation and analytics
+    x-description-ar: إنشاء التقارير والتحليلات
+  - name: Workflow
+    description: Workflow automation and approvals
+    x-description-ar: أتمتة سير العمل والموافقات
+  - name: Team
+    description: Team and user management
+    x-description-ar: إدارة الفريق والمستخدمين
+  - name: HR
+    description: Human resources management
+    x-description-ar: إدارة الموارد البشرية
+  - name: Finance
+    description: Financial overview and reports
+    x-description-ar: النظرة المالية والتقارير
+  - name: Documents
+    description: Document management
+    x-description-ar: إدارة المستندات
+  - name: Suppliers
+    description: Supplier management
+    x-description-ar: إدارة الموردين
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Security Schemes
+# ─────────────────────────────────────────────────────────────────────────────
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from the login endpoint.
+
+  # ── Reusable Parameter Definitions ───────────────────────────────────────
+
+  parameters:
+    RequestId:
+      name: X-Request-Id
+      in: header
+      description: Optional unique request identifier for tracing.
+      schema:
+        type: string
+      required: false
+    Page:
+      name: page
+      in: query
+      description: Page number (1-based).
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    Limit:
+      name: limit
+      in: query
+      description: Number of items per page.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    SortBy:
+      name: sortBy
+      in: query
+      description: Field to sort by.
+      schema:
+        type: string
+    SortOrder:
+      name: sortOrder
+      in: query
+      description: Sort direction.
+      schema:
+        type: string
+        enum: [asc, desc]
+        default: desc
+    Search:
+      name: search
+      in: query
+      description: Full-text search term.
+      schema:
+        type: string
+    ResourceId:
+      name: id
+      in: path
+      description: Unique resource identifier (CUID).
+      required: true
+      schema:
+        type: string
+
+  # ── Common Schemas ───────────────────────────────────────────────────────
+
+  schemas:
+    # ── Pagination ────────────────────────────────────────────────────────
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        total:
+          type: integer
+          example: 150
+        totalPages:
+          type: integer
+          example: 8
+        hasNext:
+          type: boolean
+          example: true
+        hasPrev:
+          type: boolean
+          example: false
+
+    # ── Error Response ────────────────────────────────────────────────────
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              example: RESOURCE_NOT_FOUND
+            message:
+              type: string
+              example: The requested resource was not found.
+            details:
+              oneOf:
+                - type: object
+                - type: array
+        timestamp:
+          type: string
+          format: date-time
+        requestId:
+          type: string
+
+    ValidationErrorField:
+      type: object
+      properties:
+        field:
+          type: string
+          example: name
+        message:
+          type: string
+          example: String must contain at least 1 character(s)
+        code:
+          type: string
+          example: too_small
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: VALIDATION_INVALID_INPUT
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                $ref: '#/components/schemas/ValidationErrorField'
+
+    # ── Success Response ───────────────────────────────────────────────────
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+        timestamp:
+          type: string
+          format: date-time
+        requestId:
+          type: string
+
+    # ── Enums ─────────────────────────────────────────────────────────────
+    ProjectStatus:
+      type: string
+      enum:
+        - planning
+        - active
+        - on_hold
+        - completed
+        - cancelled
+        - archived
+      description: Project lifecycle status
+      x-description-ar: حالة دورة حياة المشروع
+
+    TaskStatus:
+      type: string
+      enum:
+        - todo
+        - in_progress
+        - in_review
+        - done
+        - cancelled
+      description: Task status
+      x-description-ar: حالة المهمة
+
+    TaskPriority:
+      type: string
+      enum:
+        - low
+        - medium
+        - high
+        - critical
+      description: Task priority level
+      x-description-ar: مستوى أولوية المهمة
+
+    InvoiceStatus:
+      type: string
+      enum:
+        - draft
+        - sent
+        - paid
+        - overdue
+        - cancelled
+      description: Invoice status
+      x-description-ar: حالة الفاتورة
+
+    ContractStatus:
+      type: string
+      enum:
+        - draft
+        - active
+        - expired
+        - terminated
+      description: Contract status
+      x-description-ar: حالة العقد
+
+    ProposalStatus:
+      type: string
+      enum:
+        - draft
+        - sent
+        - accepted
+        - rejected
+        - expired
+      description: Proposal status
+      x-description-ar: حالة المقترح
+
+    LeaveStatus:
+      type: string
+      enum:
+        - pending
+        - approved
+        - rejected
+        - cancelled
+      description: Leave request status
+      x-description-ar: حالة طلب الإجازة
+
+    LeaveType:
+      type: string
+      enum:
+        - annual
+        - sick
+        - emergency
+        - maternity
+        - unpaid
+      description: Type of leave
+      x-description-ar: نوع الإجازة
+
+    DefectSeverity:
+      type: string
+      enum:
+        - minor
+        - moderate
+        - major
+        - critical
+      description: Defect severity level
+      x-description-ar: مستوى شدة العيب
+
+    RiskLevel:
+      type: string
+      enum:
+        - low
+        - medium
+        - high
+        - critical
+      description: Risk severity level
+      x-description-ar: مستوى خطورة المخاطرة
+
+    POStatus:
+      type: string
+      enum:
+        - draft
+        - submitted
+        - approved
+        - ordered
+        - delivered
+        - cancelled
+      description: Purchase order status
+      x-description-ar: حالة أمر الشراء
+
+    NotificationType:
+      type: string
+      enum:
+        - info
+        - warning
+        - success
+        - error
+        - task_assigned
+        - task_due
+        - approval_required
+        - invoice_paid
+      description: Notification type
+      x-description-ar: نوع الإشعار
+
+    UserRole:
+      type: string
+      enum:
+        - admin
+        - project_manager
+        - engineer
+        - contractor
+        - client
+        - viewer
+      description: User role within the system
+      x-description-ar: دور المستخدم في النظام
+
+    # ── Core Models ───────────────────────────────────────────────────────
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+        avatarUrl:
+          type: string
+          format: uri
+        organizationId:
+          type: string
+        isActive:
+          type: boolean
+        lastLoginAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Project:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          example: Tower A - Residential Complex
+        code:
+          type: string
+          example: PRJ-2024-001
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/ProjectStatus'
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        budget:
+          type: number
+          format: double
+          example: 5000000
+        spent:
+          type: number
+          format: double
+          example: 2150000
+        progress:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+          example: 43
+        location:
+          type: string
+          example: Riyadh, Saudi Arabia
+        clientId:
+          type: string
+        client:
+          $ref: '#/components/schemas/Client'
+        managerId:
+          type: string
+        manager:
+          $ref: '#/components/schemas/User'
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+          example: Foundation Excavation
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        priority:
+          $ref: '#/components/schemas/TaskPriority'
+        projectId:
+          type: string
+        assigneeId:
+          type: string
+        assignee:
+          $ref: '#/components/schemas/User'
+        startDate:
+          type: string
+          format: date
+        dueDate:
+          type: string
+          format: date
+        estimatedHours:
+          type: number
+        actualHours:
+          type: number
+        dependencies:
+          type: array
+          items:
+            type: string
+        subtasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+        attachments:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              url:
+                type: string
+              size:
+                type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Client:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          example: Al-Rajhi Development Corp.
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        company:
+          type: string
+        address:
+          type: string
+        contactPerson:
+          type: string
+        taxId:
+          type: string
+        projects:
+          type: array
+          items:
+            $ref: '#/components/schemas/Project'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Invoice:
+      type: object
+      properties:
+        id:
+          type: string
+        invoiceNumber:
+          type: string
+          example: INV-2024-001
+        projectId:
+          type: string
+        clientId:
+          type: string
+        status:
+          $ref: '#/components/schemas/InvoiceStatus'
+        subtotal:
+          type: number
+          format: double
+        tax:
+          type: number
+          format: double
+        total:
+          type: number
+          format: double
+          example: 150000
+        currency:
+          type: string
+          default: SAR
+        issueDate:
+          type: string
+          format: date
+        dueDate:
+          type: string
+          format: date
+        paidDate:
+          type: string
+          format: date
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              description:
+                type: string
+              quantity:
+                type: number
+              unitPrice:
+                type: number
+              total:
+                type: number
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Contract:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+          example: Construction Agreement - Tower A
+        contractNumber:
+          type: string
+          example: CTR-2024-001
+        projectId:
+          type: string
+        clientId:
+          type: string
+        status:
+          $ref: '#/components/schemas/ContractStatus'
+        value:
+          type: number
+          format: double
+          example: 5000000
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        terms:
+          type: string
+        attachmentUrl:
+          type: string
+          format: uri
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Proposal:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        projectId:
+          type: string
+        clientId:
+          type: string
+        status:
+          $ref: '#/components/schemas/ProposalStatus'
+        version:
+          type: integer
+        estimatedBudget:
+          type: number
+          format: double
+        estimatedDuration:
+          type: integer
+          description: Duration in days
+        scopeOfWork:
+          type: string
+        terms:
+          type: string
+        validUntil:
+          type: string
+          format: date
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    BOQItem:
+      type: object
+      properties:
+        id:
+          type: string
+        projectId:
+          type: string
+        category:
+          type: string
+          example: Civil Works
+        description:
+          type: string
+          example: Ready-mix concrete C40
+        unit:
+          type: string
+          example: m³
+        quantity:
+          type: number
+        unitPrice:
+          type: number
+        totalPrice:
+          type: number
+        specification:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Transmittal:
+      type: object
+      properties:
+        id:
+          type: string
+        referenceNumber:
+          type: string
+          example: TRN-2024-001
+        projectId:
+          type: string
+        title:
+          type: string
+        from:
+          type: string
+        to:
+          type: string
+        subject:
+          type: string
+        documents:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              url:
+                type: string
+              documentNumber:
+                type: string
+        status:
+          type: string
+          enum: [draft, sent, acknowledged, returned]
+        responseDueDate:
+          type: string
+          format: date
+        remarks:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Defect:
+      type: object
+      properties:
+        id:
+          type: string
+        projectId:
+          type: string
+        title:
+          type: string
+          example: Crack in column C-12
+        description:
+          type: string
+        severity:
+          $ref: '#/components/schemas/DefectSeverity'
+        status:
+          type: string
+          enum: [open, in_progress, resolved, closed]
+        location:
+          type: string
+          example: Level 3, Zone B
+        reportedById:
+          type: string
+        assignedToId:
+          type: string
+        dueDate:
+          type: string
+          format: date
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+        resolutionNotes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    SiteReport:
+      type: object
+      properties:
+        id:
+          type: string
+        projectId:
+          type: string
+        reportDate:
+          type: string
+          format: date
+        reportType:
+          type: string
+          enum: [daily, weekly, monthly]
+        weather:
+          type: object
+          properties:
+            temperature:
+              type: number
+            condition:
+              type: string
+              example: Sunny
+        manpower:
+          type: object
+          properties:
+            total:
+              type: integer
+            byRole:
+              type: object
+              additionalProperties:
+                type: integer
+        workCompleted:
+          type: string
+        workPlanned:
+          type: string
+        issues:
+          type: string
+        safetyIncidents:
+          type: integer
+          default: 0
+        photos:
+          type: array
+          items:
+            type: string
+            format: uri
+        createdBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Risk:
+      type: object
+      properties:
+        id:
+          type: string
+        projectId:
+          type: string
+        title:
+          type: string
+          example: Material price increase
+        description:
+          type: string
+        category:
+          type: string
+          enum: [financial, technical, operational, environmental, legal, safety]
+        level:
+          $ref: '#/components/schemas/RiskLevel'
+        probability:
+          type: string
+          enum: [low, medium, high]
+        impact:
+          type: string
+          enum: [low, medium, high]
+        mitigationPlan:
+          type: string
+        owner:
+          type: string
+        status:
+          type: string
+          enum: [identified, analysing, mitigating, accepted, transferred, closed]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Attendance:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        projectId:
+          type: string
+        date:
+          type: string
+          format: date
+        checkIn:
+          type: string
+          format: date-time
+        checkOut:
+          type: string
+          format: date-time
+        hoursWorked:
+          type: number
+        status:
+          type: string
+          enum: [present, absent, late, half_day]
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    LeaveRequest:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        type:
+          $ref: '#/components/schemas/LeaveType'
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        days:
+          type: number
+        reason:
+          type: string
+        status:
+          $ref: '#/components/schemas/LeaveStatus'
+        approvedById:
+          type: string
+        rejectionReason:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Material:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          example: Portland Cement CEM I
+        category:
+          type: string
+          example: Cement
+        unit:
+          type: string
+          example: ton
+        currentStock:
+          type: number
+        minimumStock:
+          type: number
+        unitCost:
+          type: number
+        supplierId:
+          type: string
+        projectId:
+          type: string
+        lastOrderDate:
+          type: string
+          format: date
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    PurchaseOrder:
+      type: object
+      properties:
+        id:
+          type: string
+        poNumber:
+          type: string
+          example: PO-2024-001
+        supplierId:
+          type: string
+        projectId:
+          type: string
+        status:
+          $ref: '#/components/schemas/POStatus'
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              materialId:
+                type: string
+              description:
+                type: string
+              quantity:
+                type: number
+              unitPrice:
+                type: number
+              total:
+                type: number
+        subtotal:
+          type: number
+        tax:
+          type: number
+        total:
+          type: number
+        deliveryDate:
+          type: string
+          format: date
+        deliveryAddress:
+          type: string
+        notes:
+          type: string
+        approvedById:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        type:
+          $ref: '#/components/schemas/NotificationType'
+        title:
+          type: string
+        message:
+          type: string
+        data:
+          type: object
+        isRead:
+          type: boolean
+        actionUrl:
+          type: string
+          format: uri
+        createdAt:
+          type: string
+          format: date-time
+
+    KnowledgeArticle:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        content:
+          type: string
+        category:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        authorId:
+          type: string
+        status:
+          type: string
+          enum: [draft, published, archived]
+        isPublic:
+          type: boolean
+        views:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Supplier:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          example: Saudi Cement Company
+        contactPerson:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        address:
+          type: string
+        taxId:
+          type: string
+        rating:
+          type: number
+          minimum: 0
+          maximum: 5
+        categories:
+          type: array
+          items:
+            type: string
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ChatMessage:
+      type: object
+      properties:
+        id:
+          type: string
+        conversationId:
+          type: string
+        role:
+          type: string
+          enum: [user, assistant, system]
+        content:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+
+    WorkflowAction:
+      type: object
+      properties:
+        id:
+          type: string
+        workflowId:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum: [approval, notification, task_creation, status_update, field_update]
+        assigneeId:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, rejected, skipped]
+        completedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    HealthCheckResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        timestamp:
+          type: string
+          format: date-time
+        system:
+          type: object
+          properties:
+            nodeVersion:
+              type: string
+            environment:
+              type: string
+            uptimeSeconds:
+              type: integer
+            memory:
+              type: object
+              properties:
+                rssMB:
+                  type: string
+                heapUsagePercent:
+                  type: number
+        checks:
+          type: array
+          items:
+            type: object
+            properties:
+              component:
+                type: string
+              status:
+                type: string
+              message:
+                type: string
+              responseTimeMs:
+                type: number
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Paths (51 API Endpoints)
+# ─────────────────────────────────────────────────────────────────────────────
+
+paths:
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # HEALTH (1 endpoint)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /health:
+    get:
+      tags: [Health]
+      summary: System health check
+      description: >
+        Returns the health status of the system including database connectivity,
+        memory usage, disk space, and external service availability.
+        Used by monitoring tools and container orchestrators.
+      x-description-ar: >
+        إرجاع حالة صحة النظام بما في ذلك اتصال قاعدة البيانات،
+        استخدام الذاكرة، مساحة القرص، وتوفر الخدمات الخارجية.
+      security: []
+      operationId: getHealth
+      responses:
+        '200':
+          description: System is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '503':
+          description: System is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheckResponse'
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # AUTHENTICATION (3 endpoints)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: User login
+      description: Authenticates a user with email and password, returning a JWT token.
+      x-description-ar: مصادقة المستخدم بالبريد الإلكتروني وكلمة المرور، وإرجاع رمز JWT.
+      security: []
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: admin@blueprint.sa
+                password:
+                  type: string
+                  format: password
+                  example: SecurePassword123!
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                        description: JWT access token.
+                      user:
+                        $ref: '#/components/schemas/User'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many login attempts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/register:
+    post:
+      tags: [Authentication]
+      summary: User registration
+      description: Creates a new user account.
+      x-description-ar: إنشاء حساب مستخدم جديد.
+      security: []
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, name]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                name:
+                  type: string
+                organizationName:
+                  type: string
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '409':
+          description: Email already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+
+  /auth/me:
+    get:
+      tags: [Authentication]
+      summary: Get current user
+      description: Returns the currently authenticated user's profile.
+      x-description-ar: إرجاع ملف تعريف المستخدم المصادق عليه حاليًا.
+      operationId: getCurrentUser
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # PROJECTS (3 endpoints)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /projects:
+    get:
+      tags: [Projects]
+      summary: List projects
+      description: Returns a paginated list of projects with filtering, sorting, and search.
+      x-description-ar: إرجاع قائمة مشاريع مع ترقيم الصفحات والتصفية والفرز والبحث.
+      operationId: listProjects
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/SortBy'
+        - $ref: '#/components/parameters/SortOrder'
+        - $ref: '#/components/parameters/Search'
+        - name: filter[status]
+          in: query
+          schema:
+            type: string
+        - name: filter[clientId]
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated list of projects
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Project'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '401':
+          $ref: '#/paths/~1auth~1login/post/responses/401'
+
+    post:
+      tags: [Projects]
+      summary: Create project
+      description: Creates a new construction project.
+      x-description-ar: إنشاء مشروع بناء جديد.
+      operationId: createProject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, code, clientId, startDate, endDate]
+              properties:
+                name:
+                  type: string
+                  maxLength: 200
+                code:
+                  type: string
+                  maxLength: 50
+                description:
+                  type: string
+                clientId:
+                  type: string
+                managerId:
+                  type: string
+                startDate:
+                  type: string
+                  format: date
+                endDate:
+                  type: string
+                  format: date
+                budget:
+                  type: number
+                location:
+                  type: string
+      responses:
+        '201':
+          description: Project created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '409':
+          description: Project code already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          $ref: '#/paths/~1auth~1register/post/responses/422'
+
+  /projects/{id}:
+    get:
+      tags: [Projects]
+      summary: Get project
+      description: Returns a single project by ID with full details.
+      x-description-ar: إرجاع مشروع واحد بالمعرف مع التفاصيل الكاملة.
+      operationId: getProject
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Project details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: Project not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags: [Projects]
+      summary: Update project
+      description: Updates an existing project.
+      x-description-ar: تحديث مشروع موجود.
+      operationId: updateProject
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                status:
+                  $ref: '#/components/schemas/ProjectStatus'
+                budget:
+                  type: number
+                progress:
+                  type: number
+                endDate:
+                  type: string
+                  format: date
+      responses:
+        '200':
+          description: Project updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: Project not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Invalid status transition or budget exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags: [Projects]
+      summary: Delete project
+      description: Soft-deletes a project. Active projects cannot be deleted.
+      x-description-ar: حذف مشروع (حذف ناعم). لا يمكن حذف المشاريع النشطة.
+      operationId: deleteProject
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '204':
+          description: Project deleted successfully
+        '404':
+          description: Project not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Cannot delete active project
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # TASKS (3 endpoints)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /tasks:
+    get:
+      tags: [Tasks]
+      summary: List tasks
+      description: Returns a paginated list of tasks with filtering and search.
+      x-description-ar: إرجاع قائمة المهام مع الترقيم والتصفية.
+      operationId: listTasks
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/SortBy'
+        - $ref: '#/components/parameters/SortOrder'
+        - $ref: '#/components/parameters/Search'
+        - name: filter[projectId]
+          in: query
+          schema:
+            type: string
+        - name: filter[status]
+          in: query
+          schema:
+            type: string
+        - name: filter[priority]
+          in: query
+          schema:
+            type: string
+        - name: filter[assigneeId]
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated list of tasks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+
+    post:
+      tags: [Tasks]
+      summary: Create task
+      description: Creates a new task within a project.
+      x-description-ar: إنشاء مهمة جديدة ضمن مشروع.
+      operationId: createTask
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, projectId]
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                projectId:
+                  type: string
+                assigneeId:
+                  type: string
+                priority:
+                  $ref: '#/components/schemas/TaskPriority'
+                startDate:
+                  type: string
+                  format: date
+                dueDate:
+                  type: string
+                  format: date
+                estimatedHours:
+                  type: number
+                dependencies:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '422':
+          $ref: '#/paths/~1auth~1register/post/responses/422'
+
+  /tasks/{id}:
+    put:
+      tags: [Tasks]
+      summary: Update task
+      description: Updates an existing task.
+      x-description-ar: تحديث مهمة موجودة.
+      operationId: updateTask
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                status:
+                  $ref: '#/components/schemas/TaskStatus'
+                priority:
+                  $ref: '#/components/schemas/TaskPriority'
+                assigneeId:
+                  type: string
+                dueDate:
+                  type: string
+                  format: date
+                actualHours:
+                  type: number
+      responses:
+        '200':
+          description: Task updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags: [Tasks]
+      summary: Delete task
+      description: Deletes a task. Tasks with uncompleted sub-tasks cannot be deleted.
+      x-description-ar: حذف مهمة. لا يمكن حذف المهام ذات المهام الفرعية غير المكتملة.
+      operationId: deleteTask
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '204':
+          description: Task deleted
+        '409':
+          description: Task has uncompleted sub-tasks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # CLIENTS (3 endpoints)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /clients:
+    get:
+      tags: [Clients]
+      summary: List clients
+      description: Returns a paginated list of clients.
+      x-description-ar: إرجاع قائمة العملاء.
+      operationId: listClients
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Search'
+      responses:
+        '200':
+          description: Paginated list of clients
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Client'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+
+    post:
+      tags: [Clients]
+      summary: Create client
+      description: Creates a new client record.
+      x-description-ar: إنشاء سجل عميل جديد.
+      operationId: createClient
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email]
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+                company:
+                  type: string
+                address:
+                  type: string
+                taxId:
+                  type: string
+      responses:
+        '201':
+          description: Client created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /clients/{id}:
+    get:
+      tags: [Clients]
+      summary: Get client
+      description: Returns a client by ID with associated projects.
+      x-description-ar: إرجاع عميل بالمعرف مع المشاريع المرتبطة.
+      operationId: getClient
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Client details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: Client not found
+
+    put:
+      tags: [Clients]
+      summary: Update client
+      description: Updates an existing client.
+      x-description-ar: تحديث عميل موجود.
+      operationId: updateClient
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+                company:
+                  type: string
+                address:
+                  type: string
+      responses:
+        '200':
+          description: Client updated
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # INVOICES (3 endpoints)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /invoices:
+    get:
+      tags: [Invoices]
+      summary: List invoices
+      description: Returns a paginated list of invoices with filtering.
+      x-description-ar: إرجاع قائمة الفواتير مع التصفية.
+      operationId: listInvoices
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: filter[status]
+          in: query
+          schema:
+            $ref: '#/components/schemas/InvoiceStatus'
+        - name: filter[projectId]
+          in: query
+          schema:
+            type: string
+        - name: filter[clientId]
+          in: query
+          schema:
+            type: string
+        - name: from
+          in: query
+          description: Filter by issue date (from)
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          description: Filter by issue date (to)
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Paginated list of invoices
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Invoice'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+
+    post:
+      tags: [Invoices]
+      summary: Create invoice
+      description: Creates a new invoice for a project.
+      x-description-ar: إنشاء فاتورة جديدة لمشروع.
+      operationId: createInvoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [projectId, clientId, items]
+              properties:
+                invoiceNumber:
+                  type: string
+                projectId:
+                  type: string
+                clientId:
+                  type: string
+                currency:
+                  type: string
+                  default: SAR
+                issueDate:
+                  type: string
+                  format: date
+                dueDate:
+                  type: string
+                  format: date
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required: [description, quantity, unitPrice]
+                    properties:
+                      description:
+                        type: string
+                      quantity:
+                        type: number
+                      unitPrice:
+                        type: number
+                notes:
+                  type: string
+      responses:
+        '201':
+          description: Invoice created
+        '409':
+          description: Invoice number already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /invoices/{id}:
+    get:
+      tags: [Invoices]
+      summary: Get invoice
+      description: Returns an invoice by ID with line items.
+      x-description-ar: إرجاع فاتورة بالمعرف مع البنود.
+      operationId: getInvoice
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Invoice details
+        '404':
+          description: Invoice not found
+
+    put:
+      tags: [Invoices]
+      summary: Update invoice
+      description: Updates an invoice. Paid invoices cannot be modified.
+      x-description-ar: تحديث فاتورة. لا يمكن تعديل الفواتير المدفوعة.
+      operationId: updateInvoice
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  $ref: '#/components/schemas/InvoiceStatus'
+                dueDate:
+                  type: string
+                  format: date
+                notes:
+                  type: string
+      responses:
+        '200':
+          description: Invoice updated
+        '409':
+          description: Cannot modify paid invoice
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags: [Invoices]
+      summary: Delete invoice
+      description: Deletes a draft invoice. Sent/paid invoices cannot be deleted.
+      x-description-ar: حذف فاتورة مسودة. لا يمكن حذف الفواتير المرسلة/المدفوعة.
+      operationId: deleteInvoice
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '204':
+          description: Invoice deleted
+        '409':
+          description: Cannot delete sent or paid invoice
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # CONTRACTS (2 endpoints)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /contracts:
+    get:
+      tags: [Contracts]
+      summary: List contracts
+      description: Returns a paginated list of contracts.
+      x-description-ar: إرجاع قائمة العقود.
+      operationId: listContracts
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: filter[status]
+          in: query
+          schema:
+            type: string
+        - name: filter[projectId]
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated list of contracts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Contract'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+
+    post:
+      tags: [Contracts]
+      summary: Create contract
+      description: Creates a new contract.
+      x-description-ar: إنشاء عقد جديد.
+      operationId: createContract
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, contractNumber, projectId, clientId, startDate, endDate, value]
+              properties:
+                title:
+                  type: string
+                contractNumber:
+                  type: string
+                projectId:
+                  type: string
+                clientId:
+                  type: string
+                value:
+                  type: number
+                startDate:
+                  type: string
+                  format: date
+                endDate:
+                  type: string
+                  format: date
+                terms:
+                  type: string
+      responses:
+        '201':
+          description: Contract created
+
+  /contracts/{id}:
+    get:
+      tags: [Contracts]
+      summary: Get contract
+      description: Returns a contract by ID.
+      x-description-ar: إرجاع عقد بالمعرف.
+      operationId: getContract
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Contract details
+        '404':
+          description: Contract not found
+
+    put:
+      tags: [Contracts]
+      summary: Update contract
+      description: Updates an existing contract.
+      x-description-ar: تحديث عقد موجود.
+      operationId: updateContract
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  $ref: '#/components/schemas/ContractStatus'
+                value:
+                  type: number
+                terms:
+                  type: string
+      responses:
+        '200':
+          description: Contract updated
+        '409':
+          description: Contract is expired
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # PROPOSALS (2 endpoints)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /proposals:
+    get:
+      tags: [Proposals]
+      summary: List proposals
+      description: Returns a paginated list of proposals.
+      x-description-ar: إرجاع قائمة المقترحات.
+      operationId: listProposals
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: filter[status]
+          in: query
+          schema:
+            type: string
+        - name: filter[projectId]
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated list of proposals
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Proposal'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+
+    post:
+      tags: [Proposals]
+      summary: Create proposal
+      description: Creates a new project proposal.
+      x-description-ar: إنشاء مقترح مشروع جديد.
+      operationId: createProposal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, projectId, clientId, estimatedBudget]
+              properties:
+                title:
+                  type: string
+                projectId:
+                  type: string
+                clientId:
+                  type: string
+                estimatedBudget:
+                  type: number
+                estimatedDuration:
+                  type: integer
+                scopeOfWork:
+                  type: string
+                validUntil:
+                  type: string
+                  format: date
+      responses:
+        '201':
+          description: Proposal created
+
+  /proposals/{id}:
+    put:
+      tags: [Proposals]
+      summary: Update proposal
+      description: Updates a proposal (status, budget, etc.).
+      x-description-ar: تحديث مقترح.
+      operationId: updateProposal
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  $ref: '#/components/schemas/ProposalStatus'
+                estimatedBudget:
+                  type: number
+                scopeOfWork:
+                  type: string
+      responses:
+        '200':
+          description: Proposal updated
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # BOQ (2 endpoints)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /boq:
+    get:
+      tags: [BOQ]
+      summary: List BOQ items
+      description: Returns a paginated list of Bill of Quantities items.
+      x-description-ar: إرجاع قائمة بنود قائمة الكميات.
+      operationId: listBOQItems
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: filter[projectId]
+          in: query
+          schema:
+            type: string
+        - name: filter[category]
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated BOQ items
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BOQItem'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+
+    post:
+      tags: [BOQ]
+      summary: Create BOQ item
+      description: Adds a new item to the Bill of Quantities.
+      x-description-ar: إضافة بند جديد لقائمة الكميات.
+      operationId: createBOQItem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [projectId, category, description, unit, quantity, unitPrice]
+              properties:
+                projectId:
+                  type: string
+                category:
+                  type: string
+                description:
+                  type: string
+                unit:
+                  type: string
+                quantity:
+                  type: number
+                unitPrice:
+                  type: number
+                specification:
+                  type: string
+      responses:
+        '201':
+          description: BOQ item created
+
+  /boq/{id}:
+    put:
+      tags: [BOQ]
+      summary: Update BOQ item
+      description: Updates a BOQ item.
+      x-description-ar: تحديث بند قائمة الكميات.
+      operationId: updateBOQItem
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                quantity:
+                  type: number
+                unitPrice:
+                  type: number
+      responses:
+        '200':
+          description: BOQ item updated
+
+    delete:
+      tags: [BOQ]
+      summary: Delete BOQ item
+      description: Removes a BOQ item.
+      x-description-ar: حذف بند قائمة الكميات.
+      operationId: deleteBOQItem
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '204':
+          description: BOQ item deleted
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # TRANSMITTALS (2 endpoints)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /transmittals:
+    get:
+      tags: [Transmittals]
+      summary: List transmittals
+      description: Returns a paginated list of document transmittals.
+      x-description-ar: إرجاع قائمة إحالات المستندات.
+      operationId: listTransmittals
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: filter[projectId]
+          in: query
+          schema:
+            type: string
+        - name: filter[status]
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated transmittals
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Transmittal'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+
+    post:
+      tags: [Transmittals]
+      summary: Create transmittal
+      description: Creates a new document transmittal.
+      x-description-ar: إنشاء إحالة مستندات جديدة.
+      operationId: createTransmittal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [referenceNumber, projectId, title, from, to]
+              properties:
+                referenceNumber:
+                  type: string
+                projectId:
+                  type: string
+                title:
+                  type: string
+                from:
+                  type: string
+                to:
+                  type: string
+                subject:
+                  type: string
+                responseDueDate:
+                  type: string
+                  format: date
+      responses:
+        '201':
+          description: Transmittal created
+        '409':
+          description: Reference number already exists
+
+  /transmittals/{id}:
+    get:
+      tags: [Transmittals]
+      summary: Get transmittal
+      description: Returns a transmittal by ID.
+      operationId: getTransmittal
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Transmittal details
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # DEFECTS (2 endpoints)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /defects:
+    get:
+      tags: [Defects]
+      summary: List defects
+      description: Returns a paginated list of quality defects.
+      x-description-ar: إرجاع قائمة عيوب الجودة.
+      operationId: listDefects
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: filter[projectId]
+          in: query
+          schema:
+            type: string
+        - name: filter[severity]
+          in: query
+          schema:
+            $ref: '#/components/schemas/DefectSeverity'
+        - name: filter[status]
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated defects
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Defect'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+
+    post:
+      tags: [Defects]
+      summary: Report defect
+      description: Creates a new quality defect report.
+      x-description-ar: إنشاء تقرير عيب جودة جديد.
+      operationId: createDefect
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [projectId, title, severity, location]
+              properties:
+                projectId:
+                  type: string
+                title:
+                  type: string
+                description:
+                  type: string
+                severity:
+                  $ref: '#/components/schemas/DefectSeverity'
+                location:
+                  type: string
+                assignedToId:
+                  type: string
+                dueDate:
+                  type: string
+                  format: date
+                images:
+                  type: array
+                  items:
+                    type: string
+                    format: uri
+      responses:
+        '201':
+          description: Defect created
+
+  /defects/{id}:
+    put:
+      tags: [Defects]
+      summary: Update defect
+      description: Updates a defect (status, resolution notes, etc.).
+      x-description-ar: تحديث عيب.
+      operationId: updateDefect
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [open, in_progress, resolved, closed]
+                resolutionNotes:
+                  type: string
+                assignedToId:
+                  type: string
+      responses:
+        '200':
+          description: Defect updated
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # SITE REPORTS (2 endpoints)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /site-reports:
+    get:
+      tags: [Site Reports]
+      summary: List site reports
+      description: Returns a paginated list of site reports.
+      x-description-ar: إرجاع قائمة تقارير الموقع.
+      operationId: listSiteReports
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: filter[projectId]
+          in: query
+          schema:
+            type: string
+        - name: filter[reportType]
+          in: query
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Paginated site reports
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SiteReport'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+
+    post:
+      tags: [Site Reports]
+      summary: Create site report
+      description: Creates a new daily, weekly, or monthly site report.
+      x-description-ar: إنشاء تقرير موقع جديد.
+      operationId: createSiteReport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [projectId, reportDate, reportType]
+              properties:
+                projectId:
+                  type: string
+                reportDate:
+                  type: string
+                  format: date
+                reportType:
+                  type: string
+                  enum: [daily, weekly, monthly]
+                weather:
+                  type: object
+                  properties:
+                    temperature:
+                      type: number
+                    condition:
+                      type: string
+                manpower:
+                  type: object
+                  properties:
+                    total:
+                      type: integer
+                    byRole:
+                      type: object
+                      additionalProperties:
+                        type: integer
+                workCompleted:
+                  type: string
+                workPlanned:
+                  type: string
+                issues:
+                  type: string
+                safetyIncidents:
+                  type: integer
+                photos:
+                  type: array
+                  items:
+                    type: string
+                    format: uri
+      responses:
+        '201':
+          description: Site report created
+
+  /site-reports/{id}:
+    get:
+      tags: [Site Reports]
+      summary: Get site report
+      description: Returns a site report by ID.
+      x-description-ar: إرجاع تقرير موقع بالمعرف.
+      operationId: getSiteReport
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Site report details
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # RISKS (2 endpoints)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /risks:
+    get:
+      tags: [Risks]
+      summary: List risks
+      description: Returns a paginated list of project risks.
+      x-description-ar: إرجاع قائمة مخاطر المشروع.
+      operationId: listRisks
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: filter[projectId]
+          in: query
+          schema:
+            type: string
+        - name: filter[category]
+          in: query
+          schema:
+            type: string
+        - name: filter[level]
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated risks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Risk'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+
+    post:
+      tags: [Risks]
+      summary: Create risk
+      description: Creates a new risk entry for a project.
+      x-description-ar: إنشاء إدخال مخاطرة جديد لمشروع.
+      operationId: createRisk
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [projectId, title, category, level, probability, impact]
+              properties:
+                projectId:
+                  type: string
+                title:
+                  type: string
+                description:
+                  type: string
+                category:
+                  type: string
+                  enum: [financial, technical, operational, environmental, legal, safety]
+                level:
+                  $ref: '#/components/schemas/RiskLevel'
+                probability:
+                  type: string
+                  enum: [low, medium, high]
+                impact:
+                  type: string
+                  enum: [low, medium, high]
+                mitigationPlan:
+                  type: string
+                owner:
+                  type: string
+      responses:
+        '201':
+          description: Risk created
+
+  /risks/{id}:
+    put:
+      tags: [Risks]
+      summary: Update risk
+      description: Updates a risk entry.
+      x-description-ar: تحديث إدخال مخاطرة.
+      operationId: updateRisk
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [identified, analysing, mitigating, accepted, transferred, closed]
+                mitigationPlan:
+                  type: string
+                level:
+                  $ref: '#/components/schemas/RiskLevel'
+      responses:
+        '200':
+          description: Risk updated
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # ATTENDANCE (2 endpoints)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /attendance:
+    get:
+      tags: [Attendance]
+      summary: List attendance records
+      description: Returns a paginated list of attendance records.
+      x-description-ar: إرجاع قائمة سجلات الحضور.
+      operationId: listAttendance
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: filter[projectId]
+          in: query
+          schema:
+            type: string
+        - name: filter[userId]
+          in: query
+          schema:
+            type: string
+        - name: filter[status]
+          in: query
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Paginated attendance records
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Attendance'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+
+    post:
+      tags: [Attendance]
+      summary: Record attendance
+      description: Records a check-in or check-out for a worker.
+      x-description-ar: تسجيل حضور أو انصراف عامل.
+      operationId: recordAttendance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, projectId, action]
+              properties:
+                userId:
+                  type: string
+                projectId:
+                  type: string
+                action:
+                  type: string
+                  enum: [check_in, check_out]
+                notes:
+                  type: string
+      responses:
+        '201':
+          description: Attendance recorded
+
+  /attendance/summary:
+    get:
+      tags: [Attendance]
+      summary: Attendance summary
+      description: Returns aggregated attendance statistics for a project and date range.
+      x-description-ar: إرجاع إحصائيات الحضور المجمع لمشروع ونطاق تاريخي.
+      operationId: getAttendanceSummary
+      parameters:
+        - name: projectId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Attendance summary statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      totalPresent:
+                        type: integer
+                      totalAbsent:
+                        type: integer
+                      totalLate:
+                        type: integer
+                      averageHours:
+                        type: number
+                      byRole:
+                        type: object
+                        additionalProperties:
+                          type: object
+                          properties:
+                            present:
+                              type: integer
+                            absent:
+                              type: integer
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # LEAVES (2 endpoints)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /leaves:
+    get:
+      tags: [Leaves]
+      summary: List leave requests
+      description: Returns a paginated list of leave requests.
+      x-description-ar: إرجاع قائمة طلبات الإجازة.
+      operationId: listLeaves
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: filter[userId]
+          in: query
+          schema:
+            type: string
+        - name: filter[status]
+          in: query
+          schema:
+            type: string
+        - name: filter[type]
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated leave requests
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LeaveRequest'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+
+    post:
+      tags: [Leaves]
+      summary: Create leave request
+      description: Submits a new leave request.
+      x-description-ar: تقديم طلب إجازة جديد.
+      operationId: createLeaveRequest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, startDate, endDate]
+              properties:
+                type:
+                  $ref: '#/components/schemas/LeaveType'
+                startDate:
+                  type: string
+                  format: date
+                endDate:
+                  type: string
+                  format: date
+                reason:
+                  type: string
+      responses:
+        '201':
+          description: Leave request created
+        '409':
+          description: Insufficient balance or overlapping leave
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /leaves/{id}/approve:
+    post:
+      tags: [Leaves]
+      summary: Approve leave request
+      description: Approves a pending leave request.
+      x-description-ar: الموافقة على طلب إجازة معلق.
+      operationId: approveLeaveRequest
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                notes:
+                  type: string
+      responses:
+        '200':
+          description: Leave request approved
+        '409':
+          description: Already processed
+
+  /leaves/{id}/reject:
+    post:
+      tags: [Leaves]
+      summary: Reject leave request
+      description: Rejects a pending leave request.
+      x-description-ar: رفض طلب إجازة معلق.
+      operationId: rejectLeaveRequest
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Leave request rejected
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # MATERIALS (2 endpoints)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /materials:
+    get:
+      tags: [Materials]
+      summary: List materials
+      description: Returns a paginated list of materials in inventory.
+      x-description-ar: إرجاع قائمة المواد في المخزون.
+      operationId: listMaterials
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Search'
+        - name: filter[category]
+          in: query
+          schema:
+            type: string
+        - name: filter[projectId]
+          in: query
+          schema:
+            type: string
+        - name: lowStock
+          in: query
+          description: Filter to materials below minimum stock
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Paginated materials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Material'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+
+    post:
+      tags: [Materials]
+      summary: Create material
+      description: Adds a new material to the inventory.
+      x-description-ar: إضافة مادة جديدة للمخزون.
+      operationId: createMaterial
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, category, unit, currentStock, minimumStock, unitCost]
+              properties:
+                name:
+                  type: string
+                category:
+                  type: string
+                unit:
+                  type: string
+                currentStock:
+                  type: number
+                minimumStock:
+                  type: number
+                unitCost:
+                  type: number
+                supplierId:
+                  type: string
+                projectId:
+                  type: string
+      responses:
+        '201':
+          description: Material created
+
+  /materials/{id}:
+    put:
+      tags: [Materials]
+      summary: Update material
+      description: Updates material inventory details.
+      x-description-ar: تحديث تفاصيل مخزون المادة.
+      operationId: updateMaterial
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                currentStock:
+                  type: number
+                minimumStock:
+                  type: number
+                unitCost:
+                  type: number
+      responses:
+        '200':
+          description: Material updated
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # PURCHASE ORDERS (3 endpoints)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /purchase-orders:
+    get:
+      tags: [Purchase Orders]
+      summary: List purchase orders
+      description: Returns a paginated list of purchase orders.
+      x-description-ar: إرجاع قائمة أوامر الشراء.
+      operationId: listPurchaseOrders
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: filter[status]
+          in: query
+          schema:
+            type: string
+        - name: filter[supplierId]
+          in: query
+          schema:
+            type: string
+        - name: filter[projectId]
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated purchase orders
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PurchaseOrder'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+
+    post:
+      tags: [Purchase Orders]
+      summary: Create purchase order
+      description: Creates a new purchase order.
+      x-description-ar: إنشاء أمر شراء جديد.
+      operationId: createPurchaseOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [supplierId, projectId, items]
+              properties:
+                poNumber:
+                  type: string
+                supplierId:
+                  type: string
+                projectId:
+                  type: string
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required: [materialId, quantity, unitPrice]
+                    properties:
+                      materialId:
+                        type: string
+                      description:
+                        type: string
+                      quantity:
+                        type: number
+                      unitPrice:
+                        type: number
+                deliveryDate:
+                  type: string
+                  format: date
+                deliveryAddress:
+                  type: string
+                notes:
+                  type: string
+      responses:
+        '201':
+          description: Purchase order created
+
+  /purchase-orders/{id}:
+    get:
+      tags: [Purchase Orders]
+      summary: Get purchase order
+      description: Returns a purchase order by ID.
+      x-description-ar: إرجاع أمر شراء بالمعرف.
+      operationId: getPurchaseOrder
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Purchase order details
+
+    put:
+      tags: [Purchase Orders]
+      summary: Update purchase order
+      description: Updates a purchase order.
+      x-description-ar: تحديث أمر شراء.
+      operationId: updatePurchaseOrder
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  $ref: '#/components/schemas/POStatus'
+                deliveryDate:
+                  type: string
+                  format: date
+                notes:
+                  type: string
+      responses:
+        '200':
+          description: Purchase order updated
+
+  /purchase-orders/{id}/approve:
+    post:
+      tags: [Purchase Orders]
+      summary: Approve purchase order
+      description: Approves a pending purchase order.
+      x-description-ar: الموافقة على أمر شراء معلق.
+      operationId: approvePurchaseOrder
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Purchase order approved
+        '409':
+          description: Already approved
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # KNOWLEDGE BASE (2 endpoints)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /knowledge:
+    get:
+      tags: [Knowledge Base]
+      summary: List knowledge articles
+      description: Returns a paginated list of knowledge base articles.
+      x-description-ar: إرجاع قائمة مقالات قاعدة المعرفة.
+      operationId: listKnowledgeArticles
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Search'
+        - name: filter[category]
+          in: query
+          schema:
+            type: string
+        - name: filter[status]
+          in: query
+          schema:
+            type: string
+        - name: filter[tags]
+          in: query
+          schema:
+            type: string
+          description: Comma-separated tags
+      responses:
+        '200':
+          description: Paginated knowledge articles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/KnowledgeArticle'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+
+    post:
+      tags: [Knowledge Base]
+      summary: Create knowledge article
+      description: Creates a new knowledge base article.
+      x-description-ar: إنشاء مقال قاعدة معرفة جديد.
+      operationId: createKnowledgeArticle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, content, category]
+              properties:
+                title:
+                  type: string
+                content:
+                  type: string
+                category:
+                  type: string
+                tags:
+                  type: array
+                  items:
+                    type: string
+                status:
+                  type: string
+                  enum: [draft, published]
+                  default: draft
+                isPublic:
+                  type: boolean
+                  default: false
+      responses:
+        '201':
+          description: Article created
+
+  /knowledge/{id}:
+    get:
+      tags: [Knowledge Base]
+      summary: Get knowledge article
+      description: Returns a knowledge article by ID. Increments view count.
+      x-description-ar: إرجاع مقال قاعدة المعرفة بالمعرف. يزيد عداد المشاهدات.
+      operationId: getKnowledgeArticle
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Article details
+
+    put:
+      tags: [Knowledge Base]
+      summary: Update knowledge article
+      description: Updates a knowledge article.
+      x-description-ar: تحديث مقال قاعدة المعرفة.
+      operationId: updateKnowledgeArticle
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                content:
+                  type: string
+                category:
+                  type: string
+                tags:
+                  type: array
+                  items:
+                    type: string
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Article updated
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # NOTIFICATIONS (2 endpoints)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: List notifications
+      description: Returns a paginated list of notifications for the current user.
+      x-description-ar: إرجاع قائمة الإشعارات للمستخدم الحالي.
+      operationId: listNotifications
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: filter[isRead]
+          in: query
+          schema:
+            type: boolean
+        - name: filter[type]
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated notifications
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Notification'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+
+    post:
+      tags: [Notifications]
+      summary: Mark notifications as read
+      description: Marks one or more notifications as read.
+      x-description-ar: تحديد إشعار أو أكثر كمقروء.
+      operationId: markNotificationsRead
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [notificationIds]
+              properties:
+                notificationIds:
+                  type: array
+                  items:
+                    type: string
+                markAll:
+                  type: boolean
+                  default: false
+                  description: If true, marks all notifications as read
+      responses:
+        '200':
+          description: Notifications marked as read
+
+  /notifications/unread-count:
+    get:
+      tags: [Notifications]
+      summary: Get unread notification count
+      description: Returns the count of unread notifications for the current user.
+      x-description-ar: إرجاع عدد الإشعارات غير المقروءة.
+      operationId: getUnreadCount
+      responses:
+        '200':
+          description: Unread count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      count:
+                        type: integer
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # AI CHAT (2 endpoints)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /ai/chat:
+    post:
+      tags: [AI Chat]
+      summary: Send chat message
+      description: >
+        Sends a message to the AI assistant and receives a response.
+        Supports streaming (SSE) or regular JSON responses.
+      x-description-ar: >
+        إرسال رسالة للمساعد الذكي واستلام رد.
+        يدعم البث (SSE) أو استجابات JSON العادية.
+      operationId: sendChatMessage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message:
+                  type: string
+                  maxLength: 4000
+                conversationId:
+                  type: string
+                context:
+                  type: object
+                  description: Additional context (e.g., project ID, current page)
+                  properties:
+                    projectId:
+                      type: string
+                    page:
+                      type: string
+                stream:
+                  type: boolean
+                  default: false
+      responses:
+        '200':
+          description: AI response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      conversationId:
+                        type: string
+                      timestamp:
+                        type: string
+        '429':
+          description: AI rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ai/chat/{conversationId}/history:
+    get:
+      tags: [AI Chat]
+      summary: Get chat history
+      description: Returns the message history for a conversation.
+      x-description-ar: إرجاع سجل الرسائل لمحادثة.
+      operationId: getChatHistory
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Chat message history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ChatMessage'
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # REPORTS (2 endpoints)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /reports/dashboard:
+    get:
+      tags: [Reports]
+      summary: Get dashboard statistics
+      description: Returns aggregated statistics for the main dashboard.
+      x-description-ar: إرجاع إحصائيات مجموعة للوحة التحكم الرئيسية.
+      operationId: getDashboardStats
+      parameters:
+        - name: projectId
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      activeProjects:
+                        type: integer
+                      totalTasks:
+                        type: integer
+                      completedTasks:
+                        type: integer
+                      pendingInvoices:
+                        type: integer
+                      totalRevenue:
+                        type: number
+                      openDefects:
+                        type: integer
+                      activeRisks:
+                        type: integer
+                      teamMembers:
+                        type: integer
+
+  /reports/financial:
+    get:
+      tags: [Reports]
+      summary: Get financial report
+      description: Returns financial summary and breakdowns.
+      x-description-ar: إرجاع ملخص مالي وتفاصيل.
+      operationId: getFinancialReport
+      parameters:
+        - name: projectId
+          in: query
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Financial report data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      totalInvoiced:
+                        type: number
+                      totalPaid:
+                        type: number
+                      totalOutstanding:
+                        type: number
+                      totalExpenses:
+                        type: number
+                      profitMargin:
+                        type: number
+                      byMonth:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            month:
+                              type: string
+                            invoiced:
+                              type: number
+                            paid:
+                              type: number
+                            expenses:
+                              type: number
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # WORKFLOW (2 endpoints)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /workflows:
+    get:
+      tags: [Workflow]
+      summary: List workflows
+      description: Returns a paginated list of workflows.
+      x-description-ar: إرجاع قائمة سير العمل.
+      operationId: listWorkflows
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: filter[status]
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated workflows
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        description:
+                          type: string
+                        status:
+                          type: string
+                          enum: [active, paused, archived]
+                        steps:
+                          type: array
+                          items:
+                            type: object
+                        createdAt:
+                          type: string
+                          format: date-time
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+
+    post:
+      tags: [Workflow]
+      summary: Create workflow
+      description: Creates a new workflow with steps.
+      x-description-ar: إنشاء سير عمل جديد مع خطوات.
+      operationId: createWorkflow
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, steps]
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                entityType:
+                  type: string
+                  description: The model this workflow applies to
+                steps:
+                  type: array
+                  items:
+                    type: object
+                    required: [name, type]
+                    properties:
+                      name:
+                        type: string
+                      type:
+                        type: string
+                        enum: [approval, notification, task_creation, status_update, field_update]
+                      assigneeId:
+                        type: string
+                      config:
+                        type: object
+      responses:
+        '201':
+          description: Workflow created
+
+  /workflows/{id}/execute:
+    post:
+      tags: [Workflow]
+      summary: Execute workflow action
+      description: Executes an action within a workflow (approve, reject, etc.).
+      x-description-ar: تنفيذ إجراء ضمن سير العمل.
+      operationId: executeWorkflowAction
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [actionId, decision]
+              properties:
+                actionId:
+                  type: string
+                decision:
+                  type: string
+                  enum: [approve, reject, skip]
+                comments:
+                  type: string
+      responses:
+        '200':
+          description: Workflow action executed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # TEAM (2 endpoints)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /team:
+    get:
+      tags: [Team]
+      summary: List team members
+      description: Returns a paginated list of team members.
+      x-description-ar: إرجاع قائمة أعضاء الفريق.
+      operationId: listTeamMembers
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Search'
+        - name: filter[role]
+          in: query
+          schema:
+            type: string
+        - name: filter[isActive]
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Paginated team members
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+
+    post:
+      tags: [Team]
+      summary: Invite team member
+      description: Sends an invitation email to a new team member.
+      x-description-ar: إرسال دعوة بالبريد الإلكتروني لعضو فريق جديد.
+      operationId: inviteTeamMember
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, role]
+              properties:
+                email:
+                  type: string
+                  format: email
+                role:
+                  $ref: '#/components/schemas/UserRole'
+                name:
+                  type: string
+                projectId:
+                  type: string
+      responses:
+        '201':
+          description: Invitation sent
+        '409':
+          description: User already exists
+
+  /team/{id}:
+    put:
+      tags: [Team]
+      summary: Update team member
+      description: Updates a team member's role or status.
+      x-description-ar: تحديث دور عضو الفريق أو حالته.
+      operationId: updateTeamMember
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  $ref: '#/components/schemas/UserRole'
+                name:
+                  type: string
+                isActive:
+                  type: boolean
+      responses:
+        '200':
+          description: Team member updated
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # HR (1 endpoint)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /hr/employees:
+    get:
+      tags: [HR]
+      summary: List employees
+      description: Returns a paginated list of employees with HR details.
+      x-description-ar: إرجاع قائمة الموظفين مع تفاصيل الموارد البشرية.
+      operationId: listEmployees
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Search'
+        - name: filter[department]
+          in: query
+          schema:
+            type: string
+        - name: filter[status]
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated employees
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        email:
+                          type: string
+                        department:
+                          type: string
+                        position:
+                          type: string
+                        hireDate:
+                          type: string
+                          format: date
+                        salary:
+                          type: number
+                        leaveBalance:
+                          type: object
+                          properties:
+                            annual:
+                              type: number
+                            sick:
+                              type: number
+                        isActive:
+                          type: boolean
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # FINANCE (1 endpoint)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /finance/overview:
+    get:
+      tags: [Finance]
+      summary: Financial overview
+      description: Returns an overview of financial metrics across all projects.
+      x-description-ar: إرجاع نظرة عامة على المقاييس المالية عبر جميع المشاريع.
+      operationId: getFinancialOverview
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [month, quarter, year, all]
+            default: year
+      responses:
+        '200':
+          description: Financial overview
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      totalRevenue:
+                        type: number
+                      totalExpenses:
+                        type: number
+                      netProfit:
+                        type: number
+                      profitMargin:
+                        type: number
+                      outstandingInvoices:
+                        type: number
+                      overdueInvoices:
+                        type: number
+                      budgetUtilization:
+                        type: number
+                      topProjects:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            projectId:
+                              type: string
+                            projectName:
+                              type: string
+                            budget:
+                              type: number
+                            spent:
+                              type: number
+                            remaining:
+                              type: number
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # DOCUMENTS (1 endpoint)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /documents:
+    get:
+      tags: [Documents]
+      summary: List documents
+      description: Returns a paginated list of uploaded documents.
+      x-description-ar: إرجاع قائمة المستندات المرفوعة.
+      operationId: listDocuments
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: filter[projectId]
+          in: query
+          schema:
+            type: string
+        - name: filter[category]
+          in: query
+          schema:
+            type: string
+        - name: filter[uploadedById]
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated documents
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        category:
+                          type: string
+                        size:
+                          type: integer
+                        mimeType:
+                          type: string
+                        url:
+                          type: string
+                          format: uri
+                        projectId:
+                          type: string
+                        uploadedById:
+                          type: string
+                        createdAt:
+                          type: string
+                          format: date-time
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+
+    post:
+      tags: [Documents]
+      summary: Upload document
+      description: Uploads one or more files as project documents.
+      x-description-ar: رفع ملف أو أكثر كمستندات مشروع.
+      operationId: uploadDocument
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [files]
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                projectId:
+                  type: string
+                category:
+                  type: string
+                  description: Document category (drawings, specifications, photos, contracts, etc.)
+      responses:
+        '201':
+          description: Documents uploaded
+        '413':
+          description: File too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '415':
+          description: Unsupported file type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # SUPPLIERS (2 endpoints)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /suppliers:
+    get:
+      tags: [Suppliers]
+      summary: List suppliers
+      description: Returns a paginated list of suppliers.
+      x-description-ar: إرجاع قائمة الموردين.
+      operationId: listSuppliers
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Search'
+        - name: filter[category]
+          in: query
+          schema:
+            type: string
+        - name: filter[isActive]
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Paginated suppliers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Supplier'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+
+    post:
+      tags: [Suppliers]
+      summary: Create supplier
+      description: Creates a new supplier record.
+      x-description-ar: إنشاء سجل مورد جديد.
+      operationId: createSupplier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email]
+              properties:
+                name:
+                  type: string
+                contactPerson:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+                address:
+                  type: string
+                taxId:
+                  type: string
+                categories:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: Supplier created
+
+  /suppliers/{id}:
+    get:
+      tags: [Suppliers]
+      summary: Get supplier
+      description: Returns a supplier by ID.
+      x-description-ar: إرجاع مورد بالمعرف.
+      operationId: getSupplier
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Supplier details
+
+    put:
+      tags: [Suppliers]
+      summary: Update supplier
+      description: Updates a supplier record.
+      x-description-ar: تحديث سجل مورد.
+      operationId: updateSupplier
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+                rating:
+                  type: number
+                isActive:
+                  type: boolean
+      responses:
+        '200':
+          description: Supplier updated
