@@ -12,7 +12,8 @@ import {
   retrievePaymentIntent,
     isStripeConfigured,
 } from '@/lib/stripe';
-import { successResponse, errorResponse } from '../../utils/response';
+import { successResponse, errorResponse, unauthorizedResponse } from '../../utils/response';
+import { getUserFromRequest } from '../../utils/demo-config';
 
 /**
  * POST - Create a payment intent
@@ -21,6 +22,10 @@ export async function POST(request: NextRequest) {
   if (!isStripeConfigured) {
     return errorResponse('نظام الدفع غير مُعد', 'STRIPE_NOT_CONFIGURED', 503);
   }
+
+  // SECURITY: Require authentication
+  const user = await getUserFromRequest(request);
+  if (!user) return unauthorizedResponse();
 
   try {
     const body = await request.json();
@@ -76,6 +81,10 @@ export async function GET(request: NextRequest) {
   if (!isStripeConfigured) {
     return errorResponse('نظام الدفع غير مُعد', 'STRIPE_NOT_CONFIGURED', 503);
   }
+
+  // SECURITY: Require authentication
+  const user = await getUserFromRequest(request);
+  if (!user) return unauthorizedResponse();
 
   try {
     const { searchParams } = new URL(request.url);

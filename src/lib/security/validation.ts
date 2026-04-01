@@ -120,10 +120,8 @@ export function sanitizeString(input: string): string {
 
   let sanitized = input;
 
-  // Strip HTML tags
-  sanitized = sanitized.replace(HTML_TAG_PATTERN, '');
-
-  // Decode common HTML entities
+  // IMPORTANT: Decode HTML entities FIRST, then strip tags.
+  // This prevents bypass via encoded entities like &lt;script&gt;
   sanitized = sanitized
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
@@ -132,6 +130,9 @@ export function sanitizeString(input: string): string {
     .replace(/&#039;/g, "'")
     .replace(/&#x27;/g, "'")
     .replace(/&#x2F;/g, '/');
+
+  // Strip HTML tags AFTER decoding
+  sanitized = sanitized.replace(HTML_TAG_PATTERN, '');
 
   // Collapse whitespace
   sanitized = sanitized.replace(/\s+/g, ' ').trim();

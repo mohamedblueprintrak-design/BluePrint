@@ -2,10 +2,53 @@ import { NextResponse } from 'next/server';
 import { ApiSuccessResponse, ApiErrorResponse } from '../types';
 
 /**
+ * Known Prisma enum field names that should be normalized to lowercase
+ * for frontend compatibility.
+ */
+const ENUM_FIELDS = new Set([
+  'status', 'priority', 'severity', 'type', 'role', 'clientType',
+  'leaveType', 'frequency', 'paymentMethod', 'currency',
+]);
+
+/**
+ * Recursively normalize UPPERCASE Prisma enum values to lowercase.
+ * This bridges the gap between Prisma's UPPERCASE enums and the
+ * frontend's lowercase type definitions.
+ *
+ * Only converts string values in known enum fields that are all UPPERCASE.
+ */
+function normalizeEnums<T>(data: T): T {
+  if (data === null || data === undefined) return data;
+  if (Array.isArray(data)) {
+    return data.map(normalizeEnums) as T;
+  }
+  if (typeof data === 'object') {
+    const result: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
+      if (
+        ENUM_FIELDS.has(key) &&
+        typeof value === 'string' &&
+        value === value.toUpperCase() &&
+        value.length > 1
+      ) {
+        // Convert UPPERCASE enum value to lowercase
+        result[key] = value.toLowerCase();
+      } else {
+        result[key] = normalizeEnums(value);
+      }
+    }
+    return result as T;
+  }
+  return data;
+}
+
+/**
  * Create a success response
  */
 export function successResponse<T>(data: T, meta?: Record<string, unknown>): NextResponse<ApiSuccessResponse<T>> {
-  const response: ApiSuccessResponse<T> = { success: true, data };
+  // Normalize Prisma UPPERCASE enum values to lowercase for frontend compatibility
+  const normalizedData = normalizeEnums(data);
+  const response: ApiSuccessResponse<T> = { success: true, data: normalizedData };
   if (meta) Object.assign(response, { meta });
   return NextResponse.json(response);
 }

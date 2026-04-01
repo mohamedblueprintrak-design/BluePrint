@@ -17,7 +17,8 @@ import {
   reactivateSubscription,
   isStripeConfigured,
 } from '@/lib/stripe';
-import { successResponse, errorResponse } from '../../utils/response';
+import { successResponse, errorResponse, unauthorizedResponse } from '../../utils/response';
+import { getUserFromRequest } from '../../utils/demo-config';
 
 /**
  * GET - Retrieve subscription details
@@ -26,6 +27,10 @@ export async function GET(request: NextRequest) {
   if (!isStripeConfigured) {
     return errorResponse('نظام الدفع غير مُعد', 'STRIPE_NOT_CONFIGURED', 503);
   }
+
+  // SECURITY: Require authentication
+  const user = await getUserFromRequest(request);
+  if (!user) return unauthorizedResponse();
 
   try {
     const { searchParams } = new URL(request.url);
@@ -75,6 +80,10 @@ export async function POST(request: NextRequest) {
     return errorResponse('نظام الدفع غير مُعد', 'STRIPE_NOT_CONFIGURED', 503);
   }
 
+  // SECURITY: Require authentication
+  const user = await getUserFromRequest(request);
+  if (!user) return unauthorizedResponse();
+
   try {
     const body = await request.json();
     const { customerId, priceId, trialPeriodDays, metadata } = body;
@@ -121,6 +130,10 @@ export async function PUT(request: NextRequest) {
   if (!isStripeConfigured) {
     return errorResponse('نظام الدفع غير مُعد', 'STRIPE_NOT_CONFIGURED', 503);
   }
+
+  // SECURITY: Require authentication
+  const user = await getUserFromRequest(request);
+  if (!user) return unauthorizedResponse();
 
   try {
     const body = await request.json();
@@ -181,6 +194,10 @@ export async function DELETE(request: NextRequest) {
   if (!isStripeConfigured) {
     return errorResponse('نظام الدفع غير مُعد', 'STRIPE_NOT_CONFIGURED', 503);
   }
+
+  // SECURITY: Require authentication
+  const user = await getUserFromRequest(request);
+  if (!user) return unauthorizedResponse();
 
   try {
     const body = await request.json();

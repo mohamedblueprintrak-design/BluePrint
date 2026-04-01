@@ -35,7 +35,7 @@ import { useToast } from '@/hooks/use-toast';
 import {
   CheckSquare, Plus, Search, Trash2,
   Eye, Calendar, Clock, User, Tag, GripVertical, AlertCircle,
-  CheckCircle2, Circle, Loader2, Eye as ReviewIcon,
+  CheckCircle2, Circle, Loader2, EyeClosed as ReviewIcon,
   Wand2, Link2, Shield, Star, Lock, ChevronRight,
   ListChecks
 } from 'lucide-react';

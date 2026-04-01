@@ -113,7 +113,8 @@ export async function DELETE(request: NextRequest) {
     // Verify contract belongs to user's organization
     const existingContract = await db.contract.findFirst({ where: { id, organizationId: user.organizationId }, select: { id: true } });
     if (!existingContract) return error('العقد غير موجود', 'NOT_FOUND', 404);
-    await db.contract.delete({ where: { id } });
+    // SECURITY: Soft delete instead of hard delete to prevent data loss
+    await db.contract.update({ where: { id }, data: { status: 'TERMINATED' } });
     return success({ message: 'تم الحذف' });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Unknown error';

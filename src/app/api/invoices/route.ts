@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
         if (client?.email) {
           // Check user notification preferences
           const notificationSettings = client?.organizationId
-            ? await db.notificationSettings.findUnique({ where: { userId: createdInvoice.organizationId } })
+            ? await db.notificationSettings.findUnique({ where: { userId: user.organizationId } })
             : null;
           const shouldNotify = notificationSettings?.emailNotifications !== false;
 

@@ -5,9 +5,19 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createBillingPortalSession } from '@/lib/stripe';
+import { getUserFromRequest } from '../../utils/demo-config';
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Require authentication
+    const user = await getUserFromRequest(request);
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: { code: 'UNAUTHORIZED', message: 'غير مصرح' } },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { customerId } = body;
 

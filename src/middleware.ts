@@ -364,22 +364,46 @@ export async function middleware(request: NextRequest) {
       ? process.env.CORS_ORIGINS.split(',').map(o => o.trim())
       : ['http://localhost:3000', 'http://127.0.0.1:3000'];
     
-    // In development, allow all origins
+    // In development, allow specific origins (not '*' with credentials)
     // In production, check if origin is allowed
-    const allowOrigin = isDev ? '*' : (allowedOrigins.includes(origin) ? origin : allowedOrigins[0]);
+    const allowOrigin = isDev
+      ? (origin && origin !== 'null' ? origin : 'http://localhost:3000')
+      : (allowedOrigins.includes(origin) ? origin : allowedOrigins[0]);
     
     return new NextResponse(null, {
       status: 204,
       headers: {
         'Access-Control-Allow-Origin': allowOrigin,
         'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Authorization, Content-Type, Accept, X-Requested-With, X-HTTP-Method-Override, Cache-Control',
+        'Access-Control-Allow-Headers': 'Authorization, Content-Type, Accept, X-Requested-With, X-HTTP-Method-Override, Cache-Control, X-CSRF-Token',
         'Access-Control-Allow-Credentials': 'true',
         'Access-Control-Max-Age': '86400',
       },
     });
   }
   
+  // ============================================
+  // Generate CSRF token for page requests
+  // ============================================
+  // Set CSRF token cookie on page loads so the frontend can read it
+  // and include it in mutation headers (double-submit cookie pattern)
+  if (!pathname.startsWith('/api/') && request.method === 'GET') {
+    const existingCsrf = request.cookies.get('csrf_token');
+    const response = NextResponse.next();
+    if (!existingCsrf?.value) {
+      // Generate a new CSRF token using crypto (available in Edge Runtime)
+      const token = crypto.randomUUID().replace(/-/g, '');
+      response.cookies.set('csrf_token', token, {
+        path: '/',
+        httpOnly: false, // Must be readable by JS for double-submit
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24, // 24 hours
+      });
+    }
+    return response;
+  }
+
   // Skip public paths
   if (isPublicPath(pathname)) {
     return NextResponse.next();

@@ -5,7 +5,7 @@
  * Import individual modules as needed:
  * ```ts
  * import { encrypt, decrypt } from '@/lib/security';
- * import { rateLimit, RATE_LIMITS } from '@/lib/security';
+ * import { rateLimiters, createRateLimitResponse } from '@/lib/security';
  * import { AuditLogger, auditLog } from '@/lib/security';
  * ```
  */
@@ -47,14 +47,12 @@ export {
 
 // ─── CSRF Protection ─────────────────────────────────────────────────────────
 export {
-  generateCSRFToken,
-  validateCSRFToken,
-  validateDoubleSubmit,
-  isSafeMethod,
-  getCSRFMiddleware,
+  generateCsrfToken as generateCSRFToken,
+  validateCsrfToken as validateCSRFToken,
+  requiresCsrfProtection,
+  isCsrfExempt,
   CSRF_COOKIE_NAME,
   CSRF_HEADER_NAME,
-  type CSRFValidationResult,
 } from './csrf';
 
 // ─── Security Headers ────────────────────────────────────────────────────────
@@ -76,18 +74,11 @@ export {
 // ─── Rate Limiting ───────────────────────────────────────────────────────────
 export {
   RateLimiter,
-  rateLimit,
-  initRateLimiter,
-  getRateLimiter,
-  getRateLimitHeaders,
+  rateLimiters,
   createRateLimitResponse,
-  RATE_LIMITS,
-  type RateLimitStrategy,
-  type RateLimitCategory,
+  getClientIP,
   type RateLimitConfig,
-  type RateLimitOptions,
   type RateLimitResult,
-  type RedisClient,
 } from './rate-limiter';
 
 // ─── Audit Logging ───────────────────────────────────────────────────────────
