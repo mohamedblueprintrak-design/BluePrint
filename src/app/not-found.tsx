@@ -1,15 +1,30 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Home, ArrowRight, FileQuestion, SearchX } from 'lucide-react';
-import { useApp } from '@/context/app-context';
+import { Home, ArrowRight, SearchX, Globe } from 'lucide-react';
 import Image from 'next/image';
 
+/**
+ * 404 Not Found page - runs inside root layout which has NO providers.
+ * MUST NOT use useApp/useAuth - uses local state instead.
+ */
 export default function NotFound() {
-  const { language, isRTL } = useApp();
+  const [language, setLanguage] = useState<'ar' | 'en'>('ar');
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('blueprint_language');
+      if (saved === 'en' || saved === 'ar') setLanguage(saved);
+      else if (navigator.language.startsWith('ar')) setLanguage('ar');
+      else setLanguage('en');
+    } catch { /* silent */ }
+  }, []);
+
   const isAr = language === 'ar';
+  const isRTL = language === 'ar';
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -49,14 +64,29 @@ export default function NotFound() {
               </Link>
             </Button>
             <Button variant="outline" className="border-slate-700 hover:bg-slate-800 text-white" asChild>
-              <Link href={isAr ? '/login' : '/login'}>
+              <Link href="/login">
                 <ArrowRight className="w-4 h-4 rtl:ml-2 rtl:rotate-180" />
                 {isAr ? 'تسجيل الدخول' : 'Login'}
               </Link>
             </Button>
           </div>
 
-          <div className="mt-8 pt-6 border-t border-slate-800">
+          {/* Language toggle */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              const next = language === 'ar' ? 'en' : 'ar';
+              setLanguage(next);
+              try { localStorage.setItem('blueprint_language', next); } catch { /* silent */ }
+            }}
+            className="mt-4 text-slate-500 hover:text-slate-300 gap-1.5"
+          >
+            <Globe className="w-3.5 h-3.5" />
+            {language === 'ar' ? 'English' : 'العربية'}
+          </Button>
+
+          <div className="mt-6 pt-6 border-t border-slate-800">
             <p className="text-sm text-slate-500">
               {isAr ? 'هل تحتاج مساعدة؟ ' : 'Need help? '}
               <Link href="/dashboard/help" className="text-blue-400 hover:text-blue-300 hover:underline">

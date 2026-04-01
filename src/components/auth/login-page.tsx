@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
@@ -18,8 +17,7 @@ import Image from 'next/image';
 export function LoginPage() {
   const { login, register, isLoading } = useAuth();
   const { language, setLanguage } = useApp();
-  const { t } = useTranslation(language || 'ar'); // Default to 'ar' if language is undefined
-  const _router = useRouter();
+  const { t } = useTranslation(language || 'ar');
   
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
   const [registerForm, setRegisterForm] = useState({

@@ -180,20 +180,16 @@ function CollapsibleSection({
 // Route mapping for navigation
 const getRoutes = (_language: 'ar' | 'en'): Record<string, string> => ({
   'dashboard': '/dashboard',
-  'operations': '/dashboard/operations',
   'projects': '/dashboard/projects',
   'clients': '/dashboard/clients',
   'proposals': '/dashboard/proposals',
   'contracts': '/dashboard/contracts',
   'finance': '/dashboard/finance',
-  'financials': '/dashboard/financials',
-  'procurement': '/dashboard/procurement',
   'assets': '/dashboard/assets',
   'tasks': '/dashboard/tasks',
   'hr': '/dashboard/hr',
   'siteManagement': '/dashboard/site-management',
   'documents': '/dashboard/documents',
-  'siteVisitReports': '/dashboard/site-visit-reports',
   'knowledge': '/dashboard/knowledge',
   'aiChat': '/dashboard/ai-chat',
   'reports': '/dashboard/reports',
@@ -208,9 +204,14 @@ const getRoutes = (_language: 'ar' | 'en'): Record<string, string> => ({
   'notifications': '/dashboard/notifications',
   'automations': '/dashboard/automations',
   'help': '/dashboard/help',
-  'correspondence': '/dashboard/correspondence',
   'meetings': '/dashboard/meetings',
   'workload': '/dashboard/workload',
+  // Legacy redirect routes (kept for backward compatibility)
+  'operations': '/dashboard/operations',
+  'financials': '/dashboard/financials',
+  'procurement': '/dashboard/procurement',
+  'siteVisitReports': '/dashboard/site-visit-reports',
+  'correspondence': '/dashboard/correspondence',
 });
 
 // Sidebar Content Component - shared between desktop and mobile
