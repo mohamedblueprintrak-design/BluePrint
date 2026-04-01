@@ -6,145 +6,68 @@ const nextConfig: NextConfig = {
 
   // Enable standalone output for Docker deployment
   output: 'standalone',
-  
-  // Enable React Strict Mode for better development experience
-  reactStrictMode: true,
-  
-  // TypeScript configuration - DO NOT ignore build errors in production
+
+  // Disable React Strict Mode to prevent double-render issues in dev
+  reactStrictMode: false,
+
+  // TypeScript configuration
   typescript: {
-    // Only ignore build errors in development
     ignoreBuildErrors: process.env.NODE_ENV === 'development',
   },
 
   // ESLint configuration
-  // Note: ignoreDuringBuilds is true because CI runs 'npm run lint' separately.
-  // Running ESLint in both lint step and build step is redundant and can fail
-  // due to ESM compatibility issues between @eslint/eslintrc and minimatch.
   eslint: {
     ignoreDuringBuilds: true,
   },
-  
+
   // Image optimization configuration
   images: {
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'avatars.githubusercontent.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'lh3.googleusercontent.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '*.stripe.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'uploadthing.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'utfs.io',
-      },
+      { protocol: 'https', hostname: 'avatars.githubusercontent.com' },
+      { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
+      { protocol: 'https', hostname: '*.stripe.com' },
+      { protocol: 'https', hostname: 'uploadthing.com' },
+      { protocol: 'https', hostname: 'utfs.io' },
     ],
-    // Enable image optimization
     formats: ['image/avif', 'image/webp'],
   },
-  
-  // Security headers - Enhanced for production security
+
+  // Security headers
   async headers() {
     const isDev = process.env.NODE_ENV === 'development';
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    
-    // Parse allowed origins from environment
-    const allowedOrigins = process.env.CORS_ORIGINS 
+
+    const allowedOrigins = process.env.CORS_ORIGINS
       ? process.env.CORS_ORIGINS.split(',').map(o => o.trim())
       : [appUrl, 'http://localhost:3000', 'http://127.0.0.1:3000'];
-    
+
     return [
-      // CORS headers for API routes
       {
         source: '/api/:path*',
         headers: [
-          // CORS Configuration
-          {
-            key: 'Access-Control-Allow-Credentials',
-            value: 'true',
-          },
-          {
-            key: 'Access-Control-Allow-Origin',
-            value: isDev ? '*' : allowedOrigins.join(', '),
-          },
-          {
-            key: 'Access-Control-Allow-Methods',
-            value: 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-          },
-          {
-            key: 'Access-Control-Allow-Headers',
-            value: 'Authorization, Content-Type, Accept, X-Requested-With, X-HTTP-Method-Override, Cache-Control, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset',
-          },
-          {
-            key: 'Access-Control-Max-Age',
-            value: '86400', // 24 hours
-          },
-          // Prevent MIME type sniffing
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          // Referrer policy
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
-          },
-          // XSS Protection
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
-          },
-          // Content Security Policy for API
-          {
-            key: 'Content-Security-Policy',
-            value: "default-src 'none'; frame-ancestors 'none';",
-          },
+          { key: 'Access-Control-Allow-Credentials', value: 'true' },
+          { key: 'Access-Control-Allow-Origin', value: isDev ? '*' : allowedOrigins.join(', ') },
+          { key: 'Access-Control-Allow-Methods', value: 'GET, POST, PUT, PATCH, DELETE, OPTIONS' },
+          { key: 'Access-Control-Allow-Headers', value: 'Authorization, Content-Type, Accept, X-Requested-With, X-HTTP-Method-Override, Cache-Control, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-CSRF-Token' },
+          { key: 'Access-Control-Max-Age', value: '86400' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'X-XSS-Protection', value: '1; mode=block' },
+          { key: 'Content-Security-Policy', value: "default-src 'none'; frame-ancestors 'none';" },
         ],
       },
-      // Security headers for all other routes
       {
         source: '/((?!api/).*)',
         headers: [
-          // Prevent MIME type sniffing
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          // Referrer policy
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
-          },
-          // Prevent clickjacking
-          {
-            key: 'X-Frame-Options',
-            value: 'SAMEORIGIN',
-          },
-          // XSS Protection
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
-          },
-          // Permissions Policy (formerly Feature Policy)
-          {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
-          },
-          // HTTP Strict Transport Security - Only in production
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'X-XSS-Protection', value: '1; mode=block' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()' },
           ...(isDev ? [] : [{
             key: 'Strict-Transport-Security',
             value: 'max-age=31536000; includeSubDomains; preload',
           }]),
-          // Content Security Policy for pages
           {
             key: 'Content-Security-Policy',
             value: [
@@ -165,47 +88,25 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  
-  // Experimental features
-  experimental: {
-    // optimizePackageImports DISABLED — causes webpack "options.factory undefined" error
-    // on Next.js 15.x with Webpack. Only works reliably with Turbopack.
-    // optimizePackageImports: [
-    //   'lucide-react',
-    //   '@radix-ui/react-icons',
-    //   'recharts',
-    //   'date-fns',
-    //   'framer-motion',
-    // ],
-    // Server actions configuration
-    serverActions: {
-      bodySizeLimit: '2mb',
-    },
-  },
-  
-  // Turbopack - DISABLED for Netlify compatibility
-  // Netlify's plugin doesn't fully support Turbopack yet
-  // turbopack: {},
-  
-  // Environment variables that should be available on the client
+
+  // NOTE: experimental.optimizePackageImports is intentionally REMOVED.
+  // It causes "Cannot read properties of undefined (reading 'call')" Webpack error
+  // on Windows with Next.js 15.x. If re-added, it will break the dev server.
+
+  // Environment variables
   env: {
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || 'BluePrint',
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
   },
-  
-  // Redirects for common routes
+
+  // Redirects
   async redirects() {
     return [
-      // Redirect old routes if any
-      {
-        source: '/home',
-        destination: '/dashboard',
-        permanent: true,
-      },
+      { source: '/home', destination: '/dashboard', permanent: true },
     ];
   },
-  
-  // Logging configuration
+
+  // Logging
   logging: {
     fetches: {
       fullUrl: process.env.NODE_ENV === 'development',

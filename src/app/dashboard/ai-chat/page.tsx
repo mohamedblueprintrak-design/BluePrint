@@ -3,7 +3,7 @@
 import { useApp } from '@/context/app-context';
 import { AIChatPage } from '@/components/ai-chat/ai-chat-page';
 import { KnowledgePage } from '@/components/knowledge/knowledge-page';
-import HelpPage from '@/app/dashboard/help/help-content';
+import HelpPage from '@/components/help/help-page';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Bot, BookOpen, HelpCircle } from 'lucide-react';
 
