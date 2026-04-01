@@ -1,12 +1,16 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
-import { useApp } from '@/context/app-context';
+import { AlertTriangle, RefreshCw, Home, Globe } from 'lucide-react';
 import Image from 'next/image';
 
+/**
+ * Global Error Boundary - runs OUTSIDE all layouts and providers.
+ * MUST NOT use useApp/useAuth or any context hooks.
+ * Uses local state instead.
+ */
 export default function GlobalError({
   error,
   reset,
@@ -14,11 +18,20 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  const { language } = useApp();
+  const [language, setLanguage] = useState<'ar' | 'en'>('ar');
   const isAr = language === 'ar';
 
   useEffect(() => {
     console.error('Global error:', error);
+    // Try to detect language from browser
+    try {
+      const saved = localStorage.getItem('blueprint_language');
+      if (saved === 'en' || saved === 'ar') setLanguage(saved);
+      else if (navigator.language.startsWith('ar')) setLanguage('ar');
+      else setLanguage('en');
+    } catch {
+      // localStorage not available - use default language
+    }
   }, [error]);
 
   return (
@@ -58,7 +71,7 @@ export default function GlobalError({
                 </p>
               )}
 
-              <div className="flex gap-3">
+              <div className="flex gap-3 mb-4">
                 <Button
                   onClick={() => reset()}
                   className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 shadow-lg shadow-blue-500/25 gap-2"
@@ -75,6 +88,21 @@ export default function GlobalError({
                   {isAr ? 'الرئيسية' : 'Home'}
                 </Button>
               </div>
+
+              {/* Language toggle - standalone, no context needed */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  const next = language === 'ar' ? 'en' : 'ar';
+                  setLanguage(next);
+                  try { localStorage.setItem('blueprint_language', next); } catch { /* silent */ }
+                }}
+                className="text-slate-500 hover:text-slate-300 gap-1.5"
+              >
+                <Globe className="w-3.5 h-3.5" />
+                {language === 'ar' ? 'English' : 'العربية'}
+              </Button>
             </div>
           </CardContent>
         </Card>
