@@ -37,7 +37,7 @@ import {
     X, ChevronDown, ChevronUp,
     Gavel, Compass, Handshake, Landmark,
   ClipboardList, Lightbulb, UserCog, Calendar, Bell, HelpCircle, Crown,
-  Mail, Video, Briefcase as BriefcaseIcon, MapPin
+  Mail, Video, Briefcase as BriefcaseIcon, MapPin, Building2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
