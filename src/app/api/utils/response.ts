@@ -6,8 +6,11 @@ import { ApiSuccessResponse, ApiErrorResponse } from '../types';
  * for frontend compatibility.
  */
 const ENUM_FIELDS = new Set([
-  'status', 'priority', 'severity', 'type', 'role', 'clientType',
+  'status', 'priority', 'severity', 'type', 'clientType',
   'leaveType', 'frequency', 'paymentMethod', 'currency',
+  // NOTE: 'role' is intentionally excluded — roles must remain UPPERCASE
+  // to match Prisma enum values (ADMIN, MANAGER, etc.) and the
+  // ROLE_PERMISSIONS map keys in auth/types.ts.
 ]);
 
 /**

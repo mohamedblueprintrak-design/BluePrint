@@ -33,7 +33,10 @@ function getDefaultHeaders(token?: string | null): HeadersInit {
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
   };
-  if (token) {
+  // Only send Authorization header if token is a real JWT (not the 'httpOnly' marker).
+  // When cookies are used, the token is set to 'httpOnly' as a truthy placeholder;
+  // the actual JWT lives in an httpOnly cookie sent automatically by the browser.
+  if (token && token !== 'httpOnly') {
     headers['Authorization'] = `Bearer ${token}`;
   }
   return headers;
@@ -86,6 +89,7 @@ export async function apiRequest<T>(
   const options: RequestInit = {
     method,
     headers: getDefaultHeaders(token),
+    credentials: 'include', // Always send httpOnly cookies for auth
   };
 
   if (data && method !== 'GET') {
@@ -129,6 +133,7 @@ export async function directApiRequest<T>(
   const options: RequestInit = {
     method,
     headers: getDefaultHeaders(token),
+    credentials: 'include', // Always send httpOnly cookies for auth
   };
 
   if (data && !isGet) {
@@ -151,7 +156,7 @@ export async function apiUpload<T>(
   formData.append('file', file);
 
   const headers: HeadersInit = {};
-  if (token) {
+  if (token && token !== 'httpOnly') {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
@@ -159,6 +164,7 @@ export async function apiUpload<T>(
     method: 'POST',
     headers,
     body: formData,
+    credentials: 'include', // Always send httpOnly cookies for auth
   });
 
   return parseResponse<T>(response);
@@ -186,6 +192,7 @@ export async function apiGet<T>(
   const response = await fetch(url.toString(), {
     method: 'GET',
     headers: getDefaultHeaders(token),
+    credentials: 'include',
   });
 
   return parseResponse<T>(response);
@@ -200,6 +207,7 @@ export async function apiPost<T>(
     method: 'POST',
     headers: getDefaultHeaders(token),
     body: data ? JSON.stringify(data) : undefined,
+    credentials: 'include',
   });
 
   return parseResponse<T>(response);
@@ -214,6 +222,7 @@ export async function apiPut<T>(
     method: 'PUT',
     headers: getDefaultHeaders(token),
     body: JSON.stringify(data),
+    credentials: 'include',
   });
 
   return parseResponse<T>(response);
@@ -235,6 +244,7 @@ export async function apiDelete<T>(
   const response = await fetch(url.toString(), {
     method: 'DELETE',
     headers: getDefaultHeaders(token),
+    credentials: 'include',
   });
 
   return parseResponse<T>(response);

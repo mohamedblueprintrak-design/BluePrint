@@ -12,6 +12,7 @@ import { NextRequest } from 'next/server';
 import * as jose from 'jose';
 import { DemoUser, AuthenticatedUser } from '../types';
 import { hash } from 'bcryptjs';
+import { DEMO_USERS as DB_DEMO_USERS } from './db';
 
 // ============================================
 // Environment Check
@@ -20,6 +21,7 @@ import { hash } from 'bcryptjs';
 /**
  * Check if demo mode is allowed
  * SECURITY: Demo mode is DISABLED in production
+ * Matches utils/db.ts behavior: defaults to TRUE unless DEMO_MODE=false
  */
 function isDemoModeAllowed(): boolean {
   // Explicitly disable demo mode in production
@@ -27,8 +29,8 @@ function isDemoModeAllowed(): boolean {
     return false;
   }
   
-  // Allow demo mode in development if explicitly enabled
-  return process.env.ENABLE_DEMO_MODE === 'true';
+  // Match utils/db.ts: demo mode enabled unless explicitly disabled
+  return process.env.DEMO_MODE !== 'false';
 }
 
 // ============================================
@@ -36,6 +38,9 @@ function isDemoModeAllowed(): boolean {
 // ============================================
 
 let _jwtSecretBytes: Uint8Array | null = null;
+
+// Stable development JWT secret (same as middleware fallback)
+const DEV_JWT_SECRET = 'blueprint-dev-secret-do-not-use-in-production-min32chars!';
 
 function getJWTSecretBytes(): Uint8Array {
   if (_jwtSecretBytes) return _jwtSecretBytes;
@@ -49,8 +54,8 @@ function getJWTSecretBytes(): Uint8Array {
     } else {
       console.warn('WARNING: Using development JWT secret. Set JWT_SECRET in production!');
     }
-    // Use a development-only fallback
-    _jwtSecretBytes = new TextEncoder().encode('dev-only-secret-do-not-use-in-production-' + Date.now());
+    // Use a STABLE development-only fallback (NOT Date.now() - sessions would break on restart)
+    _jwtSecretBytes = new TextEncoder().encode(DEV_JWT_SECRET);
   } else {
     _jwtSecretBytes = new TextEncoder().encode(secret);
   }
@@ -214,10 +219,25 @@ export function isDemoUser(userId: string): boolean {
  * This is the standard function all API routes should use for authentication
  */
 export async function getUserFromRequest(request: NextRequest): Promise<AuthenticatedUser | null> {
+  // Try Authorization header first
   const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) return null;
+  let token: string | null = null;
   
-  const token = authHeader.substring(7);
+  if (authHeader?.startsWith('Bearer ')) {
+    token = authHeader.substring(7);
+    // Skip if this is the 'httpOnly' placeholder (not a real JWT)
+    if (token === 'httpOnly') token = null;
+  }
+  
+  // Fall back to httpOnly cookie (set during login)
+  if (!token) {
+    const tokenCookie = request.cookies.get('token');
+    if (tokenCookie?.value) {
+      token = tokenCookie.value;
+    }
+  }
+  
+  if (!token) return null;
   
   try {
     const { payload } = await jose.jwtVerify(token, JWT_SECRET.bytes);
@@ -239,6 +259,25 @@ export async function getUserFromRequest(request: NextRequest): Promise<Authenti
           organizationId: demoUser.organizationId,
           organization: demoUser.organization,
           isActive: demoUser.isActive
+        };
+      }
+
+      // Also check db.ts DEMO_USERS (used by login route)
+      const dbDemoUser = DB_DEMO_USERS.find(u => u.id === userId);
+      if (dbDemoUser) {
+        return {
+          id: dbDemoUser.id,
+          username: dbDemoUser.username,
+          email: dbDemoUser.email,
+          fullName: dbDemoUser.fullName,
+          role: dbDemoUser.role,
+          avatar: dbDemoUser.avatar,
+          language: dbDemoUser.language,
+          theme: dbDemoUser.theme,
+          organizationId: dbDemoUser.organizationId,
+          organization: dbDemoUser.organization,
+          isActive: dbDemoUser.isActive,
+          department: (dbDemoUser as any).department,
         };
       }
     }

@@ -167,21 +167,175 @@ export async function GET(request: NextRequest) {
         return successResponse(invoice);
       }
 
-      case 'suppliers':
-      case 'materials':
-      case 'contracts':
-      case 'proposals':
-      case 'site-reports':
-      case 'documents':
-      case 'notifications':
-      case 'leave-requests':
-      case 'users':
-      case 'vouchers':
-      case 'budgets':
-      case 'expenses':
-      case 'attendances':
-        // These endpoints return empty for now - to be implemented with real services
+      case 'suppliers': {
+        if (isDemo) {
+          return successResponse([
+            { id: 's1', name: 'شركة الحديد والألموني', supplierType: 'manufacturer', email: 'info@iron.ae', phone: '+971504000111', rating: 4.5, creditLimit: 500000, isActive: true },
+            { id: 's2', name: 'مصنع الخشب', supplierType: 'factory', email: 'info@wood.ae', phone: '+971504000222', rating: 3.8, creditLimit: 300000, isActive: true },
+            { id: 's3', name: 'شركة البلاستيك', supplierType: 'manufacturer', email: 'info@plastic.ae', phone: '+971504000333', rating: 4.2, creditLimit: 200000, isActive: true },
+            { id: 's4', name: 'موردو الدهانات', supplierType: 'trader', email: 'info@paints.ae', phone: '+971504000444', rating: 4.0, creditLimit: 150000, isActive: true },
+          ]);
+        }
         return successResponse(isDemo ? [] : []);
+      }
+
+      case 'materials': {
+        if (isDemo) {
+          return successResponse([
+            { id: 'm1', name: 'أسمنت حديد TMT', category: 'metals', unit: 'طن', unitPrice: 4500, currentStock: 500, minStock: 100, maxStock: 2000, isActive: true },
+            { id: 'm2', name: 'أسمنت خشب', category: 'wood', unit: 'متر مكعب', unitPrice: 180, currentStock: 2000, minStock: 500, maxStock: 5000, isActive: true },
+            { id: 'm3', name: 'بلاستيك PVC', category: 'plastics', unit: 'كيلو', unitPrice: 35, currentStock: 10000, minStock: 2000, maxStock: 50000, isActive: true },
+            { id: 'm4', name: 'أسمنت أسمنت', category: 'cement', unit: 'طن', unitPrice: 25, currentStock: 50000, minStock: 10000, maxStock: 100000, isActive: true },
+            { id: 'm5', name: 'دهانات زيتي', category: 'paints', unit: 'لتر', unitPrice: 120, currentStock: 2000, minStock: 500, maxStock: 5000, isActive: true },
+          ]);
+        }
+        return successResponse(isDemo ? [] : []);
+      }
+
+      case 'contracts': {
+        if (isDemo) {
+          return successResponse([
+            { id: 'ct1', contractNumber: 'CT-2025-001', title: 'عقد إنشاء برج الأعمال', contractType: 'lump_sum', contractValue: 85000000, clientId: 'c1', projectId: 'p1', startDate: '2025-01-01', endDate: '2026-06-30', retentionPercentage: 5, advancePayment: 10, status: 'active' },
+            { id: 'ct2', contractNumber: 'CT-2025-002', title: 'عقد تصميم المجمع السكني', contractType: 'unit_price', contractValue: 120000000, clientId: 'c2', projectId: 'p2', startDate: '2025-02-01', endDate: '2027-01-31', retentionPercentage: 7, advancePayment: 15, status: 'active' },
+            { id: 'ct3', contractNumber: 'CT-2025-003', title: 'عقد تشطيب مستشفى السلام', contractType: 'lump_sum', contractValue: 95000000, clientId: 'c3', projectId: 'p5', startDate: '2025-01-15', endDate: '2026-12-31', retentionPercentage: 5, advancePayment: 10, status: 'active' },
+          ]);
+        }
+        return successResponse(isDemo ? [] : []);
+      }
+
+      case 'proposals': {
+        if (isDemo) {
+          return successResponse([
+            { id: 'pr1', proposalNumber: 'PRP-2025-001', title: 'اقتراح تصميم برج الأعمال', clientId: 'c1', projectId: 'p1', totalAmount: 85000000, status: 'accepted', issueDate: '2025-01-01', validUntil: '2025-02-01' },
+            { id: 'pr2', proposalNumber: 'PRP-2025-002', title: 'اقتراح تصميم مجمع سكني', clientId: 'c2', projectId: 'p2', totalAmount: 120000000, status: 'sent', issueDate: '2025-02-01', validUntil: '2025-03-01' },
+            { id: 'pr3', proposalNumber: 'PRP-2025-003', title: 'اقتراح إدارة مشروع المستشفى', clientId: 'c3', projectId: 'p5', totalAmount: 95000000, status: 'draft', issueDate: '2025-01-10', validUntil: '2025-02-10' },
+          ]);
+        }
+        return successResponse(isDemo ? [] : []);
+      }
+
+      case 'site-reports': {
+        if (isDemo) {
+          return successResponse([
+            { id: 'sr1', projectId: 'p1', reportNumber: 'SR-001', reportDate: '2025-02-01', weather: 'صاف', workersCount: 45, workDescription: 'صب الخرسانة الأرضية والأساسات', workProgress: 60, notes: 'تم الانتهاء من مرحلة الأساسات', safetyIssues: 'لا توجد', equipmentUsed: 'رافعة برجي، خلاط كهرباء', nextSteps: 'بدء صب الهيكل' },
+            { id: 'sr2', projectId: 'p2', reportNumber: 'SR-002', reportDate: '2025-02-02', weather: 'مشمس جزئياً', workersCount: 30, workDescription: 'تركيب هيكل الأعمدة', workProgress: 25, notes: 'تأخر التوريدات', safetyIssues: 'حادثة بسيطة - تم معالجتها', equipmentUsed: 'رافعة, براج', nextSteps: 'استكمال التوريدات' },
+            { id: 'sr3', projectId: 'p5', reportNumber: 'SR-003', reportDate: '2025-02-03', weather: 'مشمس', workersCount: 60, workDescription: 'أعمال السباكة والتمديدات', workProgress: 70, notes: 'سير العمل بشكل طبيعي', safetyIssues: 'لا توجد', equipmentUsed: 'خلاط, رافعة, مكانكة', nextSteps: 'تركيب الأنابيب' },
+          ]);
+        }
+        return successResponse(isDemo ? [] : []);
+      }
+
+      case 'documents': {
+        if (isDemo) {
+          return successResponse([
+            { id: 'd1', filename: 'مخططات هيكلية برج الأعمال.pdf', fileType: 'pdf', category: 'structural', uploadedById: 'demo-admin-001', createdAt: '2025-01-15' },
+            { id: 'd2', filename: 'مواصفات مجمع سكني.pdf', fileType: 'pdf', category: 'architectural', uploadedById: 'demo-admin-001', createdAt: '2025-01-20' },
+            { id: 'd3', filename: 'تقرير فحص الموقع.pdf', fileType: 'pdf', category: 'inspection', uploadedById: 'demo-admin-001', createdAt: '2025-02-01' },
+            { id: 'd4', filename: 'عقد إنشاء برج الأعمال.pdf', fileType: 'pdf', category: 'contracts', uploadedById: 'demo-admin-001', createdAt: '2025-01-10' },
+            { id: 'd5', filename: 'خطة المشروع الزمني.pdf', fileType: 'pdf', category: 'planning', uploadedById: 'demo-manager-001', createdAt: '2025-01-25' },
+          ]);
+        }
+        return successResponse(isDemo ? [] : []);
+      }
+
+      case 'notifications': {
+        if (isDemo) {
+          return successResponse([
+            { id: 'n1', userId: 'demo-manager-001', title: 'مهمة جديدة: مراجعة المخططات', message: 'تم تعيين مهمة مراجعة جديدة لك', notificationType: 'task_assigned', isRead: false, priority: 'high', createdAt: '2025-02-10T10:30:00Z' },
+            { id: 'n2', userId: 'demo-manager-001', title: 'فاتورة مستحقة', message: 'فاتورة INV-2025-001 مستحقة بعد 3 أيام', notificationType: 'invoice_overdue', isRead: true, priority: 'urgent', createdAt: '2025-02-12T09:00:00Z' },
+            { id: 'n3', userId: 'demo-manager-001', title: 'تحديث تقدم المشروع', message: 'تقدم مشروع برج الأعمال وصل 45%', notificationType: 'project_update', isRead: true, priority: 'normal', createdAt: '2025-02-13T14:00:00Z' },
+            { id: 'n4', userId: 'demo-manager-001', title: 'موافقة إجازة', message: 'تمت الموافقة على إجازتك', notificationType: 'leave_approved', isRead: false, priority: 'normal', createdAt: '2025-02-14T11:00:00Z' },
+            { id: 'n5', userId: 'demo-manager-001', title: 'مهمة عاجلة', message: 'مهام المستندجات الإلكترونية مستحقة', notificationType: 'deadline_approaching', isRead: false, priority: 'high', createdAt: '2025-02-15T08:00:00Z' },
+          ]);
+        }
+        return successResponse(isDemo ? [] : []);
+      }
+
+      case 'leave-requests': {
+        if (isDemo) {
+          return successResponse([
+            { id: 'lr1', userId: 'demo-engineer-001', leaveType: 'annual', startDate: '2025-03-01', endDate: '2025-03-15', daysCount: 15, status: 'approved', reason: 'إجازة سنوية', approvedById: 'demo-admin-001', createdAt: '2025-02-10T09:00:00Z' },
+            { id: 'lr2', userId: 'demo-engineer-001', leaveType: 'sick', startDate: '2025-02-20', endDate: '2025-02-20', daysCount: 1, status: 'pending', reason: 'مرض', createdAt: '2025-02-20T07:00:00Z' },
+            { id: 'lr3', userId: 'demo-manager-001', leaveType: 'emergency', startDate: '2025-02-25', endDate: '2025-02-26', daysCount: 2, status: 'rejected', reason: 'ظرف طارئ', rejectionReason: 'لا يوجد تغط工作开展 حالياً', createdAt: '2025-02-25T10:00:00Z' },
+          ]);
+        }
+        return successResponse(isDemo ? [] : []);
+      }
+
+      case 'users': {
+        if (isDemo) {
+          return successResponse([
+            { id: 'demo-admin-001', username: 'admin', email: 'admin@blueprint.ae', fullName: 'أحمد المدير', role: 'ADMIN', department: 'الإدارة', isActive: true, createdAt: '2025-01-01' },
+            { id: 'demo-manager-001', username: 'manager', email: 'manager@blueprint.ae', fullName: 'محمد مدير', role: 'MANAGER', department: 'الإدارة', isActive: true, createdAt: '2025-01-01' },
+            { id: 'demo-engineer-001', username: 'engineer', email: 'engineer@blueprint.ae', fullName: 'محمد مهندس', role: 'ENGINEER', department: 'التصميم', isActive: true, createdAt: '2025-01-01' },
+            { id: 'demo-struct-eng-001', username: 'struct_eng', email: 'struct_eng@blueprint.ae', fullName: 'خالد مهندس هيكلي', role: 'ENGINEER', department: 'الهيكلية', isActive: true, createdAt: '2025-01-01' },
+            { id: 'demo-elec-eng-001', username: 'elec_eng', email: 'elec_eng@blueprint.ae', fullName: 'فاطمة مهندسة كهربائية', role: 'ENGINEER', department: 'الكهرباء', isActive: true, createdAt: '2025-01-01' },
+            { id: 'demo-site-eng-001', username: 'site_eng', email: 'site_eng@blueprint.ae', fullName: 'سعيد مهندس مدني', role: 'ENGINEER', department: 'الموقع', isActive: true, createdAt: '2025-01-01' },
+            { id: 'demo-mech-eng-001', username: 'mech_eng', email: 'mech_eng@blueprint.ae', fullName: 'عمرو مهندس ميكانيكي', role: 'ENGINEER', department: 'الميكانيك', isActive: true, createdAt: '2025-01-01' },
+            { id: 'demo-draftsman-001', username: 'draftsman', email: 'draftsman@blueprint.ae', fullName: 'ياسر مهندس معماري', role: 'DRAFTSMAN', department: 'الرسم', isActive: true, createdAt: '2025-01-01' },
+            { id: 'demo-accountant-001', username: 'accountant', email: 'accountant@blueprint.ae', fullName: 'سارة محاسبة', role: 'ACCOUNTANT', department: 'المالية', isActive: true, createdAt: '2025-01-01' },
+            { id: 'demo-secretary-001', username: 'secretary', email: 'secretary@blueprint.ae', fullName: 'نورة سكرتارية', role: 'SECRETARY', department: 'السكرتارية', isActive: true, createdAt: '2025-01-01' },
+            { id: 'demo-viewer-001', username: 'viewer', email: 'viewer@blueprint.ae', fullName: 'عبدالله مراقب', role: 'VIEWER', department: '-', isActive: true, createdAt: '2025-01-01' },
+          ]);
+        }
+        return successResponse(isDemo ? [] : []);
+      }
+
+      case 'vouchers': {
+        if (isDemo) {
+          return successResponse([
+            { id: 'v1', voucherNumber: 'VCH-2025-001', voucherType: 'payment', amount: 200000, currency: 'AED', exchangeRate: 1, baseAmount: 200000, date: '2025-02-01', projectId: 'p1', projectName: 'برج الأعمال', clientId: 'c1', clientName: 'شركة الفجر', paymentMethod: 'bank_transfer', status: 'completed', approvedById: 'demo-admin-001' },
+            { id: 'v2', voucherNumber: 'VCH-2025-002', voucherType: 'receipt', amount: 150000, currency: 'AED', exchangeRate: 1, baseAmount: 150000, date: '2025-02-05', projectId: 'p2', projectName: 'مجمع سكني', clientId: 'c2', clientName: 'مؤسسة النور', paymentMethod: 'cash', status: 'completed' },
+            { id: 'v3', voucherNumber: 'VCH-2025-003', voucherType: 'payment', amount: 500000, currency: 'AED', exchangeRate: 1, baseAmount: 500000, date: '2025-02-10', projectId: 'p5', projectName: 'مستشفى السلام', clientId: 'c3', clientName: 'شركة الخليج', paymentMethod: 'bank_transfer', status: 'pending' },
+          ]);
+        }
+        return successResponse(isDemo ? [] : []);
+      }
+
+      case 'budgets': {
+        if (isDemo) {
+          return successResponse([
+            { id: 'b1', projectId: 'p1', category: 'structural', description: 'أعمال الهيكل', budgetAmount: 25000000, actualAmount: 15000000, variance: 10000000, createdAt: '2025-01-01' },
+            { id: 'b2', projectId: 'p1', category: 'electrical', description: 'الأعمال الكهربائية', budgetAmount: 8000000, actualAmount: 5000000, variance: 3000000, createdAt: '2025-01-01' },
+            { id: 'b3', projectId: 'p1', category: 'mechanical', description: 'الأعمال الميكانيكية', budgetAmount: 12000000, actualAmount: 8500000, variance: 3500000, createdAt: '2025-01-01' },
+            { id: 'b4', projectId: 'p1', category: 'finishing', description: 'أعمال التشطيب', budgetAmount: 6000000, actualAmount: 2000000, variance: 4000000, createdAt: '2025-01-01' },
+            { id: 'b5', projectId: 'p2', category: 'structural', description: 'هيكل المجمع', budgetAmount: 40000000, actualAmount: 10000000, variance: 30000000, createdAt: '2025-02-01' },
+            { id: 'b6', projectId: 'p5', category: 'medical', description: 'تجهيزات طبية', budgetAmount: 15000000, actualAmount: 5000000, variance: 10000000, createdAt: '2025-01-15' },
+          ]);
+        }
+        return successResponse(isDemo ? [] : []);
+      }
+
+      case 'expenses': {
+        if (isDemo) {
+          return successResponse([
+            { id: 'e1', projectId: 'p1', category: 'materials', description: 'شراء حديد', amount: 450000, expenseDate: '2025-02-01', status: 'approved', createdById: 'demo-manager-001', createdAt: '2025-02-01' },
+            { id: 'e2', projectId: 'p1', category: 'transport', description: 'نقل مواد', amount: 35000, expenseDate: '2025-02-03', status: 'approved', createdById: 'demo-manager-001', createdAt: '2025-02-03' },
+            { id: 'e3', projectId: 'p2', category: 'equipment_rental', description: 'إيجار رافعة برجي', amount: 25000, expenseDate: '2025-02-05', status: 'approved', createdById: 'demo-manager-001', createdAt: '2025-02-05' },
+            { id: 'e4', projectId: 'p1', category: 'labor_overtime', description: 'ساعات إضافية', amount: 15000, expenseDate: '2025-02-10', status: 'pending', createdById: 'demo-manager-001', createdAt: '2025-02-10' },
+            { id: 'e5', projectId: 'p5', category: 'consultant', description: 'استشاريع استشاري', amount: 50000, expenseDate: '2025-02-15', status: 'approved', createdById: 'demo-manager-001', createdAt: '2025-02-15' },
+          ]);
+        }
+        return successResponse(isDemo ? [] : []);
+      }
+
+      case 'attendances': {
+        if (isDemo) {
+          const today = new Date().toISOString().split('T')[0];
+          return successResponse([
+            { id: 'att1', userId: 'demo-engineer-001', date: today, checkIn: '08:00', checkOut: '17:00', status: 'present', workHours: 9, overtimeHours: 1, notes: '' },
+            { id: 'att2', userId: 'demo-engineer-001', date: today, checkIn: '08:05', checkOut: '17:05', status: 'present', workHours: 9, overtimeHours: 1, notes: '' },
+            { id: 'att3', userId: 'demo-manager-001', date: today, checkIn: '08:30', checkOut: '18:00', status: 'present', workHours: 9.5, overtimeHours: 2.5, notes: '' },
+            { id: 'att4', userId: 'demo-struct-eng-001', date: today, checkIn: '07:55', checkOut: '16:00', status: 'present', workHours: 8, overtimeHours: 0, notes: '' },
+            { id: 'att5', userId: 'demo-accountant-001', date: today, checkIn: '09:00', checkOut: '17:00', status: 'present', workHours: 8, overtimeHours: 0, notes: '' },
+            { id: 'att6', userId: 'demo-draftsman-001', date: today, checkIn: '08:00', checkOut: '16:30', status: 'late', workHours: 8.5, overtimeHours: 0, notes: '' },
+            { id: 'att7', userId: 'demo-secretary-001', date: today, checkIn: '09:00', checkOut: '17:00', status: 'present', workHours: 8, overtimeHours: 0, notes: '' },
+            { id: 'att8', userId: 'demo-viewer-001', date: today, checkIn: '09:30', checkOut: '13:00', status: 'absent', workHours: 3.5, overtimeHours: 0, notes: 'إجازة مرضية' },
+            { id: 'att9', userId: 'demo-site-eng-001', date: today, checkIn: '07:00', checkOut: '15:00', status: 'absent', workHours: 0, overtimeHours: 0, notes: 'إجازة بدون إخطار' },
+          ]);
+        }
+        return successResponse(isDemo ? [] : []);
+      }
 
       case 'profile':
         return successResponse(user);

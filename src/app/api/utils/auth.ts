@@ -49,8 +49,8 @@ function getJwtSecretBytes(): Uint8Array {
       '\n' + '='.repeat(70) + '\n'
     );
     
-    // Use a development-only secret (NOT a real secret, just for dev convenience)
-    return new TextEncoder().encode('dev-only-secret-not-for-production-use-min-32-chars');
+    // Use a development-only secret — MUST match middleware.ts and demo-config.ts
+    return new TextEncoder().encode('blueprint-dev-secret-do-not-use-in-production-min32chars!');
   }
   
   return new TextEncoder().encode(jwtSecret);
@@ -68,9 +68,17 @@ export function getJWTSecret(): Uint8Array {
 export function getTokenFromRequest(request: NextRequest): string | null {
   const authHeader = request.headers.get('authorization');
   if (authHeader?.startsWith('Bearer ')) {
-    return authHeader.substring(7);
+    const token = authHeader.substring(7);
+    // Skip the 'httpOnly' placeholder — real JWT is in the cookie
+    if (token === 'httpOnly') {
+      const tokenCookie = request.cookies.get('token');
+      return tokenCookie?.value || null;
+    }
+    return token;
   }
-  return null;
+  // Fall back to httpOnly cookie
+  const tokenCookie = request.cookies.get('token');
+  return tokenCookie?.value || null;
 }
 
 /**

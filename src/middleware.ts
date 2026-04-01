@@ -206,13 +206,21 @@ const ROLE_PROTECTED_PATHS: Record<string, string[]> = {
 
 /**
  * Get JWT secret key
+ * IMPORTANT: Must use the SAME secret as the API auth handlers (demo-config.ts)
  */
+// Stable development JWT secret (same as demo-config fallback)
+const DEV_JWT_SECRET = 'blueprint-dev-secret-do-not-use-in-production-min32chars!';
+
 function getJwtSecret(): Uint8Array {
   const secret = process.env.JWT_SECRET;
-  if (!secret || secret.length < 32) {
-    throw new Error('JWT_SECRET environment variable is required and must be at least 32 characters');
+  if (secret && secret.length >= 32) {
+    return new TextEncoder().encode(secret);
   }
-  return new TextEncoder().encode(secret);
+  // Development fallback - matches demo-config.ts behavior
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET environment variable is required in production');
+  }
+  return new TextEncoder().encode(DEV_JWT_SECRET);
 }
 
 /**
@@ -221,10 +229,9 @@ function getJwtSecret(): Uint8Array {
 async function verifyToken(token: string): Promise<JwtPayload | null> {
   try {
     const secret = getJwtSecret();
-    const { payload } = await jwtVerify(token, secret, {
-      issuer: 'blueprint-saas',
-      audience: 'blueprint-users',
-    });
+    // NOTE: No issuer/audience check here — the API auth handlers (demo-config.ts)
+    // do NOT set these claims, so we must not require them here.
+    const { payload } = await jwtVerify(token, secret);
     
     return {
       userId: payload.userId as string,
