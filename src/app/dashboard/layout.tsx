@@ -88,8 +88,8 @@ export default function DashboardLayout({
           {/* Header */}
           <Header />
           
-          {/* Page Content */}
-          <div className="p-4 md:p-6 flex-1">
+          {/* Page Content - extra bottom padding for mobile bottom nav */}
+          <div className="p-4 md:p-6 pb-20 md:pb-6 flex-1">
             <ErrorBoundary>
               {children}
             </ErrorBoundary>

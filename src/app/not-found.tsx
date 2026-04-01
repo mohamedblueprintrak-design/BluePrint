@@ -3,46 +3,64 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Home, ArrowLeft, FileQuestion } from 'lucide-react';
+import { Home, ArrowRight, FileQuestion, SearchX } from 'lucide-react';
+import { useApp } from '@/context/app-context';
+import Image from 'next/image';
 
 export default function NotFound() {
+  const { language, isRTL } = useApp();
+  const isAr = language === 'ar';
+
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4" dir="rtl">
-      <Card className="max-w-lg w-full">
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
+      <Card className="max-w-lg w-full bg-slate-900/50 border-slate-800 backdrop-blur-sm">
         <CardContent className="p-8 text-center">
-          <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
-            <FileQuestion className="w-10 h-10 text-primary" />
+          {/* Logo */}
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center mx-auto mb-6 p-0.5">
+            <Image src="/logo.png" alt="BluePrint" width={48} height={48} className="rounded-xl object-contain" />
           </div>
-          
-          <h1 className="text-4xl font-bold text-foreground mb-2">404</h1>
-          <h2 className="text-xl font-semibold text-foreground mb-4">الصفحة غير موجودة</h2>
-          
-          <p className="text-muted-foreground mb-8">
-            عذراً، الصفحة التي تبحث عنها غير موجودة أو تم نقلها.
-            <br />
-            يرجى التحقق من الرابط أو العودة للصفحة الرئيسية.
+
+          {/* Error Code */}
+          <div className="inline-flex items-center gap-2 bg-slate-800 rounded-full px-3 py-1 mb-4">
+            <SearchX className="w-4 h-4 text-slate-400" />
+            <span className="text-xs font-medium text-slate-400">404</span>
+          </div>
+
+          <h1 className="text-3xl font-bold text-white mb-2">
+            {isAr ? 'الصفحة غير موجودة' : 'Page Not Found'}
+          </h1>
+          <h2 className="text-lg text-slate-400 mb-6">
+            {isAr
+              ? 'عذراً، الصفحة التي تبحث عنها غير موجودة أو تم نقلها.'
+              : 'Sorry, the page you\'re looking for doesn\'t exist or has been moved.'}
+          </h2>
+
+          <p className="text-sm text-slate-500 mb-8 max-w-sm mx-auto">
+            {isAr
+              ? 'يرجى التحقق من الرابط أو العودة للصفحة الرئيسية.'
+              : 'Please check the URL or navigate back to the main page.'}
           </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild>
+
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button asChild className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 shadow-lg shadow-blue-500/25">
               <Link href="/dashboard">
-                <Home className="w-4 h-4 ml-2" />
-                الصفحة الرئيسية
+                <Home className="w-4 h-4 rtl:ml-2 rtl:rotate-180" />
+                {isAr ? 'الرئيسية' : 'Home'}
               </Link>
             </Button>
-            <Button variant="outline" asChild>
-              <Link href="/dashboard">
-                <ArrowLeft className="w-4 h-4 ml-2" />
-                العودة للخلف
+            <Button variant="outline" className="border-slate-700 hover:bg-slate-800 text-white" asChild>
+              <Link href={isAr ? '/login' : '/login'}>
+                <ArrowRight className="w-4 h-4 rtl:ml-2 rtl:rotate-180" />
+                {isAr ? 'تسجيل الدخول' : 'Login'}
               </Link>
             </Button>
           </div>
-          
-          <div className="mt-8 pt-6 border-t">
-            <p className="text-sm text-muted-foreground">
-              هل تحتاج مساعدة؟{' '}
-              <Link href="/dashboard/help" className="text-primary hover:underline">
-                تواصل مع الدعم الفني
+
+          <div className="mt-8 pt-6 border-t border-slate-800">
+            <p className="text-sm text-slate-500">
+              {isAr ? 'هل تحتاج مساعدة؟ ' : 'Need help? '}
+              <Link href="/dashboard/help" className="text-blue-400 hover:text-blue-300 hover:underline">
+                {isAr ? 'الدعم الفني' : 'Support'}
               </Link>
             </p>
           </div>

@@ -35,7 +35,7 @@ export function MobileBottomNav() {
   return (
     <nav
       className={cn(
-        "fixed bottom-0 left-0 right-0 border-t z-40 lg:hidden",
+        "fixed bottom-0 left-0 right-0 border-t z-40 lg:hidden pb-[env(safe-area-inset-bottom)]",
         isDark
           ? "bg-slate-950 border-slate-800"
           : "bg-white border-gray-200"
