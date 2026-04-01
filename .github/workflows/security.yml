@@ -1,0 +1,183 @@
+# BluePrint - Security Scanning Pipeline
+name: Security Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: "0 9 * * 1"
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'schedule' }}
+
+env:
+  BUN_VERSION: "1.2.5"
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+  pull-requests: write
+
+jobs:
+  dependency-audit:
+    name: 📦 Dependency Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - run: bun install --frozen-lockfile
+      - run: |
+          AUDIT_OUTPUT=$(bun audit 2>&1 || true)
+          echo "$AUDIT_OUTPUT" > audit-output.txt
+          echo "## 📦 Dependency Audit" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "$AUDIT_OUTPUT" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          CRITICAL_COUNT=$(echo "$AUDIT_OUTPUT" | grep -i "critical" | wc -l || true)
+          HIGH_COUNT=$(echo "$AUDIT_OUTPUT" | grep -i "high" | wc -l || true)
+          if [ "$CRITICAL_COUNT" -gt 0 ] || [ "$HIGH_COUNT" -gt 0 ]; then
+            echo "::error::Found critical/high vulnerabilities"
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dependency-audit-report
+          path: audit-output.txt
+          retention-days: 30
+
+  codeql-analysis:
+    name: 🕵️ CodeQL Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [javascript-typescript]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+          queries: security-extended,security-and-quality
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+          upload: true
+
+  secret-scan:
+    name: 🔑 Secret Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+        continue-on-error: true
+
+  license-check:
+    name: 📜 License Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - run: bun install --frozen-lockfile
+      - run: npm install -g license-checker
+      - run: |
+          echo "## 📜 License Check" >> $GITHUB_STEP_SUMMARY
+          license-checker --summary --production 2>&1 | tee license-report.txt || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: license-report
+          path: license-report.txt
+          retention-days: 30
+
+  container-scan:
+    name: 🐳 Container Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t blueprint-scan:latest .
+      - uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "blueprint-scan:latest"
+          format: "table"
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: "os,library"
+          severity: "CRITICAL,HIGH"
+          scanners: "vuln,misconfig,secret"
+      - uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "blueprint-scan:latest"
+          format: "sarif"
+          output: "trivy-results.sarif"
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: "trivy-results.sarif"
+          category: "trivy-container-scan"
+
+  security-report:
+    name: 📊 Security Report
+    runs-on: ubuntu-latest
+    needs: [dependency-audit, codeql-analysis, secret-scan, license-check, container-scan]
+    if: always()
+    timeout-minutes: 10
+    steps:
+      - run: |
+          echo "## 📊 Security Report" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 📦 Dependency Audit | \`${{ needs.dependency-audit.result }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🕵️ CodeQL | \`${{ needs.codeql-analysis.result }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔑 Secret Scan | \`${{ needs.secret-scan.result }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📜 License | \`${{ needs.license-check.result }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🐳 Container | \`${{ needs.container-scan.result }}\` |" >> $GITHUB_STEP_SUMMARY
+          FAILED=false
+          for r in "${{ needs.dependency-audit.result }}" "${{ needs.secret-scan.result }}" "${{ needs.container-scan.result }}"; do
+            if [ "$r" = "failure" ]; then FAILED=true; fi
+          done
+          if [ "$FAILED" = "true" ]; then
+            echo "### ⛔ CRITICAL ISSUES" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          else
+            echo "### ✅ ALL CHECKS PASSED" >> $GITHUB_STEP_SUMMARY
+          fi
+      - uses: actions/github-script@v7
+        if: github.event_name == 'pull_request' && always()
+        with:
+          script: |
+            const results = {
+              "📦 Deps": "${{ needs.dependency-audit.result }}",
+              "🕵️ CodeQL": "${{ needs.codeql-analysis.result }}",
+              "🔑 Secrets": "${{ needs.secret-scan.result }}",
+              "📜 License": "${{ needs.license-check.result }}",
+              "🐳 Container": "${{ needs.container-scan.result }}",
+            };
+            let body = "## 🔒 Security Results\n\n| Check | Status |\n|-------|--------|\n";
+            for (const [k, v] of Object.entries(results)) {
+              body += `| ${k} | ${v === 'success' ? '✅' : '❌'} \`${v}\` |\n`;
+            }
+            await github.rest.issues.createComment({...context.repo, issue_number: context.issue.number, body});
