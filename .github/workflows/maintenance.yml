@@ -1,0 +1,119 @@
+# BluePrint - Nightly Maintenance Pipeline
+name: Nightly Maintenance
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      skip_backup:
+        description: "Skip database backup"
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: nightly-maintenance
+  cancel-in-progress: false
+
+env:
+  BUN_VERSION: "1.2.5"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  database-backup:
+    name: 💾 DB Backup
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: ${{ github.event.inputs.skip_backup != 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          echo "## 💾 Database Backup" >> $GITHUB_STEP_SUMMARY
+          DB_HOST=${{ secrets.DB_HOST_PRODUCTION }}
+          if [ -z "$DB_HOST" ]; then
+            echo "### ⚠️ DB credentials not configured" >> $GITHUB_STEP_SUMMARY
+            echo "Set DB_HOST_PRODUCTION, DB_NAME_PRODUCTION, DB_USER_PRODUCTION, DB_PASSWORD_PRODUCTION" >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+          sudo apt-get update && sudo apt-get install -y postgresql-client
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          PGPASSWORD="${{ secrets.DB_PASSWORD_PRODUCTION }}" pg_dump \
+            -h "$DB_HOST" -U "${{ secrets.DB_USER_PRODUCTION }}" \
+            -d "${{ secrets.DB_NAME_PRODUCTION }}" \
+            --format=custom --compress=6 \
+            -f "blueprint_backup_${TIMESTAMP}.dump" 2>&1 | tee backup-log.txt || true
+          BACKUP_SIZE=$(du -h "blueprint_backup_${TIMESTAMP}.dump" 2>/dev/null | cut -f1 || echo "N/A")
+          echo "| Backup Size | $BACKUP_SIZE |" >> $GITHUB_STEP_SUMMARY
+
+  cleanup:
+    name: 🧹 Cleanup
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          echo "## 🧹 Cleanup" >> $GITHUB_STEP_SUMMARY
+          MERGED=$(git branch -r --merged origin/main 2>/dev/null | grep -v "main\|develop\|HEAD" | wc -l || echo "0")
+          echo "| Stale branches | $MERGED |" >> $GITHUB_STEP_SUMMARY
+
+  dependency-update:
+    name: 📦 Dep Update Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - run: bun install --frozen-lockfile
+      - run: |
+          echo "## 📦 Dependency Check" >> $GITHUB_STEP_SUMMARY
+          OUTDATED=$(bun outdated 2>&1 || echo "All up to date")
+          OUTDATED_COUNT=$(echo "$OUTDATED" | grep -c "✓" || echo "0")
+          echo "| Outdated packages | $OUTDATED_COUNT |" >> $GITHUB_STEP_SUMMARY
+          if [ "$OUTDATED_COUNT" -gt 0 ]; then
+            echo "### Outdated packages:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "$OUTDATED" | head -20 >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+          AUDIT=$(bun audit 2>&1 || true)
+          echo "$AUDIT" | tee audit-report.txt || true
+
+  health-check:
+    name: 🏥 Health Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: |
+          echo "## 🏥 Health Check" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
+          check_service "API" "https://blueprint.app/api/health" || true
+          function check_service() {
+            local name="$1" url="$2"
+            result=$(curl -s -o /dev/null -w "%{http_code} %{time_total}" --connect-timeout 10 --max-time 30 "$url" 2>/dev/null || echo "000 0")
+            code=$(echo "$result" | cut -d' ' -f1)
+            time=$(echo "$result" | cut -d' ' -f2)
+            if [ "$code" = "200" ]; then STATUS="✅"; elif [ "$code" = "000" ]; then STATUS="❌"; else STATUS="⚠️"; fi
+            echo "| $name | $STATUS $code (${time}s) |" >> $GITHUB_STEP_SUMMARY
+          }
+
+  report:
+    name: 📊 Report
+    runs-on: ubuntu-latest
+    needs: [database-backup, cleanup, dependency-update, health-check]
+    if: always()
+    steps:
+      - run: |
+          echo "## 📊 Maintenance Report" >> $GITHUB_STEP_SUMMARY
+          echo "| Task | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 💾 Backup | \`${{ needs.database-backup.result }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🧹 Cleanup | \`${{ needs.cleanup.result }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📦 Deps | \`${{ needs.dependency-update.result }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🏥 Health | \`${{ needs.health-check.result }}\` |" >> $GITHUB_STEP_SUMMARY
