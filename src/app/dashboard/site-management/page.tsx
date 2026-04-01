@@ -3,8 +3,9 @@
 import { useApp } from '@/context/app-context';
 import { SiteDiaryPage } from '@/components/site-diary/site-diary-page';
 import { DefectsPage } from '@/components/defects/defects-page';
+import { SiteVisitReportsPage } from '@/components/site-visit-reports/site-visit-reports-page';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ClipboardList, AlertTriangle } from 'lucide-react';
+import { ClipboardList, AlertTriangle, FileText } from 'lucide-react';
 
 export default function SiteManagementPage() {
   const { language } = useApp();
@@ -29,12 +30,19 @@ export default function SiteManagementPage() {
             <AlertTriangle className="w-4 h-4" />
             {isRTL ? 'العيوب' : 'Defects'}
           </TabsTrigger>
+          <TabsTrigger value="visit-reports" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white gap-2">
+            <FileText className="w-4 h-4" />
+            {isRTL ? 'تقارير الزيارة' : 'Site Visit Reports'}
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="diary" className="mt-4">
           <SiteDiaryPage />
         </TabsContent>
         <TabsContent value="defects" className="mt-4">
           <DefectsPage />
+        </TabsContent>
+        <TabsContent value="visit-reports" className="mt-4">
+          <SiteVisitReportsPage />
         </TabsContent>
       </Tabs>
     </div>

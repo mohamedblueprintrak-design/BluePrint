@@ -1,11 +1,6 @@
-'use client';
+import { redirect } from 'next/navigation';
 
-import { InvoicesPage } from '@/components/invoices/invoices-page';
-
-export default function InvoicesRoute() {
-  return (
-    <div className="p-6">
-      <InvoicesPage />
-    </div>
-  );
+export default function RedirectPage() {
+  redirect('/dashboard/finance');
+  return null;
 }

@@ -1,10 +1,6 @@
-import EquipmentPage from '@/components/equipment/equipment-page';
+import { redirect } from 'next/navigation';
 
-export const metadata = {
-  title: 'المعدات | BluePrint',
-  description: 'إدارة ومتابعة جميع المعدات',
-};
-
-export default function Equipment() {
-  return <EquipmentPage />;
+export default function RedirectPage() {
+  redirect('/dashboard/assets');
+  return null;
 }

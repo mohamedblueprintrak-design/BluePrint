@@ -1,11 +1,6 @@
-'use client';
+import { redirect } from 'next/navigation';
 
-import { DefectsPage } from '@/components/defects/defects-page';
-
-export default function DefectsRoute() {
-  return (
-    <div className="p-6">
-      <DefectsPage />
-    </div>
-  );
+export default function RedirectPage() {
+  redirect('/dashboard/site-management');
+  return null;
 }

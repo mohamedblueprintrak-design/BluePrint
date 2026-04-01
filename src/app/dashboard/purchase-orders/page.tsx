@@ -1,11 +1,6 @@
-'use client';
+import { redirect } from 'next/navigation';
 
-import { PurchaseOrdersPage } from '@/components/purchase-orders/purchase-orders-page';
-
-export default function PurchaseOrdersRoute() {
-  return (
-    <div className="p-6">
-      <PurchaseOrdersPage />
-    </div>
-  );
+export default function RedirectPage() {
+  redirect('/dashboard/assets');
+  return null;
 }

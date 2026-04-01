@@ -1,11 +1,6 @@
-'use client';
+import { redirect } from 'next/navigation';
 
-import { InventoryPage } from '@/components/inventory/inventory-page';
-
-export default function InventoryRoute() {
-  return (
-    <div className="p-6">
-      <InventoryPage />
-    </div>
-  );
+export default function RedirectPage() {
+  redirect('/dashboard/assets');
+  return null;
 }

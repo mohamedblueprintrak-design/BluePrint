@@ -1,11 +1,6 @@
-'use client';
+import { redirect } from 'next/navigation';
 
-import { SiteDiaryPage } from '@/components/site-diary/site-diary-page';
-
-export default function SiteDiaryRoute() {
-  return (
-    <div className="p-6">
-      <SiteDiaryPage />
-    </div>
-  );
+export default function RedirectPage() {
+  redirect('/dashboard/site-management');
+  return null;
 }

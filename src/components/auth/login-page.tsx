@@ -458,12 +458,19 @@ export function LoginPage() {
                                   <button
                                     key={demo.user}
                                     type="button"
-                                    onClick={() => {
+                                    disabled={isLoading}
+                                    onClick={async () => {
                                       setLoginForm({ username: demo.user, password: demo.pass });
+                                      const result = await login({ username: demo.user, password: demo.pass, rememberMe: false });
+                                      if (result.success) {
+                                        window.location.href = '/dashboard';
+                                      } else {
+                                        setError(result.error?.message || t.loginError);
+                                      }
                                     }}
-                                    className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${demo.color}`}
+                                    className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-colors disabled:opacity-50 ${demo.color}`}
                                   >
-                                    <UserCircle className="h-3.5 w-3.5" />
+                                    {isLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserCircle className="h-3.5 w-3.5" />}
                                     {demo.role}
                                   </button>
                                 ))}

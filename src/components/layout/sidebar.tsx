@@ -32,12 +32,12 @@ import {
   Home, Users, FileText, DollarSign, CheckSquare, 
   Package, FileCheck, BarChart3, Settings, 
   LogOut, Menu, Search, Moon, Sun, Globe,
-  User, Shield, BookOpen, Bot, FileSpreadsheet,
-  PanelLeftClose, PanelLeft, Zap, ShoppingCart,
+  User, Shield, BookOpen, Bot,
+  PanelLeftClose, PanelLeft, Zap,
     X, ChevronDown, ChevronUp,
-    Gavel, Compass, Handshake, Landmark,
+    Gavel, Compass, Handshake,
   ClipboardList, Lightbulb, UserCog, Calendar, Bell, HelpCircle, Crown,
-  Mail, Video, Briefcase as BriefcaseIcon, MapPin, Building2
+  Video, Briefcase as BriefcaseIcon, Building2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -249,40 +249,31 @@ function SidebarContent({
   // ─── Main Dashboard ───
   const mainItems: SidebarItem[] = [
     { id: 'dashboard', label: t.dashboard, icon: Home, href: '/dashboard' },
-    { id: 'operations', label: language === 'ar' ? 'مركز العمليات' : 'Operations', icon: BarChart3, href: '/dashboard/operations', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER] },
   ];
 
   // ─── Section 1: التصميم والمشاريع (Design & Projects) ───
   const designItems: SidebarItem[] = [
     { id: 'projects', label: t.projects, icon: Building2, href: '/dashboard/projects' },
     { id: 'tasks', label: t.tasks, icon: CheckSquare, href: '/dashboard/tasks', visibleRoles: ALL_EXCEPT_VIEWER },
-    { id: 'financials', label: language === 'ar' ? 'الميزانيات والكميات' : 'Budgets & BOQ', icon: FileSpreadsheet, href: '/dashboard/financials', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.DRAFTSMAN, UserRole.ACCOUNTANT] },
     { id: 'documents', label: language === 'ar' ? 'المستندات والمراسلات' : 'Documents', icon: FileText, href: '/dashboard/documents', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.DRAFTSMAN, UserRole.ACCOUNTANT, UserRole.SECRETARY] },
     { id: 'siteManagement', label: language === 'ar' ? 'إدارة الموقع' : 'Site Mgmt', icon: ClipboardList, href: '/dashboard/site-management', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER] },
     { id: 'assets', label: language === 'ar' ? 'الأصول والمخزون' : 'Assets', icon: Package, href: '/dashboard/assets', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER] },
-    { id: 'siteVisitReports', label: language === 'ar' ? 'تقارير الموقع' : 'Site Reports', icon: MapPin, href: '/dashboard/site-visit-reports', visibleRoles: ALL_EXCEPT_VIEWER },
   ];
 
-  // ─── Section 2: العملاء والتعاقدات (Clients & Contracts) ───
+  // ─── Section 2: العملاء والتعاقدات والمالية (Clients, Contracts & Finance) ───
   const clientItems: SidebarItem[] = [
     { id: 'clients', label: t.clients, icon: Users, href: '/dashboard/clients', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.ACCOUNTANT, UserRole.SECRETARY] },
     { id: 'proposals', label: t.proposals, icon: FileText, href: '/dashboard/proposals', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER] },
     { id: 'bidding', label: language === 'ar' ? 'العطاءات' : 'Bidding', icon: Gavel, href: '/dashboard/bidding', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER] },
     { id: 'contracts', label: t.contracts, icon: FileCheck, href: '/dashboard/contracts', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER] },
-    { id: 'finance', label: language === 'ar' ? 'الفواتير والسندات' : 'Invoices', icon: DollarSign, href: '/dashboard/finance', visibleRoles: ALL_EXCEPT_VIEWER },
-    { id: 'procurement', label: language === 'ar' ? 'المشتريات والموردون' : 'Procurement', icon: ShoppingCart, href: '/dashboard/procurement', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER] },
-  ];
-
-  // ─── Section 3: المحاسبة والمالية (Finance & Accounting) ───
-  const financeItems: SidebarItem[] = [
+    { id: 'finance', label: language === 'ar' ? 'الفواتير والمالية' : 'Finance', icon: DollarSign, href: '/dashboard/finance', visibleRoles: ALL_EXCEPT_VIEWER },
     { id: 'reports', label: t.reports, icon: BarChart3, href: '/dashboard/reports', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.ACCOUNTANT] },
   ];
 
-  // ─── Section 4: السكرتارية (Secretarial) ───
+  // ─── Section 3: السكرتارية (Secretarial) ───
   const secretarialItems: SidebarItem[] = [
     { id: 'calendar', label: language === 'ar' ? 'التقويم' : 'Calendar', icon: Calendar, href: '/dashboard/calendar', visibleRoles: ALL_EXCEPT_VIEWER },
-    { id: 'meetings', label: language === 'ar' ? 'الاجتماعات' : 'Meetings', icon: Video, href: '/dashboard/meetings', visibleRoles: ALL_EXCEPT_VIEWER },
-    { id: 'correspondence', label: language === 'ar' ? 'المراسلات البلدية' : 'Municipality', icon: Mail, href: '/dashboard/correspondence', visibleRoles: ALL_EXCEPT_VIEWER },
+    { id: 'meetings', label: language === 'ar' ? 'السكرتارية' : 'Secretarial', icon: Video, href: '/dashboard/meetings', visibleRoles: ALL_EXCEPT_VIEWER },
     { id: 'notifications', label: language === 'ar' ? 'الإشعارات' : 'Notifications', icon: Bell, href: '/dashboard/notifications' },
   ];
 
@@ -398,27 +389,12 @@ function SidebarContent({
             defaultOpen={true}
           />
 
-          {/* ─── العملاء والتعاقدات (Clients & Contracts) ─── */}
+          {/* ─── العملاء والتعاقدات والمالية ─── */}
           {filterByRole(clientItems).length > 0 && (
           <CollapsibleSection 
             title={language === 'ar' ? 'العملاء والتعاقدات' : 'Clients & Contracts'}
             icon={Handshake}
             items={filterByRole(clientItems)}
-            currentPage={currentPage}
-            sidebarCollapsed={sidebarCollapsed}
-            isMobile={isMobile}
-            isRTL={isRTL}
-            onItemClick={handleItemClick}
-            defaultOpen={false}
-          />
-          )}
-
-          {/* ─── المحاسبة والمالية (Finance & Accounting) ─── */}
-          {filterByRole(financeItems).length > 0 && (
-          <CollapsibleSection 
-            title={language === 'ar' ? 'المحاسبة والمالية' : 'Finance & Accounting'}
-            icon={Landmark}
-            items={filterByRole(financeItems)}
             currentPage={currentPage}
             sidebarCollapsed={sidebarCollapsed}
             isMobile={isMobile}

@@ -1,11 +1,6 @@
-'use client';
+import { redirect } from 'next/navigation';
 
-import { BOQPage } from '@/components/boq/boq-page';
-
-export default function BOQRoute() {
-  return (
-    <div className="p-6">
-      <BOQPage />
-    </div>
-  );
+export default function RedirectPage() {
+  redirect('/dashboard/finance');
+  return null;
 }

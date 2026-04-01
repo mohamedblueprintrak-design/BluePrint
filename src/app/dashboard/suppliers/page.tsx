@@ -1,11 +1,6 @@
-'use client';
+import { redirect } from 'next/navigation';
 
-import { SuppliersPage } from '@/components/suppliers/suppliers-page';
-
-export default function SuppliersRoute() {
-  return (
-    <div className="p-6">
-      <SuppliersPage />
-    </div>
-  );
+export default function RedirectPage() {
+  redirect('/dashboard/assets');
+  return null;
 }
