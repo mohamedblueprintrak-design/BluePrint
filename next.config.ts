@@ -1,26 +1,38 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Disable X-Powered-By header for security
   poweredByHeader: false,
-
-  // Enable standalone output for Docker deployment
   output: 'standalone',
-
-  // Disable React Strict Mode to prevent double-render issues in dev
   reactStrictMode: false,
 
-  // TypeScript configuration
   typescript: {
     ignoreBuildErrors: process.env.NODE_ENV === 'development',
   },
 
-  // ESLint configuration
   eslint: {
     ignoreDuringBuilds: true,
   },
 
-  // Image optimization configuration
+  // CRITICAL FIX: These packages cause "Cannot read properties of undefined (reading 'call')"
+  // webpack error on Windows with Next.js 15.x Webpack.
+  // serverExternalPackages tells webpack to NOT bundle them server-side,
+  // which prevents chunk resolution failures.
+  serverExternalPackages: ['bcrypt', 'winston', 'redis', 'jspdf', 'jspdf-autotable'],
+
+  // CRITICAL FIX: Webpack configuration to prevent chunk loading failures
+  webpack: (config, { isServer }) => {
+    // Prevent webpack from trying to bundle server-only modules on client
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      net: false,
+      tls: false,
+      child_process: false,
+    };
+
+    return config;
+  },
+
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'avatars.githubusercontent.com' },
@@ -32,11 +44,9 @@ const nextConfig: NextConfig = {
     formats: ['image/avif', 'image/webp'],
   },
 
-  // Security headers
   async headers() {
     const isDev = process.env.NODE_ENV === 'development';
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-
     const allowedOrigins = process.env.CORS_ORIGINS
       ? process.env.CORS_ORIGINS.split(',').map(o => o.trim())
       : [appUrl, 'http://localhost:3000', 'http://127.0.0.1:3000'];
@@ -89,24 +99,17 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  // NOTE: experimental.optimizePackageImports is intentionally REMOVED.
-  // It causes "Cannot read properties of undefined (reading 'call')" Webpack error
-  // on Windows with Next.js 15.x. If re-added, it will break the dev server.
-
-  // Environment variables
   env: {
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || 'BluePrint',
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
   },
 
-  // Redirects
   async redirects() {
     return [
       { source: '/home', destination: '/dashboard', permanent: true },
     ];
   },
 
-  // Logging
   logging: {
     fetches: {
       fullUrl: process.env.NODE_ENV === 'development',
