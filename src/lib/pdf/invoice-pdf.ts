@@ -109,12 +109,9 @@ async function loadJsPDF() {
     return jspdfCache;
   }
   
-  // Use Function constructor to prevent static analysis by bundlers
-  // This is necessary because jspdf has dependencies that don't work with bundlers
-  const dynamicImport = new Function('modulePath', 'return import(modulePath)');
-  
-  const jspdfModule = await dynamicImport('jspdf');
-  const autotableModule = await dynamicImport('jspdf-autotable');
+  // Dynamic imports for browser-only jspdf modules
+  const jspdfModule = await import('jspdf');
+  const autotableModule = await import('jspdf-autotable');
   
   jspdfCache = {
     jsPDF: jspdfModule.default,
