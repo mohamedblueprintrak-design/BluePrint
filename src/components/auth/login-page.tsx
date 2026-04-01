@@ -1,8 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- keep import to avoid Turbopack HMR crash when removing
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
