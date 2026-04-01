@@ -200,7 +200,7 @@ export const postHandlers = {
     }
 
     // SECURITY: Block role escalation to admin from this endpoint
-    if (sanitizedData.role && sanitizedData.role === 'admin') {
+    if (sanitizedData.role && (sanitizedData.role as string).toUpperCase() === 'ADMIN') {
       return errorResponse('لا يمكن تعيين دور المدير من هذا المسار', 'FORBIDDEN_ROLE_CHANGE', 403);
     }
 

@@ -248,6 +248,7 @@ function SidebarContent({
   // ─── Main Dashboard ───
   const mainItems: SidebarItem[] = [
     { id: 'dashboard', label: t.dashboard, icon: Home, href: '/dashboard' },
+    { id: 'operations', label: language === 'ar' ? 'مركز العمليات' : 'Operations', icon: BarChart3, href: '/dashboard/operations', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER] },
   ];
 
   // ─── Section 1: التصميم والمشاريع (Design & Projects) ───
@@ -255,10 +256,10 @@ function SidebarContent({
     { id: 'projects', label: t.projects, icon: Building2, href: '/dashboard/projects' },
     { id: 'tasks', label: t.tasks, icon: CheckSquare, href: '/dashboard/tasks', visibleRoles: ALL_EXCEPT_VIEWER },
     { id: 'financials', label: language === 'ar' ? 'الميزانيات والكميات' : 'Budgets & BOQ', icon: FileSpreadsheet, href: '/dashboard/financials', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.DRAFTSMAN, UserRole.ACCOUNTANT] },
-    { id: 'documents', label: language === 'ar' ? 'المستندات والمراسلات' : 'Documents', icon: FileText, href: '/dashboard/documents', visibleRoles: [UserRole.ADMIN, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.DRAFTSMAN, UserRole.SECRETARY] },
+    { id: 'documents', label: language === 'ar' ? 'المستندات والمراسلات' : 'Documents', icon: FileText, href: '/dashboard/documents', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.DRAFTSMAN, UserRole.ACCOUNTANT, UserRole.SECRETARY] },
     { id: 'siteManagement', label: language === 'ar' ? 'إدارة الموقع' : 'Site Mgmt', icon: ClipboardList, href: '/dashboard/site-management', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER] },
     { id: 'assets', label: language === 'ar' ? 'الأصول والمخزون' : 'Assets', icon: Package, href: '/dashboard/assets', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER] },
-    { id: 'siteVisitReports', label: language === 'ar' ? 'تقارير الموقع' : 'Site Reports', icon: MapPin, href: '/dashboard/site-visit-reports', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.SECRETARY] },
+    { id: 'siteVisitReports', label: language === 'ar' ? 'تقارير الموقع' : 'Site Reports', icon: MapPin, href: '/dashboard/site-visit-reports', visibleRoles: ALL_EXCEPT_VIEWER },
   ];
 
   // ─── Section 2: العملاء والتعاقدات (Clients & Contracts) ───
@@ -267,7 +268,7 @@ function SidebarContent({
     { id: 'proposals', label: t.proposals, icon: FileText, href: '/dashboard/proposals', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER] },
     { id: 'bidding', label: language === 'ar' ? 'العطاءات' : 'Bidding', icon: Gavel, href: '/dashboard/bidding', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER] },
     { id: 'contracts', label: t.contracts, icon: FileCheck, href: '/dashboard/contracts', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER] },
-    { id: 'finance', label: language === 'ar' ? 'الفواتير والسندات' : 'Invoices', icon: DollarSign, href: '/dashboard/finance', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.ACCOUNTANT] },
+    { id: 'finance', label: language === 'ar' ? 'الفواتير والسندات' : 'Invoices', icon: DollarSign, href: '/dashboard/finance', visibleRoles: ALL_EXCEPT_VIEWER },
     { id: 'procurement', label: language === 'ar' ? 'المشتريات والموردون' : 'Procurement', icon: ShoppingCart, href: '/dashboard/procurement', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER] },
   ];
 
@@ -278,9 +279,9 @@ function SidebarContent({
 
   // ─── Section 4: السكرتارية (Secretarial) ───
   const secretarialItems: SidebarItem[] = [
-    { id: 'calendar', label: language === 'ar' ? 'التقويم' : 'Calendar', icon: Calendar, href: '/dashboard/calendar', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.SECRETARY] },
-    { id: 'meetings', label: language === 'ar' ? 'الاجتماعات' : 'Meetings', icon: Video, href: '/dashboard/meetings', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.SECRETARY] },
-    { id: 'correspondence', label: language === 'ar' ? 'المراسلات البلدية' : 'Municipality', icon: Mail, href: '/dashboard/correspondence', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.SECRETARY] },
+    { id: 'calendar', label: language === 'ar' ? 'التقويم' : 'Calendar', icon: Calendar, href: '/dashboard/calendar', visibleRoles: ALL_EXCEPT_VIEWER },
+    { id: 'meetings', label: language === 'ar' ? 'الاجتماعات' : 'Meetings', icon: Video, href: '/dashboard/meetings', visibleRoles: ALL_EXCEPT_VIEWER },
+    { id: 'correspondence', label: language === 'ar' ? 'المراسلات البلدية' : 'Municipality', icon: Mail, href: '/dashboard/correspondence', visibleRoles: ALL_EXCEPT_VIEWER },
     { id: 'notifications', label: language === 'ar' ? 'الإشعارات' : 'Notifications', icon: Bell, href: '/dashboard/notifications' },
   ];
 

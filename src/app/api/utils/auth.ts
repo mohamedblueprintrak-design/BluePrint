@@ -139,35 +139,37 @@ export async function requireAuth(
  * Check if user has admin role
  */
 export function isAdmin(user: AuthenticatedUser): boolean {
-  return user.role === 'admin';
+  return user.role === 'ADMIN' || user.role === 'admin';
 }
 
 /**
  * Check if user has HR role
  */
 export function isHR(user: AuthenticatedUser): boolean {
-  return user.role === 'hr';
+  return user.role === 'HR' || user.role === 'hr';
 }
 
 /**
  * Check if user has accountant role
  */
 export function isAccountant(user: AuthenticatedUser): boolean {
-  return user.role === 'accountant';
+  return user.role === 'ACCOUNTANT' || user.role === 'accountant';
 }
 
 /**
  * Check if user can approve leaves
  */
 export function canApproveLeave(user: AuthenticatedUser): boolean {
-  return user.role === 'admin' || user.role === 'hr';
+  const r = user.role?.toUpperCase();
+  return r === 'ADMIN' || r === 'HR' || r === 'MANAGER';
 }
 
 /**
  * Check if user can approve expenses
  */
 export function canApproveExpense(user: AuthenticatedUser): boolean {
-  return user.role === 'admin' || user.role === 'accountant';
+  const r = user.role?.toUpperCase();
+  return r === 'ADMIN' || r === 'ACCOUNTANT' || r === 'MANAGER';
 }
 
 /**

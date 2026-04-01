@@ -53,7 +53,7 @@ export async function PUT(
     if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
 
     // SECURITY: Only admins and managers can update team members
-    if (!['admin', 'manager'].includes(user.role)) {
+    if (!['ADMIN', 'MANAGER'].includes(user.role)) {
       return errorResponse('ليس لديك صلاحية تحديث أعضاء الفريق', 'FORBIDDEN', 403);
     }
 
@@ -96,7 +96,7 @@ export async function DELETE(
     if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
 
     // SECURITY: Only admins can delete team members
-    if (user.role !== 'admin') {
+    if (user.role !== 'ADMIN') {
       return errorResponse('ليس لديك صلاحية حذف أعضاء الفريق', 'FORBIDDEN', 403);
     }
 

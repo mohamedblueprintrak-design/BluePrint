@@ -17,7 +17,7 @@ import { getUserFromRequest } from '../utils/demo-config';
 export async function GET(request: NextRequest) {
   const user = await getUserFromRequest(request);
 
-  if (!user || user.role !== 'admin') {
+  if (!user || user.role !== 'ADMIN') {
     return unauthorizedResponse();
   }
 
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const user = await getUserFromRequest(request);
 
-  if (!user || user.role !== 'admin') {
+  if (!user || user.role !== 'ADMIN') {
     return unauthorizedResponse();
   }
 

@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
   const user = await getUserFromToken(request);
   if (!user) return errorResponse('غير مصرح', 'UNAUTHORIZED', 401);
 
-  if (!['admin', 'hr'].includes(user.role)) {
+  if (!['ADMIN', 'HR', 'MANAGER'].includes(user.role)) {
     return errorResponse('غير مصرح لك بالوصول لهذه الميزة', 'FORBIDDEN', 403);
   }
 
