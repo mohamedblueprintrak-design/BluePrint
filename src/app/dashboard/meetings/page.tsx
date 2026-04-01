@@ -31,10 +31,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import CalendarPage from '@/components/calendar/calendar-page';
 import {
   Calendar, Plus, Clock, MapPin, Users, Video,
   CheckCircle, Landmark, Search, Send, Eye,
-  XCircle, AlertTriangle, FileText, Building
+  XCircle, AlertTriangle, FileText, Building,
+  CalendarDays
 } from 'lucide-react';
 
 // ─── Meetings Data ───────────────────────────────────────────────
@@ -761,7 +763,7 @@ export default function SecretarialPage() {
           {isAr ? 'السكرتارية' : 'Secretarial'}
         </h1>
         <p className="text-slate-400 mt-1">
-          {isAr ? 'إدارة الاجتماعات والمراسلات البلدية' : 'Manage meetings and municipality correspondence'}
+          {isAr ? 'إدارة الاجتماعات والمراسلات والتقويم' : 'Manage meetings, correspondence, and calendar'}
         </p>
       </div>
 
@@ -775,6 +777,10 @@ export default function SecretarialPage() {
             <Landmark className="w-4 h-4 me-2" />
             {isAr ? 'المراسلات البلدية' : 'Municipality'}
           </TabsTrigger>
+          <TabsTrigger value="calendar" className="data-[state=active]:bg-cyan-600 data-[state=active]:text-white">
+            <CalendarDays className="w-4 h-4 me-2" />
+            {isAr ? 'التقويم' : 'Calendar'}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="meetings">
@@ -783,6 +789,10 @@ export default function SecretarialPage() {
 
         <TabsContent value="correspondence">
           <CorrespondenceContent />
+        </TabsContent>
+
+        <TabsContent value="calendar">
+          <CalendarPage />
         </TabsContent>
       </Tabs>
     </div>

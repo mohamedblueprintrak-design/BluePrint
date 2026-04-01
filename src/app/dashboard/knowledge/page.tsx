@@ -1,11 +1,6 @@
-'use client';
-
-import { KnowledgePage } from '@/components/knowledge/knowledge-page';
+import { redirect } from 'next/navigation';
 
 export default function KnowledgeRoute() {
-  return (
-    <div className="p-6">
-      <KnowledgePage />
-    </div>
-  );
+  redirect('/dashboard/ai-chat');
+  return null;
 }

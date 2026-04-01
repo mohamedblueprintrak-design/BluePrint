@@ -1,10 +1,6 @@
-import TeamPage from '@/components/team/team-page';
+import { redirect } from 'next/navigation';
 
-export const metadata = {
-  title: 'الفريق | BluePrint',
-  description: 'إدارة أعضاء الفريق والصلاحيات',
-};
-
-export default function Team() {
-  return <TeamPage />;
+export default function TeamRoute() {
+  redirect('/dashboard/hr');
+  return null;
 }

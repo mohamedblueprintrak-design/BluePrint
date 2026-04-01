@@ -1,10 +1,6 @@
-import CalendarPage from '@/components/calendar/calendar-page';
+import { redirect } from 'next/navigation';
 
-export const metadata = {
-  title: 'التقويم | BluePrint',
-  description: 'عرض جميع المواعيد والأحداث',
-};
-
-export default function Calendar() {
-  return <CalendarPage />;
+export default function CalendarRoute() {
+  redirect('/dashboard/meetings');
+  return null;
 }

@@ -32,12 +32,12 @@ import {
   Home, Users, FileText, DollarSign, CheckSquare, 
   Package, FileCheck, BarChart3, Settings, 
   LogOut, Menu, Search, Moon, Sun, Globe,
-  User, Shield, BookOpen, Bot,
+  User, Shield, Bot,
   PanelLeftClose, PanelLeft, Zap,
     X, ChevronDown, ChevronUp,
     Gavel, Compass, Handshake,
-  ClipboardList, Lightbulb, UserCog, Calendar, Bell, HelpCircle, Crown,
-  Video, Briefcase as BriefcaseIcon, Building2
+  ClipboardList, Lightbulb, UserCog, Bell, Crown,
+  Video, Building2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -190,28 +190,28 @@ const getRoutes = (_language: 'ar' | 'en'): Record<string, string> => ({
   'hr': '/dashboard/hr',
   'siteManagement': '/dashboard/site-management',
   'documents': '/dashboard/documents',
-  'knowledge': '/dashboard/knowledge',
   'aiChat': '/dashboard/ai-chat',
   'reports': '/dashboard/reports',
   'settings': '/dashboard/settings',
   'admin': '/dashboard/admin',
-  'activities': '/dashboard/activities',
   'profile': '/dashboard/profile',
   'pricing': '/dashboard/pricing',
-  'team': '/dashboard/team',
   'bidding': '/dashboard/bidding',
-  'calendar': '/dashboard/calendar',
   'notifications': '/dashboard/notifications',
   'automations': '/dashboard/automations',
-  'help': '/dashboard/help',
   'meetings': '/dashboard/meetings',
-  'workload': '/dashboard/workload',
   // Legacy redirect routes (kept for backward compatibility)
   'operations': '/dashboard/operations',
   'financials': '/dashboard/financials',
   'procurement': '/dashboard/procurement',
   'siteVisitReports': '/dashboard/site-visit-reports',
   'correspondence': '/dashboard/correspondence',
+  'knowledge': '/dashboard/ai-chat',
+  'help': '/dashboard/ai-chat',
+  'activities': '/dashboard/admin',
+  'team': '/dashboard/hr',
+  'workload': '/dashboard/hr',
+  'calendar': '/dashboard/meetings',
 });
 
 // Sidebar Content Component - shared between desktop and mobile
@@ -273,23 +273,18 @@ function SidebarContent({
 
   // ─── Section 3: السكرتارية (Secretarial) ───
   const secretarialItems: SidebarItem[] = [
-    { id: 'calendar', label: language === 'ar' ? 'التقويم' : 'Calendar', icon: Calendar, href: '/dashboard/calendar', visibleRoles: ALL_EXCEPT_VIEWER },
     { id: 'meetings', label: language === 'ar' ? 'السكرتارية' : 'Secretarial', icon: Video, href: '/dashboard/meetings', visibleRoles: ALL_EXCEPT_VIEWER },
     { id: 'notifications', label: language === 'ar' ? 'الإشعارات' : 'Notifications', icon: Bell, href: '/dashboard/notifications' },
   ];
 
   // ─── Section 5: الموارد البشرية (Human Resources) ───
   const hrSectionItems: SidebarItem[] = [
-    { id: 'hr', label: t.hr, icon: Users, href: '/dashboard/hr', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.HR, UserRole.SECRETARY] },
-    { id: 'team', label: language === 'ar' ? 'الفريق' : 'Team', icon: Users, href: '/dashboard/team', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.SECRETARY] },
-    { id: 'workload', label: language === 'ar' ? 'الأحمال والقدرات' : 'Workload', icon: BriefcaseIcon, href: '/dashboard/workload', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER] },
+    { id: 'hr', label: language === 'ar' ? 'الموارد البشرية' : 'Human Resources', icon: Users, href: '/dashboard/hr', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.HR, UserRole.PROJECT_MANAGER, UserRole.SECRETARY] },
   ];
 
   // ─── Section 6: المعرفة والذكاء الاصطناعي (Knowledge & AI) ───
   const knowledgeItems: SidebarItem[] = [
-    { id: 'knowledge', label: t.knowledge, icon: BookOpen, href: '/dashboard/knowledge', visibleRoles: ALL_EXCEPT_VIEWER },
-    { id: 'aiChat', label: t.aiChat, icon: Bot, href: '/dashboard/ai-chat' },
-    { id: 'help', label: language === 'ar' ? 'المساعدة' : 'Help', icon: HelpCircle, href: '/dashboard/help' },
+    { id: 'aiChat', label: language === 'ar' ? 'المعرفة والذكاء الاصطناعي' : 'Knowledge & AI', icon: Bot, href: '/dashboard/ai-chat' },
   ];
 
   // ─── System & Settings (bottom) ───
@@ -301,7 +296,6 @@ function SidebarContent({
 
   const adminItems: SidebarItem[] = [
     { id: 'admin', label: language === 'ar' ? 'لوحة الإدارة' : 'Admin Panel', icon: Shield, href: '/dashboard/admin', visibleRoles: [UserRole.ADMIN] },
-    { id: 'activities', label: t.activities, icon: Zap, href: '/dashboard/activities', visibleRoles: [UserRole.ADMIN] },
   ];
 
   // Sync currentPage with pathname - using memoized routes
