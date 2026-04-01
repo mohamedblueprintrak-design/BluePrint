@@ -1,77 +1,77 @@
-'use client';
-
-import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
-  Menu, X, ArrowLeft, Users, FileText, Bot,
+  ArrowLeft, Users, FileText, Bot,
   DollarSign, HardHat, BarChart3, ChevronRight, Star,
   Shield, Zap, Globe
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { PricingPage } from '@/components/pricing/pricing-page';
+import { MobileMenu } from '@/components/landing/mobile-menu';
+
+/* ─── Static Data (no hydration issues) ──────────── */
+
+const features = [
+  {
+    icon: <FileText className="w-6 h-6" />,
+    color: 'from-blue-500 to-cyan-500',
+    bgColor: 'bg-blue-500/10',
+    title: 'إدارة المشاريع',
+    description: 'تتبع كامل للمشاريع مع جدول الكميات والمعالم الرئيسية وتقارير الموقع والجداول الزمنية',
+  },
+  {
+    icon: <Bot className="w-6 h-6" />,
+    color: 'from-green-500 to-emerald-500',
+    bgColor: 'bg-green-500/10',
+    title: 'المساعد الذكي',
+    description: 'مساعد AI متخصص في الهندسة يدعم نماذج GPT-4 و Gemini و DeepSeek للتحليل والتوصيات',
+  },
+  {
+    icon: <DollarSign className="w-6 h-6" />,
+    color: 'from-amber-500 to-orange-500',
+    bgColor: 'bg-amber-500/10',
+    title: 'الفواتير والعقود',
+    description: 'نظام فوترة متكامل مع دعم الضرائب وإدارة العقود والتغييرات وسندات القبض',
+  },
+  {
+    icon: <Users className="w-6 h-6" />,
+    color: 'from-purple-500 to-violet-500',
+    bgColor: 'bg-purple-500/10',
+    title: 'الموارد البشرية',
+    description: 'إدارة الحضور والإجازات والرواتب مع نظام موافقات متكامل وتقييم الأداء',
+  },
+  {
+    icon: <HardHat className="w-6 h-6" />,
+    color: 'from-red-500 to-rose-500',
+    bgColor: 'bg-red-500/10',
+    title: 'الإشراف الميداني',
+    description: 'نظام العيوب واليوميات الميدانية مع دعم الصور والموقع الجغرافي والتقارير',
+  },
+  {
+    icon: <BarChart3 className="w-6 h-6" />,
+    color: 'from-sky-500 to-blue-500',
+    bgColor: 'bg-sky-500/10',
+    title: 'التقارير والتحليلات',
+    description: 'تقارير PDF و Excel مع لوحات تحكم تفاعلية ومؤشرات أداء متقدمة',
+  },
+];
+
+const stats = [
+  { value: '500+', label: 'مكتب هندسي', icon: <Globe className="w-5 h-5" /> },
+  { value: '12,000+', label: 'مشروع مكتمل', icon: <FileText className="w-5 h-5" /> },
+  { value: '99.9%', label: 'وقت تشغيل', icon: <Zap className="w-5 h-5" /> },
+  { value: '24/7', label: 'دعم فني', icon: <Shield className="w-5 h-5" /> },
+];
+
+const navLinks = [
+  { label: 'المميزات', href: '#features' },
+  { label: 'الأسعار', href: '#pricing' },
+  { label: 'GitHub', href: 'https://github.com/mohamedblueprintrak-design/BluePrint', external: true },
+];
+
+/* ─── Page (Server Component — no hydration issues) ─ */
 
 export default function Home() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const features = [
-    {
-      icon: <FileText className="w-6 h-6" />,
-      color: 'from-blue-500 to-cyan-500',
-      bgColor: 'bg-blue-500/10',
-      title: 'إدارة المشاريع',
-      description: 'تتبع كامل للمشاريع مع جدول الكميات والمعالم الرئيسية وتقارير الموقع والجداول الزمنية',
-    },
-    {
-      icon: <Bot className="w-6 h-6" />,
-      color: 'from-green-500 to-emerald-500',
-      bgColor: 'bg-green-500/10',
-      title: 'المساعد الذكي',
-      description: 'مساعد AI متخصص في الهندسة يدعم نماذج GPT-4 و Gemini و DeepSeek للتحليل والتوصيات',
-    },
-    {
-      icon: <DollarSign className="w-6 h-6" />,
-      color: 'from-amber-500 to-orange-500',
-      bgColor: 'bg-amber-500/10',
-      title: 'الفواتير والعقود',
-      description: 'نظام فوترة متكامل مع دعم الضرائب وإدارة العقود والتغييرات وسندات القبض',
-    },
-    {
-      icon: <Users className="w-6 h-6" />,
-      color: 'from-purple-500 to-violet-500',
-      bgColor: 'bg-purple-500/10',
-      title: 'الموارد البشرية',
-      description: 'إدارة الحضور والإجازات والرواتب مع نظام موافقات متكامل وتقييم الأداء',
-    },
-    {
-      icon: <HardHat className="w-6 h-6" />,
-      color: 'from-red-500 to-rose-500',
-      bgColor: 'bg-red-500/10',
-      title: 'الإشراف الميداني',
-      description: 'نظام العيوب واليوميات الميدانية مع دعم الصور والموقع الجغرافي والتقارير',
-    },
-    {
-      icon: <BarChart3 className="w-6 h-6" />,
-      color: 'from-sky-500 to-blue-500',
-      bgColor: 'bg-sky-500/10',
-      title: 'التقارير والتحليلات',
-      description: 'تقارير PDF و Excel مع لوحات تحكم تفاعلية ومؤشرات أداء متقدمة',
-    },
-  ];
-
-  const stats = [
-    { value: '500+', label: 'مكتب هندسي', icon: <Globe className="w-5 h-5" /> },
-    { value: '12,000+', label: 'مشروع مكتمل', icon: <FileText className="w-5 h-5" /> },
-    { value: '99.9%', label: 'وقت تشغيل', icon: <Zap className="w-5 h-5" /> },
-    { value: '24/7', label: 'دعم فني', icon: <Shield className="w-5 h-5" /> },
-  ];
-
-  const navLinks = [
-    { label: 'المميزات', href: '#features' },
-    { label: 'الأسعار', href: '#pricing' },
-    { label: 'GitHub', href: 'https://github.com/mohamedblueprintrak-design/BluePrint', external: true },
-  ];
-
   return (
     <div className="min-h-screen bg-slate-950 text-white" dir="rtl">
       {/* ═══════════ HEADER ═══════════ */}
@@ -113,7 +113,7 @@ export default function Home() {
             ))}
           </nav>
 
-          {/* CTA + Mobile Toggle */}
+          {/* CTA + Mobile Menu */}
           <div className="flex items-center gap-3">
             <Link
               href="/login"
@@ -122,54 +122,9 @@ export default function Home() {
               تسجيل الدخول
               <ArrowLeft className="w-4 h-4" />
             </Link>
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800/50 transition-colors"
-              aria-label="القائمة"
-            >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
+            <MobileMenu navLinks={navLinks} />
           </div>
         </div>
-
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t border-slate-800 bg-slate-950/95 backdrop-blur-xl">
-            <nav className="flex flex-col p-4 gap-1">
-              {navLinks.map((link) => (
-                link.external ? (
-                  <a
-                    key={link.label}
-                    href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-slate-400 hover:text-white transition-colors text-sm px-4 py-3 rounded-lg hover:bg-slate-800/50"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {link.label}
-                  </a>
-                ) : (
-                  <a
-                    key={link.label}
-                    href={link.href}
-                    className="text-slate-400 hover:text-white transition-colors text-sm px-4 py-3 rounded-lg hover:bg-slate-800/50"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {link.label}
-                  </a>
-                )
-              ))}
-              <Link
-                href="/login"
-                className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-5 py-3 rounded-lg text-sm font-medium mt-2"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                تسجيل الدخول
-                <ArrowLeft className="w-4 h-4" />
-              </Link>
-            </nav>
-          </div>
-        )}
       </header>
 
       {/* ═══════════ HERO SECTION ═══════════ */}
