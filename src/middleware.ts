@@ -331,7 +331,7 @@ export async function middleware(request: NextRequest) {
   // CSRF Protection for Mutations
   // ============================================
   const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method);
-  const csrfExemptPaths = ['/api/stripe/webhook', '/api/health'];
+  const csrfExemptPaths = ['/api/stripe/webhook', '/api/health', '/api/auth', '/api/seed'];
   const isCsrfExempt = csrfExemptPaths.some(p => pathname.startsWith(p));
 
   if (pathname.startsWith('/api/') && isMutation && !isCsrfExempt) {
@@ -397,7 +397,7 @@ export async function middleware(request: NextRequest) {
         path: '/',
         httpOnly: false, // Must be readable by JS for double-submit
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        sameSite: 'lax', // Use 'lax' so cookie is sent on first navigation
         maxAge: 60 * 60 * 24, // 24 hours
       });
     }

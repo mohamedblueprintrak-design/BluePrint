@@ -210,7 +210,7 @@ async function handleLogin(
     response.cookies.set('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict', // Changed from 'lax' to 'strict' for better security
+      sameSite: 'lax', // Use 'lax' so cookies are sent on navigation from login
       maxAge: 60 * 60 * 2, // 2 hours
       path: '/',
     });
@@ -289,8 +289,8 @@ async function handleLogin(
       response.cookies.set('refreshToken', result.refreshToken!, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict', // Changed from 'lax' for better security
-        maxAge: data.rememberMe ? 60 * 60 * 24 * 7 : 60 * 60 * 24 * 7, // 7 days (reduced from 30d for security)
+        sameSite: 'lax',
+        maxAge: data.rememberMe ? 60 * 60 * 24 * 7 : 60 * 60 * 24 * 7, // 7 days
         path: '/',
       });
       
@@ -298,7 +298,7 @@ async function handleLogin(
       response.cookies.set('token', result.token!, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict', // Changed from 'lax' for better security
+        sameSite: 'lax',
         maxAge: 60 * 60 * 2, // 2 hours
         path: '/',
       });
@@ -396,7 +396,7 @@ async function handleSignup(
   cookieStore.set('refreshToken', result.refreshToken!, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict', // Changed from 'lax' for better security
+    sameSite: 'lax',
     maxAge: 60 * 60 * 24 * 7, // 7 days
     path: '/',
   });
@@ -495,7 +495,7 @@ async function handleRefreshToken(
   cookieStore.set('refreshToken', result.refreshToken!, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: 'lax',
     maxAge: 60 * 60 * 24 * 7, // 7 days
     path: '/',
   });
