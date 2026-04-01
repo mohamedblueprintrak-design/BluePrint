@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Noto_Sans_Arabic } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
-import { Providers } from "@/components/providers";
 import { ServiceWorkerRegistration } from "@/components/pwa/service-worker-registration";
 
 // Geist Sans - Primary font for English/Latin text
@@ -140,9 +139,7 @@ export default function RootLayout({
           selection:bg-primary/20
         `}
       >
-        <Providers>
-          {children}
-        </Providers>
+        {children}
         <Toaster />
         <ServiceWorkerRegistration />
       </body>

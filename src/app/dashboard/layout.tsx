@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { Providers } from '@/components/providers';
 
 // Inner component that checks auth
 function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -71,10 +72,11 @@ export default function DashboardLayout({
   const { sidebarCollapsed, isRTL } = useApp();
 
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-slate-950">
-        {/* Sidebar */}
-        <Sidebar />
+    <Providers>
+      <AuthGuard>
+        <div className="min-h-screen bg-slate-950">
+          {/* Sidebar */}
+          <Sidebar />
         
         {/* Main Content Area */}
         <main 
@@ -102,6 +104,7 @@ export default function DashboardLayout({
         {/* Mobile Bottom Navigation - hidden on desktop */}
         <MobileBottomNav />
       </div>
-    </AuthGuard>
+      </AuthGuard>
+    </Providers>
   );
 }
