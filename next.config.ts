@@ -168,14 +168,15 @@ const nextConfig: NextConfig = {
   
   // Experimental features
   experimental: {
-    // Enable optimized package imports
-    optimizePackageImports: [
-      'lucide-react',
-      '@radix-ui/react-icons',
-      'recharts',
-      'date-fns',
-      'framer-motion',
-    ],
+    // optimizePackageImports DISABLED — causes webpack "options.factory undefined" error
+    // on Next.js 15.x with Webpack. Only works reliably with Turbopack.
+    // optimizePackageImports: [
+    //   'lucide-react',
+    //   '@radix-ui/react-icons',
+    //   'recharts',
+    //   'date-fns',
+    //   'framer-motion',
+    // ],
     // Server actions configuration
     serverActions: {
       bodySizeLimit: '2mb',
