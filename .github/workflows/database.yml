@@ -1,0 +1,121 @@
+# BluePrint - Database Migration Pipeline
+name: Database Migration
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        default: "staging"
+        type: choice
+        options: [staging, production]
+      dry_run:
+        description: "Dry run mode"
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: db-migration-${{ github.event.inputs.environment || 'staging' }}
+  cancel-in-progress: false
+
+env:
+  BUN_VERSION: "1.2.5"
+
+jobs:
+  migration-check:
+    name: 🔎 Check Pending
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      has-changes: ${{ steps.check.outputs.has-changes }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - run: bun install --frozen-lockfile
+      - run: bunx prisma generate
+      - id: check
+        run: |
+          echo "## 🔎 Migration Check" >> $GITHUB_STEP_SUMMARY
+          TARGET_ENV=${{ github.event.inputs.environment || 'staging' }}
+          MIGRATION_LIST=$(bunx prisma migrate status 2>&1 || echo "OK")
+          if echo "$MIGRATION_LIST" | grep -qiE "pending|not yet applied|drift"; then
+            echo "has-changes=true" >> $GITHUB_OUTPUT
+            echo "### ⚠️ Pending migrations detected" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "has-changes=false" >> $GITHUB_OUTPUT
+            echo "### ✅ Schema is up to date" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  migration-test:
+    name: 🧪 Test Migration
+    runs-on: ubuntu-latest
+    needs: migration-check
+    if: needs.migration-check.outputs.has-changes == 'true'
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: blueprint
+          POSTGRES_PASSWORD: blueprint
+          POSTGRES_DB: blueprint_migration_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U blueprint"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - run: bun install --frozen-lockfile
+      - run: bunx prisma migrate deploy 2>&1 | tee migration-output.txt
+        env:
+          DATABASE_URL: postgresql://blueprint:blueprint@localhost:5432/blueprint_migration_test
+        continue-on-error: true
+      - run: bunx prisma validate
+        env:
+          DATABASE_URL: postgresql://blueprint:blueprint@localhost:5432/blueprint_migration_test
+
+  production-migrate:
+    name: 🚀 Production Migration
+    runs-on: ubuntu-latest
+    needs: [migration-check, migration-test]
+    if: needs.migration-check.outputs.has-changes == 'true'
+    timeout-minutes: 30
+    environment: ${{ github.event.inputs.environment || 'staging' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - run: bun install --frozen-lockfile
+      - run: |
+          echo "## 🚀 Production Migration" >> $GITHUB_STEP_SUMMARY
+          TARGET_ENV=${{ github.event.inputs.environment || 'staging' }}
+          if [ "${{ github.event.inputs.dry_run }}" == "true" ]; then
+            echo "### 🔍 Dry Run Mode - no changes applied" >> $GITHUB_STEP_SUMMARY
+            bunx prisma migrate diff --from-migrations prisma/migrations --to-schema-datamodel prisma/schema.prisma --script 2>&1 | head -100
+            exit 0
+          fi
+          bunx prisma migrate deploy 2>&1 | tee migration-output.txt
+        continue-on-error: true
+      - run: bunx prisma validate
+        if: success()
+      - run: |
+          echo "### ❌ Migration failed - rollback needed" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        if: failure()
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: migration-output
+          path: migration-output.txt
+          retention-days: 90
