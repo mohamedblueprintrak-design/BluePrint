@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import {
   Home, Building2, DollarSign, Bot, Settings,
   FileText, Package, Handshake, BarChart3,
-  Users, HardHat
+  Users, HardHat, ListTodo, Shield, Activity
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/auth-context';
@@ -33,8 +33,8 @@ interface MoreMenuItem {
 const bottomNavItems: NavItem[] = [
   { href: '/dashboard', icon: Home, label: 'الرئيسية', labelEn: 'Home' },
   { href: '/dashboard/projects', icon: Building2, label: 'المشاريع', labelEn: 'Projects' },
+  { href: '/dashboard/projects?tab=tasks', icon: ListTodo, label: 'المهام', labelEn: 'Tasks' },
   { href: '/dashboard/finance', icon: DollarSign, label: 'المالية', labelEn: 'Finance' },
-  { href: '/dashboard/ai-chat', icon: Bot, label: 'المساعد', labelEn: 'Assistant' },
 ];
 
 const moreMenuItems: MoreMenuItem[] = [
@@ -44,6 +44,9 @@ const moreMenuItems: MoreMenuItem[] = [
   { href: '/dashboard/assets', icon: Package, label: 'المشتريات والمخزون', labelEn: 'Procurement', roles: ['ADMIN', 'MANAGER', 'PROJECT_MANAGER', 'ENGINEER'] },
   { href: '/dashboard/site-management', icon: HardHat, label: 'إدارة الموقع', labelEn: 'Site Mgmt', roles: ['ADMIN', 'MANAGER', 'PROJECT_MANAGER', 'ENGINEER'] },
   { href: '/dashboard/hr', icon: Users, label: 'الموارد البشرية', labelEn: 'HR', roles: ['ADMIN', 'MANAGER', 'HR', 'PROJECT_MANAGER', 'SECRETARY'] },
+  { href: '/dashboard/ai-chat', icon: Bot, label: 'المساعد الذكي', labelEn: 'AI Assistant' },
+  { href: '/dashboard/admin', icon: Shield, label: 'لوحة الإدارة', labelEn: 'Admin Panel', roles: ['ADMIN'] },
+  { href: '/dashboard/admin?tab=activities', icon: Activity, label: 'النشاطات', labelEn: 'Activities', roles: ['ADMIN'] },
   { href: '/dashboard/settings', icon: Settings, label: 'الإعدادات', labelEn: 'Settings', roles: ['ADMIN', 'MANAGER'] },
 ];
 

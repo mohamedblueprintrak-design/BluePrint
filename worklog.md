@@ -1312,3 +1312,63 @@ Clean up Dashboard Operations Center, fix Notifications/Automations dark theme s
 - 0 new errors introduced across all 4 modified files
 - Only pre-existing warnings remain (`@typescript-eslint/no-explicit-any`)
 - Dev server compiles successfully with no errors
+
+---
+## Task ID: NAV-RESTRUCTURE - navigation-architect
+### Work Task
+Coordinated navigation changes across BluePrint: Add Tasks to sidebar, restore Admin as standalone section, simplify Settings, flatten HR tabs, update mobile nav, and update redirects.
+
+### Work Summary
+
+#### A. Sidebar (`src/components/layout/sidebar.tsx`)
+- **Added imports**: `ListTodo`, `Shield`, `Activity` from lucide-react
+- **Added "المهام" (Tasks)** as standalone item in "المشاريع والتنفيذ" section, after Projects
+  - Icon: `ListTodo`, Route: `/dashboard/projects?tab=tasks`, Visible: All except VIEWER
+- **Added new "الإدارة" (Administration) section** before System section, ADMIN only
+  - Collapsible section with Shield icon
+  - "لوحة الإدارة" → `/dashboard/admin`
+  - "النشاطات" → `/dashboard/admin?tab=activities`
+- **Updated route mapping**:
+  - `admin` → `/dashboard/admin` (was `/dashboard/settings?tab=admin`)
+  - `activities` → `/dashboard/admin?tab=activities` (was `/dashboard/settings?tab=admin`)
+  - Added `adminPanel` → `/dashboard/admin`
+
+#### B. Settings Page (`src/app/dashboard/settings/page.tsx`)
+- **Removed "إدارة النظام" (System Admin) tab** entirely
+- **Removed** lazy imports of `AdminPageWrapper` and `ActivitiesPage`
+- **Removed** `AdminTabs` inner component (was rendering Admin + Activities)
+- **Removed** `useApp` import (no longer needed)
+- **Kept**: "الإعدادات" (Settings) + "الأتمتة" (Automations) tabs
+- **Backward compat**: If `?tab=admin` is accessed on settings, redirects to `/dashboard/admin`
+- **Removed** `Shield` from lucide-react imports
+
+#### C. HR Page (`src/app/dashboard/hr/page.tsx`)
+- **No changes made** — the current 3-tab structure (HR | Team | Workload) is already well-named with descriptive labels ("الموارد البشرية" | "الفريق" | "الأحمال والقدرات"). The HRPage component has its own 4 inner tabs. Chose the least-risk approach of keeping existing structure.
+
+#### D. Admin Page (`src/app/dashboard/admin/page.tsx`)
+- **Replaced redirect** (`redirect('/dashboard/settings?tab=admin')`) with a full client component
+- **New page renders** AdminPage + ActivitiesPage in tabs (same pattern as the old AdminTabs component)
+- **Supports `?tab=activities`** URL param for direct linking to Activities tab
+- **ADMIN-only**: Returns null if user is not ADMIN
+- **Uses lazy loading** for both AdminPage and ActivitiesPage
+- **RTL-aware** with proper dir attribute
+
+#### E. Mobile Bottom Nav (`src/components/mobile-bottom-nav.tsx`)
+- **Added imports**: `ListTodo`, `Shield`, `Activity` from lucide-react
+- **Updated bottom nav items**: Added "المهام" (Tasks) with `ListTodo` icon, removed AI Assistant from bottom bar (moved to More sheet)
+  - Bottom bar now: Home | Projects | Tasks | Finance
+- **Updated more menu items**:
+  - Added "المساعد الذكي" (AI Assistant) — available to all
+  - Added "لوحة الإدارة" (Admin Panel) — ADMIN only
+  - Added "النشاطات" (Activities) — ADMIN only
+  - Kept existing items (Contracts, Reports, Documents, etc.)
+
+#### F. Redirects (backward compatibility)
+- `/dashboard/tasks` → `/dashboard/projects?tab=tasks` (unchanged, uses server-side redirect)
+- `/dashboard/activities` → `/dashboard/admin?tab=activities` (updated from `/dashboard/admin` to include tab param)
+- `/dashboard/admin` → renders AdminPage directly (no longer redirects)
+
+#### Lint & Validation
+- All 6 modified files pass ESLint with 0 new errors/warnings
+- Pre-existing lint issues in other files remain unchanged
+- No functionality broken; all changes are additive and backward-compatible

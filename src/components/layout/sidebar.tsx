@@ -36,7 +36,8 @@ import {
   PanelLeftClose, PanelLeft,
     X, ChevronDown, ChevronUp,
     Compass, Handshake,
-  UserCog, Building2, HardHat
+  UserCog, Building2, HardHat,
+  ListTodo, Shield, Activity
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -197,10 +198,11 @@ const getRoutes = (_language: 'ar' | 'en'): Record<string, string> => ({
   'notifications': '/dashboard/notifications',
   'meetings': '/dashboard/reports?tab=meetings',
   // Redirect routes for removed sidebar items (backward compatibility)
-  'admin': '/dashboard/settings?tab=admin',
+  'admin': '/dashboard/admin',
+  'adminPanel': '/dashboard/admin',
   'automations': '/dashboard/settings?tab=automations',
   'pricing': '/dashboard/settings?tab=billing',
-  'activities': '/dashboard/settings?tab=admin',
+  'activities': '/dashboard/admin?tab=activities',
   // Legacy redirect routes (kept for backward compatibility)
   'operations': '/dashboard/operations',
   'financials': '/dashboard/financials',
@@ -256,6 +258,7 @@ function SidebarContent({
   // ─── Section: المشاريع والتنفيذ (Projects & Execution) ───
   const projectExecutionItems: SidebarItem[] = [
     { id: 'projects', label: t.projects, icon: Building2, href: '/dashboard/projects' },
+    { id: 'tasks', label: language === 'ar' ? 'المهام' : 'Tasks', icon: ListTodo, href: '/dashboard/projects?tab=tasks', visibleRoles: ALL_EXCEPT_VIEWER },
     { id: 'siteManagement', label: language === 'ar' ? 'إدارة الموقع' : 'Site Mgmt', icon: HardHat, href: '/dashboard/site-management', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER] },
     { id: 'documents', label: language === 'ar' ? 'المستندات' : 'Documents', icon: FileText, href: '/dashboard/documents', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.DRAFTSMAN, UserRole.ACCOUNTANT, UserRole.SECRETARY] },
     { id: 'assets', label: language === 'ar' ? 'المشتريات والمخزون' : 'Procurement', icon: Package, href: '/dashboard/assets', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER] },
@@ -271,6 +274,12 @@ function SidebarContent({
   // ─── Section: الموارد (Resources) ───
   const resourcesItems: SidebarItem[] = [
     { id: 'hr', label: language === 'ar' ? 'الموارد البشرية' : 'Human Resources', icon: Users, href: '/dashboard/hr', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.HR, UserRole.PROJECT_MANAGER, UserRole.SECRETARY] },
+  ];
+
+  // ─── Administration (ADMIN only) ───
+  const adminItems: SidebarItem[] = [
+    { id: 'adminPanel', label: language === 'ar' ? 'لوحة الإدارة' : 'Admin Panel', icon: Shield, href: '/dashboard/admin', visibleRoles: [UserRole.ADMIN] },
+    { id: 'activities', label: language === 'ar' ? 'النشاطات' : 'Activities', icon: Activity, href: '/dashboard/admin?tab=activities', visibleRoles: [UserRole.ADMIN] },
   ];
 
   // ─── System (bottom) ───
@@ -393,6 +402,24 @@ function SidebarContent({
             onItemClick={handleItemClick}
             defaultOpen={false}
           />
+          )}
+
+          {/* ─── الإدارة (Administration) - ADMIN only ─── */}
+          {user?.role === UserRole.ADMIN && filterByRole(adminItems).length > 0 && (
+          <>
+            <Separator className="my-2 bg-slate-800" />
+            <CollapsibleSection 
+              title={language === 'ar' ? 'الإدارة' : 'Administration'}
+              icon={Shield}
+              items={filterByRole(adminItems)}
+              currentPage={currentPage}
+              sidebarCollapsed={sidebarCollapsed}
+              isMobile={isMobile}
+              isRTL={isRTL}
+              onItemClick={handleItemClick}
+              defaultOpen={false}
+            />
+          </>
           )}
 
           {/* ─── System ─── */}

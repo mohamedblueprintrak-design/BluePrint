@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useApp } from '@/context/app-context';
 import { useAuth } from '@/context/auth-context';
 import { useTranslation } from '@/lib/translations';
@@ -9,7 +10,7 @@ import { useDashboard, useProjects, useTasks, useInvoices } from '@/hooks/use-da
 import { OnboardingWizard } from '@/components/onboarding/onboarding-wizard';
 import { FloatingAIButton } from '@/components/ai/floating-ai-button';
 import { AIInsightsCard } from '@/components/ai/ai-insights-card';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -22,15 +23,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import Link from 'next/link';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Building2, Users, DollarSign, CheckSquare, AlertTriangle,
-  ArrowUpRight, ArrowDownRight, Clock, FileText, Loader2, Plus,
-  Rocket, BarChart3, CalendarDays, Sparkles, Info, AlertCircle,
-  TrendingUp, ClipboardList, FileSpreadsheet, MessageSquare, FolderOpen,
-  Activity, Timer, Briefcase, ChevronRight, LayoutDashboard
+  ArrowUpRight, Clock, FileText, Loader2, Plus,
+  Rocket, BarChart3, CalendarDays, Sparkles, AlertCircle,
+  TrendingUp, ClipboardList, ChevronDown,
+  ChevronRight, Shield, UserPlus, Eye, CreditCard,
+  Receipt, CalendarCheck, UserCog, HeartHandshake,
+  Mail
 } from 'lucide-react';
 import {
   RevenueChart,
@@ -47,1001 +53,475 @@ import {
 
 type Period = '7d' | '30d' | '90d' | 'year';
 
+// ─── Role types ───────────────────────────────────────────────
+type RoleKey = 'ADMIN' | 'MANAGER' | 'PROJECT_MANAGER' | 'ENGINEER' | 'ACCOUNTANT' | 'HR' | 'DRAFTSMAN' | 'SECRETARY' | 'VIEWER';
+
+interface StatCardDef {
+  title: string;
+  titleEn: string;
+  value: number | string;
+  icon: React.ElementType;
+  color: string;
+  bgColor: string;
+  subtitle?: string;
+}
+
+interface QuickActionDef {
+  label: string;
+  labelEn: string;
+  href: string;
+  icon: React.ElementType;
+  color: string;
+  bgColor: string;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────
+function getGreeting(lang: string): string {
+  const h = new Date().getHours();
+  if (h < 12) return lang === 'ar' ? 'صباح الخير' : 'Good Morning';
+  if (h < 18) return lang === 'ar' ? 'مساء الخير' : 'Good Afternoon';
+  return lang === 'ar' ? 'مساء الخير' : 'Good Evening';
+}
+
+function getRoleMessage(role: string, lang: string): string {
+  const messages: Record<string, { ar: string; en: string }> = {
+    ADMIN:      { ar: 'إليك نظرة عامة على أداء المؤسسة اليوم', en: "Here's your organization performance overview for today" },
+    MANAGER:    { ar: 'تابع تقدم المشاريع والفريق اليوم', en: "Track your projects and team progress today" },
+    PROJECT_MANAGER: { ar: 'إدارة مشاريعك بكفاءة اليوم', en: "Manage your projects efficiently today" },
+    ENGINEER:   { ar: 'مهامك لع اليوم جاهزة، هيا نبدأ!', en: "Your tasks for today are ready, let's go!" },
+    ACCOUNTANT: { ar: 'ملخصك المالي اليوم جاهز', en: "Your financial summary for today is ready" },
+    HR:         { ar: 'تابع شؤون الموظفين اليوم', en: "Manage your HR tasks for today" },
+    DRAFTSMAN:  { ar: 'راجع مهام الرسم والمستندات', en: "Review your drawing and document tasks" },
+    SECRETARY:  { ar: 'جدولك ومهامك الإدارية اليوم', en: "Your schedule and admin tasks for today" },
+    VIEWER:     { ar: 'تصفح آخر التحديثات', en: "Browse the latest updates" },
+  };
+  const m = messages[role] || messages.VIEWER;
+  return lang === 'ar' ? m.ar : m.en;
+}
+
+// ─── Main Component ──────────────────────────────────────────
 export function DashboardPage() {
   const router = useRouter();
   const { language } = useApp();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { user, hasRole, hasPermission } = useAuth();
+  const { user, hasRole } = useAuth();
   const canSeeFinancials = hasRole(['ADMIN', 'MANAGER', 'ACCOUNTANT', 'PROJECT_MANAGER'] as any);
-  const { t, formatCurrency, formatDate } = useTranslation(language);
-  
+  const { t, formatCurrency } = useTranslation(language);
+  const role = (user?.role || 'VIEWER') as RoleKey;
+  const isAr = language === 'ar';
+  const now = useMemo(() => new Date(), []);
+
   const [period, setPeriod] = useState<Period>('30d');
   const [showOnboardingWizard, setShowOnboardingWizard] = useState(false);
-  
-  // Check if onboarding wizard should be shown - only on client side
+  const [chartsOpen, setChartsOpen] = useState(false);
+
+  // ─── Onboarding check ───
   useEffect(() => {
     let isMounted = true;
-    
-    const checkOnboarding = () => {
+    const check = () => {
       try {
-        // Never show onboarding in demo mode - go straight to dashboard
         const isDemo = localStorage.getItem('blueprint_demo_mode') === 'true';
         if (isDemo) return;
         const hasCompleted = localStorage.getItem('blueprint_onboarding_completed');
-        if (!hasCompleted && isMounted) {
-          setShowOnboardingWizard(true);
-        }
-      } catch {
-        // localStorage might not be available
-      }
+        if (!hasCompleted && isMounted) setShowOnboardingWizard(true);
+      } catch { /* noop */ }
     };
-    
-    const timer = setTimeout(checkOnboarding, 100);
-    
-    return () => {
-      isMounted = false;
-      clearTimeout(timer);
-    };
+    const timer = setTimeout(check, 100);
+    return () => { isMounted = false; clearTimeout(timer); };
   }, []);
-  
+
+  // ─── Data hooks (same as original) ───
   const { data: dashboardData, isLoading: dashboardLoading, error, refetch } = useDashboard();
   const { data: projectsData, isLoading: projectsLoading } = useProjects();
   const { data: tasksData, isLoading: tasksLoading } = useTasks({ status: 'todo' });
   const { data: invoicesData } = useInvoices({ status: 'pending' });
-  // All tasks (no filter) for operations center
   const { data: allTasksData } = useTasks();
-  const allTasks = allTasksData?.data || [];
 
   const stats = dashboardData?.data;
   const projectsRaw = projectsData?.data;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const tasks = tasksData?.data || [];
-  const invoices = invoicesData?.data || [];
-
-  // Memoize projects to avoid dependency issues
+  const invoices = useMemo(() => invoicesData?.data || [], [invoicesData?.data]);
+  const allTasks = useMemo(() => allTasksData?.data || [], [allTasksData?.data]);
   const projects = useMemo(() => projectsRaw || [], [projectsRaw]);
 
-  // Generate chart data based on period - Using REAL data from API
-  const revenueData = useMemo((): RevenueData[] => {
-    const months = language === 'ar'
-      ? ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
-      : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  // ─── Computed values ───
+  const overdueTasks = useMemo(() => allTasks.filter((tk: any) => tk.dueDate && tk.status !== 'done' && new Date(tk.dueDate) < now).length, [allTasks, now]);
+  const slaBreached = useMemo(() => allTasks.filter((tk: any) => {
+    if (!tk.slaDays || !tk.slaStartDate) return false;
+    const elapsed = Math.floor((now.getTime() - new Date(tk.slaStartDate).getTime()) / 86400000);
+    return elapsed > tk.slaDays;
+  }).length, [allTasks, now]);
+  const overdueInvoices = useMemo(() => invoices.filter((inv: any) => inv.dueDate && inv.status !== 'paid' && new Date(inv.dueDate) < now).length, [invoices, now]);
+  const openDefects = stats?.defects?.open || 0;
 
+  const activeProjects = useMemo(() => projects.filter((p: any) => p.status === 'active'), [projects]);
+
+  // Today's tasks (for Engineer)
+  const todayTasks = useMemo(() => allTasks.filter((tk: any) => {
+    if (!tk.dueDate || tk.status === 'done') return false;
+    return new Date(tk.dueDate).toDateString() === now.toDateString();
+  }).slice(0, 10), [allTasks, now]);
+
+  // ─── Chart data (same logic as original) ───
+  const revenueData = useMemo((): RevenueData[] => {
+    const months = isAr
+      ? ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر']
+      : ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const numMonths = period === '7d' ? 1 : period === '30d' ? 3 : period === '90d' ? 6 : 12;
-    
-    // Use real financial data from API instead of random values
     const baseRevenue = stats?.financial?.totalPaid || 0;
-    // Calculate expenses as percentage of revenue if not provided
     const baseExpenses = (stats?.financial as Record<string, number>)?.totalExpenses || baseRevenue * 0.4;
     const baseProfit = baseRevenue - baseExpenses;
-    
-    // Calculate monthly averages based on actual totals
-    const monthlyRevenue = baseRevenue / numMonths;
-    const monthlyExpenses = baseExpenses / numMonths;
-    const monthlyProfit = baseProfit / numMonths;
-    
-    return months.slice(0, numMonths).map((month, index) => ({
+    const mr = baseRevenue / (numMonths || 1);
+    const me = baseExpenses / (numMonths || 1);
+    const mp = baseProfit / (numMonths || 1);
+    return months.slice(0, numMonths).map((month, i) => ({
       month,
-      // Use calculated values based on real data with slight variance for chart visualization
-      revenue: Math.round(monthlyRevenue * (0.85 + (index * 0.03))), // Gradual growth pattern
-      expenses: Math.round(monthlyExpenses * (0.9 + (index * 0.02))),
-      profit: Math.round(monthlyProfit * (0.8 + (index * 0.04))),
+      revenue: Math.round(mr * (0.85 + i * 0.03)),
+      expenses: Math.round(me * (0.9 + i * 0.02)),
+      profit: Math.round(mp * (0.8 + i * 0.04)),
     }));
-  }, [period, stats, language]);
+  }, [period, stats, isAr]);
 
-  const projectStatusData = useMemo((): ProjectStatusData[] => {
-    const activeProjects = projects.filter((p: { status: string }) => p.status === 'active').length;
-    const completedProjects = projects.filter((p: { status: string }) => p.status === 'completed').length;
-    const pendingProjects = projects.filter((p: { status: string }) => p.status === 'pending').length;
-    const onHoldProjects = projects.filter((p: { status: string }) => p.status === 'on_hold').length;
-
-    // Only use real data, no fake fallback values
-    return [
-      { name: 'active', value: activeProjects, color: '#3b82f6' },
-      { name: 'completed', value: completedProjects, color: '#10b981' },
-      { name: 'pending', value: pendingProjects, color: '#f59e0b' },
-      { name: 'on_hold', value: onHoldProjects, color: '#8b5cf6' },
-    ];
-  }, [projects]);
+  const projectStatusData = useMemo((): ProjectStatusData[] => [
+    { name: 'active', value: projects.filter((p: any) => p.status === 'active').length, color: '#3b82f6' },
+    { name: 'completed', value: projects.filter((p: any) => p.status === 'completed').length, color: '#10b981' },
+    { name: 'pending', value: projects.filter((p: any) => p.status === 'pending').length, color: '#f59e0b' },
+    { name: 'on_hold', value: projects.filter((p: any) => p.status === 'on_hold').length, color: '#8b5cf6' },
+  ], [projects]);
 
   const taskCompletionData = useMemo((): TaskCompletionData[] => {
-    if (period === '7d') {
-      return generateWeeklyTaskData(language);
-    } else if (period === 'year') {
-      return generateMonthlyTaskData(language);
-    }
+    if (period === 'year') return generateMonthlyTaskData(language);
     return generateWeeklyTaskData(language);
   }, [period, language]);
 
   const expenseData = useMemo((): ExpenseData[] => {
-    const categories = language === 'ar'
-      ? ['مواد', 'عمالة', 'معدات', 'نقل', 'مرافق', 'متفرقات']
-      : ['Materials', 'Labor', 'Equipment', 'Transportation', 'Utilities', 'Miscellaneous'];
-
-    // Use real expense data from API
+    const categories = isAr ? ['مواد','عمالة','معدات','نقل','مرافق','متفرقات'] : ['Materials','Labor','Equipment','Transportation','Utilities','Miscellaneous'];
     const financial = stats?.financial as Record<string, number> | undefined;
     const totalExpenses = financial?.totalExpenses || (stats?.financial?.totalPaid || 0) * 0.4;
-    
-    // Realistic expense distribution percentages based on construction industry standards
-    const distribution = [0.35, 0.25, 0.15, 0.10, 0.08, 0.07]; // Materials, Labor, Equipment, Transport, Utilities, Misc
-    
-    return categories.map((category, index) => ({
-      category,
-      amount: Math.round(totalExpenses * distribution[index]),
-    }));
-  }, [stats, language]);
+    const distribution = [0.35, 0.25, 0.15, 0.10, 0.08, 0.07];
+    return categories.map((category, i) => ({ category, amount: Math.round(totalExpenses * distribution[i]) }));
+  }, [stats, isAr]);
 
-  // Quick stats cards
-  const statCards = [
-    {
-      title: t.activeProjects,
-      value: stats?.projects?.active || 0,
-      total: stats?.projects?.total || 0,
-      icon: Building2,
-      color: 'text-blue-400',
-      bgColor: 'bg-blue-500/10',
-      trend: '+12%',
-      trendUp: true
-    },
-    {
-      title: t.totalClients,
-      value: stats?.clients?.total || 0,
-      icon: Users,
-      color: 'text-green-400',
-      bgColor: 'bg-green-500/10',
-      trend: '+5%',
-      trendUp: true
-    },
-    canSeeFinancials ? {
-      title: t.revenue,
-      value: formatCurrency(stats?.financial?.totalPaid || 0),
-      subtitle: `${formatCurrency(stats?.financial?.totalPending || 0)} ${language === 'ar' ? 'معلق' : 'pending'}`,
-      icon: DollarSign,
-      color: 'text-cyan-400',
-      bgColor: 'bg-cyan-500/10',
-      trend: '+18%',
-      trendUp: true
-    } : {
-      title: language === 'ar' ? 'إجمالي المهام' : 'Total Tasks',
-      value: stats?.tasks?.total || 0,
-      total: stats?.tasks?.completed || 0,
-      icon: CheckSquare,
-      color: 'text-cyan-400',
-      bgColor: 'bg-cyan-500/10',
-      trend: '+8%',
-      trendUp: true
-    },
-    {
-      title: t.pendingTasks,
-      value: stats?.tasks?.pending || 0,
-      icon: CheckSquare,
-      color: 'text-orange-400',
-      bgColor: 'bg-orange-500/10',
-      trend: '-3%',
-      trendUp: false
-    }
-  ];
+  // ─── Role-adaptive Stat Cards ───
+  const statCards: StatCardDef[] = useMemo(() => {
+    const map: Record<RoleKey, StatCardDef[]> = {
+      ADMIN: [
+        { title: 'إجمالي المستخدمين', titleEn: 'Total Users', value: stats?.clients?.total || 0, icon: Users, color: 'text-blue-400', bgColor: 'bg-blue-500/10' },
+        { title: 'المشاريع النشطة', titleEn: 'Active Projects', value: stats?.projects?.active || 0, icon: Building2, color: 'text-green-400', bgColor: 'bg-green-500/10' },
+        { title: 'الإيرادات', titleEn: 'Revenue', value: formatCurrency(stats?.financial?.totalPaid || 0), icon: DollarSign, color: 'text-cyan-400', bgColor: 'bg-cyan-500/10', subtitle: `${formatCurrency(stats?.financial?.totalPending || 0)} ${isAr ? 'معلق' : 'pending'}` },
+        { title: 'تنبيهات SLA', titleEn: 'SLA Alerts', value: slaBreached, icon: AlertTriangle, color: 'text-red-400', bgColor: 'bg-red-500/10' },
+      ],
+      MANAGER: [
+        { title: 'المشاريع النشطة', titleEn: 'Active Projects', value: stats?.projects?.active || 0, icon: Building2, color: 'text-blue-400', bgColor: 'bg-blue-500/10' },
+        { title: 'المهام المعلقة', titleEn: 'Pending Tasks', value: stats?.tasks?.pending || 0, icon: CheckSquare, color: 'text-orange-400', bgColor: 'bg-orange-500/10' },
+        { title: 'الإيرادات', titleEn: 'Revenue', value: formatCurrency(stats?.financial?.totalPaid || 0), icon: DollarSign, color: 'text-cyan-400', bgColor: 'bg-cyan-500/10' },
+        { title: 'تنبيهات SLA', titleEn: 'SLA Alerts', value: slaBreached, icon: AlertTriangle, color: 'text-red-400', bgColor: 'bg-red-500/10' },
+      ],
+      PROJECT_MANAGER: [
+        { title: 'مشاريعي النشطة', titleEn: 'My Active Projects', value: activeProjects.length, icon: Building2, color: 'text-blue-400', bgColor: 'bg-blue-500/10' },
+        { title: 'المهام المعلقة', titleEn: 'Pending Tasks', value: stats?.tasks?.pending || 0, icon: CheckSquare, color: 'text-orange-400', bgColor: 'bg-orange-500/10' },
+        { title: 'فواتير معلقة', titleEn: 'Pending Invoices', value: invoices.length, icon: CreditCard, color: 'text-cyan-400', bgColor: 'bg-cyan-500/10' },
+        { title: 'تنبيهات SLA', titleEn: 'SLA Alerts', value: slaBreached, icon: AlertTriangle, color: 'text-red-400', bgColor: 'bg-red-500/10' },
+      ],
+      ENGINEER: [
+        { title: 'مهامي النهارده', titleEn: "Today's Tasks", value: todayTasks.length, icon: CheckSquare, color: 'text-blue-400', bgColor: 'bg-blue-500/10' },
+        { title: 'مهام متأخرة', titleEn: 'Overdue Tasks', value: overdueTasks, icon: AlertTriangle, color: 'text-red-400', bgColor: 'bg-red-500/10' },
+        { title: 'عيوب مطلوبة', titleEn: 'Open Defects', value: openDefects, icon: ClipboardList, color: 'text-orange-400', bgColor: 'bg-orange-500/10' },
+        { title: 'مستندات بانتظار', titleEn: 'Pending Documents', value: 0, icon: FileText, color: 'text-cyan-400', bgColor: 'bg-cyan-500/10' },
+      ],
+      ACCOUNTANT: [
+        { title: 'فواتير معلقة', titleEn: 'Pending Invoices', value: invoices.length, icon: CreditCard, color: 'text-blue-400', bgColor: 'bg-blue-500/10' },
+        { title: 'فواتير متأخرة', titleEn: 'Overdue Invoices', value: overdueInvoices, icon: AlertTriangle, color: 'text-red-400', bgColor: 'bg-red-500/10' },
+        { title: 'تحصيلات اليوم', titleEn: "Today's Collections", value: 0, icon: DollarSign, color: 'text-green-400', bgColor: 'bg-green-500/10' },
+        { title: 'السندات المدفوعة', titleEn: 'Paid Vouchers', value: stats?.financial?.totalPaid ? 1 : 0, icon: Receipt, color: 'text-cyan-400', bgColor: 'bg-cyan-500/10' },
+      ],
+      HR: [
+        { title: 'الحاضرون اليوم', titleEn: "Today's Attendance", value: stats?.clients?.total || 0, icon: CalendarCheck, color: 'text-green-400', bgColor: 'bg-green-500/10' },
+        { title: 'طلبات إجازة', titleEn: 'Leave Requests', value: 0, icon: HeartHandshake, color: 'text-amber-400', bgColor: 'bg-amber-500/10' },
+        { title: 'متأخرين اليوم', titleEn: "Today's Late", value: 0, icon: Clock, color: 'text-red-400', bgColor: 'bg-red-500/10' },
+        { title: 'الموظفين النشطين', titleEn: 'Active Employees', value: stats?.clients?.total || 0, icon: Users, color: 'text-blue-400', bgColor: 'bg-blue-500/10' },
+      ],
+      DRAFTSMAN: [
+        { title: 'مهامي النهارده', titleEn: "Today's Tasks", value: todayTasks.length, icon: CheckSquare, color: 'text-blue-400', bgColor: 'bg-blue-500/10' },
+        { title: 'المراجعات المعلقة', titleEn: 'Pending Reviews', value: stats?.tasks?.pending || 0, icon: Eye, color: 'text-purple-400', bgColor: 'bg-purple-500/10' },
+        { title: 'المستندات النشطة', titleEn: 'Active Documents', value: 0, icon: FileText, color: 'text-cyan-400', bgColor: 'bg-cyan-500/10' },
+        { title: 'مشاريعي', titleEn: 'My Projects', value: activeProjects.length, icon: Building2, color: 'text-green-400', bgColor: 'bg-green-500/10' },
+      ],
+      SECRETARY: [
+        { title: 'الاجتماعات اليوم', titleEn: "Today's Meetings", value: 0, icon: CalendarDays, color: 'text-blue-400', bgColor: 'bg-blue-500/10' },
+        { title: 'المراسلات المعلقة', titleEn: 'Pending Correspondence', value: 0, icon: Mail, color: 'text-purple-400', bgColor: 'bg-purple-500/10' },
+        { title: 'المستندات النشطة', titleEn: 'Active Documents', value: 0, icon: FileText, color: 'text-cyan-400', bgColor: 'bg-cyan-500/10' },
+        { title: 'المواعيد', titleEn: 'Appointments', value: 0, icon: Clock, color: 'text-amber-400', bgColor: 'bg-amber-500/10' },
+      ],
+      VIEWER: [
+        { title: 'المشاريع النشطة', titleEn: 'Active Projects', value: stats?.projects?.active || 0, icon: Building2, color: 'text-blue-400', bgColor: 'bg-blue-500/10' },
+        { title: 'المهام النشطة', titleEn: 'Active Tasks', value: stats?.tasks?.total || 0, icon: CheckSquare, color: 'text-green-400', bgColor: 'bg-green-500/10' },
+        { title: 'التحديثات الأخيرة', titleEn: 'Recent Updates', value: 0, icon: TrendingUp, color: 'text-cyan-400', bgColor: 'bg-cyan-500/10' },
+        { title: isAr ? '—' : '—', titleEn: '—', value: '—', icon: Eye, color: 'text-slate-400', bgColor: 'bg-slate-500/10' },
+      ],
+    };
+    return map[role] || map.VIEWER;
+  }, [role, stats, invoices, activeProjects.length, todayTasks.length, overdueTasks, overdueInvoices, slaBreached, openDefects, formatCurrency, isAr]);
 
-  // Recent projects
-  const recentProjects = projects.slice(0, 5);
+  // ─── Role-adaptive Quick Actions ───
+  const quickActions: QuickActionDef[] = useMemo(() => {
+    const map: Record<RoleKey, QuickActionDef[]> = {
+      ADMIN: [
+        { label: 'إدارة المستخدمين', labelEn: 'Manage Users', href: '/dashboard/users', icon: UserCog, color: 'text-blue-400', bgColor: 'bg-blue-500/20' },
+        { label: 'عرض النشاط', labelEn: 'View Activity', href: '/dashboard/activities', icon: TrendingUp, color: 'text-green-400', bgColor: 'bg-green-500/20' },
+        { label: 'تقرير', labelEn: 'Reports', href: '/dashboard/reports', icon: BarChart3, color: 'text-purple-400', bgColor: 'bg-purple-500/20' },
+        { label: 'المساعد الذكي', labelEn: 'AI Assistant', href: '/dashboard/ai-chat', icon: Sparkles, color: 'text-emerald-400', bgColor: 'bg-emerald-500/20' },
+      ],
+      MANAGER: [
+        { label: 'تعيين مهمة', labelEn: 'Assign Task', href: '/dashboard/tasks', icon: CheckSquare, color: 'text-blue-400', bgColor: 'bg-blue-500/20' },
+        { label: 'تقرير تقدم', labelEn: 'Progress Report', href: '/dashboard/reports', icon: BarChart3, color: 'text-green-400', bgColor: 'bg-green-500/20' },
+        { label: 'إنشاء فاتورة', labelEn: 'Create Invoice', href: '/dashboard/finance', icon: CreditCard, color: 'text-cyan-400', bgColor: 'bg-cyan-500/20' },
+        { label: 'اجتماع جديد', labelEn: 'New Meeting', href: '/dashboard/calendar', icon: CalendarDays, color: 'text-purple-400', bgColor: 'bg-purple-500/20' },
+      ],
+      PROJECT_MANAGER: [
+        { label: 'تعيين مهمة', labelEn: 'Assign Task', href: '/dashboard/tasks', icon: CheckSquare, color: 'text-blue-400', bgColor: 'bg-blue-500/20' },
+        { label: 'تحديث تقدم', labelEn: 'Update Progress', href: '/dashboard/projects', icon: TrendingUp, color: 'text-green-400', bgColor: 'bg-green-500/20' },
+        { label: 'إنشاء فاتورة', labelEn: 'Create Invoice', href: '/dashboard/finance', icon: CreditCard, color: 'text-cyan-400', bgColor: 'bg-cyan-500/20' },
+        { label: 'تسجيل زيارة', labelEn: 'Log Visit', href: '/dashboard/site-management', icon: ClipboardList, color: 'text-orange-400', bgColor: 'bg-orange-500/20' },
+      ],
+      ENGINEER: [
+        { label: 'تسجيل يومية', labelEn: 'Daily Log', href: '/dashboard/site-management', icon: ClipboardList, color: 'text-blue-400', bgColor: 'bg-blue-500/20' },
+        { label: 'الإبلاغ عن عيب', labelEn: 'Report Defect', href: '/dashboard/site-management', icon: AlertTriangle, color: 'text-red-400', bgColor: 'bg-red-500/20' },
+        { label: 'رفع مستند', labelEn: 'Upload Document', href: '/dashboard/documents', icon: FileText, color: 'text-cyan-400', bgColor: 'bg-cyan-500/20' },
+        { label: 'إتمام مهمة', labelEn: 'Complete Task', href: '/dashboard/tasks', icon: CheckSquare, color: 'text-green-400', bgColor: 'bg-green-500/20' },
+      ],
+      ACCOUNTANT: [
+        { label: 'إنشاء فاتورة', labelEn: 'Create Invoice', href: '/dashboard/finance', icon: CreditCard, color: 'text-blue-400', bgColor: 'bg-blue-500/20' },
+        { label: 'تسجيل دفعة', labelEn: 'Record Payment', href: '/dashboard/finance', icon: DollarSign, color: 'text-green-400', bgColor: 'bg-green-500/20' },
+        { label: 'تقرير مالي', labelEn: 'Financial Report', href: '/dashboard/reports', icon: BarChart3, color: 'text-purple-400', bgColor: 'bg-purple-500/20' },
+        { label: 'إدارة سندات', labelEn: 'Manage Vouchers', href: '/dashboard/finance', icon: Receipt, color: 'text-amber-400', bgColor: 'bg-amber-500/20' },
+      ],
+      HR: [
+        { label: 'الموافقة على إجازة', labelEn: 'Approve Leave', href: '/dashboard/users', icon: HeartHandshake, color: 'text-green-400', bgColor: 'bg-green-500/20' },
+        { label: 'عرض الحضور', labelEn: 'View Attendance', href: '/dashboard/users', icon: CalendarCheck, color: 'text-blue-400', bgColor: 'bg-blue-500/20' },
+        { label: 'إضافة موظف', labelEn: 'Add Employee', href: '/dashboard/users', icon: UserPlus, color: 'text-purple-400', bgColor: 'bg-purple-500/20' },
+        { label: 'المعاشات', labelEn: 'Pensions', href: '/dashboard/users', icon: Shield, color: 'text-amber-400', bgColor: 'bg-amber-500/20' },
+      ],
+      DRAFTSMAN: [
+        { label: 'مشروع جديد', labelEn: 'New Project', href: '/dashboard/projects', icon: Building2, color: 'text-blue-400', bgColor: 'bg-blue-500/20' },
+        { label: 'مهمة جديدة', labelEn: 'New Task', href: '/dashboard/tasks', icon: CheckSquare, color: 'text-green-400', bgColor: 'bg-green-500/20' },
+        { label: 'عرض التقارير', labelEn: 'View Reports', href: '/dashboard/reports', icon: BarChart3, color: 'text-purple-400', bgColor: 'bg-purple-500/20' },
+        { label: 'المساعد الذكي', labelEn: 'AI Assistant', href: '/dashboard/ai-chat', icon: Sparkles, color: 'text-emerald-400', bgColor: 'bg-emerald-500/20' },
+      ],
+      SECRETARY: [
+        { label: 'مشروع جديد', labelEn: 'New Project', href: '/dashboard/projects', icon: Building2, color: 'text-blue-400', bgColor: 'bg-blue-500/20' },
+        { label: 'مهمة جديدة', labelEn: 'New Task', href: '/dashboard/tasks', icon: CheckSquare, color: 'text-green-400', bgColor: 'bg-green-500/20' },
+        { label: 'عرض التقارير', labelEn: 'View Reports', href: '/dashboard/reports', icon: BarChart3, color: 'text-purple-400', bgColor: 'bg-purple-500/20' },
+        { label: 'المساعد الذكي', labelEn: 'AI Assistant', href: '/dashboard/ai-chat', icon: Sparkles, color: 'text-emerald-400', bgColor: 'bg-emerald-500/20' },
+      ],
+      VIEWER: [
+        { label: 'مشروع جديد', labelEn: 'New Project', href: '/dashboard/projects', icon: Building2, color: 'text-blue-400', bgColor: 'bg-blue-500/20' },
+        { label: 'مهمة جديدة', labelEn: 'New Task', href: '/dashboard/tasks', icon: CheckSquare, color: 'text-green-400', bgColor: 'bg-green-500/20' },
+        { label: 'عرض التقارير', labelEn: 'View Reports', href: '/dashboard/reports', icon: BarChart3, color: 'text-purple-400', bgColor: 'bg-purple-500/20' },
+        { label: 'المساعد الذكي', labelEn: 'AI Assistant', href: '/dashboard/ai-chat', icon: Sparkles, color: 'text-emerald-400', bgColor: 'bg-emerald-500/20' },
+      ],
+    };
+    return map[role] || map.VIEWER;
+  }, [role]);
 
-  // Recent tasks
-  const recentTasks = tasks.slice(0, 5);
+  // ─── Alerts ───
+  const alerts = useMemo(() => {
+    const items: { id: string; severity: 'red' | 'amber'; icon: React.ElementType; text: string; count: number; href: string }[] = [];
+    if (slaBreached > 0) items.push({ id: 'sla', severity: 'red', icon: AlertTriangle, text: isAr ? 'SLA مخالف' : 'SLA Breached', count: slaBreached, href: '/dashboard/tasks' });
+    if (overdueInvoices > 0) items.push({ id: 'overdue-inv', severity: 'red', icon: CreditCard, text: isAr ? 'فواتير متأخرة' : 'Overdue Invoices', count: overdueInvoices, href: '/dashboard/finance' });
+    if (overdueTasks > 0) items.push({ id: 'overdue-tasks', severity: 'amber', icon: Clock, text: isAr ? 'مهام متأخرة' : 'Overdue Tasks', count: overdueTasks, href: '/dashboard/tasks' });
+    if (role === 'HR') items.push({ id: 'leave', severity: 'amber', icon: HeartHandshake, text: isAr ? 'طلبات إجازة معلقة' : 'Pending Leave Requests', count: 0, href: '/dashboard/users' });
+    if (openDefects > 0) items.push({ id: 'defects', severity: 'amber', icon: ClipboardList, text: isAr ? 'عيوب مفتوحة' : 'Open Defects', count: openDefects, href: '/dashboard/site-management' });
+    return items;
+  }, [slaBreached, overdueInvoices, overdueTasks, openDefects, role, isAr]);
 
-  // Pending invoices
-  const _pendingInvoices = invoices.filter((inv: { status: string }) => inv.status === 'pending' || inv.status === 'partial').slice(0, 5);
-
-  // ========== Operations Center computed values ==========
-  const opsNow = new Date();
-
-  const opsActiveProjects = projects
-    .filter((p: any) => p.status === 'active')
-    .slice(0, 6);
-
-  const opsPendingTasks = allTasks
-    .filter((t: any) => t.status === 'todo' || t.status === 'in_progress')
-    .sort((a: any, b: any) => {
-      const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
-      return (priorityOrder as any)[a.priority] - (priorityOrder as any)[b.priority];
-    })
-    .slice(0, 8);
-
-  const getTaskSLAStatus = (task: any) => {
-    if (!task.slaDays || !task.slaStartDate) return null;
-    const start = new Date(task.slaStartDate);
-    const elapsed = Math.floor((opsNow.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    const remaining = task.slaDays - elapsed;
-    const pct = (remaining / task.slaDays) * 100;
-    if (remaining <= 0) return { label: language === 'ar' ? 'مخالف' : 'Breached', color: 'text-red-400 bg-red-500/10', remaining };
-    if (pct < 25) return { label: language === 'ar' ? 'خطر' : 'At Risk', color: 'text-red-400 bg-red-500/10', remaining };
-    if (pct < 50) return { label: language === 'ar' ? 'تحذير' : 'Warning', color: 'text-amber-400 bg-amber-500/10', remaining };
-    return { label: language === 'ar' ? 'على المسار' : 'On Track', color: 'text-green-400 bg-green-500/10', remaining };
-  };
-
-  const opsWorkloadSummary = {
-    totalActive: allTasks.filter((t: any) => t.status === 'in_progress').length,
-    overdue: allTasks.filter((t: any) => {
-      if (!t.dueDate || t.status === 'done') return false;
-      return new Date(t.dueDate) < opsNow;
-    }).length,
-    completedToday: allTasks.filter((t: any) => {
-      if (!t.completedAt) return false;
-      const completed = new Date(t.completedAt);
-      return completed.toDateString() === opsNow.toDateString();
-    }).length,
-    slaBreached: allTasks.filter((t: any) => {
-      if (!t.slaDays || !t.slaStartDate) return false;
-      const start = new Date(t.slaStartDate);
-      const elapsed = Math.floor((opsNow.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-      return elapsed > t.slaDays;
-    }).length,
-  };
-
-  const opsQuickLinks = [
-    { href: '/dashboard/tasks', icon: CheckSquare, label: language === 'ar' ? 'المهام' : 'Tasks', count: allTasks.filter((t: any) => t.status !== 'done').length, color: 'text-blue-400', bgColor: 'bg-blue-500/20' },
-    { href: '/dashboard/site-management', icon: ClipboardList, label: language === 'ar' ? 'تقارير الموقع' : 'Site Reports', color: 'text-green-400', bgColor: 'bg-green-500/20' },
-    { href: '/dashboard/clients', icon: MessageSquare, label: language === 'ar' ? 'التفاعلات' : 'Interactions', color: 'text-purple-400', bgColor: 'bg-purple-500/20' },
-    { href: '/dashboard/documents', icon: FileText, label: language === 'ar' ? 'المستندات' : 'Documents', color: 'text-cyan-400', bgColor: 'bg-cyan-500/20' },
-    { href: '/dashboard/finance', icon: DollarSign, label: language === 'ar' ? 'الفواتير' : 'Invoices', color: 'text-amber-400', bgColor: 'bg-amber-500/20' },
-    { href: '/dashboard/financials', icon: FileSpreadsheet, label: language === 'ar' ? 'جدول الكميات' : 'BOQ', color: 'text-rose-400', bgColor: 'bg-rose-500/20' },
-  ];
-
-  // opsRecentActivities removed - replaced with Activity Log link (admin-only data)
-
-  // Loading component
+  // ─── Chart loader ───
   const ChartLoader = () => (
     <div className="h-[300px] flex items-center justify-center">
       <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
     </div>
   );
 
+  // ─── Get SLA status for a task ───
+  const getTaskSLAStatus = useCallback((task: any) => {
+    if (!task.slaDays || !task.slaStartDate) return null;
+    const start = new Date(task.slaStartDate);
+    const elapsed = Math.floor((now.getTime() - start.getTime()) / 86400000);
+    const remaining = task.slaDays - elapsed;
+    const pct = (remaining / task.slaDays) * 100;
+    if (remaining <= 0) return { label: isAr ? 'مخالف' : 'Breached', color: 'text-red-400 bg-red-500/10', remaining };
+    if (pct < 25) return { label: isAr ? 'خطر' : 'At Risk', color: 'text-red-400 bg-red-500/10', remaining };
+    if (pct < 50) return { label: isAr ? 'تحذير' : 'Warning', color: 'text-amber-400 bg-amber-500/10', remaining };
+    return { label: isAr ? 'على المسار' : 'On Track', color: 'text-green-400 bg-green-500/10', remaining };
+  }, [isAr, now]);
+
+  // ─── Render ───
   return (
-    <div className="space-y-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-      {/* Onboarding Wizard */}
+    <div className="space-y-6" dir={isAr ? 'rtl' : 'ltr'}>
       <OnboardingWizard isOpen={showOnboardingWizard} onClose={() => setShowOnboardingWizard(false)} />
-      
-      {/* Welcome Banner */}
+
+      {/* ═══ 1. Welcome Banner ═══ */}
       <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 p-6 text-white shadow-lg shadow-blue-500/20">
         <div className="relative z-10">
-          <h2 className="text-2xl font-bold mb-2">
-            {language === 'ar' ? 'مرحباً بك في BluePrint 👋' : 'Welcome to BluePrint 👋'}
+          <h2 className="text-2xl font-bold mb-1">
+            {getGreeting(language)} يا {user?.fullName || (isAr ? 'مستخدم' : 'User')} 👋
           </h2>
-          <p className="text-blue-100">
-            {language === 'ar' 
-              ? 'إليك نظرة عامة على أداء شركتك اليوم'
-              : "Here's an overview of your company's performance today"}
-          </p>
+          <p className="text-blue-100">{getRoleMessage(role, language)}</p>
         </div>
         <div className="absolute end-0 top-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
         <div className="absolute start-10 bottom-0 w-32 h-32 bg-white/10 rounded-full translate-y-1/2" />
         <div className="absolute end-20 top-1/2 w-20 h-20 bg-white/5 rounded-full" />
       </div>
 
-      {/* Tab Navigation */}
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="bg-slate-900/50 border border-slate-800">
-          <TabsTrigger value="overview" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-            <BarChart3 className="w-4 h-4 me-2" />
-            {language === 'ar' ? 'نظرة عامة' : 'Overview'}
-          </TabsTrigger>
-          <TabsTrigger value="operations" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-            <LayoutDashboard className="w-4 h-4 me-2" />
-            {language === 'ar' ? 'مركز العمليات' : 'Operations Center'}
-          </TabsTrigger>
-        </TabsList>
-
-      <TabsContent value="overview" className="space-y-6">
-      {/* Period Selector */}
-      <div className="flex justify-end">
-        <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
-          <SelectTrigger className="w-32 bg-slate-800 border-slate-700">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="bg-slate-800 border-slate-700">
-            <SelectItem value="7d">{language === 'ar' ? 'آخر 7 أيام' : 'Last 7 days'}</SelectItem>
-            <SelectItem value="30d">{language === 'ar' ? 'آخر 30 يوم' : 'Last 30 days'}</SelectItem>
-            <SelectItem value="90d">{language === 'ar' ? 'آخر 90 يوم' : 'Last 90 days'}</SelectItem>
-            <SelectItem value="year">{language === 'ar' ? 'هذا العام' : 'This Year'}</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Error State */}
+      {/* ═══ Error State ═══ */}
       {error && (
         <Card className="bg-red-500/10 border-red-500/30">
           <CardContent className="p-6 text-center">
             <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-3" />
-            <p className="text-red-400 font-medium">
-              {language === 'ar' ? 'حدث خطأ في تحميل البيانات' : 'Failed to load dashboard data'}
-            </p>
-            <Button variant="outline" size="sm" onClick={() => refetch()} className="mt-3">
-              {language === 'ar' ? 'إعادة المحاولة' : 'Retry'}
-            </Button>
+            <p className="text-red-400 font-medium">{isAr ? 'حدث خطأ في تحميل البيانات' : 'Failed to load dashboard data'}</p>
+            <Button variant="outline" size="sm" onClick={() => refetch()} className="mt-3">{isAr ? 'إعادة المحاولة' : 'Retry'}</Button>
           </CardContent>
         </Card>
       )}
 
-      {/* Empty State - No Projects */}
+      {/* ═══ Empty State ═══ */}
       {projects.length === 0 && !projectsLoading && (
         <Card className="bg-slate-900/50 border-slate-800">
           <CardContent className="p-8">
             <div className="flex flex-col items-center text-center">
-              <div className="p-4 rounded-2xl bg-blue-500/10 mb-4">
-                <Rocket className="w-12 h-12 text-blue-400" />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2">
-                {language === 'ar' ? 'مرحبًا بك في BluePrint!' : 'Welcome to BluePrint!'}
-              </h3>
-              <p className="text-slate-400 max-w-md mb-6">
-                {language === 'ar'
-                  ? 'ابدأ بإنشاء مشروعك الأول لإدارة المشاريع والمهام والفريق بسهولة'
-                  : 'Start by creating your first project to manage projects, tasks, and team effortlessly'}
-              </p>
-              <Button
-                onClick={() => router.push('/dashboard/projects')}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <Plus className="w-4 h-4 me-2" />
-                {t.newProject}
+              <div className="p-4 rounded-2xl bg-blue-500/10 mb-4"><Rocket className="w-12 h-12 text-blue-400" /></div>
+              <h3 className="text-xl font-bold text-white mb-2">{isAr ? 'مرحبًا بك في BluePrint!' : 'Welcome to BluePrint!'}</h3>
+              <p className="text-slate-400 max-w-md mb-6">{isAr ? 'ابدأ بإنشاء مشروعك الأول' : 'Start by creating your first project'}</p>
+              <Button onClick={() => router.push('/dashboard/projects')} className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Plus className="w-4 h-4 me-2" />{t.newProject}
               </Button>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statCards.map((stat, index) => {
-          const tooltipMap: Record<string, { ar: string; en: string }> = {
-            [t.activeProjects]: {
-              ar: 'عدد المشاريع التي تعمل عليها حاليًا من إجمالي المشاريع',
-              en: 'Number of projects currently in progress out of total projects',
-            },
-            [t.totalClients]: {
-              ar: 'إجمالي العملاء المسجلين في النظام',
-              en: 'Total registered clients in the system',
-            },
-            ...(canSeeFinancials ? { [t.revenue]: {
-              ar: 'إجمالي المبالغ المحصّلة من الفواتير المدفوعة',
-              en: 'Total amount collected from paid invoices',
-            }} : { [language === 'ar' ? 'إجمالي المهام' : 'Total Tasks']: {
-              ar: 'إجمالي المهام المسجلة في النظام',
-              en: 'Total tasks registered in the system',
-            }}),
-            [t.pendingTasks]: {
-              ar: 'المهام التي لم تكتمل بعد وتحتاج إلى اهتمام',
-              en: 'Tasks that are not yet completed and need attention',
-            },
-          };
-          const tooltipText = tooltipMap[stat.title];
-
-          return (
-            <Tooltip key={index}>
-              <TooltipTrigger asChild>
-                <Card
-                  className="bg-slate-900/50 border-slate-800 hover:border-slate-700 hover:shadow-lg hover:shadow-slate-900/50 transition-all duration-300 hover:-translate-y-1 group cursor-default"
-                >
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className={`p-2.5 rounded-xl ${stat.bgColor} group-hover:scale-110 transition-transform duration-300`}>
-                        <stat.icon className={`w-5 h-5 ${stat.color}`} />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {tooltipText && (
-                          <Info className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-400 transition-colors" />
-                        )}
-                        <div className={`flex items-center gap-1 text-sm ${stat.trendUp ? 'text-green-400' : 'text-red-400'}`}>
-                          {stat.trend}
-                          {stat.trendUp ? (
-                            <ArrowUpRight className="w-3 h-3" />
-                          ) : (
-                            <ArrowDownRight className="w-3 h-3" />
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-4">
-                      <p className="text-2xl font-bold text-white">{stat.value}</p>
-                      {stat.total && (
-                        <p className="text-sm text-slate-400">{language === 'ar' ? 'من' : 'of'} {stat.total}</p>
-                      )}
-                      {stat.subtitle && (
-                        <p className="text-sm text-slate-400">{stat.subtitle}</p>
-                      )}
-                    </div>
-                    <p className="text-sm text-slate-400 mt-1">{stat.title}</p>
-                  </CardContent>
-                </Card>
-              </TooltipTrigger>
-              {tooltipText && (
-                <TooltipContent side="bottom" className="bg-slate-800 border-slate-700 text-slate-200 max-w-xs">
-                  <p className="text-xs">{language === 'ar' ? tooltipText.ar : tooltipText.en}</p>
-                </TooltipContent>
-              )}
-            </Tooltip>
-          );
-        })}
+      {/* ═══ 2. Stat Cards ═══ */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {statCards.map((stat, i) => (
+          <Card key={i} className="bg-slate-900/50 border-slate-800 hover:border-slate-700 hover:shadow-lg hover:shadow-slate-900/50 transition-all duration-300 hover:-translate-y-1 group">
+            <CardContent className="p-5">
+              <div className={`p-2.5 rounded-xl ${stat.bgColor} w-fit group-hover:scale-110 transition-transform duration-300`}>
+                <stat.icon className={`w-5 h-5 ${stat.color}`} />
+              </div>
+              <div className="mt-4">
+                <p className="text-2xl font-bold text-white">{stat.value}</p>
+                {stat.subtitle && <p className="text-sm text-slate-400 mt-0.5">{stat.subtitle}</p>}
+              </div>
+              <p className="text-sm text-slate-400 mt-1">{isAr ? stat.title : stat.titleEn}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* Charts Row 1 - Revenue & Project Status */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Monthly Revenue Chart (financial users) / Project Progress (non-financial users) */}
-        {canSeeFinancials ? (
+      {/* ═══ 3. Alerts Banner ═══ */}
+      {alerts.length > 0 && (
         <Card className="bg-slate-900/50 border-slate-800">
-          <CardHeader>
-            <CardTitle className="text-white">
-              {language === 'ar' ? 'الإيرادات الشهرية' : 'Monthly Revenue'}
+          <CardHeader className="pb-3">
+            <CardTitle className="text-white flex items-center gap-2 text-base">
+              <AlertCircle className="w-4 h-4 text-amber-400" />
+              {isAr ? 'تنبيهات تحتاج اهتمامك' : 'Alerts Needing Attention'}
             </CardTitle>
-            <CardDescription className="text-slate-400">
-              {language === 'ar' ? 'نظرة عامة على الإيرادات والمصروفات' : 'Overview of revenue and expenses'}
-            </CardDescription>
           </CardHeader>
           <CardContent>
-            {dashboardLoading ? (
-              <ChartLoader />
-            ) : (
-              <RevenueChart
-                data={revenueData}
-                formatCurrency={formatCurrency}
-                language={language}
-              />
-            )}
+            <div className="space-y-2">
+              {alerts.map((alert) => (
+                <Link key={alert.id} href={alert.href} className="block">
+                  <div className={`flex items-center gap-3 p-3 rounded-lg border-s-2 transition-colors cursor-pointer ${
+                    alert.severity === 'red' ? 'bg-red-500/5 border-red-500/30 hover:bg-red-500/10' : 'bg-amber-500/5 border-amber-500/30 hover:bg-amber-500/10'
+                  }`}>
+                    <div className={`p-2 rounded-lg ${alert.severity === 'red' ? 'bg-red-500/20' : 'bg-amber-500/20'}`}>
+                      <alert.icon className={`w-4 h-4 ${alert.severity === 'red' ? 'text-red-400' : 'text-amber-400'}`} />
+                    </div>
+                    <div className="flex-1">
+                      <p className={`text-sm font-medium ${alert.severity === 'red' ? 'text-red-300' : 'text-amber-300'}`}>{alert.text}</p>
+                    </div>
+                    <Badge variant="outline" className={`text-xs px-2 py-0.5 ${alert.severity === 'red' ? 'border-red-500/40 text-red-400 bg-red-500/10' : 'border-amber-500/40 text-amber-400 bg-amber-500/10'}`}>
+                      {alert.count}
+                    </Badge>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </CardContent>
         </Card>
-        ) : (
-        <Card className="bg-slate-900/50 border-slate-800">
-          <CardHeader>
-            <CardTitle className="text-white">
-              {language === 'ar' ? 'تقدم المشاريع' : 'Project Progress'}
-            </CardTitle>
-            <CardDescription className="text-slate-400">
-              {language === 'ar' ? 'نظرة عامة على تقدم المشاريع' : 'Overview of project progress'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {projectsLoading ? (
-              <ChartLoader />
-            ) : (
-              <ScrollArea className="h-[300px]">
-                <div className="space-y-4">
-                  {recentProjects.length > 0 ? recentProjects.map((project: any) => (
-                    <div key={project.id} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-white truncate">{project.name}</p>
-                        <span className="text-xs text-slate-400">{project.progressPercentage || 0}%</span>
-                      </div>
-                      <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-blue-500 rounded-full transition-all duration-500"
-                          style={{ width: `${project.progressPercentage || 0}%` }}
-                        />
-                      </div>
-                    </div>
-                  )) : (
-                    <div className="flex flex-col items-center justify-center py-8 text-slate-400">
-                      <Building2 className="w-12 h-12 mb-4 opacity-50" />
-                      <p>{t.noData}</p>
-                    </div>
-                  )}
+      )}
+
+      {/* ═══ 4. Quick Actions ═══ */}
+      <Card className="bg-slate-900/50 border-slate-800">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-white text-lg">{isAr ? 'إجراءات سريعة' : 'Quick Actions'}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {quickActions.map((action, i) => (
+              <Button
+                key={i}
+                variant="outline"
+                className="h-20 flex flex-col gap-2 bg-slate-800/50 border-slate-700 hover:border-slate-500 transition-all duration-300 group"
+                onClick={() => router.push(action.href)}
+              >
+                <div className={`p-2 rounded-lg ${action.bgColor} group-hover:scale-110 transition-transform duration-300`}>
+                  <action.icon className={`w-5 h-5 ${action.color}`} />
                 </div>
-              </ScrollArea>
-            )}
-          </CardContent>
-        </Card>
-        )}
+                <span className="text-xs text-slate-300 group-hover:text-white truncate">{isAr ? action.label : action.labelEn}</span>
+              </Button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Project Status Distribution */}
+      {/* ═══ 5. Active Content Section (role-adaptive) ═══ */}
+      {(role === 'ADMIN' || role === 'MANAGER' || role === 'PROJECT_MANAGER') && (
         <Card className="bg-slate-900/50 border-slate-800">
-          <CardHeader>
-            <CardTitle className="text-white">
-              {language === 'ar' ? 'حالة المشاريع' : 'Project Status'}
-            </CardTitle>
-            <CardDescription className="text-slate-400">
-              {language === 'ar' ? 'توزيع المشاريع حسب الحالة' : 'Distribution of projects by status'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {projectsLoading ? (
-              <ChartLoader />
-            ) : (
-              <ProjectDonutChart
-                data={projectStatusData}
-                language={language}
-              />
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Charts Row 2 - Task Completion & Expenses */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Task Completion Trend */}
-        <Card className="bg-slate-900/50 border-slate-800">
-          <CardHeader>
-            <CardTitle className="text-white">
-              {language === 'ar' ? 'اتجاه إنجاز المهام' : 'Task Completion Trend'}
-            </CardTitle>
-            <CardDescription className="text-slate-400">
-              {language === 'ar' ? 'المهام المكتملة والمعلقة' : 'Completed and pending tasks'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {tasksLoading ? (
-              <ChartLoader />
-            ) : (
-              <TaskCompletionChart
-                data={taskCompletionData}
-                language={language}
-              />
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Expense by Category (financial users) / Team Activity (non-financial users) */}
-        {canSeeFinancials ? (
-        <Card className="bg-slate-900/50 border-slate-800">
-          <CardHeader>
-            <CardTitle className="text-white">
-              {language === 'ar' ? 'المصروفات حسب الفئة' : 'Expenses by Category'}
-            </CardTitle>
-            <CardDescription className="text-slate-400">
-              {language === 'ar' ? 'توزيع المصروفات' : 'Distribution of expenses'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {dashboardLoading ? (
-              <ChartLoader />
-            ) : (
-              <ExpenseDonutChart
-                data={expenseData}
-                formatCurrency={formatCurrency}
-                language={language}
-              />
-            )}
-          </CardContent>
-        </Card>
-        ) : (
-        <Card className="bg-slate-900/50 border-slate-800">
-          <CardHeader>
-            <CardTitle className="text-white">
-              {language === 'ar' ? 'نشاط الفريق' : 'Team Activity'}
-            </CardTitle>
-            <CardDescription className="text-slate-400">
-              {language === 'ar' ? 'نظرة عامة على نشاط المهام' : 'Overview of task activity'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {tasksLoading ? (
-              <ChartLoader />
-            ) : (
-              <TaskCompletionChart
-                data={taskCompletionData}
-                language={language}
-              />
-            )}
-          </CardContent>
-        </Card>
-        )}
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Projects */}
-        <Card className="lg:col-span-2 bg-slate-900/50 border-slate-800">
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
-              <CardTitle className="text-white">{t.projects}</CardTitle>
-              <CardDescription className="text-slate-400">
-                {language === 'ar' ? 'آخر المشاريع' : 'Recent projects'}
-              </CardDescription>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-blue-400" />
+                {isAr ? 'المشاريع النشطة' : 'Active Projects'}
+              </CardTitle>
             </div>
             <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard/projects')} className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10">
-              {t.view} {language === 'ar' ? 'الكل' : 'All'}
+              {isAr ? 'عرض الكل' : 'View All'} <ChevronRight className="w-4 h-4 ms-1" />
             </Button>
           </CardHeader>
           <CardContent>
             {projectsLoading ? (
-              <div className="space-y-4">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="flex items-center gap-4 p-3">
-                    <Skeleton className="w-10 h-10 rounded-lg" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-4 w-3/4" />
-                      <Skeleton className="h-3 w-1/2" />
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <div className="space-y-3">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}</div>
             ) : (
-              <ScrollArea className="h-80">
-                <div className="space-y-4">
-                  {recentProjects.length > 0 ? recentProjects.map((project: {
-                    id: string;
-                    name: string;
-                    location?: string;
-                    projectNumber?: string;
-                    status: string;
-                    progressPercentage?: number;
-                  }) => (
-                    <div 
-                      key={project.id} 
-                      className="flex items-center gap-4 p-3 rounded-lg bg-slate-800/50 hover:bg-slate-800 transition-colors cursor-pointer"
-                    >
-                      <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                        <Building2 className="w-5 h-5 text-blue-400" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-white truncate">{project.name}</p>
-                        <p className="text-sm text-slate-400 truncate">{project.location || project.projectNumber}</p>
-                      </div>
-                      <div className="text-end">
-                        <Badge variant={
-                          project.status === 'active' ? 'default' :
-                          project.status === 'completed' ? 'outline' :
-                          project.status === 'pending' ? 'secondary' : 'destructive'
-                        } className={project.status === 'completed' ? 'border-green-500 text-green-400' : ''}>
-                          {project.status}
-                        </Badge>
-                        <p className="text-sm text-slate-400 mt-1">
-                          {project.progressPercentage || 0}%
-                        </p>
-                      </div>
-                    </div>
-                  )) : (
-                    <div className="flex flex-col items-center justify-center py-8 text-slate-400">
-                      <Building2 className="w-12 h-12 mb-4 opacity-50" />
-                      <p>{t.noData}</p>
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Quick Actions & Activity */}
-        <div className="space-y-6">
-          {/* Quick Actions */}
-          <Card className="bg-slate-900/50 border-slate-800">
-            <CardHeader>
-              <CardTitle className="text-white text-lg">
-                {language === 'ar' ? 'إجراءات سريعة' : 'Quick Actions'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-3">
-              <Button 
-                variant="outline" 
-                className="h-24 flex flex-col gap-2 bg-slate-800/50 border-slate-700 hover:bg-blue-500/20 hover:border-blue-500 transition-all duration-300 group"
-                onClick={() => router.push('/dashboard/projects')}
-              >
-                <div className="p-2 rounded-lg bg-blue-500/20 group-hover:bg-blue-500/30 transition-colors">
-                  <Building2 className="w-5 h-5 text-blue-400" />
-                </div>
-                <span className="text-xs text-slate-300 group-hover:text-white">{t.newProject}</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                className="h-24 flex flex-col gap-2 bg-slate-800/50 border-slate-700 hover:bg-green-500/20 hover:border-green-500 transition-all duration-300 group"
-                onClick={() => router.push('/dashboard/clients')}
-              >
-                <div className="p-2 rounded-lg bg-green-500/20 group-hover:bg-green-500/30 transition-colors">
-                  <Users className="w-5 h-5 text-green-400" />
-                </div>
-                <span className="text-xs text-slate-300 group-hover:text-white">{t.newClient}</span>
-              </Button>
-              {canSeeFinancials && (
-              <Button 
-                variant="outline" 
-                className="h-24 flex flex-col gap-2 bg-slate-800/50 border-slate-700 hover:bg-cyan-500/20 hover:border-cyan-500 transition-all duration-300 group"
-                onClick={() => router.push('/dashboard/finance')}
-              >
-                <div className="p-2 rounded-lg bg-cyan-500/20 group-hover:bg-cyan-500/30 transition-colors">
-                  <DollarSign className="w-5 h-5 text-cyan-400" />
-                </div>
-                <span className="text-xs text-slate-300 group-hover:text-white">{t.newInvoice}</span>
-              </Button>
-              )}
-              <Button 
-                variant="outline" 
-                className="h-24 flex flex-col gap-2 bg-slate-800/50 border-slate-700 hover:bg-orange-500/20 hover:border-orange-500 transition-all duration-300 group"
-                onClick={() => router.push('/dashboard/tasks')}
-              >
-                <div className="p-2 rounded-lg bg-orange-500/20 group-hover:bg-orange-500/30 transition-colors">
-                  <CheckSquare className="w-5 h-5 text-orange-400" />
-                </div>
-                <span className="text-xs text-slate-300 group-hover:text-white">{t.newTask}</span>
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Enhanced Quick Actions Bar */}
-          <Card className="bg-gradient-to-br from-violet-950/50 to-slate-900/50 border-violet-500/20">
-            <CardContent className="p-4">
-              <div className="grid grid-cols-1 gap-2">
-                {hasPermission('REPORTS_READ') && (
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start gap-3 text-slate-300 hover:bg-violet-500/10 hover:text-violet-300 p-3 h-auto"
-                  onClick={() => router.push('/dashboard/reports')}
-                >
-                  <div className="p-1.5 rounded-lg bg-violet-500/20">
-                    <BarChart3 className="w-4 h-4 text-violet-400" />
-                  </div>
-                  <div className="text-start">
-                    <p className="text-sm font-medium">{language === 'ar' ? 'إنشاء تقرير' : 'Generate Report'}</p>
-                    <p className="text-[10px] text-slate-500">{language === 'ar' ? 'تقارير مالية وتشغيلية' : 'Financial & operational reports'}</p>
-                  </div>
-                </Button>
-                )}
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start gap-3 text-slate-300 hover:bg-blue-500/10 hover:text-blue-300 p-3 h-auto"
-                  onClick={() => router.push('/dashboard/calendar')}
-                >
-                  <div className="p-1.5 rounded-lg bg-blue-500/20">
-                    <CalendarDays className="w-4 h-4 text-blue-400" />
-                  </div>
-                  <div className="text-start">
-                    <p className="text-sm font-medium">{language === 'ar' ? 'عرض الجدول' : 'View Schedule'}</p>
-                    <p className="text-[10px] text-slate-500">{language === 'ar' ? 'جدول المشاريع والجداول الزمنية' : 'Project schedule & timelines'}</p>
-                  </div>
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start gap-3 text-slate-300 hover:bg-emerald-500/10 hover:text-emerald-300 p-3 h-auto"
-                  onClick={() => router.push('/dashboard/ai-chat')}
-                >
-                  <div className="p-1.5 rounded-lg bg-emerald-500/20">
-                    <Sparkles className="w-4 h-4 text-emerald-400" />
-                  </div>
-                  <div className="text-start">
-                    <p className="text-sm font-medium">{language === 'ar' ? 'اسأل الذكاء الاصطناعي' : 'Ask AI'}</p>
-                    <p className="text-[10px] text-slate-500">{language === 'ar' ? 'المساعد الذكي بلو جاهز لمساعدتك' : 'Blu AI assistant ready to help'}</p>
-                  </div>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Open Defects */}
-          <Card className="bg-slate-900/50 border-slate-800 hover:border-red-500/50 transition-colors cursor-pointer" onClick={() => router.push('/dashboard/site-management')}>
-            <CardHeader>
-              <CardTitle className="text-white text-lg flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-red-500/20">
-                  <AlertTriangle className="w-5 h-5 text-red-400" />
-                </div>
-                {t.openDefects}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-4">
-                <p className="text-5xl font-bold text-red-400">{stats?.defects?.open || 0}</p>
-                <p className="text-sm text-slate-400 mt-2">
-                  {language === 'ar' ? 'عيوب تحتاج معالجة' : 'Defects need attention'}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* AI Insights */}
-          <AIInsightsCard
-            title={language === 'ar' ? 'رؤى ذكية' : 'AI Insights'}
-            context={JSON.stringify(canSeeFinancials ? {
-              activeProjects: stats?.projects?.active || 0,
-              totalRevenue: stats?.financial?.totalPaid || 0,
-              pendingTasks: stats?.tasks?.pending || 0,
-              openDefects: stats?.defects?.open || 0
-            } : {
-              activeProjects: stats?.projects?.active || 0,
-              pendingTasks: stats?.tasks?.pending || 0,
-              openDefects: stats?.defects?.open || 0
-            })}
-            taskType="data-analysis"
-            compact
-          />
-        </div>
-      </div>
-
-      {/* Bottom Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Pending Tasks */}
-        <Card className="bg-slate-900/50 border-slate-800">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-white flex items-center gap-2">
-              <CheckSquare className="w-5 h-5 text-orange-400" />
-              {t.pendingTasks}
-            </CardTitle>
-            <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard/tasks')} className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10">
-              {t.view} {language === 'ar' ? 'الكل' : 'All'}
-            </Button>
-          </CardHeader>
-          <CardContent>
-            {tasksLoading ? (
-              <div className="space-y-3">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="flex items-center gap-3 p-2">
-                    <Skeleton className="w-2 h-2 rounded-full" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-4 w-3/4" />
-                      <Skeleton className="h-3 w-1/2" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <ScrollArea className="h-64">
-                <div className="space-y-3">
-                  {recentTasks.length > 0 ? recentTasks.map((task: any) => (
-                    <div key={task.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800/50 transition-colors">
-                      <div className={`w-2 h-2 rounded-full ${
-                        task.priority === 'urgent' ? 'bg-red-500' :
-                        task.priority === 'high' ? 'bg-orange-500' :
-                        task.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
-                      }`} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-white truncate">{task.title}</p>
-                        <p className="text-xs text-slate-400">{task.project?.name || task.project || t.noData}</p>
-                      </div>
-                      {task.dueDate && (
-                        <div className="flex items-center gap-1 text-xs text-slate-400">
-                          <Clock className="w-3 h-3" />
-                          {formatDate(task.dueDate)}
-                        </div>
-                      )}
-                    </div>
-                  )) : (
-                    <div className="flex flex-col items-center justify-center py-8 text-slate-400">
-                      <CheckSquare className="w-12 h-12 mb-4 opacity-50" />
-                      <p>{t.noData}</p>
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      </TabsContent>
-
-      {/* ===== Operations Center Tab ===== */}
-      <TabsContent value="operations" className="space-y-6">
-        {/* Operations Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-              <LayoutDashboard className="w-7 h-7 text-blue-400" />
-              {language === 'ar' ? 'مركز العمليات' : 'Operations Center'}
-            </h1>
-            <p className="text-slate-400 mt-1">
-              {language === 'ar' ? 'نظرة عامة شاملة على جميع العمليات' : 'Comprehensive overview of all operations'}
-            </p>
-          </div>
-          <div className="text-sm text-slate-500">
-            {opsNow.toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-          </div>
-        </div>
-
-        {/* Operations Summary Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="bg-slate-900/50 border-slate-800">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-blue-500/20">
-                  <Briefcase className="w-5 h-5 text-blue-400" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-white">{opsActiveProjects.length}</p>
-                  <p className="text-xs text-slate-400">{language === 'ar' ? 'مشاريع نشطة' : 'Active Projects'}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-slate-900/50 border-slate-800">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-green-500/20">
-                  <Activity className="w-5 h-5 text-green-400" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-white">{opsWorkloadSummary.totalActive}</p>
-                  <p className="text-xs text-slate-400">{language === 'ar' ? 'مهام قيد التنفيذ' : 'Active Tasks'}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-slate-900/50 border-slate-800">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-red-500/20">
-                  <AlertTriangle className="w-5 h-5 text-red-400" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-white">{opsWorkloadSummary.overdue + opsWorkloadSummary.slaBreached}</p>
-                  <p className="text-xs text-slate-400">{language === 'ar' ? 'تحذيرات' : 'Alerts'}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-slate-900/50 border-slate-800">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-emerald-500/20">
-                  <TrendingUp className="w-5 h-5 text-emerald-400" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-white">{opsWorkloadSummary.completedToday}</p>
-                  <p className="text-xs text-slate-400">{language === 'ar' ? 'مكتمل اليوم' : 'Completed Today'}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Active Projects with SLA */}
-          <Card className="bg-slate-900/50 border-slate-800 lg:col-span-2">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Building2 className="w-5 h-5 text-blue-400" />
-                  {language === 'ar' ? 'المشاريع النشطة' : 'Active Projects'}
-                </CardTitle>
-                <Link href="/dashboard/projects">
-                  <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white">
-                    {language === 'ar' ? 'عرض الكل' : 'View All'}
-                    <ChevronRight className="w-4 h-4 ms-1" />
-                  </Button>
-                </Link>
-              </div>
-            </CardHeader>
-            <CardContent>
               <div className="space-y-3 max-h-96 overflow-y-auto">
-                {opsActiveProjects.length === 0 ? (
-                  <div className="text-center py-8 text-slate-500 text-sm">
-                    {language === 'ar' ? 'لا توجد مشاريع نشطة' : 'No active projects'}
-                  </div>
+                {activeProjects.length === 0 ? (
+                  <div className="text-center py-8 text-slate-500 text-sm">{isAr ? 'لا توجد مشاريع نشطة' : 'No active projects'}</div>
                 ) : (
-                  opsActiveProjects.map((project: any) => {
-                    const projectTasks = allTasks.filter((t: any) => t.projectId === project.id);
-                    const doneTasks = projectTasks.filter((t: any) => t.status === 'done').length;
-                    const totalTasks = projectTasks.length;
-                    const progress = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
-                    const overdueTasks = projectTasks.filter((t: any) => {
-                      if (!t.dueDate || t.status === 'done') return false;
-                      return new Date(t.dueDate) < opsNow;
-                    }).length;
-                    const slaTasks = projectTasks.filter((t: any) => t.slaDays && t.slaStartDate);
-                    const breachedSla = slaTasks.filter((t: any) => {
-                      const start = new Date(t.slaStartDate);
-                      const elapsed = Math.floor((opsNow.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-                      return elapsed > t.slaDays;
-                    }).length;
+                  activeProjects.slice(0, 6).map((project: any) => {
+                    const projectTasks = allTasks.filter((tk: any) => tk.projectId === project.id);
+                    const done = projectTasks.filter((tk: any) => tk.status === 'done').length;
+                    const total = projectTasks.length;
+                    const progress = total > 0 ? Math.round((done / total) * 100) : 0;
+                    const overdue = projectTasks.filter((tk: any) => tk.dueDate && tk.status !== 'done' && new Date(tk.dueDate) < now).length;
                     return (
                       <Link key={project.id} href={`/dashboard/projects/${project.id}`}>
-                        <div className="flex items-center gap-4 p-3 rounded-lg bg-slate-800/30 hover:bg-slate-800/50 transition-colors group cursor-pointer">
+                        <div className="flex items-center gap-4 p-3 rounded-lg bg-slate-800/30 hover:bg-slate-800/50 transition-colors cursor-pointer group">
                           <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center shrink-0">
                             <Building2 className="w-5 h-5 text-blue-400" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <p className="text-sm font-medium text-white truncate">{project.name}</p>
-                              {overdueTasks > 0 && (
+                              {overdue > 0 && (
                                 <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-red-500/30 text-red-400 bg-red-500/10">
-                                  {overdueTasks} {language === 'ar' ? 'متأخر' : 'overdue'}
-                                </Badge>
-                              )}
-                              {breachedSla > 0 && (
-                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-red-500/30 text-red-400 bg-red-500/10 animate-pulse">
-                                  SLA ⚠
+                                  {overdue} {isAr ? 'متأخر' : 'overdue'}
                                 </Badge>
                               )}
                             </div>
                             <div className="flex items-center gap-3 mt-1.5">
                               <Progress value={progress} className="h-1.5 flex-1" />
                               <span className="text-xs text-slate-400">{progress}%</span>
-                              <span className="text-[10px] text-slate-500">
-                                {doneTasks}/{totalTasks} {language === 'ar' ? 'مهام' : 'tasks'}
-                              </span>
+                              <span className="text-[10px] text-slate-500">{done}/{total}</span>
                             </div>
                           </div>
                           <ArrowUpRight className="w-4 h-4 text-slate-500 group-hover:text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -1051,212 +531,266 @@ export function DashboardPage() {
                   })
                 )}
               </div>
-            </CardContent>
-          </Card>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
-          {/* Right Column */}
-          <div className="space-y-6">
-            {/* Quick Links */}
-            <Card className="bg-slate-900/50 border-slate-800">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-white flex items-center gap-2 text-base">
-                  <FolderOpen className="w-4 h-4 text-slate-400" />
-                  {language === 'ar' ? 'وصول سريع' : 'Quick Access'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-2">
-                  {opsQuickLinks.map((link) => (
-                    <Link key={link.href} href={link.href}>
-                      <div className="flex flex-col items-center gap-2 p-3 rounded-lg bg-slate-800/30 hover:bg-slate-800/50 transition-colors cursor-pointer group">
-                        <div className={`p-2 rounded-lg ${link.bgColor}`}>
-                          <link.icon className={`w-5 h-5 ${link.color}`} />
-                        </div>
-                        <span className="text-xs text-slate-400 group-hover:text-white">{link.label}</span>
-                        {link.count !== undefined && (
-                          <Badge variant="secondary" className="bg-slate-700 text-slate-300 text-[10px]">{link.count}</Badge>
-                        )}
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Recent Activities - Link to Activity Log */}
-            <Card className="bg-slate-900/50 border-slate-800">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-white flex items-center gap-2 text-base">
-                  <Clock className="w-4 h-4 text-slate-400" />
-                  {language === 'ar' ? 'النشاط الأخير' : 'Recent Activity'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col items-center justify-center py-6 gap-3">
-                  <div className="p-3 rounded-xl bg-slate-800/50">
-                    <Timer className="w-8 h-8 text-slate-400" />
-                  </div>
-                  <p className="text-sm text-slate-400 text-center">
-                    {language === 'ar' ? 'سجل الأنشطة متاح في صفحة الإدارة' : 'Activity log available in the admin section'}
-                  </p>
-                  <Link href="/dashboard/activities">
-                    <Button variant="outline" size="sm" className="bg-slate-800/50 border-slate-700 hover:bg-slate-800 text-slate-300 hover:text-white">
-                      {language === 'ar' ? 'عرض سجل الأنشطة' : 'View Activity Log'}
-                      <ChevronRight className="w-4 h-4 ms-1" />
-                    </Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Pending Tasks / Workload */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Urgent Tasks */}
-          <Card className="bg-slate-900/50 border-slate-800">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Timer className="w-5 h-5 text-amber-400" />
-                  {language === 'ar' ? 'مهام عاجلة' : 'Urgent Tasks'}
-                </CardTitle>
-                <Link href="/dashboard/tasks">
-                  <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white">
-                    {language === 'ar' ? 'عرض الكل' : 'View All'}
-                    <ChevronRight className="w-4 h-4 ms-1" />
-                  </Button>
-                </Link>
-              </div>
-            </CardHeader>
-            <CardContent>
+      {role === 'ENGINEER' && (
+        <Card className="bg-slate-900/50 border-slate-800">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <div>
+              <CardTitle className="text-white flex items-center gap-2">
+                <CheckSquare className="w-5 h-5 text-blue-400" />
+                {isAr ? 'مهامي النهارده' : "Today's Tasks"}
+              </CardTitle>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard/tasks')} className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10">
+              {isAr ? 'عرض الكل' : 'View All'} <ChevronRight className="w-4 h-4 ms-1" />
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {tasksLoading ? (
+              <div className="space-y-3">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}</div>
+            ) : (
               <div className="space-y-2 max-h-96 overflow-y-auto">
-                {opsPendingTasks.length === 0 ? (
-                  <div className="text-center py-8 text-slate-500 text-sm">
-                    {language === 'ar' ? 'لا توجد مهام عاجلة' : 'No urgent tasks'}
-                  </div>
+                {todayTasks.length === 0 ? (
+                  <div className="text-center py-8 text-slate-500 text-sm">{isAr ? 'لا توجد مهام لليوم' : 'No tasks for today'}</div>
                 ) : (
-                  opsPendingTasks.map((task: any) => {
+                  todayTasks.map((task: any) => {
                     const slaStatus = getTaskSLAStatus(task);
-                    const isOverdue = task.dueDate && new Date(task.dueDate) < opsNow && task.status !== 'done';
+                    const isOverdue = task.dueDate && new Date(task.dueDate) < now && task.status !== 'done';
                     const priorityColors: Record<string, string> = { urgent: 'bg-red-500', high: 'bg-orange-500', medium: 'bg-yellow-500', low: 'bg-green-500' };
                     return (
-                      <div
-                        key={task.id}
-                        className="flex items-center gap-3 p-2.5 rounded-lg bg-slate-800/30 hover:bg-slate-800/50 transition-colors cursor-pointer"
-                        onClick={() => router.push('/dashboard/tasks')}
-                      >
+                      <div key={task.id} className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/30 hover:bg-slate-800/50 transition-colors cursor-pointer" onClick={() => router.push('/dashboard/tasks')}>
                         <div className={`w-2 h-2 rounded-full ${priorityColors[task.priority] || 'bg-gray-500'} shrink-0`} />
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-white truncate">{task.title}</p>
                           <div className="flex items-center gap-2 mt-1">
-                            {task.dueDate && (
-                              <span className={`text-[10px] ${isOverdue ? 'text-red-400' : 'text-slate-500'}`}>
-                                {formatDate(task.dueDate)}
-                              </span>
-                            )}
+                            <span className="text-[10px] text-slate-500">{task.project?.name || ''}</span>
                             {slaStatus && (
                               <Badge variant="outline" className={`text-[9px] px-1 py-0 h-4 border ${slaStatus.color}`}>
-                                SLA: {slaStatus.remaining}{language === 'ar' ? 'ي' : 'd'}
+                                SLA: {slaStatus.remaining}{isAr ? 'ي' : 'd'}
                               </Badge>
                             )}
                           </div>
                         </div>
-                        <Badge
-                          variant="outline"
-                          className={`text-[10px] px-1.5 py-0 h-5 border shrink-0 ${
-                            task.status === 'todo'
-                              ? 'border-slate-600 text-slate-400'
-                              : 'border-blue-500/30 text-blue-400 bg-blue-500/10'
-                          }`}
-                        >
-                          {task.status === 'todo'
-                            ? (language === 'ar' ? 'قيد الانتظار' : 'To Do')
-                            : (language === 'ar' ? 'قيد التنفيذ' : 'In Progress')
-                          }
-                        </Badge>
+                        {isOverdue && <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 border-red-500/30 text-red-400 bg-red-500/10 shrink-0">{isAr ? 'متأخر' : 'Overdue'}</Badge>}
                       </div>
                     );
                   })
                 )}
               </div>
-            </CardContent>
-          </Card>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
-          {/* Workload Summary */}
-          <Card className="bg-slate-900/50 border-slate-800">
-            <CardHeader className="pb-3">
+      {role === 'ACCOUNTANT' && (
+        <Card className="bg-slate-900/50 border-slate-800">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <div>
               <CardTitle className="text-white flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-purple-400" />
-                {language === 'ar' ? 'ملخص العمل' : 'Workload Summary'}
+                <CreditCard className="w-5 h-5 text-cyan-400" />
+                {isAr ? 'الفواتير المعلقة' : 'Pending Invoices'}
               </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <h4 className="text-sm text-slate-400">{language === 'ar' ? 'توزيع المهام' : 'Task Distribution'}</h4>
-                {[
-                  { label: language === 'ar' ? 'مكتمل' : 'Done', count: allTasks.filter((t: any) => t.status === 'done').length, total: allTasks.length, color: 'bg-green-500' },
-                  { label: language === 'ar' ? 'قيد التنفيذ' : 'In Progress', count: allTasks.filter((t: any) => t.status === 'in_progress').length, total: allTasks.length, color: 'bg-blue-500' },
-                  { label: language === 'ar' ? 'مراجعة' : 'Review', count: allTasks.filter((t: any) => t.status === 'review').length, total: allTasks.length, color: 'bg-purple-500' },
-                  { label: language === 'ar' ? 'قيد الانتظار' : 'To Do', count: allTasks.filter((t: any) => t.status === 'todo').length, total: allTasks.length, color: 'bg-gray-500' },
-                ].map((item) => (
-                  <div key={item.label} className="space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">{item.label}</span>
-                      <span className="text-white font-medium">{item.count}</span>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard/finance')} className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10">
+              {isAr ? 'عرض الكل' : 'View All'} <ChevronRight className="w-4 h-4 ms-1" />
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {invoices.length === 0 ? (
+                <div className="text-center py-8 text-slate-500 text-sm">{isAr ? 'لا توجد فواتير معلقة' : 'No pending invoices'}</div>
+              ) : (
+                invoices.slice(0, 8).map((inv: any) => (
+                  <div key={inv.id} className="flex items-center gap-4 p-3 rounded-lg bg-slate-800/30 hover:bg-slate-800/50 transition-colors cursor-pointer" onClick={() => router.push('/dashboard/finance')}>
+                    <div className="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center shrink-0">
+                      <CreditCard className="w-5 h-5 text-cyan-400" />
                     </div>
-                    <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${item.color} transition-all`}
-                        style={{ width: `${item.total > 0 ? (item.count / item.total) * 100 : 0}%` }}
-                      />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-white truncate">{inv.invoiceNumber || (isAr ? 'فاتورة' : 'Invoice')}</p>
+                      <p className="text-xs text-slate-500">{inv.client?.name || ''}</p>
+                    </div>
+                    <div className="text-end shrink-0">
+                      <p className="text-sm font-medium text-white">{formatCurrency(inv.amount || 0)}</p>
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-amber-500/30 text-amber-400 bg-amber-500/10 mt-1">
+                        {isAr ? 'معلق' : 'Pending'}
+                      </Badge>
                     </div>
                   </div>
-                ))}
-              </div>
-              <div className="border-t border-slate-800 pt-4">
-                <h4 className="text-sm text-slate-400 mb-3">{language === 'ar' ? 'مؤشرات الأداء' : 'Performance Metrics'}</h4>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 rounded-lg bg-slate-800/30 text-center">
-                    <p className="text-lg font-bold text-white">
-                      {allTasks.length > 0 ? Math.round((allTasks.filter((t: any) => t.status === 'done').length / allTasks.length) * 100) : 0}%
-                    </p>
-                    <p className="text-[10px] text-slate-500">{language === 'ar' ? 'نسبة الإنجاز' : 'Completion Rate'}</p>
-                  </div>
-                  <div className="p-3 rounded-lg bg-slate-800/30 text-center">
-                    <p className="text-lg font-bold text-white">
-                      {allTasks.filter((t: any) => {
-                        if (!t.slaDays || !t.slaStartDate) return true;
-                        const start = new Date(t.slaStartDate);
-                        const elapsed = Math.floor((opsNow.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-                        return elapsed <= t.slaDays;
-                      }).length}
-                    </p>
-                    <p className="text-[10px] text-slate-500">{language === 'ar' ? 'SLA ملتزم' : 'SLA Compliant'}</p>
-                  </div>
-                  <div className="p-3 rounded-lg bg-slate-800/30 text-center">
-                    <p className="text-lg font-bold text-amber-400">{opsWorkloadSummary.overdue}</p>
-                    <p className="text-[10px] text-slate-500">{language === 'ar' ? 'متأخرات' : 'Overdue'}</p>
-                  </div>
-                  <div className="p-3 rounded-lg bg-slate-800/30 text-center">
-                    <p className="text-lg font-bold text-red-400">{opsWorkloadSummary.slaBreached}</p>
-                    <p className="text-[10px] text-slate-500">{language === 'ar' ? 'SLA مخالف' : 'SLA Breached'}</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </TabsContent>
-      </Tabs>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* FloatingAIButton stays outside tabs */}
-      <FloatingAIButton
-        context={language === 'ar' ? 'لوحة التحكم الرئيسية' : 'Main Dashboard'}
-        entityType="project"
+      {role === 'HR' && (
+        <Card className="bg-slate-900/50 border-slate-800">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-white flex items-center gap-2">
+              <HeartHandshake className="w-5 h-5 text-amber-400" />
+              {isAr ? 'طلبات الإجازة المعلقة' : 'Pending Leave Requests'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-8 text-slate-500 text-sm">{isAr ? 'لا توجد طلبات معلقة حاليًا' : 'No pending requests right now'}</div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ═══ 6. AI Insights ═══ */}
+      <AIInsightsCard
+        title={isAr ? 'رؤى ذكية' : 'AI Insights'}
+        context={JSON.stringify(canSeeFinancials ? {
+          activeProjects: stats?.projects?.active || 0,
+          totalRevenue: stats?.financial?.totalPaid || 0,
+          pendingTasks: stats?.tasks?.pending || 0,
+          openDefects: stats?.defects?.open || 0,
+          role,
+        } : {
+          activeProjects: stats?.projects?.active || 0,
+          pendingTasks: stats?.tasks?.pending || 0,
+          openDefects: stats?.defects?.open || 0,
+          role,
+        })}
+        taskType="data-analysis"
+        compact
       />
 
+      {/* ═══ 7. Charts Section (Collapsible) ═══ */}
+      <Collapsible open={chartsOpen} onOpenChange={setChartsOpen}>
+        <Card className="bg-slate-900/50 border-slate-800 overflow-hidden">
+          <CollapsibleTrigger asChild>
+            <button className="w-full flex items-center justify-between p-4 hover:bg-slate-800/30 transition-colors cursor-pointer">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-blue-400" />
+                <span className="text-white font-medium">{isAr ? '📊 التحليلات والرسوم البيانية' : '📊 Analytics & Charts'}</span>
+              </div>
+              <motion.div
+                animate={{ rotate: chartsOpen ? 180 : 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <ChevronDown className="w-5 h-5 text-slate-400" />
+              </motion.div>
+            </button>
+          </CollapsibleTrigger>
+          <AnimatePresence initial={false}>
+            {chartsOpen && (
+              <CollapsibleContent forceMount>
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3, ease: 'easeInOut' }}
+                  className="overflow-hidden"
+                >
+                  <div className="px-4 pb-4 space-y-6">
+                    {/* Period selector inside charts */}
+                    <div className="flex justify-end pt-2">
+                      <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
+                        <SelectTrigger className="w-32 bg-slate-800 border-slate-700">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-800 border-slate-700">
+                          <SelectItem value="7d">{isAr ? 'آخر 7 أيام' : 'Last 7 days'}</SelectItem>
+                          <SelectItem value="30d">{isAr ? 'آخر 30 يوم' : 'Last 30 days'}</SelectItem>
+                          <SelectItem value="90d">{isAr ? 'آخر 90 يوم' : 'Last 90 days'}</SelectItem>
+                          <SelectItem value="year">{isAr ? 'هذا العام' : 'This Year'}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
+                    {/* Row 1 */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {canSeeFinancials ? (
+                        <Card className="bg-slate-800/50 border-slate-700">
+                          <CardHeader>
+                            <CardTitle className="text-white text-base">{isAr ? 'الإيرادات الشهرية' : 'Monthly Revenue'}</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            {dashboardLoading ? <ChartLoader /> : <RevenueChart data={revenueData} formatCurrency={formatCurrency} language={language} />}
+                          </CardContent>
+                        </Card>
+                      ) : (
+                        <Card className="bg-slate-800/50 border-slate-700">
+                          <CardHeader>
+                            <CardTitle className="text-white text-base">{isAr ? 'تقدم المشاريع' : 'Project Progress'}</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <ScrollArea className="h-[300px]">
+                              <div className="space-y-4">
+                                {projects.slice(0, 5).map((project: any) => (
+                                  <div key={project.id} className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                      <p className="text-sm font-medium text-white truncate">{project.name}</p>
+                                      <span className="text-xs text-slate-400">{project.progressPercentage || 0}%</span>
+                                    </div>
+                                    <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+                                      <div className="h-full bg-blue-500 rounded-full transition-all duration-500" style={{ width: `${project.progressPercentage || 0}%` }} />
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </ScrollArea>
+                          </CardContent>
+                        </Card>
+                      )}
+                      <Card className="bg-slate-800/50 border-slate-700">
+                        <CardHeader>
+                          <CardTitle className="text-white text-base">{isAr ? 'حالة المشاريع' : 'Project Status'}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {projectsLoading ? <ChartLoader /> : <ProjectDonutChart data={projectStatusData} language={language} />}
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Row 2 */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <Card className="bg-slate-800/50 border-slate-700">
+                        <CardHeader>
+                          <CardTitle className="text-white text-base">{isAr ? 'اتجاه إنجاز المهام' : 'Task Completion Trend'}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {tasksLoading ? <ChartLoader /> : <TaskCompletionChart data={taskCompletionData} language={language} />}
+                        </CardContent>
+                      </Card>
+                      {canSeeFinancials ? (
+                        <Card className="bg-slate-800/50 border-slate-700">
+                          <CardHeader>
+                            <CardTitle className="text-white text-base">{isAr ? 'المصروفات حسب الفئة' : 'Expenses by Category'}</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            {dashboardLoading ? <ChartLoader /> : <ExpenseDonutChart data={expenseData} formatCurrency={formatCurrency} language={language} />}
+                          </CardContent>
+                        </Card>
+                      ) : (
+                        <Card className="bg-slate-800/50 border-slate-700">
+                          <CardHeader>
+                            <CardTitle className="text-white text-base">{isAr ? 'نشاط الفريق' : 'Team Activity'}</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            {tasksLoading ? <ChartLoader /> : <TaskCompletionChart data={taskCompletionData} language={language} />}
+                          </CardContent>
+                        </Card>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              </CollapsibleContent>
+            )}
+          </AnimatePresence>
+        </Card>
+      </Collapsible>
+
+      {/* ═══ Floating AI Button ═══ */}
+      <FloatingAIButton
+        context={isAr ? 'لوحة التحكم الرئيسية' : 'Main Dashboard'}
+        entityType="project"
+      />
     </div>
   );
 }
