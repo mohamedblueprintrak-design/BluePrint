@@ -1,4 +1,4 @@
-import AutomationsPage from '@/components/automations/automations-page';
+import { redirect } from 'next/navigation';
 
 export const metadata = {
   title: 'الأتمتة | BluePrint',
@@ -6,5 +6,5 @@ export const metadata = {
 };
 
 export default function Automations() {
-  return <AutomationsPage />;
+  redirect('/dashboard/settings?tab=automations');
 }

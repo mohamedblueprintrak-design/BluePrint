@@ -1,9 +1,5 @@
-import { PricingPage } from '@/components/pricing/pricing-page';
+import { redirect } from 'next/navigation';
 
 export default function DashboardPricingPage() {
-  return (
-    <div>
-      <PricingPage />
-    </div>
-  );
+  redirect('/dashboard/settings?tab=billing');
 }

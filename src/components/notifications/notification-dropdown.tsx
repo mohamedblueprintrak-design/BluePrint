@@ -275,7 +275,7 @@ export function NotificationDropdown({ isRTL }: NotificationDropdownProps) {
         <DropdownMenuSeparator className="bg-slate-800" />
         <div className="p-2">
           <Link
-            href="/dashboard/activities"
+            href="/dashboard/notifications"
             onClick={() => setIsOpen(false)}
             className="flex items-center justify-center w-full p-2 text-sm text-slate-400 hover:text-white hover:bg-slate-800 rounded-md transition-colors"
           >

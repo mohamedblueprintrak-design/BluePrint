@@ -123,7 +123,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-// Monthly data generator
+// TODO: Replace with real API data when available - requires monthly time-series revenue endpoint
 const generateMonthlyData = () => [
   { month: 'Jan', revenue: 45000, expenses: 32000, profit: 13000 },
   { month: 'Feb', revenue: 52000, expenses: 35000, profit: 17000 },
@@ -139,7 +139,7 @@ const generateMonthlyData = () => [
   { month: 'Dec', revenue: 92000, expenses: 55000, profit: 37000 },
 ];
 
-// Invoice status data
+// TODO: Replace with real API data when available - requires invoice status aggregation endpoint
 const generateInvoiceStatusData = () => [
   { name: 'Paid', value: 45, color: CHART_COLORS.success },
   { name: 'Pending', value: 25, color: CHART_COLORS.warning },
@@ -147,7 +147,7 @@ const generateInvoiceStatusData = () => [
   { name: 'Draft', value: 15, color: CHART_COLORS.slate },
 ];
 
-// Project status data
+// TODO: Replace with real API data when available - requires project status aggregation endpoint
 const generateProjectStatusData = () => [
   { name: 'Active', value: 35, color: CHART_COLORS.success },
   { name: 'Pending', value: 20, color: CHART_COLORS.warning },
@@ -156,7 +156,7 @@ const generateProjectStatusData = () => [
   { name: 'Cancelled', value: 5, color: CHART_COLORS.slate },
 ];
 
-// Task completion data
+// TODO: Replace with real API data when available - requires monthly task completion time-series endpoint
 const generateTaskCompletionData = () => [
   { month: 'Jan', completed: 45, pending: 12, inProgress: 8 },
   { month: 'Feb', completed: 52, pending: 10, inProgress: 12 },
@@ -172,7 +172,7 @@ const generateTaskCompletionData = () => [
   { month: 'Dec', completed: 92, pending: 4, inProgress: 8 },
 ];
 
-// Top clients data
+// TODO: Replace with real API data when available - requires client revenue aggregation endpoint
 const generateTopClientsData = () => [
   { name: 'ABC Construction', revenue: 125000, projects: 5 },
   { name: 'XYZ Developers', revenue: 98000, projects: 3 },
@@ -181,7 +181,7 @@ const generateTopClientsData = () => [
   { name: 'Dubai Holdings', revenue: 65000, projects: 3 },
 ];
 
-// Department distribution data
+// TODO: Replace with real API data when available - requires department/employee distribution endpoint
 const generateDepartmentData = () => [
   { name: 'Engineering', value: 35, color: CHART_COLORS.primary },
   { name: 'Architecture', value: 25, color: CHART_COLORS.secondary },
@@ -190,7 +190,7 @@ const generateDepartmentData = () => [
   { name: 'HR', value: 8, color: CHART_COLORS.purple },
 ];
 
-// Salary distribution data
+// TODO: Replace with real API data when available - requires salary/payroll endpoint
 const generateSalaryData = () => [
   { range: '5K-10K', count: 15 },
   { range: '10K-15K', count: 25 },
@@ -200,7 +200,7 @@ const generateSalaryData = () => [
   { range: '30K+', count: 5 },
 ];
 
-// Budget vs Actual data
+// TODO: Replace with real API data when available - requires budget vs actual cost comparison endpoint
 const generateBudgetData = () => [
   { category: 'Labor', budget: 150000, actual: 142000 },
   { category: 'Materials', budget: 80000, actual: 85000 },
@@ -209,7 +209,7 @@ const generateBudgetData = () => [
   { category: 'Overhead', budget: 30000, actual: 28000 },
 ];
 
-// Attendance data
+// TODO: Replace with real API data when available - requires attendance tracking endpoint
 const generateAttendanceData = () => [
   { month: 'Jan', present: 95, absent: 3, late: 2 },
   { month: 'Feb', present: 92, absent: 5, late: 3 },
@@ -219,7 +219,7 @@ const generateAttendanceData = () => [
   { month: 'Jun', present: 97, absent: 2, late: 1 },
 ];
 
-// Overdue invoices data
+// TODO: Replace with real API data when available - should filter invoices by overdue status
 const overdueInvoicesData = [
   { id: 'INV-2024-001', client: 'ABC Construction', amount: 15000, dueDate: '2024-01-15', daysOverdue: 45 },
   { id: 'INV-2024-023', client: 'Gulf Properties', amount: 22500, dueDate: '2024-02-01', daysOverdue: 30 },
@@ -227,7 +227,7 @@ const overdueInvoicesData = [
   { id: 'INV-2024-067', client: 'XYZ Developers', amount: 12000, dueDate: '2024-02-15', daysOverdue: 16 },
 ];
 
-// Custom report templates
+// TODO: Replace with real API data when available - should come from saved reports endpoint
 const customReportTemplates = [
   { id: '1', name: 'Monthly Financial Summary', category: 'Financial', lastUsed: '2024-01-15' },
   { id: '2', name: 'Project Progress Report', category: 'Projects', lastUsed: '2024-01-10' },

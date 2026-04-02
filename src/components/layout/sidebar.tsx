@@ -32,12 +32,11 @@ import {
   Home, Users, FileText, DollarSign,
   Package, BarChart3, Settings, 
   LogOut, Menu, Search, Moon, Sun, Globe,
-  User, Shield, Bot,
-  PanelLeftClose, PanelLeft, Zap,
+  User, Bot,
+  PanelLeftClose, PanelLeft,
     X, ChevronDown, ChevronUp,
     Compass, Handshake,
-  UserCog, Bell, Crown,
-  Building2, HardHat
+  UserCog, Building2, HardHat
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -193,13 +192,15 @@ const getRoutes = (_language: 'ar' | 'en'): Record<string, string> => ({
   'aiChat': '/dashboard/ai-chat',
   'reports': '/dashboard/reports',
   'settings': '/dashboard/settings',
-  'admin': '/dashboard/admin',
   'profile': '/dashboard/profile',
-  'pricing': '/dashboard/pricing',
   'bidding': '/dashboard/contracts?tab=bidding',
   'notifications': '/dashboard/notifications',
-  'automations': '/dashboard/automations',
   'meetings': '/dashboard/reports?tab=meetings',
+  // Redirect routes for removed sidebar items (backward compatibility)
+  'admin': '/dashboard/settings?tab=admin',
+  'automations': '/dashboard/settings?tab=automations',
+  'pricing': '/dashboard/settings?tab=billing',
+  'activities': '/dashboard/settings?tab=admin',
   // Legacy redirect routes (kept for backward compatibility)
   'operations': '/dashboard/operations',
   'financials': '/dashboard/financials',
@@ -208,7 +209,6 @@ const getRoutes = (_language: 'ar' | 'en'): Record<string, string> => ({
   'correspondence': '/dashboard/correspondence',
   'knowledge': '/dashboard/ai-chat',
   'help': '/dashboard/ai-chat',
-  'activities': '/dashboard/admin',
   'team': '/dashboard/hr?tab=team',
   'workload': '/dashboard/hr?tab=workload',
   'calendar': '/dashboard/reports?tab=calendar',
@@ -275,12 +275,8 @@ function SidebarContent({
 
   // ─── System (bottom) ───
   const systemItems: SidebarItem[] = [
-    { id: 'notifications', label: language === 'ar' ? 'الإشعارات' : 'Notifications', icon: Bell, href: '/dashboard/notifications' },
     { id: 'settings', label: t.settings, icon: Settings, href: '/dashboard/settings', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER] },
-    { id: 'automations', label: language === 'ar' ? 'الأتمتة' : 'Automations', icon: Zap, href: '/dashboard/automations', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER] },
     { id: 'aiChat', label: language === 'ar' ? 'المساعد الذكي' : 'AI Assistant', icon: Bot, href: '/dashboard/ai-chat' },
-    { id: 'admin', label: language === 'ar' ? 'لوحة الإدارة' : 'Admin Panel', icon: Shield, href: '/dashboard/admin', visibleRoles: [UserRole.ADMIN] },
-    { id: 'pricing', label: language === 'ar' ? 'التسعير' : 'Pricing', icon: Crown, href: '/dashboard/pricing', visibleRoles: [UserRole.ADMIN] },
   ];
 
   // Sync currentPage with pathname - using memoized routes

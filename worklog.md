@@ -1226,3 +1226,89 @@ Fix ALL remaining ESLint errors (266 → 0) across the BluePrint codebase by add
 - **TypeScript**: No new errors introduced; all remaining TS errors are pre-existing (schema mismatches for `estimatedHours`, `NotificationType`, etc.)
 - **Functionality**: All changes are purely cosmetic (removing unused code); no logic was altered
 
+---
+## Task ID: A-D - cleanup-engineer
+### Work Task
+Clean up Dashboard Operations Center, fix Notifications/Automations dark theme styling, and annotate Reports page fake data generators.
+
+### Work Summary
+
+#### Task A: Dashboard Operations Center Cleanup
+**File:** `/src/components/dashboard/dashboard-page.tsx`
+- Removed hardcoded `opsRecentActivities` array (6 static activity items that never changed)
+- Replaced the "Recent Activities" card section with a "View Activity Log" button card
+- New card shows: Timer icon, descriptive text, and a Link button → `/dashboard/activities`
+- Used existing `Timer` and `ChevronRight` icons, dark theme styling consistent with rest of page
+- Fixed lint: removed unused `invoicesLoading` destructuring, renamed `pendingInvoices` → `_pendingInvoices`
+
+#### Task B: Notifications Page Dark Theme Fix
+**File:** `/src/components/notifications-page/notifications-page.tsx`
+- Added `useApp()` context import and used `language` and `isRTL` for RTL/text support
+- Removed hardcoded `dir="rtl"` — now uses `dir={isRTL ? 'rtl' : 'ltr'}`
+- Made all text bilingual (Arabic/English) using `isArabic` flag
+- Replaced light theme classes with dark theme:
+  - `bg-white` → `bg-slate-900/50`
+  - `text-gray-900` → `text-white`
+  - `text-gray-700` → `text-slate-300`
+  - `text-gray-600` → `text-slate-400`
+  - `text-gray-500` → `text-slate-400` / `text-slate-500`
+  - `text-gray-400` → `text-slate-500`
+  - `text-gray-300` → `text-slate-600`
+  - `bg-blue-50` → `bg-blue-500/5`
+  - `border-gray-200` → `border-slate-800`
+  - `bg-blue-100` → `bg-blue-500/20`
+  - Icon colors: `text-blue-600` → `text-blue-400`, `text-yellow-600` → `text-yellow-400`, etc.
+- Updated `categoryLabels` to bilingual format with `_` prefix (reserved for future use)
+- Loading spinner uses `border-blue-500` instead of `border-primary`
+- RTL-aware `border-l/r-4` for unread indicator using `isRTL` ternary
+- Button spacing uses `isRTL ? 'me-2' : 'ms-2'` pattern
+
+#### Task C: Automations Page Dark Theme Fix
+**File:** `/src/components/automations/automations-page.tsx`
+- Added `useApp()` context import and used `language` and `isRTL` for RTL/text support
+- Removed hardcoded `dir="rtl"` — now uses `dir={isRTL ? 'rtl' : 'ltr'}`
+- Made all text bilingual (Arabic/English) using `isArabic` flag and `{ ar, en }` label objects
+- Replaced light theme classes with dark theme:
+  - All `Card` → `bg-slate-900/50 border-slate-800`
+  - `text-gray-900` → `text-white`
+  - `text-gray-700` → `text-slate-300`
+  - `text-gray-600` → `text-slate-400`
+  - `text-gray-500` → `text-slate-500`
+  - `text-gray-400` → `text-slate-500`
+  - `text-gray-300` → `text-slate-600`
+  - `bg-green-50 border-green-200` → `bg-green-500/5 border-green-500/20`
+  - `bg-gray-50 border-gray-200` → `bg-slate-900/50 border-slate-800`
+  - `bg-purple-50 border-purple-200` → `bg-purple-500/5 border-purple-500/20`
+  - `bg-blue-100` → `bg-blue-500/20`
+  - `bg-green-100` → `bg-green-500/20`
+  - `bg-gray-100` → `bg-slate-700`
+  - `bg-purple-100` → `bg-purple-500/20`
+  - `text-blue-600` → `text-blue-400`, `text-green-600` → `text-green-400`, etc.
+  - `bg-gray-300` → `bg-slate-600` (toggle track)
+- Created button with `bg-blue-600 hover:bg-blue-700 text-white` for primary action
+- Filter buttons use dark outline styling when not active
+- Loading spinner uses `border-blue-500` instead of `border-primary`
+- Toggle switches have dark track color (`bg-slate-600` vs `bg-green-500`)
+- Ghost buttons have `hover:bg-slate-800` and `hover:text-white`
+
+#### Task D: Reports Page Fake Data Annotations
+**File:** `/src/components/reports/reports-page.tsx`
+- Added TODO comments to all 11 fake data generators explaining what real API endpoint would be needed:
+  - `generateMonthlyData()` — needs monthly time-series revenue endpoint
+  - `generateInvoiceStatusData()` — needs invoice status aggregation endpoint
+  - `generateProjectStatusData()` — needs project status aggregation endpoint
+  - `generateTaskCompletionData()` — needs monthly task completion time-series endpoint
+  - `generateTopClientsData()` — needs client revenue aggregation endpoint
+  - `generateDepartmentData()` — needs department/employee distribution endpoint
+  - `generateSalaryData()` — needs salary/payroll endpoint
+  - `generateBudgetData()` — needs budget vs actual cost comparison endpoint
+  - `generateAttendanceData()` — needs attendance tracking endpoint
+  - `overdueInvoicesData` — should filter invoices by overdue status
+  - `customReportTemplates` — should come from saved reports endpoint
+- Left data generators intact since the API doesn't provide the needed formats (time-series, aggregations)
+- Real API hooks are already imported (`useProjects`, `useInvoices`, etc.) and used for metric cards via `stats`
+
+#### ESLint Results
+- 0 new errors introduced across all 4 modified files
+- Only pre-existing warnings remain (`@typescript-eslint/no-explicit-any`)
+- Dev server compiles successfully with no errors

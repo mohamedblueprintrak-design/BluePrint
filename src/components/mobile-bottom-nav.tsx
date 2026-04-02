@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Home, Building2, DollarSign, Bot, Settings,
-  Bell, FileText, Package, Handshake, BarChart3,
-  Users, Shield, Crown, Zap, HardHat
+  FileText, Package, Handshake, BarChart3,
+  Users, HardHat
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/auth-context';
@@ -38,7 +38,6 @@ const bottomNavItems: NavItem[] = [
 ];
 
 const moreMenuItems: MoreMenuItem[] = [
-  { href: '/dashboard/notifications', icon: Bell, label: 'الإشعارات', labelEn: 'Notifications' },
   { href: '/dashboard/contracts', icon: Handshake, label: 'العملاء والعقود', labelEn: 'Clients & Contracts', roles: ['ADMIN', 'MANAGER', 'PROJECT_MANAGER'] },
   { href: '/dashboard/reports', icon: BarChart3, label: 'التقارير والاجتماعات', labelEn: 'Reports', roles: ['ADMIN', 'MANAGER', 'PROJECT_MANAGER', 'ENGINEER', 'ACCOUNTANT'] },
   { href: '/dashboard/documents', icon: FileText, label: 'المستندات', labelEn: 'Documents', roles: ['ADMIN', 'MANAGER', 'PROJECT_MANAGER', 'ENGINEER', 'DRAFTSMAN', 'ACCOUNTANT', 'SECRETARY'] },
@@ -46,9 +45,6 @@ const moreMenuItems: MoreMenuItem[] = [
   { href: '/dashboard/site-management', icon: HardHat, label: 'إدارة الموقع', labelEn: 'Site Mgmt', roles: ['ADMIN', 'MANAGER', 'PROJECT_MANAGER', 'ENGINEER'] },
   { href: '/dashboard/hr', icon: Users, label: 'الموارد البشرية', labelEn: 'HR', roles: ['ADMIN', 'MANAGER', 'HR', 'PROJECT_MANAGER', 'SECRETARY'] },
   { href: '/dashboard/settings', icon: Settings, label: 'الإعدادات', labelEn: 'Settings', roles: ['ADMIN', 'MANAGER'] },
-  { href: '/dashboard/automations', icon: Zap, label: 'الأتمتة', labelEn: 'Automations', roles: ['ADMIN', 'MANAGER'] },
-  { href: '/dashboard/admin', icon: Shield, label: 'لوحة الإدارة', labelEn: 'Admin', roles: ['ADMIN'] },
-  { href: '/dashboard/pricing', icon: Crown, label: 'التسعير', labelEn: 'Pricing', roles: ['ADMIN'] },
 ];
 
 export function MobileBottomNav() {

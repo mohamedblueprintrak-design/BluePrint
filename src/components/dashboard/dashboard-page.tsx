@@ -87,7 +87,7 @@ export function DashboardPage() {
   const { data: dashboardData, isLoading: dashboardLoading, error, refetch } = useDashboard();
   const { data: projectsData, isLoading: projectsLoading } = useProjects();
   const { data: tasksData, isLoading: tasksLoading } = useTasks({ status: 'todo' });
-  const { data: invoicesData, isLoading: invoicesLoading } = useInvoices({ status: 'pending' });
+  const { data: invoicesData } = useInvoices({ status: 'pending' });
   // All tasks (no filter) for operations center
   const { data: allTasksData } = useTasks();
   const allTasks = allTasksData?.data || [];
@@ -228,7 +228,7 @@ export function DashboardPage() {
   const recentTasks = tasks.slice(0, 5);
 
   // Pending invoices
-  const pendingInvoices = invoices.filter((inv: { status: string }) => inv.status === 'pending' || inv.status === 'partial').slice(0, 5);
+  const _pendingInvoices = invoices.filter((inv: { status: string }) => inv.status === 'pending' || inv.status === 'partial').slice(0, 5);
 
   // ========== Operations Center computed values ==========
   const opsNow = new Date();
@@ -285,14 +285,7 @@ export function DashboardPage() {
     { href: '/dashboard/financials', icon: FileSpreadsheet, label: language === 'ar' ? 'جدول الكميات' : 'BOQ', color: 'text-rose-400', bgColor: 'bg-rose-500/20' },
   ];
 
-  const opsRecentActivities = [
-    { id: '1', icon: CheckSquare, text: language === 'ar' ? 'تم إكمال مهمة "مراجعة المخططات"' : 'Task "Drawing Review" completed', time: '2h', color: 'text-green-400' },
-    { id: '2', icon: FileText, text: language === 'ar' ? 'تم رفع مستند جديد' : 'New document uploaded', time: '3h', color: 'text-blue-400' },
-    { id: '3', icon: AlertTriangle, text: language === 'ar' ? 'تنبيه SLA: مهمة حكومية مخالفة' : 'SLA Alert: Government task breached', time: '4h', color: 'text-red-400' },
-    { id: '4', icon: Users, text: language === 'ar' ? 'تم تعيين مهمة جديدة' : 'New task assigned', time: '5h', color: 'text-purple-400' },
-    { id: '5', icon: MessageSquare, text: language === 'ar' ? 'تعليق جديد من العميل' : 'New client comment', time: '6h', color: 'text-amber-400' },
-    { id: '6', icon: BarChart3, text: language === 'ar' ? 'تم تحديث تقدم المشروع' : 'Project progress updated', time: '7h', color: 'text-cyan-400' },
-  ];
+  // opsRecentActivities removed - replaced with Activity Log link (admin-only data)
 
   // Loading component
   const ChartLoader = () => (
@@ -1090,37 +1083,29 @@ export function DashboardPage() {
               </CardContent>
             </Card>
 
-            {/* Recent Activities */}
+            {/* Recent Activities - Link to Activity Log */}
             <Card className="bg-slate-900/50 border-slate-800">
               <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-white flex items-center gap-2 text-base">
-                    <Clock className="w-4 h-4 text-slate-400" />
-                    {language === 'ar' ? 'النشاط الأخير' : 'Recent Activity'}
-                  </CardTitle>
+                <CardTitle className="text-white flex items-center gap-2 text-base">
+                  <Clock className="w-4 h-4 text-slate-400" />
+                  {language === 'ar' ? 'النشاط الأخير' : 'Recent Activity'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col items-center justify-center py-6 gap-3">
+                  <div className="p-3 rounded-xl bg-slate-800/50">
+                    <Timer className="w-8 h-8 text-slate-400" />
+                  </div>
+                  <p className="text-sm text-slate-400 text-center">
+                    {language === 'ar' ? 'سجل الأنشطة متاح في صفحة الإدارة' : 'Activity log available in the admin section'}
+                  </p>
                   <Link href="/dashboard/activities">
-                    <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white text-xs">
-                      {language === 'ar' ? 'الكل' : 'All'}
+                    <Button variant="outline" size="sm" className="bg-slate-800/50 border-slate-700 hover:bg-slate-800 text-slate-300 hover:text-white">
+                      {language === 'ar' ? 'عرض سجل الأنشطة' : 'View Activity Log'}
+                      <ChevronRight className="w-4 h-4 ms-1" />
                     </Button>
                   </Link>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="max-h-64">
-                  <div className="space-y-3">
-                    {opsRecentActivities.map((activity) => (
-                      <div key={activity.id} className="flex items-start gap-3">
-                        <div className="mt-0.5">
-                          <activity.icon className={`w-4 h-4 ${activity.color}`} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-slate-300">{activity.text}</p>
-                          <p className="text-xs text-slate-500 mt-0.5">{activity.time}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
               </CardContent>
             </Card>
           </div>

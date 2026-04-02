@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useApp } from '@/context/app-context';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,11 +21,11 @@ import {
 } from 'lucide-react';
 import type { Automation, AutomationStatus } from '@/types';
 
-// Status labels in Arabic
-const statusLabels: Record<AutomationStatus, string> = {
-  active: 'نشط',
-  inactive: 'غير نشط',
-  paused: 'متوقف مؤقتاً',
+// Status labels
+const statusLabels: Record<AutomationStatus, { ar: string; en: string }> = {
+  active: { ar: 'نشط', en: 'Active' },
+  inactive: { ar: 'غير نشط', en: 'Inactive' },
+  paused: { ar: 'متوقف مؤقتاً', en: 'Paused' },
 };
 
 // Status badge variants
@@ -35,53 +36,55 @@ const statusVariants: Record<AutomationStatus, 'default' | 'secondary' | 'destru
 };
 
 // Trigger type labels
-const triggerTypeLabels: Record<string, string> = {
-  schedule: 'مجدول',
-  event: 'بناء على حدث',
-  threshold: 'بناء على حد',
+const triggerTypeLabels: Record<string, { ar: string; en: string }> = {
+  schedule: { ar: 'مجدول', en: 'Scheduled' },
+  event: { ar: 'بناء على حدث', en: 'Event-based' },
+  threshold: { ar: 'بناء على حد', en: 'Threshold-based' },
 };
 
 // Action type labels
-const actionTypeLabels: Record<string, string> = {
-  notification: 'إشعار',
-  email: 'بريد إلكتروني',
-  webhook: 'Webhook',
-  task: 'إنشاء مهمة',
+const actionTypeLabels: Record<string, { ar: string; en: string }> = {
+  notification: { ar: 'إشعار', en: 'Notification' },
+  email: { ar: 'بريد إلكتروني', en: 'Email' },
+  webhook: { ar: 'Webhook', en: 'Webhook' },
+  task: { ar: 'إنشاء مهمة', en: 'Create Task' },
 };
 
 // Templates data
 const templates = [
   {
-    name: 'تنبيه المهام',
+    name: { ar: 'تنبيه المهام', en: 'Task Alerts' },
     icon: Bell,
-    description: 'إرسال تنبيه عند إنشاء أو تحديث مهمة',
+    description: { ar: 'إرسال تنبيه عند إنشاء أو تحديث مهمة', en: 'Send alert when a task is created or updated' },
     triggerType: 'event',
     actionType: 'notification',
   },
   {
-    name: 'تقرير يومي',
+    name: { ar: 'تقرير يومي', en: 'Daily Report' },
     icon: FileText,
-    description: 'إنشاء تقرير يومي تلقائي',
+    description: { ar: 'إنشاء تقرير يومي تلقائي', en: 'Auto-generate daily report' },
     triggerType: 'schedule',
     actionType: 'email',
   },
   {
-    name: 'تنبيه الفواتير',
+    name: { ar: 'تنبيه الفواتير', en: 'Invoice Alerts' },
     icon: Mail,
-    description: 'تذكير بالفواتير المستحقة',
+    description: { ar: 'تذكير بالفواتير المستحقة', en: 'Remind about due invoices' },
     triggerType: 'schedule',
     actionType: 'notification',
   },
   {
-    name: 'مراقبة الميزانية',
+    name: { ar: 'مراقبة الميزانية', en: 'Budget Monitor' },
     icon: TrendingUp,
-    description: 'تنبيه عند تجاوز حد الميزانية',
+    description: { ar: 'تنبيه عند تجاوز حد الميزانية', en: 'Alert when budget limit is exceeded' },
     triggerType: 'threshold',
     actionType: 'notification',
   },
 ];
 
 export default function AutomationsPage() {
+  const { language, isRTL } = useApp();
+  const isArabic = language === 'ar';
   const [automations, setAutomations] = useState<Automation[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -117,15 +120,15 @@ export default function AutomationsPage() {
 
       if (response.ok) {
         toast({
-          title: 'تم تحديث الحالة',
-          description: 'تم تحديث حالة الأتمتة بنجاح',
+          title: isArabic ? 'تم تحديث الحالة' : 'Status updated',
+          description: isArabic ? 'تم تحديث حالة الأتمتة بنجاح' : 'Automation status updated successfully',
         });
         fetchAutomations();
       }
     } catch {
       toast({
-        title: 'خطأ',
-        description: 'حدث خطأ أثناء تحديث الحالة',
+        title: isArabic ? 'خطأ' : 'Error',
+        description: isArabic ? 'حدث خطأ أثناء تحديث الحالة' : 'Failed to update automation status',
         variant: 'destructive',
       });
     }
@@ -139,78 +142,82 @@ export default function AutomationsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6" dir="rtl">
+    <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">الأتمتة</h1>
-          <p className="text-gray-500 mt-1">أتمتة المهام والعمليات المتكررة</p>
+          <h1 className="text-2xl font-bold text-white">
+            {isArabic ? 'الأتمتة' : 'Automations'}
+          </h1>
+          <p className="text-slate-400 mt-1">
+            {isArabic ? 'أتمتة المهام والعمليات المتكررة' : 'Automate repetitive tasks and workflows'}
+          </p>
         </div>
-        <Button>
-          <Plus className="w-4 h-4 ml-2" />
-          إنشاء أتمتة جديدة
+        <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Plus className={`w-4 h-4 ${isRTL ? 'me-2' : 'ms-2'}`} />
+          {isArabic ? 'إنشاء أتمتة جديدة' : 'New Automation'}
         </Button>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="bg-slate-900/50 border-slate-800">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">إجمالي الأتمتة</p>
-                <p className="text-2xl font-bold text-gray-900">{automations.length}</p>
+                <p className="text-sm text-slate-400">{isArabic ? 'إجمالي الأتمتة' : 'Total'}</p>
+                <p className="text-2xl font-bold text-white">{automations.length}</p>
               </div>
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                <Zap className="w-5 h-5 text-blue-600" />
+              <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center">
+                <Zap className="w-5 h-5 text-blue-400" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-green-50 border-green-200">
+        <Card className="bg-green-500/5 border-green-500/20">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-green-600">نشطة</p>
-                <p className="text-2xl font-bold text-green-700">{activeCount}</p>
+                <p className="text-sm text-green-400">{isArabic ? 'نشطة' : 'Active'}</p>
+                <p className="text-2xl font-bold text-green-400">{activeCount}</p>
               </div>
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                <Play className="w-5 h-5 text-green-600" />
+              <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
+                <Play className="w-5 h-5 text-green-400" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-50 border-gray-200">
+        <Card className="bg-slate-900/50 border-slate-800">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">غير نشطة</p>
-                <p className="text-2xl font-bold text-gray-700">{inactiveCount}</p>
+                <p className="text-sm text-slate-400">{isArabic ? 'غير نشطة' : 'Inactive'}</p>
+                <p className="text-2xl font-bold text-slate-300">{inactiveCount}</p>
               </div>
-              <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                <Pause className="w-5 h-5 text-gray-600" />
+              <div className="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center">
+                <Pause className="w-5 h-5 text-slate-400" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-purple-50 border-purple-200">
+        <Card className="bg-purple-500/5 border-purple-500/20">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-purple-600">إجمالي التشغيلات</p>
-                <p className="text-2xl font-bold text-purple-700">{totalRuns}</p>
+                <p className="text-sm text-purple-400">{isArabic ? 'إجمالي التشغيلات' : 'Total Runs'}</p>
+                <p className="text-2xl font-bold text-purple-400">{totalRuns}</p>
               </div>
-              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-purple-600" />
+              <div className="w-10 h-10 bg-purple-500/20 rounded-full flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 text-purple-400" />
               </div>
             </div>
           </CardContent>
@@ -219,57 +226,59 @@ export default function AutomationsPage() {
 
       {/* Automations List */}
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-gray-900">الأتمتة النشطة</h2>
+        <h2 className="text-lg font-semibold text-white">
+          {isArabic ? 'الأتمتة النشطة' : 'Active Automations'}
+        </h2>
         {automations.map((automation) => (
-          <Card key={automation.id} className="hover:shadow-lg transition-shadow">
+          <Card key={automation.id} className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-colors">
             <CardContent className="p-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="font-semibold text-gray-900 text-lg">{automation.name}</h3>
+                    <h3 className="font-semibold text-white text-lg">{automation.name}</h3>
                     <Badge variant={statusVariants[automation.status]}>
-                      {statusLabels[automation.status]}
+                      {statusLabels[automation.status][isRTL ? 'ar' : 'en']}
                     </Badge>
                   </div>
                   {automation.description && (
-                    <p className="text-gray-600 mb-4">{automation.description}</p>
+                    <p className="text-slate-400 mb-4">{automation.description}</p>
                   )}
                   <div className="flex flex-wrap items-center gap-6">
                     <div className="flex items-center gap-2">
-                      <Zap className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-400">المحفز:</span>
-                      <span className="text-sm font-medium text-gray-700">
-                        {triggerTypeLabels[automation.triggerType]}
+                      <Zap className="w-4 h-4 text-slate-500" />
+                      <span className="text-slate-500">{isArabic ? 'المحفز:' : 'Trigger:'}</span>
+                      <span className="text-sm font-medium text-slate-300">
+                        {triggerTypeLabels[automation.triggerType]?.[isRTL ? 'ar' : 'en'] || automation.triggerType}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Settings className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-400">الإجراء:</span>
-                      <span className="text-sm font-medium text-gray-700">
-                        {actionTypeLabels[automation.actionType]}
+                      <Settings className="w-4 h-4 text-slate-500" />
+                      <span className="text-slate-500">{isArabic ? 'الإجراء:' : 'Action:'}</span>
+                      <span className="text-sm font-medium text-slate-300">
+                        {actionTypeLabels[automation.actionType]?.[isRTL ? 'ar' : 'en'] || automation.actionType}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Play className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-400">عدد التشغيلات:</span>
-                      <span className="text-sm font-medium text-gray-700">{automation.runCount}</span>
+                      <Play className="w-4 h-4 text-slate-500" />
+                      <span className="text-slate-500">{isArabic ? 'عدد التشغيلات:' : 'Runs:'}</span>
+                      <span className="text-sm font-medium text-slate-300">{automation.runCount}</span>
                     </div>
                     {automation.lastRunAt && (
                       <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-gray-400" />
-                        <span className="text-gray-400">آخر تشغيل:</span>
-                        <span className="text-sm font-medium text-gray-700">
-                          {new Date(automation.lastRunAt).toLocaleString('ar-SA')}
+                        <Clock className="w-4 h-4 text-slate-500" />
+                        <span className="text-slate-500">{isArabic ? 'آخر تشغيل:' : 'Last run:'}</span>
+                        <span className="text-sm font-medium text-slate-300">
+                          {new Date(automation.lastRunAt).toLocaleString(isArabic ? 'ar-SA' : 'en-US')}
                         </span>
                       </div>
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={() => toggleStatus(automation.id, automation.status)}
                     className={`w-12 h-6 rounded-full transition-colors ${
-                      automation.status === 'active' ? 'bg-green-500' : 'bg-gray-300'
+                      automation.status === 'active' ? 'bg-green-500' : 'bg-slate-600'
                     }`}
                   >
                     <div
@@ -278,7 +287,7 @@ export default function AutomationsPage() {
                       }`}
                     />
                   </button>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white hover:bg-slate-800">
                     <Edit className="w-4 h-4" />
                   </Button>
                 </div>
@@ -290,23 +299,25 @@ export default function AutomationsPage() {
 
       {/* Templates */}
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-gray-900">قوالب جاهزة</h2>
+        <h2 className="text-lg font-semibold text-white">
+          {isArabic ? 'قوالب جاهزة' : 'Templates'}
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {templates.map((template, index) => {
             const Icon = template.icon;
             return (
               <Card
                 key={index}
-                className="hover:shadow-md transition-shadow cursor-pointer"
+                className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-colors cursor-pointer"
               >
                 <CardContent className="p-4">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <Icon className="w-6 h-6 text-blue-600" />
+                    <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center shrink-0">
+                      <Icon className="w-6 h-6 text-blue-400" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">{template.name}</h3>
-                      <p className="text-sm text-gray-500">{template.description}</p>
+                      <h3 className="font-semibold text-white">{template.name[isRTL ? 'ar' : 'en']}</h3>
+                      <p className="text-sm text-slate-400">{template.description[isRTL ? 'ar' : 'en']}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -317,12 +328,14 @@ export default function AutomationsPage() {
       </div>
 
       {automations.length === 0 && (
-        <Card>
+        <Card className="bg-slate-900/50 border-slate-800">
           <CardContent className="p-8 text-center">
-            <Zap className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 mb-4">لا توجد أتمتة</p>
-            <p className="text-sm text-gray-400">
-              ابدأ بإنشاء أتمتة جديدة أو استخدم أحد القوالب الجاهزة
+            <Zap className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+            <p className="text-slate-400 mb-4">{isArabic ? 'لا توجد أتمتة' : 'No automations'}</p>
+            <p className="text-sm text-slate-500">
+              {isArabic
+                ? 'ابدأ بإنشاء أتمتة جديدة أو استخدم أحد القوالب الجاهزة'
+                : 'Create a new automation or use one of the ready-made templates'}
             </p>
           </CardContent>
         </Card>
