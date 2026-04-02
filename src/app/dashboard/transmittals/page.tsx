@@ -1,14 +1,6 @@
-'use client';
+import { redirect } from 'next/navigation';
 
-import { useApp } from '@/context/app-context';
-import { TransmittalSystem } from '@/components/transmittal/transmittal-system';
-
-export default function TransmittalsPage() {
-  const { language } = useApp();
-
-  return (
-    <div dir={language === 'ar' ? 'rtl' : 'ltr'}>
-      <TransmittalSystem lang={language as 'ar' | 'en'} />
-    </div>
-  );
+export default function TransmittalsRedirect() {
+  redirect('/dashboard/documents?tab=transmittals');
+  return null;
 }

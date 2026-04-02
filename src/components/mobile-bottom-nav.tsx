@@ -33,7 +33,7 @@ interface MoreMenuItem {
 const bottomNavItems: NavItem[] = [
   { href: '/dashboard', icon: Home, label: 'الرئيسية', labelEn: 'Home' },
   { href: '/dashboard/projects', icon: Building2, label: 'المشاريع', labelEn: 'Projects' },
-  { href: '/dashboard/projects?tab=tasks', icon: ListTodo, label: 'المهام', labelEn: 'Tasks' },
+  { href: '/dashboard/tasks', icon: ListTodo, label: 'المهام', labelEn: 'Tasks' },
   { href: '/dashboard/finance', icon: DollarSign, label: 'المالية', labelEn: 'Finance' },
 ];
 

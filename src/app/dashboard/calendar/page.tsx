@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
-export default function CalendarRoute() {
-  redirect('/dashboard/meetings?tab=calendar');
+export default function CalendarRedirect() {
+  redirect('/dashboard/reports?tab=meetings');
   return null;
 }

@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
 export default function RedirectPage() {
-  redirect('/dashboard/finance');
+  redirect('/dashboard/finance?tab=budgets');
   return null;
 }

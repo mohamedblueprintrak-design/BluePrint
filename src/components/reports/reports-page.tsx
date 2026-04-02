@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
 import { useDashboard, useProjects, useTasks, useInvoices, useClients, useExportReport, type ReportType } from '@/hooks/use-data';
@@ -314,6 +315,7 @@ function CustomPieChart({ data, height = 300 }: { data: { name: string; value: n
 }
 
 export function ReportsPage() {
+  const router = useRouter();
   const { language, isRTL: _isRTL, currency: _currency } = useApp();
   const { t, formatCurrency, formatDate } = useTranslation(language);
   
@@ -731,6 +733,14 @@ export function ReportsPage() {
             <FileBarChart className="w-4 h-4 me-2" />
             {language === 'ar' ? 'تقارير مخصصة' : 'Custom Reports'}
           </TabsTrigger>
+          <button
+            type="button"
+            onClick={() => router.push('/dashboard/reports?tab=meetings')}
+            className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-slate-400 px-4 py-2 rounded-md text-sm font-medium inline-flex items-center transition-colors hover:text-white cursor-pointer border-0 bg-transparent"
+          >
+            <CalendarDays className="w-4 h-4 me-2" />
+            {language === 'ar' ? 'الاجتماعات والسكرتارية' : 'Meetings & Secretarial'}
+          </button>
         </TabsList>
 
         {/* Overview Tab */}

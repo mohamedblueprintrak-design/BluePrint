@@ -186,7 +186,7 @@ const getRoutes = (_language: 'ar' | 'en'): Record<string, string> => ({
   'contracts': '/dashboard/contracts',
   'finance': '/dashboard/finance',
   'assets': '/dashboard/assets',
-  'tasks': '/dashboard/projects?tab=tasks',
+  'tasks': '/dashboard/tasks',
   'hr': '/dashboard/hr',
   'siteManagement': '/dashboard/site-management',
   'documents': '/dashboard/documents',
@@ -208,12 +208,12 @@ const getRoutes = (_language: 'ar' | 'en'): Record<string, string> => ({
   'financials': '/dashboard/financials',
   'procurement': '/dashboard/procurement',
   'siteVisitReports': '/dashboard/site-visit-reports',
-  'correspondence': '/dashboard/correspondence',
+  'correspondence': '/dashboard/reports?tab=meetings',
   'knowledge': '/dashboard/ai-chat',
   'help': '/dashboard/ai-chat',
   'team': '/dashboard/hr?tab=team',
   'workload': '/dashboard/hr?tab=workload',
-  'calendar': '/dashboard/reports?tab=calendar',
+  'calendar': '/dashboard/reports?tab=meetings',
   'invoices': '/dashboard/finance?tab=invoices',
 });
 
@@ -258,7 +258,7 @@ function SidebarContent({
   // ─── Section: المشاريع والتنفيذ (Projects & Execution) ───
   const projectExecutionItems: SidebarItem[] = [
     { id: 'projects', label: t.projects, icon: Building2, href: '/dashboard/projects' },
-    { id: 'tasks', label: language === 'ar' ? 'المهام' : 'Tasks', icon: ListTodo, href: '/dashboard/projects?tab=tasks', visibleRoles: ALL_EXCEPT_VIEWER },
+    { id: 'tasks', label: language === 'ar' ? 'المهام' : 'Tasks', icon: ListTodo, href: '/dashboard/tasks', visibleRoles: ALL_EXCEPT_VIEWER },
     { id: 'siteManagement', label: language === 'ar' ? 'إدارة الموقع' : 'Site Mgmt', icon: HardHat, href: '/dashboard/site-management', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER] },
     { id: 'documents', label: language === 'ar' ? 'المستندات' : 'Documents', icon: FileText, href: '/dashboard/documents', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER, UserRole.DRAFTSMAN, UserRole.ACCOUNTANT, UserRole.SECRETARY] },
     { id: 'assets', label: language === 'ar' ? 'المشتريات والمخزون' : 'Procurement', icon: Package, href: '/dashboard/assets', visibleRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PROJECT_MANAGER, UserRole.ENGINEER] },

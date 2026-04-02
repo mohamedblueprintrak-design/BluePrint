@@ -34,10 +34,6 @@ interface AppContextType {
   commandPaletteOpen: boolean;
   setCommandPaletteOpen: (open: boolean) => void;
   
-  // Notifications Panel
-  notificationsPanelOpen: boolean;
-  setNotificationsPanelOpen: (open: boolean) => void;
-  
   // Quick Add Dialog
   quickAddDialog: QuickAddDialog;
   setQuickAddDialog: (dialog: QuickAddDialog) => void;
@@ -110,9 +106,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   
   // Command Palette state
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-  
-  // Notifications Panel state
-  const [notificationsPanelOpen, setNotificationsPanelOpen] = useState(false);
   
   // Quick Add Dialog state
   const [quickAddDialog, setQuickAddDialog] = useState<QuickAddDialog>(null);
@@ -196,8 +189,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setCurrentPage,
     commandPaletteOpen,
     setCommandPaletteOpen,
-    notificationsPanelOpen,
-    setNotificationsPanelOpen,
     quickAddDialog,
     setQuickAddDialog,
     openQuickAddDialog: openQuickAddDialogCb,
@@ -209,7 +200,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     sidebarCollapsed, setSidebarCollapsed,
     currentPage,
     commandPaletteOpen,
-    notificationsPanelOpen,
     quickAddDialog,
     openQuickAddDialogCb, closeQuickAddDialogCb
   ]);

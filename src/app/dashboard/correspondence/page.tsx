@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
-export default function RedirectPage() {
-  redirect('/dashboard/meetings?tab=correspondence');
+export default function CorrespondenceRedirect() {
+  redirect('/dashboard/reports?tab=meetings');
   return null;
 }

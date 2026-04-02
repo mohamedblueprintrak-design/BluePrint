@@ -267,8 +267,8 @@ export function DashboardPage() {
   const quickActions: QuickActionDef[] = useMemo(() => {
     const map: Record<RoleKey, QuickActionDef[]> = {
       ADMIN: [
-        { label: 'إدارة المستخدمين', labelEn: 'Manage Users', href: '/dashboard/users', icon: UserCog, color: 'text-blue-400', bgColor: 'bg-blue-500/20' },
-        { label: 'عرض النشاط', labelEn: 'View Activity', href: '/dashboard/activities', icon: TrendingUp, color: 'text-green-400', bgColor: 'bg-green-500/20' },
+        { label: 'إدارة المستخدمين', labelEn: 'Manage Users', href: '/dashboard/admin', icon: UserCog, color: 'text-blue-400', bgColor: 'bg-blue-500/20' },
+        { label: 'عرض النشاط', labelEn: 'View Activity', href: '/dashboard/admin?tab=activities', icon: TrendingUp, color: 'text-green-400', bgColor: 'bg-green-500/20' },
         { label: 'تقرير', labelEn: 'Reports', href: '/dashboard/reports', icon: BarChart3, color: 'text-purple-400', bgColor: 'bg-purple-500/20' },
         { label: 'المساعد الذكي', labelEn: 'AI Assistant', href: '/dashboard/ai-chat', icon: Sparkles, color: 'text-emerald-400', bgColor: 'bg-emerald-500/20' },
       ],
@@ -276,7 +276,7 @@ export function DashboardPage() {
         { label: 'تعيين مهمة', labelEn: 'Assign Task', href: '/dashboard/tasks', icon: CheckSquare, color: 'text-blue-400', bgColor: 'bg-blue-500/20' },
         { label: 'تقرير تقدم', labelEn: 'Progress Report', href: '/dashboard/reports', icon: BarChart3, color: 'text-green-400', bgColor: 'bg-green-500/20' },
         { label: 'إنشاء فاتورة', labelEn: 'Create Invoice', href: '/dashboard/finance', icon: CreditCard, color: 'text-cyan-400', bgColor: 'bg-cyan-500/20' },
-        { label: 'اجتماع جديد', labelEn: 'New Meeting', href: '/dashboard/calendar', icon: CalendarDays, color: 'text-purple-400', bgColor: 'bg-purple-500/20' },
+        { label: 'اجتماع جديد', labelEn: 'New Meeting', href: '/dashboard/reports?tab=meetings', icon: CalendarDays, color: 'text-purple-400', bgColor: 'bg-purple-500/20' },
       ],
       PROJECT_MANAGER: [
         { label: 'تعيين مهمة', labelEn: 'Assign Task', href: '/dashboard/tasks', icon: CheckSquare, color: 'text-blue-400', bgColor: 'bg-blue-500/20' },
@@ -297,10 +297,10 @@ export function DashboardPage() {
         { label: 'إدارة سندات', labelEn: 'Manage Vouchers', href: '/dashboard/finance', icon: Receipt, color: 'text-amber-400', bgColor: 'bg-amber-500/20' },
       ],
       HR: [
-        { label: 'الموافقة على إجازة', labelEn: 'Approve Leave', href: '/dashboard/users', icon: HeartHandshake, color: 'text-green-400', bgColor: 'bg-green-500/20' },
-        { label: 'عرض الحضور', labelEn: 'View Attendance', href: '/dashboard/users', icon: CalendarCheck, color: 'text-blue-400', bgColor: 'bg-blue-500/20' },
-        { label: 'إضافة موظف', labelEn: 'Add Employee', href: '/dashboard/users', icon: UserPlus, color: 'text-purple-400', bgColor: 'bg-purple-500/20' },
-        { label: 'المعاشات', labelEn: 'Pensions', href: '/dashboard/users', icon: Shield, color: 'text-amber-400', bgColor: 'bg-amber-500/20' },
+        { label: 'الموافقة على إجازة', labelEn: 'Approve Leave', href: '/dashboard/hr', icon: HeartHandshake, color: 'text-green-400', bgColor: 'bg-green-500/20' },
+        { label: 'عرض الحضور', labelEn: 'View Attendance', href: '/dashboard/hr', icon: CalendarCheck, color: 'text-blue-400', bgColor: 'bg-blue-500/20' },
+        { label: 'إضافة موظف', labelEn: 'Add Employee', href: '/dashboard/hr', icon: UserPlus, color: 'text-purple-400', bgColor: 'bg-purple-500/20' },
+        { label: 'المعاشات', labelEn: 'Pensions', href: '/dashboard/hr', icon: Shield, color: 'text-amber-400', bgColor: 'bg-amber-500/20' },
       ],
       DRAFTSMAN: [
         { label: 'مشروع جديد', labelEn: 'New Project', href: '/dashboard/projects', icon: Building2, color: 'text-blue-400', bgColor: 'bg-blue-500/20' },
@@ -330,7 +330,7 @@ export function DashboardPage() {
     if (slaBreached > 0) items.push({ id: 'sla', severity: 'red', icon: AlertTriangle, text: isAr ? 'SLA مخالف' : 'SLA Breached', count: slaBreached, href: '/dashboard/tasks' });
     if (overdueInvoices > 0) items.push({ id: 'overdue-inv', severity: 'red', icon: CreditCard, text: isAr ? 'فواتير متأخرة' : 'Overdue Invoices', count: overdueInvoices, href: '/dashboard/finance' });
     if (overdueTasks > 0) items.push({ id: 'overdue-tasks', severity: 'amber', icon: Clock, text: isAr ? 'مهام متأخرة' : 'Overdue Tasks', count: overdueTasks, href: '/dashboard/tasks' });
-    if (role === 'HR') items.push({ id: 'leave', severity: 'amber', icon: HeartHandshake, text: isAr ? 'طلبات إجازة معلقة' : 'Pending Leave Requests', count: 0, href: '/dashboard/users' });
+    if (role === 'HR') items.push({ id: 'leave', severity: 'amber', icon: HeartHandshake, text: isAr ? 'طلبات إجازة معلقة' : 'Pending Leave Requests', count: 0, href: '/dashboard/hr' });
     if (openDefects > 0) items.push({ id: 'defects', severity: 'amber', icon: ClipboardList, text: isAr ? 'عيوب مفتوحة' : 'Open Defects', count: openDefects, href: '/dashboard/site-management' });
     return items;
   }, [slaBreached, overdueInvoices, overdueTasks, openDefects, role, isAr]);
