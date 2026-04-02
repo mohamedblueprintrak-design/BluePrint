@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/context/auth-context';
+import { useApp } from '@/context/app-context';
 import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead } from '@/hooks/use-data';
 import { useRealtime } from '@/hooks/use-realtime';
 import { Button } from '@/components/ui/button';
@@ -24,7 +25,7 @@ import {
 } from 'lucide-react';
 import type { NotificationType, Notification } from '@/types';
 import Link from 'next/link';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, type Locale } from 'date-fns';
 import { ar } from 'date-fns/locale';
 
 // أيقونات الإشعارات
@@ -50,19 +51,19 @@ const NOTIFICATION_ICONS: Record<NotificationType, React.ReactNode> = {
 
 // ألوان الأولوية
 const PRIORITY_COLORS = {
-  low: 'border-l-slate-500',
+  low: 'border-l-muted-foreground',
   normal: 'border-l-blue-500',
   high: 'border-l-orange-500',
   urgent: 'border-l-red-500'
 };
 
 // تنسيق الوقت النسبي
-function formatRelativeTime(date: Date | string): string {
+function formatRelativeTime(date: Date | string, locale: Locale): string {
   try {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
-    return formatDistanceToNow(dateObj, { addSuffix: true, locale: ar });
+    return formatDistanceToNow(dateObj, { addSuffix: true, locale });
   } catch {
-    return 'منذ فترة';
+    return '';
   }
 }
 
@@ -72,6 +73,8 @@ interface NotificationDropdownProps {
 
 export function NotificationDropdown({ isRTL }: NotificationDropdownProps) {
   const { token } = useAuth();
+  const { language } = useApp();
+  const isAr = language === 'ar';
   const [isOpen, setIsOpen] = useState(false);
   const [localUnreadCount, setLocalUnreadCount] = useState(0);
   
@@ -143,15 +146,16 @@ export function NotificationDropdown({ isRTL }: NotificationDropdownProps) {
       
       <DropdownMenuContent 
         align={isRTL ? 'start' : 'end'} 
+        dir={isRTL ? 'rtl' : 'ltr'}
         className="w-80 md:w-96 bg-card border-border p-0"
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
           <DropdownMenuLabel className="text-foreground p-0">
-            الإشعارات
+            {isAr ? 'الإشعارات' : 'Notifications'}
             {unreadCount > 0 && (
               <Badge variant="secondary" className="ms-2 bg-secondary text-foreground/80">
-                {unreadCount} جديد
+                {unreadCount} {isAr ? 'جديد' : 'new'}
               </Badge>
             )}
           </DropdownMenuLabel>
@@ -159,7 +163,7 @@ export function NotificationDropdown({ isRTL }: NotificationDropdownProps) {
             {isConnected && (
               <span className="flex items-center gap-1 text-xs text-green-400">
                 <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-                متصل
+                {isAr ? 'متصل' : 'Connected'}
               </span>
             )}
             {unreadCount > 0 && (
@@ -173,7 +177,7 @@ export function NotificationDropdown({ isRTL }: NotificationDropdownProps) {
                 {markAllAsRead.isPending ? (
                   <Loader2 className="w-3 h-3 animate-spin" />
                 ) : (
-                  'تحديد الكل كمقروء'
+                  isAr ? 'تحديد الكل كمقروء' : 'Mark all read'
                 )}
               </Button>
             )}
@@ -189,7 +193,7 @@ export function NotificationDropdown({ isRTL }: NotificationDropdownProps) {
           ) : notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-8 text-muted-foreground">
               <Bell className="w-12 h-12 mb-3 opacity-50" />
-              <p className="text-sm">لا توجد إشعارات</p>
+              <p className="text-sm">{isAr ? 'لا توجد إشعارات' : 'No notifications'}</p>
             </div>
           ) : (
             <div className="py-2">
@@ -228,7 +232,7 @@ export function NotificationDropdown({ isRTL }: NotificationDropdownProps) {
                             </p>
                           )}
                           <p className="text-xs text-muted-foreground mt-1">
-                            {formatRelativeTime(notification.createdAt)}
+                            {formatRelativeTime(notification.createdAt, isAr ? ar : undefined)}
                           </p>
                         </div>
                       </Link>
@@ -259,7 +263,7 @@ export function NotificationDropdown({ isRTL }: NotificationDropdownProps) {
                             </p>
                           )}
                           <p className="text-xs text-muted-foreground mt-1">
-                            {formatRelativeTime(notification.createdAt)}
+                            {formatRelativeTime(notification.createdAt, isAr ? ar : undefined)}
                           </p>
                         </div>
                       </div>
@@ -279,7 +283,7 @@ export function NotificationDropdown({ isRTL }: NotificationDropdownProps) {
             onClick={() => setIsOpen(false)}
             className="flex items-center justify-center w-full p-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
           >
-            عرض جميع الإشعارات
+            {isAr ? 'عرض جميع الإشعارات' : 'View all notifications'}
           </Link>
         </div>
       </DropdownMenuContent>

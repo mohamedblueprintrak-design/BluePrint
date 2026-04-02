@@ -9,6 +9,8 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { MobileBottomNav } from '@/components/mobile-bottom-nav';
 import { QuickActionsFab } from '@/components/quick-actions-fab';
+import { CommandPalette } from '@/components/command-palette';
+import { QuickAddDialog } from '@/components/quick-add-dialog';
 import { cn } from '@/lib/utils';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
@@ -67,7 +69,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
 // Dashboard shell — uses useApp() so must be INSIDE Providers
 function DashboardShell({ children }: { children: React.ReactNode }) {
-  const { sidebarCollapsed, isRTL } = useApp();
+  const { sidebarCollapsed, isRTL, commandPaletteOpen, setCommandPaletteOpen } = useApp();
 
   return (
     <AuthGuard>
@@ -103,6 +105,12 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
         
         {/* Quick Actions FAB - mobile only */}
         <QuickActionsFab />
+
+        {/* Quick Add Dialog */}
+        <QuickAddDialog />
+
+        {/* Command Palette - ⌘K */}
+        <CommandPalette open={commandPaletteOpen} onOpenChange={setCommandPaletteOpen} />
       </div>
     </AuthGuard>
   );

@@ -231,7 +231,7 @@ function SidebarContent({
   const { 
     theme, setTheme, language, setLanguage, isDark, isRTL,
     sidebarCollapsed, setSidebarCollapsed: _setSidebarCollapsed, currentPage, setCurrentPage,
-    setCommandPaletteOpen, setNotificationsPanelOpen: _setNotificationsPanelOpen
+    setCommandPaletteOpen
   } = useApp();
   const { t } = useTranslation(language);
 

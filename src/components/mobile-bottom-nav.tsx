@@ -53,7 +53,7 @@ const moreMenuItems: MoreMenuItem[] = [
 export function MobileBottomNav() {
   const pathname = usePathname();
   const { user } = useAuth();
-  const { isDark, language, isRTL } = useApp();
+  const { language, isRTL } = useApp();
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
 
   const filteredBottomItems = bottomNavItems.filter(
@@ -69,9 +69,7 @@ export function MobileBottomNav() {
       <nav
         className={cn(
           "fixed bottom-0 left-0 right-0 border-t z-40 lg:hidden pb-[env(safe-area-inset-bottom)]",
-          isDark
-            ? "bg-background border-border"
-            : "bg-white border-gray-200"
+          "bg-background border-border"
         )}
         dir={isRTL ? 'rtl' : 'ltr'}
       >
@@ -87,8 +85,8 @@ export function MobileBottomNav() {
                 className={cn(
                   'flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors relative',
                   isActive
-                    ? isDark ? 'text-blue-400' : 'text-blue-600'
-                    : isDark ? 'text-muted-foreground' : 'text-gray-500'
+                    ? 'text-blue-500'
+                    : 'text-muted-foreground'
                 )}
               >
                 <div className="relative">
@@ -100,7 +98,7 @@ export function MobileBottomNav() {
                 {isActive && (
                   <div className={cn(
                     "absolute -top-2 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full",
-                    isDark ? "bg-blue-400" : "bg-blue-600"
+                    "bg-blue-500"
                   )} />
                 )}
               </Link>
@@ -113,7 +111,7 @@ export function MobileBottomNav() {
               <button
                 className={cn(
                   'flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors relative',
-                  isDark ? 'text-muted-foreground' : 'text-gray-500'
+                  'text-muted-foreground'
                 )}
               >
                 <Settings className="w-5 h-5" />
@@ -132,7 +130,7 @@ export function MobileBottomNav() {
               <div className="flex items-center h-14 px-4 border-b border-border">
                 <h3 className={cn(
                   "text-base font-semibold",
-                  isDark ? 'text-foreground' : 'text-gray-900'
+                  'text-foreground'
                 )}>
                   {language === 'ar' ? 'المزيد' : 'More'}
                 </h3>
@@ -152,9 +150,7 @@ export function MobileBottomNav() {
                           "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
                           isActive
                             ? "bg-blue-600/20 text-blue-400 border border-blue-500/30"
-                            : isDark
-                              ? "text-muted-foreground hover:bg-accent hover:text-foreground"
-                              : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                            : "text-muted-foreground hover:bg-accent hover:text-foreground"
                         )}
                       >
                         <Icon className="w-5 h-5 shrink-0" />

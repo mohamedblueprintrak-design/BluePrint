@@ -27,7 +27,7 @@ const quickActions: QuickAction[] = [
     icon: ListPlus,
     label: 'مهمة جديدة',
     labelEn: 'New Task',
-    href: '/dashboard/projects?tab=tasks&action=create',
+    href: '/dashboard/tasks',
     bgColor: 'bg-amber-600',
   },
   {
@@ -170,10 +170,10 @@ export function QuickActionsFab() {
         className={cn(
           'fixed z-[35] md:hidden w-14 h-14 rounded-full shadow-2xl',
           'flex items-center justify-center',
-          'bg-gradient-to-br from-slate-800 to-slate-900',
+          'bg-foreground',
           'border border-border',
           'transition-shadow active:scale-95',
-          isOpen ? 'shadow-blue-500/20' : 'shadow-slate-900/50'
+          isOpen ? 'shadow-blue-500/30' : 'shadow-foreground/30'
         )}
         style={{
           bottom: '6rem',

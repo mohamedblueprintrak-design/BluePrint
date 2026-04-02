@@ -21,13 +21,14 @@ import {
   Wrench,
   Target,
   Zap,
-  HelpCircle,
   Search,
   ChevronLeft,
+  ChevronRight,
   Plus,
   Sparkles,
   BarChart3,
 } from 'lucide-react';
+import { useApp } from '@/context/app-context';
 
 interface CommandPaletteProps {
   open: boolean;
@@ -37,38 +38,36 @@ interface CommandPaletteProps {
 interface CommandItem {
   id: string;
   label: string;
+  labelEn?: string;
   icon: React.ElementType;
   category: string;
+  categoryEn?: string;
   action?: () => void;
 }
 
 // Navigation commands
 const navCommands: CommandItem[] = [
-  { id: '/dashboard', label: 'لوحة التحكم', icon: Home, category: 'الرئيسية' },
-  { id: '/dashboard/projects', label: 'المشاريع', icon: FolderKanban, category: 'إدارة المشاريع' },
-  { id: '/dashboard/tasks', label: 'المهام', icon: CheckSquare, category: 'إدارة المشاريع' },
-  { id: '/dashboard/calendar', label: 'التقويم', icon: Calendar, category: 'إدارة المشاريع' },
-  { id: '/dashboard/reports', label: 'التقارير', icon: FileText, category: 'إدارة المشاريع' },
-  { id: '/dashboard/clients', label: 'العملاء', icon: Users, category: 'العملاء والمبيعات' },
-  { id: '/dashboard/contracts', label: 'العقود', icon: FileText, category: 'العملاء والمبيعات' },
-  { id: '/dashboard/proposals', label: 'العروض', icon: FileText, category: 'العملاء والمبيعات' },
-  { id: '/dashboard/bidding', label: 'المناقصات', icon: Target, category: 'العملاء والمبيعات' },
-  { id: '/dashboard/finance', label: 'الفواتير والسندات', icon: DollarSign, category: 'المالية' },
-  { id: '/dashboard/financials', label: 'الميزانيات والكميات', icon: DollarSign, category: 'المالية' },
-  { id: '/dashboard/procurement', label: 'المشتريات والموردون', icon: FileText, category: 'المالية' },
-  { id: '/dashboard/site-management', label: 'إدارة الموقع', icon: Wrench, category: 'الجودة والسلامة' },
-  { id: '/dashboard/site-visit-reports', label: 'تقارير زيارة الموقع', icon: FileText, category: 'الجودة والسلامة' },
-  { id: '/dashboard/assets', label: 'الأصول والمخزون', icon: Wrench, category: 'الموارد' },
-  { id: '/dashboard/team', label: 'الفريق', icon: Users, category: 'الموارد' },
-  { id: '/dashboard/workload', label: 'إدارة الأحمال', icon: Wrench, category: 'الموارد' },
-  { id: '/dashboard/hr', label: 'الموارد البشرية', icon: Users, category: 'الموارد' },
-  { id: '/dashboard/documents', label: 'المستندات والمراسلات', icon: FileText, category: 'الموارد' },
-  { id: '/dashboard/automations', label: 'الأتمتة', icon: Zap, category: 'النظام' },
-  { id: '/dashboard/ai-chat', label: 'المساعد الذكي', icon: Zap, category: 'النظام' },
-  { id: '/dashboard/notifications', label: 'الإشعارات', icon: Bell, category: 'النظام' },
-  { id: '/dashboard/settings', label: 'الإعدادات', icon: Settings, category: 'النظام' },
-  { id: '/dashboard/profile', label: 'الملف الشخصي', icon: Users, category: 'النظام' },
-  { id: '/dashboard/help', label: 'المساعدة', icon: HelpCircle, category: 'النظام' },
+  { id: '/dashboard', label: 'لوحة التحكم', labelEn: 'Dashboard', icon: Home, category: 'الرئيسية', categoryEn: 'Main' },
+  { id: '/dashboard/projects', label: 'المشاريع', labelEn: 'Projects', icon: FolderKanban, category: 'إدارة المشاريع', categoryEn: 'Project Management' },
+  { id: '/dashboard/tasks', label: 'المهام', labelEn: 'Tasks', icon: CheckSquare, category: 'إدارة المشاريع', categoryEn: 'Project Management' },
+  { id: '/dashboard/reports?tab=meetings', label: 'التقويم والاجتماعات', labelEn: 'Calendar & Meetings', icon: Calendar, category: 'إدارة المشاريع', categoryEn: 'Project Management' },
+  { id: '/dashboard/reports', label: 'التقارير', labelEn: 'Reports', icon: FileText, category: 'إدارة المشاريع', categoryEn: 'Project Management' },
+  { id: '/dashboard/contracts?tab=clients', label: 'العملاء', labelEn: 'Clients', icon: Users, category: 'العملاء والعقود', categoryEn: 'Clients & Contracts' },
+  { id: '/dashboard/contracts', label: 'العقود', labelEn: 'Contracts', icon: FileText, category: 'العملاء والعقود', categoryEn: 'Clients & Contracts' },
+  { id: '/dashboard/contracts?tab=proposals', label: 'العروض', labelEn: 'Proposals', icon: FileText, category: 'العملاء والعقود', categoryEn: 'Clients & Contracts' },
+  { id: '/dashboard/contracts?tab=bidding', label: 'المناقصات', labelEn: 'Bidding', icon: Target, category: 'العملاء والعقود', categoryEn: 'Clients & Contracts' },
+  { id: '/dashboard/finance', label: 'الشئون المالية', labelEn: 'Finance', icon: DollarSign, category: 'المالية', categoryEn: 'Finance' },
+  { id: '/dashboard/assets', label: 'المشتريات والمخزون', labelEn: 'Procurement & Inventory', icon: Wrench, category: 'المشتريات', categoryEn: 'Procurement' },
+  { id: '/dashboard/site-management', label: 'إدارة الموقع', labelEn: 'Site Management', icon: Wrench, category: 'الموقع', categoryEn: 'Site' },
+  { id: '/dashboard/assets?tab=equipment', label: 'المعدات', labelEn: 'Equipment', icon: Wrench, category: 'الموقع', categoryEn: 'Site' },
+  { id: '/dashboard/hr', label: 'الموارد البشرية', labelEn: 'Human Resources', icon: Users, category: 'الموارد البشرية', categoryEn: 'Human Resources' },
+  { id: '/dashboard/documents', label: 'المستندات', labelEn: 'Documents', icon: FileText, category: 'المستندات', categoryEn: 'Documents' },
+  { id: '/dashboard/documents?tab=transmittals', label: 'التنازلات', labelEn: 'Transmittals', icon: FileText, category: 'المستندات', categoryEn: 'Documents' },
+  { id: '/dashboard/ai-chat', label: 'المساعد الذكي', labelEn: 'AI Assistant', icon: Zap, category: 'النظام', categoryEn: 'System' },
+  { id: '/dashboard/notifications', label: 'الإشعارات', labelEn: 'Notifications', icon: Bell, category: 'النظام', categoryEn: 'System' },
+  { id: '/dashboard/settings', label: 'الإعدادات', labelEn: 'Settings', icon: Settings, category: 'النظام', categoryEn: 'System' },
+  { id: '/dashboard/settings?tab=automations', label: 'الأتمتة', labelEn: 'Automations', icon: Zap, category: 'النظام', categoryEn: 'System' },
+  { id: '/dashboard/profile', label: 'الملف الشخصي', labelEn: 'Profile', icon: Users, category: 'النظام', categoryEn: 'System' },
 ];
 
 // Engineering-specific quick actions (built dynamically with router)
@@ -77,29 +76,37 @@ function buildActionCommands(router: ReturnType<typeof useRouter>): CommandItem[
     {
       id: 'action-new-project',
       label: 'مشروع جديد',
+      labelEn: 'New Project',
       icon: Plus,
       category: 'إجراءات سريعة',
+      categoryEn: 'Quick Actions',
       action: () => router.push('/dashboard/projects'),
     },
     {
       id: 'action-new-task',
       label: 'مهمة جديدة',
+      labelEn: 'New Task',
       icon: CheckSquare,
       category: 'إجراءات سريعة',
+      categoryEn: 'Quick Actions',
       action: () => router.push('/dashboard/tasks'),
     },
     {
       id: 'action-view-sla',
       label: 'عرض SLA',
+      labelEn: 'View SLA',
       icon: BarChart3,
       category: 'إجراءات سريعة',
+      categoryEn: 'Quick Actions',
       action: () => router.push('/dashboard/reports'),
     },
     {
       id: 'action-ask-ai',
       label: 'اسأل بلو',
+      labelEn: 'Ask Blu',
       icon: Sparkles,
       category: 'إجراءات سريعة',
+      categoryEn: 'Quick Actions',
       action: () => router.push('/dashboard/ai-chat'),
     },
   ];
@@ -110,16 +117,19 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const { isRTL, language } = useApp();
 
   const allCommands = useCallback((): CommandItem[] => {
     return [...buildActionCommands(router), ...navCommands];
   }, [router]);
 
-  // Filter commands based on search
+  // Filter commands based on search (bilingual)
   const filteredCommands = allCommands().filter(
     (cmd) =>
       cmd.label.includes(search) ||
-      cmd.category.includes(search)
+      (cmd.labelEn && cmd.labelEn.toLowerCase().includes(search.toLowerCase())) ||
+      cmd.category.includes(search) ||
+      (cmd.categoryEn && cmd.categoryEn.toLowerCase().includes(search.toLowerCase()))
   );
 
   // Group commands by category
@@ -173,7 +183,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl p-0" dir="rtl">
+      <DialogContent className="max-w-xl p-0" dir={isRTL ? 'rtl' : 'ltr'}>
         {/* Search Input */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
           <Search className="w-5 h-5 text-muted-foreground" />
@@ -182,7 +192,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="ابحث عن صفحة أو إجراء..."
+            placeholder={language === 'ar' ? 'ابحث عن صفحة أو إجراء...' : 'Search for a page or action...'}
             className="border-0 shadow-none focus-visible:ring-0 px-0 bg-transparent text-foreground"
           />
           <kbd className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded hidden sm:inline-block border border-border">
@@ -194,7 +204,9 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         <div className="max-h-80 overflow-y-auto p-2">
           {Object.entries(groupedCommands).map(([category, cmds]) => (
             <div key={category}>
-              <p className="px-3 py-2 text-xs text-muted-foreground font-medium">{category}</p>
+              <p className="px-3 py-2 text-xs text-muted-foreground font-medium">
+                {language === 'ar' ? category : (cmds[0]?.categoryEn || category)}
+              </p>
               {cmds.map((cmd) => {
                 const Icon = cmd.icon;
                 const globalIndex = filteredCommands.indexOf(cmd);
@@ -206,19 +218,19 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                     onMouseEnter={() => setSelectedIndex(globalIndex)}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                       selectedIndex === globalIndex
-                        ? 'bg-violet-500/20 text-violet-300'
+                        ? 'bg-blue-500/20 text-blue-400'
                         : 'text-foreground/80 hover:bg-accent'
                     }`}
                   >
                     <Icon className="w-5 h-5" />
-                    <span className="flex-1 text-right">{cmd.label}</span>
+                    <span className={`flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'ar' ? cmd.label : (cmd.labelEn || cmd.label)}</span>
                     {isAction && (
                       <Badge variant="outline" className="text-[10px] border-border text-muted-foreground">
-                        إجراء
+                        {language === 'ar' ? 'إجراء' : 'Action'}
                       </Badge>
                     )}
                     {selectedIndex === globalIndex && (
-                      <ChevronLeft className="w-4 h-4" />
+                      isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />
                     )}
                   </button>
                 );
@@ -229,7 +241,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           {filteredCommands.length === 0 && (
             <div className="py-8 text-center text-muted-foreground">
               <Search className="w-8 h-8 mx-auto mb-2" />
-              <p>لا توجد نتائج لـ &quot;{search}&quot;</p>
+              <p>{language === 'ar' ? `لا توجد نتائج لـ "${search}"` : `No results for "${search}"`}</p>
             </div>
           )}
         </div>
@@ -239,11 +251,11 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1">
               <kbd className="px-1.5 py-0.5 bg-muted rounded border border-border">↑↓</kbd>
-              للتنقل
+              {language === 'ar' ? 'للتنقل' : 'Navigate'}
             </span>
             <span className="flex items-center gap-1">
               <kbd className="px-1.5 py-0.5 bg-muted rounded border border-border">↵</kbd>
-              للتأكيد
+              {language === 'ar' ? 'للتأكيد' : 'Select'}
             </span>
           </div>
           <span>BluePrint</span>

@@ -1415,3 +1415,141 @@ Work Log:
 Stage Summary:
 - Added overflow-x-auto to all 3 files' table wrappers (4 Card elements total)
 - Tables will now scroll horizontally on mobile devices instead of overflowing
+
+---
+## Task ID: 4 - bilingual-notification-fixer
+### Work Task
+Fix notification dropdown to support bilingual (Arabic/English) text in `/src/components/notifications/notification-dropdown.tsx`.
+
+### Work Summary
+Made the notification dropdown bilingual by integrating with the app's language context (`useApp` from `@/context/app-context`). All hardcoded Arabic strings were replaced with conditional `isAr ? 'arabic' : 'english'` expressions. The relative time formatting function (`formatRelativeTime`) was updated to accept a locale parameter, using `date-fns`'s `ar` locale for Arabic and default (English) for other languages. Added `dir={isRTL ? 'rtl' : 'ltr'}` to `DropdownMenuContent` for proper text direction. Changed the low priority border color from `border-l-slate-500` to `border-l-muted-foreground` for semantic consistency. ESLint passes with 0 errors on the modified file.
+
+#### Changes made:
+1. Added `import { useApp } from '@/context/app-context'`
+2. Added `import { type Locale } from 'date-fns'` for locale type
+3. Added `const { language } = useApp()` and `const isAr = language === 'ar'` in component
+4. Changed `border-l-slate-500` → `border-l-muted-foreground` (semantic color)
+5. Updated `formatRelativeTime()` to accept `locale: Locale` parameter
+6. "الإشعارات" → `isAr ? 'الإشعارات' : 'Notifications'`
+7. "جديد" → `isAr ? 'جديد' : 'new'`
+8. "متصل" → `isAr ? 'متصل' : 'Connected'`
+9. "تحديد الكل كمقروء" → `isAr ? 'تحديد الكل كمقروء' : 'Mark all read'`
+10. "لا توجد إشعارات" → `isAr ? 'لا توجد إشعارات' : 'No notifications'`
+11. "عرض جميع الإشعارات" → `isAr ? 'عرض جميع الإشعارات' : 'View all notifications'`
+12. Added `dir={isRTL ? 'rtl' : 'ltr'}` on `DropdownMenuContent`
+13. Updated both `formatRelativeTime()` call sites to pass `isAr ? ar : undefined`
+
+---
+## Task ID: 3 - ui-cleanup-agent
+### Work Task
+Fix 3 frontend files: replace hardcoded light/dark classes in mobile bottom nav with semantic tokens, fix hardcoded dark classes and broken href in quick actions FAB, and remove dead state destructuring from sidebar.
+
+### Work Summary
+
+#### Fix 1: Mobile Bottom Nav — replace hardcoded light/dark classes with semantic tokens ✅
+**File:** `src/components/mobile-bottom-nav.tsx`
+
+- Removed `isDark` from `useApp()` destructuring (no longer needed after changes)
+- Line 72-74: Replaced `isDark ? "bg-background border-border" : "bg-white border-gray-200"` with `"bg-background border-border"`
+- Line 89-91: Replaced active state `isDark ? text-blue-400 : text-blue-600` with `text-blue-500`; inactive state `isDark ? text-muted-foreground : text-gray-500` with `text-muted-foreground`
+- Line 103: Replaced `isDark ? "bg-blue-400" : "bg-blue-600"` with `"bg-blue-500"`
+- Line 116: Replaced `isDark ? text-muted-foreground : text-gray-500` with `text-muted-foreground`
+- Line 135: Replaced `isDark ? text-foreground : text-gray-900` with `text-foreground`
+- Lines 155-157: Replaced inactive more-menu items `isDark ? "text-muted-foreground hover:bg-accent hover:text-foreground" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"` with `"text-muted-foreground hover:bg-accent hover:text-foreground"`
+
+#### Fix 2: Quick Actions FAB — fix hardcoded dark classes and broken href ✅
+**File:** `src/components/quick-actions-fab.tsx`
+
+- Line 30: Changed New Task href from `/dashboard/projects?tab=tasks&action=create` to `/dashboard/tasks` (direct route)
+- Line 173: Changed FAB button background from `bg-gradient-to-br from-slate-800 to-slate-900` to `bg-foreground` (theme-aware)
+- Line 176: Changed shadow classes from `shadow-blue-500/20 : shadow-slate-900/50` to `shadow-blue-500/30 : shadow-foreground/30` (theme-aware)
+- Kept `isDark` in destructuring since it is still used on line 154 for action button opacity
+
+#### Fix 3: Sidebar — remove dead state destructuring ✅
+**File:** `src/components/layout/sidebar.tsx`
+
+- Line 234: Removed `setNotificationsPanelOpen: _setNotificationsPanelOpen` from `useApp()` destructuring in `SidebarContent` component
+- This was dead code referencing a state setter that was removed from the app context in a previous refactor
+
+#### Lint & Validation
+- All 3 files pass ESLint with 0 errors and 0 warnings
+
+---
+## Task ID: 2 - quick-add-dialog
+### Work Task
+Create QuickAddDialog component and mount it in the dashboard layout to respond to the Header's "Quick Add" dropdown actions.
+
+### Work Summary
+
+#### Part A: Created QuickAddDialog component
+**File (NEW):** `/src/components/quick-add-dialog.tsx`
+
+- Created `QuickAddDialog` component that listens to `quickAddDialog` state from `useApp()` context
+- Supports 4 dialog types: 'project', 'client', 'invoice', 'task' — each with appropriate form fields
+- Uses shadcn/ui components: Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, Button, Input, Label, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+- Full bilingual (Arabic/English) support using `language` from `useApp()`
+- RTL-aware layout via `dir` attribute on DialogContent
+- Uses semantic tokens: `bg-card`, `bg-muted`, `text-foreground`, `border-border`, `text-foreground/80`
+- On "Create" click: shows a success toast via `useToast()` and closes the dialog
+- Form fields per type:
+  - **Project**: name (text), client (select), description (textarea)
+  - **Client**: name (text), email (text), phone (text)
+  - **Invoice**: client (select), amount (text), due date (text)
+  - **Task**: title (text), project (select), priority (select)
+- Defined `FormField` interface with proper TypeScript typing for optional `placeholder` and `options` properties
+- Removed unused imports (`useEffect`, `useRouter`) from the provided spec to avoid lint errors
+
+#### Part B: Mounted QuickAddDialog in dashboard layout
+**File (MODIFIED):** `/src/app/dashboard/layout.tsx`
+
+- Added import: `import { QuickAddDialog } from '@/components/quick-add-dialog';`
+- Mounted `<QuickAddDialog />` inside the DashboardShell div, after QuickActionsFab
+
+#### Lint & Validation
+- Both files pass ESLint with 0 errors and 0 warnings
+- Dev server compiles successfully with no errors
+
+---
+## Task ID: 1 - command-palette-fixer
+### Work Task
+Fix Command Palette routes and bilingual support, mount CommandPalette in dashboard layout.
+
+### Work Summary
+
+#### Part A: Fixed `/src/components/command-palette.tsx`
+
+**1. Updated CommandItem interface** — Added optional `labelEn` and `categoryEn` fields for bilingual support.
+
+**2. Replaced all 25 outdated nav commands** with 21 correct routes matching the current sidebar navigation:
+- Removed dead routes: `/dashboard/calendar`, `/dashboard/clients`, `/dashboard/contracts` (standalone), `/dashboard/proposals`, `/dashboard/bidding`, `/dashboard/financials`, `/dashboard/procurement`, `/dashboard/site-visit-reports`, `/dashboard/assets` (standalone), `/dashboard/team`, `/dashboard/workload`, `/dashboard/automations`, `/dashboard/help`
+- Added correct tab-based routes: `/dashboard/reports?tab=meetings`, `/dashboard/contracts?tab=clients`, `/dashboard/contracts?tab=proposals`, `/dashboard/contracts?tab=bidding`, `/dashboard/assets?tab=equipment`, `/dashboard/documents?tab=transmittals`, `/dashboard/settings?tab=automations`
+- Added English labels (`labelEn`) and English categories (`categoryEn`) to all nav commands and action commands
+
+**3. Updated search filter** — Now checks both Arabic and English labels/categories using case-insensitive matching for English text.
+
+**4. Fixed `dir="rtl"` on DialogContent** — Changed to dynamic `dir={isRTL ? 'rtl' : 'ltr'}` using `useApp()` from `@/context/app-context`.
+
+**5. Fixed all hardcoded Arabic text** — Made bilingual:
+- Search placeholder: Arabic/English based on language
+- Category headers: Shows Arabic or English category names
+- Command labels: Shows `cmd.label` or `cmd.labelEn` based on language
+- Action badge: "إجراء" / "Action"
+- No results text: Arabic/English
+- Footer: "للتنقل" / "Navigate", "للتأكيد" / "Select"
+
+**6. Fixed selected item highlight** — Changed `bg-violet-500/20 text-violet-300` to `bg-blue-500/20 text-blue-400` to match app's blue accent.
+
+**7. Fixed text alignment** — Command label text-align now switches between `text-right` (RTL) and `text-left` (LTR).
+
+**8. Fixed chevron direction** — Selection indicator uses `ChevronLeft` for RTL and `ChevronRight` for LTR.
+
+**9. Removed unused import** — Removed `HelpCircle` icon that was no longer used after route cleanup.
+
+#### Part B: Mounted CommandPalette in `/src/app/dashboard/layout.tsx`
+
+- Import `CommandPalette` from `@/components/command-palette` was already present (added by previous agent)
+- `commandPaletteOpen` and `setCommandPaletteOpen` were already destructured from `useApp()`
+- Added `<CommandPalette open={commandPaletteOpen} onOpenChange={setCommandPaletteOpen} />` inside the DashboardShell div, after QuickAddDialog
+
+#### Lint & Validation
+- Both files pass ESLint with 0 errors and 0 warnings
