@@ -284,7 +284,7 @@ export function HRPage() {
   const getLeaveTypeBadge = (type: string) => {
     const leaveType = LEAVE_TYPES.find(lt => lt.value === type) || LEAVE_TYPES[0];
     return (
-      <Badge variant="secondary" className={`${leaveType.color} text-white`}>
+      <Badge variant="secondary" className={`${leaveType.color} text-foreground`}>
         {isRTL ? leaveType.labelAr : leaveType.labelEn}
       </Badge>
     );
@@ -294,7 +294,7 @@ export function HRPage() {
   const getLeaveStatusBadge = (status: string) => {
     const statusConfig = LEAVE_STATUSES.find(s => s.value === status) || LEAVE_STATUSES[0];
     return (
-      <Badge variant="secondary" className={`${statusConfig.color} text-white`}>
+      <Badge variant="secondary" className={`${statusConfig.color} text-foreground`}>
         {isRTL ? statusConfig.labelAr : statusConfig.labelEn}
       </Badge>
     );
@@ -304,7 +304,7 @@ export function HRPage() {
   const getAttendanceStatusBadge = (status: string) => {
     const statusConfig = ATTENDANCE_STATUSES.find(s => s.value === status) || ATTENDANCE_STATUSES[0];
     return (
-      <Badge variant="secondary" className={`${statusConfig.color} text-white text-xs`}>
+      <Badge variant="secondary" className={`${statusConfig.color} text-foreground text-xs`}>
         {isRTL ? statusConfig.labelAr : statusConfig.labelEn}
       </Badge>
     );
@@ -344,8 +344,8 @@ export function HRPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">{t.hr}</h1>
-          <p className="text-slate-400">
+          <h1 className="text-2xl font-bold text-foreground">{t.hr}</h1>
+          <p className="text-muted-foreground">
             {isRTL ? 'إدارة الموارد البشرية والحضور والرواتب' : 'Manage human resources, attendance, and salaries'}
           </p>
         </div>
@@ -353,20 +353,20 @@ export function HRPage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-4 w-full max-w-xl bg-slate-900/50 border border-slate-800">
-          <TabsTrigger value="attendance" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+        <TabsList className="grid grid-cols-4 w-full max-w-xl bg-card border border-border">
+          <TabsTrigger value="attendance" className="data-[state=active]:bg-blue-600 data-[state=active]:text-foreground">
             <Calendar className="w-4 h-4 me-2" />
             {t.attendance}
           </TabsTrigger>
-          <TabsTrigger value="leaves" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+          <TabsTrigger value="leaves" className="data-[state=active]:bg-blue-600 data-[state=active]:text-foreground">
             <FileText className="w-4 h-4 me-2" />
             {t.leaves}
           </TabsTrigger>
-          <TabsTrigger value="employees" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+          <TabsTrigger value="employees" className="data-[state=active]:bg-blue-600 data-[state=active]:text-foreground">
             <Users className="w-4 h-4 me-2" />
             {t.employees}
           </TabsTrigger>
-          <TabsTrigger value="salaries" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+          <TabsTrigger value="salaries" className="data-[state=active]:bg-blue-600 data-[state=active]:text-foreground">
             <DollarSign className="w-4 h-4 me-2" />
             {t.salaries}
           </TabsTrigger>
@@ -376,57 +376,57 @@ export function HRPage() {
         <TabsContent value="attendance" className="space-y-6 mt-6">
           {/* Attendance Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="bg-slate-900/50 border-slate-800">
+            <Card className="bg-card border-border">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-green-500/20">
                     <UserCheck className="w-5 h-5 text-green-400" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-white">{attendanceStats.presentToday}</p>
-                    <p className="text-sm text-slate-400">{t.presentToday}</p>
+                    <p className="text-2xl font-bold text-foreground">{attendanceStats.presentToday}</p>
+                    <p className="text-sm text-muted-foreground">{t.presentToday}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-900/50 border-slate-800">
+            <Card className="bg-card border-border">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-blue-500/20">
                     <PartyPopper className="w-5 h-5 text-blue-400" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-white">{attendanceStats.onLeave}</p>
-                    <p className="text-sm text-slate-400">{t.onLeave}</p>
+                    <p className="text-2xl font-bold text-foreground">{attendanceStats.onLeave}</p>
+                    <p className="text-sm text-muted-foreground">{t.onLeave}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-900/50 border-slate-800">
+            <Card className="bg-card border-border">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-orange-500/20">
                     <Clock className="w-5 h-5 text-orange-400" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-white">{attendanceStats.late}</p>
-                    <p className="text-sm text-slate-400">{isRTL ? 'متأخرين' : 'Late'}</p>
+                    <p className="text-2xl font-bold text-foreground">{attendanceStats.late}</p>
+                    <p className="text-sm text-muted-foreground">{isRTL ? 'متأخرين' : 'Late'}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-900/50 border-slate-800">
+            <Card className="bg-card border-border">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-red-500/20">
                     <UserX className="w-5 h-5 text-red-400" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-white">{attendanceStats.absent}</p>
-                    <p className="text-sm text-slate-400">{isRTL ? 'غائبين' : 'Absent'}</p>
+                    <p className="text-2xl font-bold text-foreground">{attendanceStats.absent}</p>
+                    <p className="text-sm text-muted-foreground">{isRTL ? 'غائبين' : 'Absent'}</p>
                   </div>
                 </div>
               </CardContent>
@@ -436,10 +436,10 @@ export function HRPage() {
           {/* Calendar and Table */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Calendar */}
-            <Card className="bg-slate-900/50 border-slate-800">
+            <Card className="bg-card border-border">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-white text-lg">
+                  <CardTitle className="text-foreground text-lg">
                     {monthNames[selectedMonth.getMonth()]} {selectedMonth.getFullYear()}
                   </CardTitle>
                   <div className="flex items-center gap-2">
@@ -456,7 +456,7 @@ export function HRPage() {
                 {/* Week Days Header */}
                 <div className="grid grid-cols-7 gap-1 mb-2">
                   {weekDays.map((day, index) => (
-                    <div key={index} className="text-center text-xs text-slate-400 py-2">
+                    <div key={index} className="text-center text-xs text-muted-foreground py-2">
                       {day}
                     </div>
                   ))}
@@ -477,9 +477,9 @@ export function HRPage() {
                       <div
                         key={day}
                         className={`aspect-square rounded-lg flex items-center justify-center text-sm cursor-pointer transition-colors
-                          ${isToday ? 'bg-blue-600 text-white' : 
-                            isWeekend ? 'bg-slate-800/50 text-slate-400' : 
-                            'bg-slate-800/30 text-slate-300 hover:bg-slate-800'}
+                          ${isToday ? 'bg-blue-600 text-foreground' : 
+                            isWeekend ? 'bg-muted text-muted-foreground' : 
+                            'bg-muted/50 text-foreground/80 hover:bg-accent'}
                         `}
                       >
                         {day}
@@ -488,24 +488,24 @@ export function HRPage() {
                   })}
                 </div>
                 {/* Legend */}
-                <div className="flex items-center gap-4 mt-4 pt-4 border-t border-slate-800">
+                <div className="flex items-center gap-4 mt-4 pt-4 border-t border-border">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded bg-blue-600" />
-                    <span className="text-xs text-slate-400">{isRTL ? 'اليوم' : 'Today'}</span>
+                    <span className="text-xs text-muted-foreground">{isRTL ? 'اليوم' : 'Today'}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded bg-slate-800/50" />
-                    <span className="text-xs text-slate-400">{isRTL ? 'عطلة' : 'Weekend'}</span>
+                    <div className="w-3 h-3 rounded bg-muted" />
+                    <span className="text-xs text-muted-foreground">{isRTL ? 'عطلة' : 'Weekend'}</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Attendance Table */}
-            <Card className="lg:col-span-2 bg-slate-900/50 border-slate-800">
+            <Card className="lg:col-span-2 bg-card border-border overflow-x-auto">
               <CardHeader>
-                <CardTitle className="text-white">{isRTL ? 'سجل الحضور' : 'Attendance Record'}</CardTitle>
-                <CardDescription className="text-slate-400">
+                <CardTitle className="text-foreground">{isRTL ? 'سجل الحضور' : 'Attendance Record'}</CardTitle>
+                <CardDescription className="text-muted-foreground">
                   {isRTL ? `حضور اليوم - ${formatDate(new Date())}` : `Today's attendance - ${formatDate(new Date())}`}
                 </CardDescription>
               </CardHeader>
@@ -513,23 +513,23 @@ export function HRPage() {
                 <ScrollArea className="max-h-96">
                   <Table>
                     <TableHeader>
-                      <TableRow className="border-slate-800 hover:bg-slate-800/50">
-                        <TableHead className="text-slate-400">{t.employee}</TableHead>
-                        <TableHead className="text-slate-400">{t.date}</TableHead>
-                        <TableHead className="text-slate-400">{t.checkIn}</TableHead>
-                        <TableHead className="text-slate-400">{t.checkOut}</TableHead>
-                        <TableHead className="text-slate-400">{t.workHours}</TableHead>
-                        <TableHead className="text-slate-400">{t.status}</TableHead>
+                      <TableRow className="border-border hover:bg-muted">
+                        <TableHead className="text-muted-foreground">{t.employee}</TableHead>
+                        <TableHead className="text-muted-foreground">{t.date}</TableHead>
+                        <TableHead className="text-muted-foreground">{t.checkIn}</TableHead>
+                        <TableHead className="text-muted-foreground">{t.checkOut}</TableHead>
+                        <TableHead className="text-muted-foreground">{t.workHours}</TableHead>
+                        <TableHead className="text-muted-foreground">{t.status}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {SAMPLE_ATTENDANCE.map((record) => (
-                        <TableRow key={record.id} className="border-slate-800 hover:bg-slate-800/50">
-                          <TableCell className="text-white font-medium">{record.employeeName}</TableCell>
-                          <TableCell className="text-slate-300">{formatDate(record.date)}</TableCell>
-                          <TableCell className="text-slate-300">{record.checkIn}</TableCell>
-                          <TableCell className="text-slate-300">{record.checkOut}</TableCell>
-                          <TableCell className="text-slate-300">
+                        <TableRow key={record.id} className="border-border hover:bg-muted">
+                          <TableCell className="text-foreground font-medium">{record.employeeName}</TableCell>
+                          <TableCell className="text-foreground/80">{formatDate(record.date)}</TableCell>
+                          <TableCell className="text-foreground/80">{record.checkIn}</TableCell>
+                          <TableCell className="text-foreground/80">{record.checkOut}</TableCell>
+                          <TableCell className="text-foreground/80">
                             {record.workHours > 0 ? `${record.workHours}h` : '-'}
                           </TableCell>
                           <TableCell>{getAttendanceStatusBadge(record.status)}</TableCell>
@@ -549,20 +549,20 @@ export function HRPage() {
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
             <div className="flex flex-1 gap-3 w-full md:w-auto">
               <div className="relative flex-1 min-w-[200px]">
-                <Search className={`absolute ${isRTL ? 'end-3' : 'start-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400`} />
+                <Search className={`absolute ${isRTL ? 'end-3' : 'start-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground`} />
                 <Input
                   placeholder={isRTL ? 'بحث عن موظف...' : 'Search employee...'}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`${isRTL ? 'pe-9' : 'ps-9'} bg-slate-800/50 border-slate-700 text-white`}
+                  className={`${isRTL ? 'pe-9' : 'ps-9'} bg-muted border-border text-foreground`}
                 />
               </div>
               
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[160px] bg-slate-800/50 border-slate-700 text-white">
+                <SelectTrigger className="w-[160px] bg-muted border-border text-foreground">
                   <SelectValue placeholder={t.status} />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800">
+                <SelectContent className="bg-card border-border">
                   <SelectItem value="all">{t.all}</SelectItem>
                   {LEAVE_STATUSES.map((status) => (
                     <SelectItem key={status.value} value={status.value}>
@@ -577,32 +577,32 @@ export function HRPage() {
           {/* Leave Requests List */}
           {leaveLoading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="text-slate-400">{t.loading}</div>
+              <div className="text-muted-foreground">{t.loading}</div>
             </div>
           ) : filteredLeaveRequests.length === 0 ? (
-            <Card className="bg-slate-900/50 border-slate-800">
+            <Card className="bg-card border-border">
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <FileText className="w-16 h-16 text-slate-600 mb-4" />
-                <p className="text-slate-400">{t.noData}</p>
+                <FileText className="w-16 h-16 text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">{t.noData}</p>
               </CardContent>
             </Card>
           ) : (
             <div className="space-y-4">
               {filteredLeaveRequests.map((request: any) => (
-                <Card key={request.id} className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-colors">
+                <Card key={request.id} className="bg-card border-border hover:border-border transition-colors">
                   <CardContent className="p-6">
                     <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                       {/* Employee Info */}
                       <div className="flex items-center gap-4">
                         <Avatar className="w-12 h-12">
                           <AvatarImage src={request.user?.avatar} />
-                          <AvatarFallback className="bg-blue-600 text-white">
+                          <AvatarFallback className="bg-blue-600 text-foreground">
                             {request.user?.fullName?.charAt(0) || request.user?.username?.charAt(0) || 'U'}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium text-white">{request.user?.fullName || request.user?.username || 'Unknown'}</p>
-                          <p className="text-sm text-slate-400">{request.user?.jobTitle || request.user?.department || ''}</p>
+                          <p className="font-medium text-foreground">{request.user?.fullName || request.user?.username || 'Unknown'}</p>
+                          <p className="text-sm text-muted-foreground">{request.user?.jobTitle || request.user?.department || ''}</p>
                         </div>
                       </div>
 
@@ -611,18 +611,18 @@ export function HRPage() {
                         {getLeaveTypeBadge(request.leaveType)}
                         
                         <div className="text-center">
-                          <p className="text-sm text-slate-400">{isRTL ? 'من' : 'From'}</p>
-                          <p className="text-white font-medium">{formatDate(request.startDate)}</p>
+                          <p className="text-sm text-muted-foreground">{isRTL ? 'من' : 'From'}</p>
+                          <p className="text-foreground font-medium">{formatDate(request.startDate)}</p>
                         </div>
                         
                         <div className="text-center">
-                          <p className="text-sm text-slate-400">{isRTL ? 'إلى' : 'To'}</p>
-                          <p className="text-white font-medium">{formatDate(request.endDate)}</p>
+                          <p className="text-sm text-muted-foreground">{isRTL ? 'إلى' : 'To'}</p>
+                          <p className="text-foreground font-medium">{formatDate(request.endDate)}</p>
                         </div>
                         
                         <div className="text-center">
-                          <p className="text-sm text-slate-400">{t.daysCount}</p>
-                          <p className="text-white font-medium">{request.daysCount}</p>
+                          <p className="text-sm text-muted-foreground">{t.daysCount}</p>
+                          <p className="text-foreground font-medium">{request.daysCount}</p>
                         </div>
                         
                         {getLeaveStatusBadge(request.status)}
@@ -631,7 +631,7 @@ export function HRPage() {
                       {/* Reason & Actions */}
                       <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
                         {request.reason && (
-                          <p className="text-sm text-slate-400 max-w-xs truncate">
+                          <p className="text-sm text-muted-foreground max-w-xs truncate">
                             {isRTL ? 'السبب: ' : 'Reason: '}{request.reason}
                           </p>
                         )}
@@ -640,7 +640,7 @@ export function HRPage() {
                           <div className="flex items-center gap-2">
                             <Button
                               size="sm"
-                              className="bg-green-600 hover:bg-green-700 text-white"
+                              className="bg-green-600 hover:bg-green-700 text-foreground"
                               onClick={() => handleApproveLeave(request.id)}
                               disabled={approveLeaveMutation.isPending}
                             >
@@ -665,7 +665,7 @@ export function HRPage() {
                     </div>
 
                     {request.rejectionReason && (
-                      <div className="mt-4 pt-4 border-t border-slate-800">
+                      <div className="mt-4 pt-4 border-t border-border">
                         <p className="text-sm text-red-400">
                           {isRTL ? `سبب الرفض: ${request.rejectionReason}` : `Rejection reason: ${request.rejectionReason}`}
                         </p>
@@ -682,43 +682,43 @@ export function HRPage() {
         <TabsContent value="employees" className="space-y-6 mt-6">
           {/* Employee Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="bg-slate-900/50 border-slate-800">
+            <Card className="bg-card border-border">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-blue-500/20">
                     <Users className="w-5 h-5 text-blue-400" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-white">{employeeStats.total}</p>
-                    <p className="text-sm text-slate-400">{t.totalEmployees}</p>
+                    <p className="text-2xl font-bold text-foreground">{employeeStats.total}</p>
+                    <p className="text-sm text-muted-foreground">{t.totalEmployees}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-900/50 border-slate-800">
+            <Card className="bg-card border-border">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-green-500/20">
                     <UserCheck className="w-5 h-5 text-green-400" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-white">{employeeStats.active}</p>
-                    <p className="text-sm text-slate-400">{t.active}</p>
+                    <p className="text-2xl font-bold text-foreground">{employeeStats.active}</p>
+                    <p className="text-sm text-muted-foreground">{t.active}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-900/50 border-slate-800">
+            <Card className="bg-card border-border">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-orange-500/20">
                     <PartyPopper className="w-5 h-5 text-orange-400" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-white">{employeeStats.onLeave}</p>
-                    <p className="text-sm text-slate-400">{t.onLeave}</p>
+                    <p className="text-2xl font-bold text-foreground">{employeeStats.onLeave}</p>
+                    <p className="text-sm text-muted-foreground">{t.onLeave}</p>
                   </div>
                 </div>
               </CardContent>
@@ -727,28 +727,28 @@ export function HRPage() {
 
           {/* Search */}
           <div className="relative max-w-md">
-            <Search className={`absolute ${isRTL ? 'end-3' : 'start-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400`} />
+            <Search className={`absolute ${isRTL ? 'end-3' : 'start-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground`} />
             <Input
               placeholder={isRTL ? 'بحث عن موظف...' : 'Search employee...'}
-              className={`${isRTL ? 'pe-9' : 'ps-9'} bg-slate-800/50 border-slate-700 text-white`}
+              className={`${isRTL ? 'pe-9' : 'ps-9'} bg-muted border-border text-foreground`}
             />
           </div>
 
           {/* Employee Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {SAMPLE_EMPLOYEES.map((employee) => (
-              <Card key={employee.id} className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-colors">
+              <Card key={employee.id} className="bg-card border-border hover:border-border transition-colors">
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
                     <Avatar className="w-14 h-14">
                       <AvatarImage src={employee.avatar} />
-                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white text-lg">
+                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-cyan-500 text-foreground text-lg">
                         {isRTL ? employee.name.charAt(0) : employee.nameEn.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <p className="font-semibold text-white truncate">
+                        <p className="font-semibold text-foreground truncate">
                           {isRTL ? employee.name : employee.nameEn}
                         </p>
                         <Badge 
@@ -759,26 +759,26 @@ export function HRPage() {
                         </Badge>
                       </div>
                       <p className="text-sm text-blue-400">{isRTL ? employee.position : employee.positionEn}</p>
-                      <p className="text-sm text-slate-400">{isRTL ? employee.department : employee.departmentEn}</p>
+                      <p className="text-sm text-muted-foreground">{isRTL ? employee.department : employee.departmentEn}</p>
                     </div>
                   </div>
 
-                  <Separator className="my-4 bg-slate-800" />
+                  <Separator className="my-4 bg-muted" />
 
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-slate-400">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Mail className="w-4 h-4" />
                       <span className="truncate">{employee.email}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-slate-400">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Phone className="w-4 h-4" />
                       <span>{employee.phone}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-slate-400">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Building2 className="w-4 h-4" />
                       <span>{isRTL ? employee.department : employee.departmentEn}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-slate-400">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Briefcase className="w-4 h-4" />
                       <span>{isRTL ? employee.position : employee.positionEn}</span>
                     </div>
@@ -793,43 +793,43 @@ export function HRPage() {
         <TabsContent value="salaries" className="space-y-6 mt-6">
           {/* Salary Summary */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="bg-slate-900/50 border-slate-800">
+            <Card className="bg-card border-border">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-cyan-500/20">
                     <TrendingUp className="w-5 h-5 text-cyan-400" />
                   </div>
                   <div>
-                    <p className="text-xl font-bold text-white">{formatCurrency(salaryStats.total)}</p>
-                    <p className="text-sm text-slate-400">{t.totalSalaries}</p>
+                    <p className="text-xl font-bold text-foreground">{formatCurrency(salaryStats.total)}</p>
+                    <p className="text-sm text-muted-foreground">{t.totalSalaries}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-900/50 border-slate-800">
+            <Card className="bg-card border-border">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-green-500/20">
                     <CheckCircle className="w-5 h-5 text-green-400" />
                   </div>
                   <div>
-                    <p className="text-xl font-bold text-white">{formatCurrency(salaryStats.paid)}</p>
-                    <p className="text-sm text-slate-400">{t.paid}</p>
+                    <p className="text-xl font-bold text-foreground">{formatCurrency(salaryStats.paid)}</p>
+                    <p className="text-sm text-muted-foreground">{t.paid}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-900/50 border-slate-800">
+            <Card className="bg-card border-border">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-orange-500/20">
                     <Clock className="w-5 h-5 text-orange-400" />
                   </div>
                   <div>
-                    <p className="text-xl font-bold text-white">{formatCurrency(salaryStats.pending)}</p>
-                    <p className="text-sm text-slate-400">{t.pending}</p>
+                    <p className="text-xl font-bold text-foreground">{formatCurrency(salaryStats.pending)}</p>
+                    <p className="text-sm text-muted-foreground">{t.pending}</p>
                   </div>
                 </div>
               </CardContent>
@@ -837,10 +837,10 @@ export function HRPage() {
           </div>
 
           {/* Salary Table */}
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border overflow-x-auto">
             <CardHeader>
-              <CardTitle className="text-white">{isRTL ? 'سجل الرواتب' : 'Salary Record'}</CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardTitle className="text-foreground">{isRTL ? 'سجل الرواتب' : 'Salary Record'}</CardTitle>
+              <CardDescription className="text-muted-foreground">
                 {isRTL ? 'رواتب الموظفين لهذا الشهر' : 'Employee salaries for this month'}
               </CardDescription>
             </CardHeader>
@@ -848,36 +848,36 @@ export function HRPage() {
               <ScrollArea className="max-h-96">
                 <Table>
                   <TableHeader>
-                    <TableRow className="border-slate-800 hover:bg-slate-800/50">
-                      <TableHead className="text-slate-400">{t.employee}</TableHead>
-                      <TableHead className="text-slate-400">{isRTL ? 'الراتب الأساسي' : 'Basic Salary'}</TableHead>
-                      <TableHead className="text-slate-400">{isRTL ? 'البدلات' : 'Allowances'}</TableHead>
-                      <TableHead className="text-slate-400">{isRTL ? 'الخصومات' : 'Deductions'}</TableHead>
-                      <TableHead className="text-slate-400">{isRTL ? 'صافي الراتب' : 'Net Salary'}</TableHead>
-                      <TableHead className="text-slate-400">{t.status}</TableHead>
+                    <TableRow className="border-border hover:bg-muted">
+                      <TableHead className="text-muted-foreground">{t.employee}</TableHead>
+                      <TableHead className="text-muted-foreground">{isRTL ? 'الراتب الأساسي' : 'Basic Salary'}</TableHead>
+                      <TableHead className="text-muted-foreground">{isRTL ? 'البدلات' : 'Allowances'}</TableHead>
+                      <TableHead className="text-muted-foreground">{isRTL ? 'الخصومات' : 'Deductions'}</TableHead>
+                      <TableHead className="text-muted-foreground">{isRTL ? 'صافي الراتب' : 'Net Salary'}</TableHead>
+                      <TableHead className="text-muted-foreground">{t.status}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {SAMPLE_SALARIES.map((salary) => (
-                      <TableRow key={salary.id} className="border-slate-800 hover:bg-slate-800/50">
-                        <TableCell className="text-white font-medium">
+                      <TableRow key={salary.id} className="border-border hover:bg-muted">
+                        <TableCell className="text-foreground font-medium">
                           <div className="flex items-center gap-2">
                             <Avatar className="w-8 h-8">
-                              <AvatarFallback className="bg-blue-600 text-white text-xs">
+                              <AvatarFallback className="bg-blue-600 text-foreground text-xs">
                                 {salary.employeeName.charAt(0)}
                               </AvatarFallback>
                             </Avatar>
                             {salary.employeeName}
                           </div>
                         </TableCell>
-                        <TableCell className="text-slate-300">{formatCurrency(salary.basicSalary)}</TableCell>
+                        <TableCell className="text-foreground/80">{formatCurrency(salary.basicSalary)}</TableCell>
                         <TableCell className="text-green-400">+{formatCurrency(salary.allowances)}</TableCell>
                         <TableCell className="text-red-400">-{formatCurrency(salary.deductions)}</TableCell>
-                        <TableCell className="text-white font-semibold">{formatCurrency(salary.netSalary)}</TableCell>
+                        <TableCell className="text-foreground font-semibold">{formatCurrency(salary.netSalary)}</TableCell>
                         <TableCell>
                           <Badge 
                             variant="secondary" 
-                            className={salary.status === 'paid' ? 'bg-green-500 text-white' : 'bg-orange-500 text-white'}
+                            className={salary.status === 'paid' ? 'bg-green-500 text-foreground' : 'bg-orange-500 text-foreground'}
                           >
                             {salary.status === 'paid' ? (isRTL ? 'مدفوع' : 'Paid') : (isRTL ? 'معلق' : 'Pending')}
                           </Badge>
@@ -894,10 +894,10 @@ export function HRPage() {
 
       {/* Reject Dialog */}
       <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-md">
+        <DialogContent className="bg-card border-border text-foreground max-w-md">
           <DialogHeader>
             <DialogTitle>{isRTL ? 'رفض طلب الإجازة' : 'Reject Leave Request'}</DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-muted-foreground">
               {isRTL ? 'يرجى إدخال سبب الرفض' : 'Please enter the reason for rejection'}
             </DialogDescription>
           </DialogHeader>
@@ -906,13 +906,13 @@ export function HRPage() {
             <Input
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
-              className="bg-slate-800/50 border-slate-700 text-white"
+              className="bg-muted border-border text-foreground"
               placeholder={isRTL ? 'سبب الرفض...' : 'Rejection reason...'}
             />
           </div>
           
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setShowRejectDialog(false)} className="text-slate-400">
+            <Button variant="ghost" onClick={() => setShowRejectDialog(false)} className="text-muted-foreground">
               {t.cancel}
             </Button>
             <Button 

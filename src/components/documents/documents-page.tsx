@@ -380,7 +380,7 @@ export function DocumentsPage() {
     return (
       <Card 
         key={doc.id}
-        className="bg-slate-800/50 border-slate-700 hover:border-slate-600 transition-all group"
+        className="bg-muted border-border hover:border-border transition-all group"
       >
         <CardContent className="p-4 space-y-3">
           {/* File icon and type badge */}
@@ -388,25 +388,25 @@ export function DocumentsPage() {
             <div className={`p-3 rounded-lg ${typeConfig.bgColor}`}>
               <TypeIcon className={`w-8 h-8 ${typeConfig.color}`} />
             </div>
-            <Badge variant="secondary" className={`${categoryConfig.color} text-white text-xs`}>
+            <Badge variant="secondary" className={`${categoryConfig.color} text-foreground text-xs`}>
               {language === 'ar' ? categoryConfig.label : categoryConfig.labelEn}
             </Badge>
           </div>
 
           {/* File name */}
           <div className="min-h-[2.5rem]">
-            <p className="text-white font-medium text-sm line-clamp-2">
+            <p className="text-foreground font-medium text-sm line-clamp-2">
               {doc.originalName || doc.filename}
             </p>
           </div>
 
           {/* File type badge */}
-          <Badge variant="outline" className="text-slate-400 border-slate-700 text-xs">
+          <Badge variant="outline" className="text-muted-foreground border-border text-xs">
             {typeConfig.value.toUpperCase()}
           </Badge>
 
           {/* File info */}
-          <div className="flex items-center justify-between text-xs text-slate-400">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <HardDrive className="w-3 h-3" />
               {formatFileSize(doc.fileSize, language)}
@@ -421,12 +421,12 @@ export function DocumentsPage() {
           {doc.tags && doc.tags.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {doc.tags.slice(0, 2).map((tag, index) => (
-                <Badge key={index} variant="secondary" className="bg-slate-700/50 text-slate-400 text-[10px]">
+                <Badge key={index} variant="secondary" className="bg-secondary/50 text-muted-foreground text-[10px]">
                   {tag}
                 </Badge>
               ))}
               {doc.tags.length > 2 && (
-                <Badge variant="secondary" className="bg-slate-700/50 text-slate-400 text-[10px]">
+                <Badge variant="secondary" className="bg-secondary/50 text-muted-foreground text-[10px]">
                   +{doc.tags.length - 2}
                 </Badge>
               )}
@@ -434,12 +434,12 @@ export function DocumentsPage() {
           )}
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-1 pt-2 border-t border-slate-700/50 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center justify-end gap-1 pt-2 border-t border-border/50 opacity-0 group-hover:opacity-100 transition-opacity">
             <Button 
               variant="ghost" 
               size="icon" 
               aria-label="Preview document"
-              className="h-8 w-8 text-slate-400 hover:text-white"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
               onClick={() => handlePreview(doc)}
             >
               <Eye className="w-4 h-4" />
@@ -448,7 +448,7 @@ export function DocumentsPage() {
               variant="ghost" 
               size="icon" 
               aria-label="Download document"
-              className="h-8 w-8 text-slate-400 hover:text-white"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
               onClick={() => handleDownload(doc)}
             >
               <Download className="w-4 h-4" />
@@ -457,7 +457,7 @@ export function DocumentsPage() {
               variant="ghost" 
               size="icon" 
               aria-label="Delete document"
-              className="h-8 w-8 text-slate-400 hover:text-red-400"
+              className="h-8 w-8 text-muted-foreground hover:text-red-400"
               onClick={() => handleDelete(doc)}
             >
               <Trash2 className="w-4 h-4" />
@@ -475,18 +475,18 @@ export function DocumentsPage() {
     const TypeIcon = typeConfig.icon;
 
     return (
-      <TableRow key={doc.id} className="border-slate-700 hover:bg-slate-800/50">
+      <TableRow key={doc.id} className="border-border hover:bg-muted">
         <TableCell>
           <div className="flex items-center gap-3">
             <div className={`p-2 rounded ${typeConfig.bgColor}`}>
               <TypeIcon className={`w-5 h-5 ${typeConfig.color}`} />
             </div>
             <div>
-              <p className="text-white font-medium text-sm">
+              <p className="text-foreground font-medium text-sm">
                 {doc.originalName || doc.filename}
               </p>
               {doc.description && (
-                <p className="text-slate-500 text-xs truncate max-w-[200px]">
+                <p className="text-muted-foreground text-xs truncate max-w-[200px]">
                   {doc.description}
                 </p>
               )}
@@ -494,19 +494,19 @@ export function DocumentsPage() {
           </div>
         </TableCell>
         <TableCell>
-          <Badge variant="outline" className="text-slate-400 border-slate-700">
+          <Badge variant="outline" className="text-muted-foreground border-border">
             {typeConfig.value.toUpperCase()}
           </Badge>
         </TableCell>
         <TableCell>
-          <Badge className={`${categoryConfig.color} text-white`}>
+          <Badge className={`${categoryConfig.color} text-foreground`}>
             {language === 'ar' ? categoryConfig.label : categoryConfig.labelEn}
           </Badge>
         </TableCell>
-        <TableCell className="text-slate-300">
+        <TableCell className="text-foreground/80">
           {formatFileSize(doc.fileSize, language)}
         </TableCell>
-        <TableCell className="text-slate-300">
+        <TableCell className="text-foreground/80">
           {formatDate(doc.createdAt)}
         </TableCell>
         <TableCell>
@@ -515,7 +515,7 @@ export function DocumentsPage() {
               variant="ghost" 
               size="icon" 
               aria-label="Preview document"
-              className="h-8 w-8 text-slate-400 hover:text-white"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
               onClick={() => handlePreview(doc)}
             >
               <Eye className="w-4 h-4" />
@@ -524,7 +524,7 @@ export function DocumentsPage() {
               variant="ghost" 
               size="icon" 
               aria-label="Download document"
-              className="h-8 w-8 text-slate-400 hover:text-white"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
               onClick={() => handleDownload(doc)}
             >
               <Download className="w-4 h-4" />
@@ -533,7 +533,7 @@ export function DocumentsPage() {
               variant="ghost" 
               size="icon" 
               aria-label="Delete document"
-              className="h-8 w-8 text-slate-400 hover:text-red-400"
+              className="h-8 w-8 text-muted-foreground hover:text-red-400"
               onClick={() => handleDelete(doc)}
             >
               <Trash2 className="w-4 h-4" />
@@ -548,15 +548,15 @@ export function DocumentsPage() {
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-cyan-500/20">
                 <FileText className="w-5 h-5 text-cyan-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.totalDocuments}</p>
-                <p className="text-sm text-slate-400">
+                <p className="text-2xl font-bold text-foreground">{stats.totalDocuments}</p>
+                <p className="text-sm text-muted-foreground">
                   {language === 'ar' ? 'إجمالي المستندات' : 'Total Documents'}
                 </p>
               </div>
@@ -564,15 +564,15 @@ export function DocumentsPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-green-500/20">
                 <HardDrive className="w-5 h-5 text-green-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{formatFileSize(stats.totalSize, language)}</p>
-                <p className="text-sm text-slate-400">
+                <p className="text-2xl font-bold text-foreground">{formatFileSize(stats.totalSize, language)}</p>
+                <p className="text-sm text-muted-foreground">
                   {language === 'ar' ? 'إجمالي الحجم' : 'Total Size'}
                 </p>
               </div>
@@ -580,15 +580,15 @@ export function DocumentsPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-amber-500/20">
                 <Upload className="w-5 h-5 text-amber-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.recentUploads}</p>
-                <p className="text-sm text-slate-400">
+                <p className="text-2xl font-bold text-foreground">{stats.recentUploads}</p>
+                <p className="text-sm text-muted-foreground">
                   {language === 'ar' ? 'مرفوعات حديثة' : 'Recent Uploads'}
                 </p>
               </div>
@@ -602,27 +602,27 @@ export function DocumentsPage() {
         <div className="flex flex-col lg:flex-row gap-3">
           {/* Search */}
           <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder={language === 'ar' ? 'بحث في المستندات...' : 'Search documents...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="ps-9 bg-slate-800/50 border-slate-700 text-white"
+              className="ps-9 bg-muted border-border text-foreground"
             />
           </div>
 
           {/* Type Filter */}
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-[140px] bg-slate-800/50 border-slate-700 text-white">
+            <SelectTrigger className="w-[140px] bg-muted border-border text-foreground">
               <SelectValue placeholder={language === 'ar' ? 'النوع' : 'Type'} />
             </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-slate-800">
+            <SelectContent className="bg-card border-border">
               {FILE_TYPES.map((type) => {
                 const TypeIcon = type.icon;
                 return (
                   <SelectItem key={type.value} value={type.value}>
                     <div className="flex items-center gap-2">
-                      <TypeIcon className={`w-4 h-4 ${type.color || 'text-slate-400'}`} />
+                      <TypeIcon className={`w-4 h-4 ${type.color || 'text-muted-foreground'}`} />
                       {language === 'ar' ? type.label : type.labelEn}
                     </div>
                   </SelectItem>
@@ -633,10 +633,10 @@ export function DocumentsPage() {
 
           {/* Category Filter */}
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-[150px] bg-slate-800/50 border-slate-700 text-white">
+            <SelectTrigger className="w-[150px] bg-muted border-border text-foreground">
               <SelectValue placeholder={language === 'ar' ? 'الفئة' : 'Category'} />
             </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-slate-800">
+            <SelectContent className="bg-card border-border">
               {CATEGORIES.map((category) => (
                 <SelectItem key={category.value} value={category.value}>
                   <div className="flex items-center gap-2">
@@ -656,14 +656,14 @@ export function DocumentsPage() {
               type="date"
               value={dateFromFilter}
               onChange={(e) => setDateFromFilter(e.target.value)}
-              className="w-[140px] bg-slate-800/50 border-slate-700 text-white"
+              className="w-[140px] bg-muted border-border text-foreground"
               placeholder={language === 'ar' ? 'من' : 'From'}
             />
             <Input
               type="date"
               value={dateToFilter}
               onChange={(e) => setDateToFilter(e.target.value)}
-              className="w-[140px] bg-slate-800/50 border-slate-700 text-white"
+              className="w-[140px] bg-muted border-border text-foreground"
               placeholder={language === 'ar' ? 'إلى' : 'To'}
             />
           </div>
@@ -671,11 +671,11 @@ export function DocumentsPage() {
 
         <div className="flex justify-between items-center">
           {/* View Toggle */}
-          <div className="flex items-center gap-1 bg-slate-800/50 rounded-lg p-1">
+          <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
             <Button
               variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
               size="sm"
-              className={`h-8 px-3 ${viewMode === 'grid' ? 'bg-slate-700 text-white' : 'text-slate-400'}`}
+              className={`h-8 px-3 ${viewMode === 'grid' ? 'bg-secondary text-foreground' : 'text-muted-foreground'}`}
               onClick={() => setViewMode('grid')}
             >
               <Grid className="w-4 h-4 me-1" />
@@ -684,7 +684,7 @@ export function DocumentsPage() {
             <Button
               variant={viewMode === 'list' ? 'secondary' : 'ghost'}
               size="sm"
-              className={`h-8 px-3 ${viewMode === 'list' ? 'bg-slate-700 text-white' : 'text-slate-400'}`}
+              className={`h-8 px-3 ${viewMode === 'list' ? 'bg-secondary text-foreground' : 'text-muted-foreground'}`}
               onClick={() => setViewMode('list')}
             >
               <List className="w-4 h-4 me-1" />
@@ -695,15 +695,15 @@ export function DocumentsPage() {
           {/* Upload Dialog */}
           <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
             <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-foreground">
                 <Upload className="w-4 h-4 me-2" />
                 {language === 'ar' ? 'رفع مستند' : 'Upload Document'}
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-lg">
+            <DialogContent className="bg-card border-border text-foreground max-w-lg">
               <DialogHeader>
                 <DialogTitle>{language === 'ar' ? 'رفع مستند جديد' : 'Upload New Document'}</DialogTitle>
-                <DialogDescription className="text-slate-400">
+                <DialogDescription className="text-muted-foreground">
                   {language === 'ar' ? 'اسحب الملف أو اختر من جهازك' : 'Drag file or select from your device'}
                 </DialogDescription>
               </DialogHeader>
@@ -714,7 +714,7 @@ export function DocumentsPage() {
                   className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
                     isDragging 
                       ? 'border-blue-500 bg-blue-500/10' 
-                      : 'border-slate-700 hover:border-slate-600'
+                      : 'border-border hover:border-border'
                   }`}
                   onDragEnter={handleDragEnter}
                   onDragLeave={handleDragLeave}
@@ -733,15 +733,15 @@ export function DocumentsPage() {
                     <div className="space-y-3">
                       <CheckCircle2 className="w-12 h-12 mx-auto text-green-400" />
                       <div>
-                        <p className="text-white font-medium">{uploadForm.file.name}</p>
-                        <p className="text-slate-400 text-sm">
+                        <p className="text-foreground font-medium">{uploadForm.file.name}</p>
+                        <p className="text-muted-foreground text-sm">
                           {formatFileSize(uploadForm.file.size, language)}
                         </p>
                       </div>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-slate-400"
+                        className="text-muted-foreground"
                         onClick={() => setUploadForm(prev => ({ ...prev, file: null }))}
                       >
                         <X className="w-4 h-4 me-1" />
@@ -750,23 +750,23 @@ export function DocumentsPage() {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      <CloudUpload className="w-12 h-12 mx-auto text-slate-500" />
+                      <CloudUpload className="w-12 h-12 mx-auto text-muted-foreground" />
                       <div>
-                        <p className="text-slate-300">
+                        <p className="text-foreground/80">
                           {language === 'ar' ? 'اسحب الملف هنا' : 'Drag file here'}
                         </p>
-                        <p className="text-slate-500 text-sm">
+                        <p className="text-muted-foreground text-sm">
                           {language === 'ar' ? 'أو' : 'or'}
                         </p>
                       </div>
                       <Button
                         variant="outline"
-                        className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                        className="border-border text-foreground/80 hover:bg-accent"
                         onClick={() => fileInputRef.current?.click()}
                       >
                         {language === 'ar' ? 'اختر ملف' : 'Select File'}
                       </Button>
-                      <p className="text-slate-500 text-xs">
+                      <p className="text-muted-foreground text-xs">
                         {language === 'ar' 
                           ? 'PDF, Word, Excel, CAD, Images, Archives'
                           : 'PDF, Word, Excel, CAD, Images, Archives'
@@ -780,25 +780,25 @@ export function DocumentsPage() {
                 {isUploading && (
                   <div className="space-y-2">
                     <Progress value={uploadProgress} className="h-2" />
-                    <p className="text-slate-400 text-sm text-center">
+                    <p className="text-muted-foreground text-sm text-center">
                       {language === 'ar' ? 'جاري الرفع...' : 'Uploading...'} {uploadProgress}%
                     </p>
                   </div>
                 )}
 
-                <Separator className="bg-slate-700" />
+                <Separator className="bg-secondary" />
 
                 {/* Category */}
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{language === 'ar' ? 'الفئة' : 'Category'} *</Label>
+                  <Label className="text-foreground/80">{language === 'ar' ? 'الفئة' : 'Category'} *</Label>
                   <Select 
                     value={uploadForm.category} 
                     onValueChange={(v) => setUploadForm(prev => ({ ...prev, category: v }))}
                   >
-                    <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                    <SelectTrigger className="bg-muted border-border text-foreground">
                       <SelectValue placeholder={language === 'ar' ? 'اختر الفئة' : 'Select category'} />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-800">
+                    <SelectContent className="bg-card border-border">
                       {CATEGORIES.filter(c => c.value !== 'all').map((category) => (
                         <SelectItem key={category.value} value={category.value}>
                           <div className="flex items-center gap-2">
@@ -813,11 +813,11 @@ export function DocumentsPage() {
 
                 {/* Description */}
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{language === 'ar' ? 'الوصف' : 'Description'}</Label>
+                  <Label className="text-foreground/80">{language === 'ar' ? 'الوصف' : 'Description'}</Label>
                   <Textarea
                     value={uploadForm.description}
                     onChange={(e) => setUploadForm(prev => ({ ...prev, description: e.target.value }))}
-                    className="bg-slate-800/50 border-slate-700 text-white"
+                    className="bg-muted border-border text-foreground"
                     rows={2}
                     placeholder={language === 'ar' ? 'وصف المستند...' : 'Document description...'}
                   />
@@ -825,14 +825,14 @@ export function DocumentsPage() {
 
                 {/* Tags */}
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{language === 'ar' ? 'الوسوم' : 'Tags'}</Label>
+                  <Label className="text-foreground/80">{language === 'ar' ? 'الوسوم' : 'Tags'}</Label>
                   <Input
                     value={uploadForm.tags}
                     onChange={(e) => setUploadForm(prev => ({ ...prev, tags: e.target.value }))}
-                    className="bg-slate-800/50 border-slate-700 text-white"
+                    className="bg-muted border-border text-foreground"
                     placeholder={language === 'ar' ? 'عقد، تقرير، مهم' : 'contract, report, important'}
                   />
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-muted-foreground">
                     {language === 'ar' ? 'افصل بين الوسوم بفاصلة' : 'Separate tags with commas'}
                   </p>
                 </div>
@@ -845,7 +845,7 @@ export function DocumentsPage() {
                     setShowUploadDialog(false);
                     resetUploadForm();
                   }} 
-                  className="text-slate-400"
+                  className="text-muted-foreground"
                   disabled={isUploading}
                 >
                   {t.cancel}
@@ -870,15 +870,15 @@ export function DocumentsPage() {
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4"></div>
-          <div className="text-slate-400">{t.loading}</div>
+          <div className="text-muted-foreground">{t.loading}</div>
         </div>
       ) : isError ? (
-        <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
           <AlertCircle className="w-16 h-16 mb-4 text-red-400" />
           <p className="text-lg text-red-400">
             {language === 'ar' ? 'خطأ في تحميل البيانات' : 'Error loading data'}
           </p>
-          <p className="text-sm text-slate-500 mt-2">
+          <p className="text-sm text-muted-foreground mt-2">
             {error?.message || (language === 'ar' ? 'يرجى المحاولة مرة أخرى' : 'Please try again')}
           </p>
           <Button variant="outline" className="mt-4" onClick={() => refetch()}>
@@ -886,7 +886,7 @@ export function DocumentsPage() {
           </Button>
         </div>
       ) : filteredDocuments.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
           <FolderOpen className="w-16 h-16 mb-4 opacity-50" />
           <p className="text-lg">{t.noData}</p>
           <Button variant="outline" className="mt-4" onClick={() => setShowUploadDialog(true)}>
@@ -899,26 +899,26 @@ export function DocumentsPage() {
           {filteredDocuments.map(renderDocumentCard)}
         </div>
       ) : (
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <Table>
             <TableHeader>
-              <TableRow className="border-slate-700 hover:bg-slate-800/50">
-                <TableHead className="text-slate-400">
+              <TableRow className="border-border hover:bg-muted">
+                <TableHead className="text-muted-foreground">
                   {language === 'ar' ? 'الملف' : 'File'}
                 </TableHead>
-                <TableHead className="text-slate-400">
+                <TableHead className="text-muted-foreground">
                   {language === 'ar' ? 'النوع' : 'Type'}
                 </TableHead>
-                <TableHead className="text-slate-400">
+                <TableHead className="text-muted-foreground">
                   {language === 'ar' ? 'الفئة' : 'Category'}
                 </TableHead>
-                <TableHead className="text-slate-400">
+                <TableHead className="text-muted-foreground">
                   {language === 'ar' ? 'الحجم' : 'Size'}
                 </TableHead>
-                <TableHead className="text-slate-400">
+                <TableHead className="text-muted-foreground">
                   {language === 'ar' ? 'التاريخ' : 'Date'}
                 </TableHead>
-                <TableHead className="text-slate-400">{t.actions}</TableHead>
+                <TableHead className="text-muted-foreground">{t.actions}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -930,7 +930,7 @@ export function DocumentsPage() {
 
       {/* Preview Dialog */}
       <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-2xl">
+        <DialogContent className="bg-card border-border text-foreground max-w-2xl">
           {selectedDocument && (
             <>
               <DialogHeader>
@@ -948,15 +948,15 @@ export function DocumentsPage() {
 
               <div className="space-y-4 py-4">
                 {/* Preview placeholder */}
-                <div className="aspect-video bg-slate-800/50 rounded-lg flex items-center justify-center">
-                  <div className="text-center text-slate-400">
+                <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
+                  <div className="text-center text-muted-foreground">
                     {(() => {
                       const typeConfig = getFileTypeConfig(selectedDocument.fileType || getFileTypeFromMime(selectedDocument.mimeType));
                       const TypeIcon = typeConfig.icon;
                       return <TypeIcon className={`w-16 h-16 mx-auto mb-4 ${typeConfig.color}`} />;
                     })()}
                     <p>{language === 'ar' ? 'معاينة الملف' : 'File Preview'}</p>
-                    <p className="text-sm text-slate-500 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                       {language === 'ar' ? 'غير متاح حالياً' : 'Not available at the moment'}
                     </p>
                   </div>
@@ -965,20 +965,20 @@ export function DocumentsPage() {
                 {/* Document Info */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <Label className="text-slate-400 text-xs">
+                    <Label className="text-muted-foreground text-xs">
                       {language === 'ar' ? 'النوع' : 'Type'}
                     </Label>
-                    <p className="text-white">
+                    <p className="text-foreground">
                       {getFileTypeConfig(selectedDocument.fileType || getFileTypeFromMime(selectedDocument.mimeType))
                         .value.toUpperCase()}
                     </p>
                   </div>
 
                   <div className="space-y-1">
-                    <Label className="text-slate-400 text-xs">
+                    <Label className="text-muted-foreground text-xs">
                       {language === 'ar' ? 'الفئة' : 'Category'}
                     </Label>
-                    <p className="text-white">
+                    <p className="text-foreground">
                       {language === 'ar' 
                         ? getCategoryConfig(selectedDocument.category).label 
                         : getCategoryConfig(selectedDocument.category).labelEn
@@ -987,41 +987,41 @@ export function DocumentsPage() {
                   </div>
 
                   <div className="space-y-1">
-                    <Label className="text-slate-400 text-xs">
+                    <Label className="text-muted-foreground text-xs">
                       {language === 'ar' ? 'الحجم' : 'Size'}
                     </Label>
-                    <p className="text-white">{formatFileSize(selectedDocument.fileSize, language)}</p>
+                    <p className="text-foreground">{formatFileSize(selectedDocument.fileSize, language)}</p>
                   </div>
 
                   <div className="space-y-1">
-                    <Label className="text-slate-400 text-xs">
+                    <Label className="text-muted-foreground text-xs">
                       {language === 'ar' ? 'تاريخ الرفع' : 'Upload Date'}
                     </Label>
-                    <p className="text-white">{formatDate(selectedDocument.createdAt)}</p>
+                    <p className="text-foreground">{formatDate(selectedDocument.createdAt)}</p>
                   </div>
 
                   <div className="space-y-1">
-                    <Label className="text-slate-400 text-xs">
+                    <Label className="text-muted-foreground text-xs">
                       {language === 'ar' ? 'الإصدار' : 'Version'}
                     </Label>
-                    <p className="text-white">v{selectedDocument.version || 1}</p>
+                    <p className="text-foreground">v{selectedDocument.version || 1}</p>
                   </div>
 
                   <div className="space-y-1">
-                    <Label className="text-slate-400 text-xs">
+                    <Label className="text-muted-foreground text-xs">
                       {language === 'ar' ? 'اسم الملف' : 'Filename'}
                     </Label>
-                    <p className="text-white font-mono text-sm">{selectedDocument.filename}</p>
+                    <p className="text-foreground font-mono text-sm">{selectedDocument.filename}</p>
                   </div>
                 </div>
 
                 {/* Description */}
                 {selectedDocument.description && (
                   <div className="space-y-1">
-                    <Label className="text-slate-400 text-xs">
+                    <Label className="text-muted-foreground text-xs">
                       {language === 'ar' ? 'الوصف' : 'Description'}
                     </Label>
-                    <p className="text-slate-300 text-sm bg-slate-800/50 p-3 rounded-lg">
+                    <p className="text-foreground/80 text-sm bg-muted p-3 rounded-lg">
                       {selectedDocument.description}
                     </p>
                   </div>
@@ -1030,10 +1030,10 @@ export function DocumentsPage() {
                 {/* Tags */}
                 {selectedDocument.tags && selectedDocument.tags.length > 0 && (
                   <div className="space-y-2">
-                    <Label className="text-slate-400 text-xs">{t.tags}</Label>
+                    <Label className="text-muted-foreground text-xs">{t.tags}</Label>
                     <div className="flex flex-wrap gap-2">
                       {selectedDocument.tags.map((tag, index) => (
-                        <Badge key={index} variant="secondary" className="bg-slate-800 text-slate-300">
+                        <Badge key={index} variant="secondary" className="bg-muted text-foreground/80">
                           <Tag className="w-3 h-3 me-1" />
                           {tag}
                         </Badge>
@@ -1046,7 +1046,7 @@ export function DocumentsPage() {
               <DialogFooter className="flex gap-2">
                 <Button 
                   variant="outline" 
-                  className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                  className="border-border text-foreground/80 hover:bg-accent"
                   onClick={() => handleDownload(selectedDocument)}
                 >
                   <Download className="w-4 h-4 me-2" />

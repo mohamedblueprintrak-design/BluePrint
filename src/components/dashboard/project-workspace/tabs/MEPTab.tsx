@@ -82,10 +82,10 @@ export default function MEPTab({
         );
         if (filteredPhases.length === 0) return null;
         return (
-          <div key={group.key} className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4">
+          <div key={group.key} className="bg-muted rounded-xl border border-border/50 p-4">
             <div className="flex items-center gap-2 mb-3">
               {group.icon}
-              <h3 className="text-sm font-semibold text-slate-200">
+              <h3 className="text-sm font-semibold text-foreground">
                 {isAr ? group.label.ar : group.label.en}
               </h3>
             </div>

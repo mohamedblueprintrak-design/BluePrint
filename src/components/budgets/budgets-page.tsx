@@ -230,35 +230,35 @@ export function BudgetsPage() {
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-blue-500/20">
                 <Wallet className="w-5 h-5 text-blue-400" />
               </div>
               <div>
-                <p className="text-lg font-bold text-white">{formatCurrency(stats.totalBudget)}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'إجمالي الميزانية' : 'Total Budget'}</p>
+                <p className="text-lg font-bold text-foreground">{formatCurrency(stats.totalBudget)}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'إجمالي الميزانية' : 'Total Budget'}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-green-500/20">
                 <DollarSign className="w-5 h-5 text-green-400" />
               </div>
               <div>
-                <p className="text-lg font-bold text-white">{formatCurrency(stats.totalActual)}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'المصروف الفعلي' : 'Actual Spent'}</p>
+                <p className="text-lg font-bold text-foreground">{formatCurrency(stats.totalActual)}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'المصروف الفعلي' : 'Actual Spent'}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className={`p-2 rounded-lg ${stats.totalVariance >= 0 ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
@@ -272,7 +272,7 @@ export function BudgetsPage() {
                 <p className={`text-lg font-bold ${getVarianceColor(stats.totalVariance)}`}>
                   {formatCurrency(Math.abs(stats.totalVariance))}
                 </p>
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-muted-foreground">
                   {stats.totalVariance >= 0 
                     ? (language === 'ar' ? 'فائض' : 'Under Budget')
                     : (language === 'ar' ? 'عجز' : 'Over Budget')}
@@ -282,15 +282,15 @@ export function BudgetsPage() {
           </CardContent>
         </Card>
         
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-red-500/20">
                 <AlertTriangle className="w-5 h-5 text-red-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.overBudget}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'تجاوز الميزانية' : 'Over Budget'}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.overBudget}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'تجاوز الميزانية' : 'Over Budget'}</p>
               </div>
             </div>
           </CardContent>
@@ -301,20 +301,20 @@ export function BudgetsPage() {
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div className="flex flex-1 gap-3 w-full md:w-auto">
           <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder={t.search}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="ps-9 bg-slate-800/50 border-slate-700 text-white"
+              className="ps-9 bg-muted border-border text-foreground"
             />
           </div>
           
           <Select value={projectFilter} onValueChange={setProjectFilter}>
-            <SelectTrigger className="w-[150px] bg-slate-800/50 border-slate-700 text-white">
+            <SelectTrigger className="w-[150px] bg-muted border-border text-foreground">
               <SelectValue placeholder={t.project} />
             </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-slate-800">
+            <SelectContent className="bg-card border-border">
               <SelectItem value="all">{t.all}</SelectItem>
               {projects.map((project: any) => (
                 <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
@@ -323,10 +323,10 @@ export function BudgetsPage() {
           </Select>
           
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-[150px] bg-slate-800/50 border-slate-700 text-white">
+            <SelectTrigger className="w-[150px] bg-muted border-border text-foreground">
               <SelectValue placeholder={language === 'ar' ? 'الفئة' : 'Category'} />
             </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-slate-800">
+            <SelectContent className="bg-card border-border">
               <SelectItem value="all">{t.all}</SelectItem>
               {BUDGET_CATEGORIES.map((cat) => (
                 <SelectItem key={cat.value} value={cat.value}>
@@ -339,27 +339,27 @@ export function BudgetsPage() {
         
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
           <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-foreground">
               <Plus className="w-4 h-4 me-2" />
               {language === 'ar' ? 'إضافة ميزانية' : 'Add Budget'}
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-md">
+          <DialogContent className="bg-card border-border text-foreground max-w-md">
             <DialogHeader>
               <DialogTitle>{language === 'ar' ? 'إضافة ميزانية جديدة' : 'Add New Budget'}</DialogTitle>
-              <DialogDescription className="text-slate-400">
+              <DialogDescription className="text-muted-foreground">
                 {language === 'ar' ? 'أدخل تفاصيل الميزانية' : 'Enter budget details'}
               </DialogDescription>
             </DialogHeader>
             
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label className="text-slate-300">{t.project} *</Label>
+                <Label className="text-foreground/80">{t.project} *</Label>
                 <Select value={formData.projectId} onValueChange={(v) => setFormData({ ...formData, projectId: v })}>
-                  <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                  <SelectTrigger className="bg-muted border-border text-foreground">
                     <SelectValue placeholder={language === 'ar' ? 'اختر المشروع' : 'Select project'} />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-900 border-slate-800">
+                  <SelectContent className="bg-card border-border">
                     {projects.map((project: any) => (
                       <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
                     ))}
@@ -368,12 +368,12 @@ export function BudgetsPage() {
               </div>
               
               <div className="space-y-2">
-                <Label className="text-slate-300">{language === 'ar' ? 'الفئة' : 'Category'} *</Label>
+                <Label className="text-foreground/80">{language === 'ar' ? 'الفئة' : 'Category'} *</Label>
                 <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
-                  <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                  <SelectTrigger className="bg-muted border-border text-foreground">
                     <SelectValue placeholder={language === 'ar' ? 'اختر الفئة' : 'Select category'} />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-900 border-slate-800">
+                  <SelectContent className="bg-card border-border">
                     {BUDGET_CATEGORIES.map((cat) => (
                       <SelectItem key={cat.value} value={cat.value}>
                         {language === 'ar' ? cat.label : cat.labelEn}
@@ -384,37 +384,37 @@ export function BudgetsPage() {
               </div>
               
               <div className="space-y-2">
-                <Label className="text-slate-300">{language === 'ar' ? 'الوصف' : 'Description'}</Label>
+                <Label className="text-foreground/80">{language === 'ar' ? 'الوصف' : 'Description'}</Label>
                 <Input
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="bg-slate-800/50 border-slate-700 text-white"
+                  className="bg-muted border-border text-foreground"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label className="text-slate-300">{language === 'ar' ? 'المبلغ الميزاني' : 'Budget Amount'} *</Label>
+                <Label className="text-foreground/80">{language === 'ar' ? 'المبلغ الميزاني' : 'Budget Amount'} *</Label>
                 <Input
                   type="number"
                   value={formData.budgetAmount || ''}
                   onChange={(e) => setFormData({ ...formData, budgetAmount: parseFloat(e.target.value) || 0 })}
-                  className="bg-slate-800/50 border-slate-700 text-white"
+                  className="bg-muted border-border text-foreground"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label className="text-slate-300">{language === 'ar' ? 'المبلغ الفعلي' : 'Actual Amount'}</Label>
+                <Label className="text-foreground/80">{language === 'ar' ? 'المبلغ الفعلي' : 'Actual Amount'}</Label>
                 <Input
                   type="number"
                   value={formData.actualAmount || ''}
                   onChange={(e) => setFormData({ ...formData, actualAmount: parseFloat(e.target.value) || 0 })}
-                  className="bg-slate-800/50 border-slate-700 text-white"
+                  className="bg-muted border-border text-foreground"
                 />
               </div>
             </div>
             
             <DialogFooter>
-              <Button variant="ghost" onClick={closeDialog} className="text-slate-400">
+              <Button variant="ghost" onClick={closeDialog} className="text-muted-foreground">
                 {t.cancel}
               </Button>
               <Button onClick={handleAddBudget} className="bg-blue-600 hover:bg-blue-700" disabled={createBudget.isPending}>
@@ -432,25 +432,25 @@ export function BudgetsPage() {
           const usagePercentage = budget.budgetAmount > 0 ? (budget.actualAmount / budget.budgetAmount) * 100 : 0;
           
           return (
-            <Card key={budget.id} className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-colors">
+            <Card key={budget.id} className="bg-card border-border hover:border-border transition-colors">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-lg ${getCategoryColor(budget.category)}20`}>
-                      <PieChart className="w-5 h-5 text-white" />
+                      <PieChart className="w-5 h-5 text-foreground" />
                     </div>
                     <div>
-                      <Badge className={`${getCategoryColor(budget.category)} text-white text-xs mb-1`}>
+                      <Badge className={`${getCategoryColor(budget.category)} text-foreground text-xs mb-1`}>
                         {getCategoryLabel(budget.category)}
                       </Badge>
-                      <h3 className="text-white font-medium">{budget.description || getCategoryLabel(budget.category)}</h3>
+                      <h3 className="text-foreground font-medium">{budget.description || getCategoryLabel(budget.category)}</h3>
                     </div>
                   </div>
                   <div className="flex gap-1">
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="h-8 w-8 text-slate-400 hover:text-white"
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
                       onClick={() => openEditDialog(budget)}
                     >
                       <Edit className="w-4 h-4" />
@@ -458,7 +458,7 @@ export function BudgetsPage() {
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="h-8 w-8 text-slate-400 hover:text-red-400"
+                      className="h-8 w-8 text-muted-foreground hover:text-red-400"
                       onClick={() => handleDeleteBudget(budget.id)}
                       disabled={deleteBudget.isPending}
                     >
@@ -467,7 +467,7 @@ export function BudgetsPage() {
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-2 text-xs text-slate-500 mb-3">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
                   <Building2 className="w-3 h-3" />
                   <span>{budget.projectName || language === 'ar' ? 'غير محدد' : 'Not specified'}</span>
                 </div>
@@ -475,24 +475,24 @@ export function BudgetsPage() {
                 {/* Progress Bar */}
                 <div className="space-y-2 mb-3">
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-400">{language === 'ar' ? 'الاستخدام' : 'Usage'}</span>
-                    <span className="text-white">{usagePercentage.toFixed(1)}%</span>
+                    <span className="text-muted-foreground">{language === 'ar' ? 'الاستخدام' : 'Usage'}</span>
+                    <span className="text-foreground">{usagePercentage.toFixed(1)}%</span>
                   </div>
                   <Progress value={Math.min(usagePercentage, 100)} className="h-2" />
                 </div>
                 
                 {/* Amounts */}
                 <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="p-2 bg-slate-800/30 rounded">
-                    <p className="text-xs text-slate-400">{language === 'ar' ? 'الميزانية' : 'Budget'}</p>
-                    <p className="text-white font-medium">{formatCurrency(budget.budgetAmount)}</p>
+                  <div className="p-2 bg-muted/50 rounded">
+                    <p className="text-xs text-muted-foreground">{language === 'ar' ? 'الميزانية' : 'Budget'}</p>
+                    <p className="text-foreground font-medium">{formatCurrency(budget.budgetAmount)}</p>
                   </div>
-                  <div className="p-2 bg-slate-800/30 rounded">
-                    <p className="text-xs text-slate-400">{language === 'ar' ? 'المصروف' : 'Spent'}</p>
-                    <p className="text-white font-medium">{formatCurrency(budget.actualAmount)}</p>
+                  <div className="p-2 bg-muted/50 rounded">
+                    <p className="text-xs text-muted-foreground">{language === 'ar' ? 'المصروف' : 'Spent'}</p>
+                    <p className="text-foreground font-medium">{formatCurrency(budget.actualAmount)}</p>
                   </div>
                   <div className={`p-2 rounded ${budget.variance >= 0 ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
-                    <p className="text-xs text-slate-400">{language === 'ar' ? 'الفرق' : 'Variance'}</p>
+                    <p className="text-xs text-muted-foreground">{language === 'ar' ? 'الفرق' : 'Variance'}</p>
                     <p className={`font-medium ${getVarianceColor(budget.variance)}`}>
                       {formatCurrency(Math.abs(budget.variance))}
                     </p>
@@ -506,29 +506,29 @@ export function BudgetsPage() {
 
       {filteredBudgets.length === 0 && (
         <div className="text-center py-12">
-          <PieChart className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-          <p className="text-slate-400">{language === 'ar' ? 'لا توجد ميزانيات' : 'No budgets found'}</p>
+          <PieChart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+          <p className="text-muted-foreground">{language === 'ar' ? 'لا توجد ميزانيات' : 'No budgets found'}</p>
         </div>
       )}
 
       {/* Edit Dialog */}
       <Dialog open={!!editingBudget} onOpenChange={() => setEditingBudget(null)}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-md">
+        <DialogContent className="bg-card border-border text-foreground max-w-md">
           <DialogHeader>
             <DialogTitle>{language === 'ar' ? 'تعديل الميزانية' : 'Edit Budget'}</DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-muted-foreground">
               {language === 'ar' ? 'تعديل تفاصيل الميزانية' : 'Edit budget details'}
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label className="text-slate-300">{t.project}</Label>
+              <Label className="text-foreground/80">{t.project}</Label>
               <Select value={formData.projectId} onValueChange={(v) => setFormData({ ...formData, projectId: v })}>
-                <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                <SelectTrigger className="bg-muted border-border text-foreground">
                   <SelectValue placeholder={language === 'ar' ? 'اختر المشروع' : 'Select project'} />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800">
+                <SelectContent className="bg-card border-border">
                   {projects.map((project: any) => (
                     <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
                   ))}
@@ -537,12 +537,12 @@ export function BudgetsPage() {
             </div>
             
             <div className="space-y-2">
-              <Label className="text-slate-300">{language === 'ar' ? 'الفئة' : 'Category'}</Label>
+              <Label className="text-foreground/80">{language === 'ar' ? 'الفئة' : 'Category'}</Label>
               <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
-                <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                <SelectTrigger className="bg-muted border-border text-foreground">
                   <SelectValue placeholder={language === 'ar' ? 'اختر الفئة' : 'Select category'} />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800">
+                <SelectContent className="bg-card border-border">
                   {BUDGET_CATEGORIES.map((cat) => (
                     <SelectItem key={cat.value} value={cat.value}>
                       {language === 'ar' ? cat.label : cat.labelEn}
@@ -553,37 +553,37 @@ export function BudgetsPage() {
             </div>
             
             <div className="space-y-2">
-              <Label className="text-slate-300">{language === 'ar' ? 'الوصف' : 'Description'}</Label>
+              <Label className="text-foreground/80">{language === 'ar' ? 'الوصف' : 'Description'}</Label>
               <Input
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="bg-slate-800/50 border-slate-700 text-white"
+                className="bg-muted border-border text-foreground"
               />
             </div>
             
             <div className="space-y-2">
-              <Label className="text-slate-300">{language === 'ar' ? 'المبلغ الميزاني' : 'Budget Amount'}</Label>
+              <Label className="text-foreground/80">{language === 'ar' ? 'المبلغ الميزاني' : 'Budget Amount'}</Label>
               <Input
                 type="number"
                 value={formData.budgetAmount || ''}
                 onChange={(e) => setFormData({ ...formData, budgetAmount: parseFloat(e.target.value) || 0 })}
-                className="bg-slate-800/50 border-slate-700 text-white"
+                className="bg-muted border-border text-foreground"
               />
             </div>
             
             <div className="space-y-2">
-              <Label className="text-slate-300">{language === 'ar' ? 'المبلغ الفعلي' : 'Actual Amount'}</Label>
+              <Label className="text-foreground/80">{language === 'ar' ? 'المبلغ الفعلي' : 'Actual Amount'}</Label>
               <Input
                 type="number"
                 value={formData.actualAmount || ''}
                 onChange={(e) => setFormData({ ...formData, actualAmount: parseFloat(e.target.value) || 0 })}
-                className="bg-slate-800/50 border-slate-700 text-white"
+                className="bg-muted border-border text-foreground"
               />
             </div>
           </div>
           
           <DialogFooter>
-            <Button variant="ghost" onClick={closeDialog} className="text-slate-400">
+            <Button variant="ghost" onClick={closeDialog} className="text-muted-foreground">
               {t.cancel}
             </Button>
             <Button onClick={handleUpdateBudget} className="bg-blue-600 hover:bg-blue-700" disabled={updateBudget.isPending}>

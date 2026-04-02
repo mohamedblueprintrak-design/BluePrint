@@ -405,15 +405,15 @@ export function BillingPage() {
   return (
     <div className={`space-y-6 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Current Plan Card */}
-      <Card className="bg-slate-900/50 border-slate-800">
+      <Card className="bg-card border-border">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-foreground flex items-center gap-2">
                 <Crown className="w-5 h-5 text-amber-400" />
                 {texts.currentPlan}
               </CardTitle>
-              <CardDescription className="text-slate-400 mt-1">
+              <CardDescription className="text-muted-foreground mt-1">
                 {billingData.plan.nameAr} - {billingData.plan.price} {texts.aed}
                 {billingData.plan.interval === 'month' ? texts.perMonth : texts.perYear}
               </CardDescription>
@@ -446,7 +446,7 @@ export function BillingPage() {
           {/* Features */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {billingData.plan.features.map((feature, index) => (
-              <div key={index} className="flex items-center gap-2 text-sm text-slate-300">
+              <div key={index} className="flex items-center gap-2 text-sm text-foreground/80">
                 <Check className="w-4 h-4 text-green-400" />
                 {feature}
               </div>
@@ -455,7 +455,7 @@ export function BillingPage() {
 
           {/* Next Billing */}
           {billingData.currentPeriodEnd && billingData.subscriptionStatus === 'active' && (
-            <div className="flex items-center gap-2 text-sm text-slate-400">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Calendar className="w-4 h-4" />
               {texts.nextBilling}: {new Date(billingData.currentPeriodEnd).toLocaleDateString(isRTL ? 'ar-AE' : 'en-US')}
             </div>
@@ -495,9 +495,9 @@ export function BillingPage() {
       </Card>
 
       {/* Usage Statistics */}
-      <Card className="bg-slate-900/50 border-slate-800">
+      <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+          <CardTitle className="text-foreground flex items-center gap-2">
             <Wallet className="w-5 h-5 text-green-400" />
             {texts.usage}
           </CardTitle>
@@ -519,8 +519,8 @@ export function BillingPage() {
               return (
                 <div key={item.key} className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-400">{item.label}</span>
-                    <span className="text-sm text-slate-300">
+                    <span className="text-sm text-muted-foreground">{item.label}</span>
+                    <span className="text-sm text-foreground/80">
                       {usage.used}
                       {!isUnlimited && ` / ${usage.total}`}
                       {isUnlimited && ` (${texts.unlimited})`}
@@ -546,10 +546,10 @@ export function BillingPage() {
       </Card>
 
       {/* Payment Methods */}
-      <Card className="bg-slate-900/50 border-slate-800">
+      <Card className="bg-card border-border">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className="text-foreground flex items-center gap-2">
               <CreditCard className="w-5 h-5 text-blue-400" />
               {texts.paymentMethods}
             </CardTitle>
@@ -561,24 +561,24 @@ export function BillingPage() {
         </CardHeader>
         <CardContent>
           {billingData.paymentMethods.length === 0 ? (
-            <p className="text-slate-400 text-center py-4">{texts.noPaymentMethods}</p>
+            <p className="text-muted-foreground text-center py-4">{texts.noPaymentMethods}</p>
           ) : (
             <div className="space-y-3">
               {billingData.paymentMethods.map((method) => (
                 <div
                   key={method.id}
-                  className="flex items-center justify-between p-4 rounded-lg bg-slate-800/30 border border-slate-700"
+                  className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border border-border"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-slate-700 flex items-center justify-center">
-                      <CreditCard className="w-5 h-5 text-slate-400" />
+                    <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
+                      <CreditCard className="w-5 h-5 text-muted-foreground" />
                     </div>
                     <div>
-                      <p className="text-white font-medium">
+                      <p className="text-foreground font-medium">
                         {method.brand} {texts.cardEndsIn} {method.last4}
                       </p>
                       {method.expiryMonth && method.expiryYear && (
-                        <p className="text-sm text-slate-400">
+                        <p className="text-sm text-muted-foreground">
                           {texts.expires} {method.expiryMonth}/{method.expiryYear}
                         </p>
                       )}
@@ -599,34 +599,34 @@ export function BillingPage() {
       </Card>
 
       {/* Payment History */}
-      <Card className="bg-slate-900/50 border-slate-800">
+      <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+          <CardTitle className="text-foreground flex items-center gap-2">
             <FileText className="w-5 h-5 text-purple-400" />
             {texts.paymentHistory}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {billingData.payments.length === 0 ? (
-            <p className="text-slate-400 text-center py-4">{texts.noPayments}</p>
+            <p className="text-muted-foreground text-center py-4">{texts.noPayments}</p>
           ) : (
             <div className="space-y-3">
               {billingData.payments.map((payment) => (
                 <div
                   key={payment.id}
-                  className="flex items-center justify-between p-4 rounded-lg bg-slate-800/30 border border-slate-700"
+                  className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border border-border"
                 >
                   <div className="flex items-center gap-4">
                     {getPaymentStatusIcon(payment.status)}
                     <div>
-                      <p className="text-white font-medium">{payment.invoice}</p>
-                      <p className="text-sm text-slate-400">
+                      <p className="text-foreground font-medium">{payment.invoice}</p>
+                      <p className="text-sm text-muted-foreground">
                         {new Date(payment.date).toLocaleDateString(isRTL ? 'ar-AE' : 'en-US')}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <span className="text-white font-medium">
+                    <span className="text-foreground font-medium">
                       {payment.amount} {texts.aed}
                     </span>
                     <Badge
@@ -659,10 +659,10 @@ export function BillingPage() {
 
       {/* Cancel Dialog */}
       <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-        <DialogContent className="bg-slate-900 border-slate-800">
+        <DialogContent className="bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-white">{texts.cancelConfirm}</DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogTitle className="text-foreground">{texts.cancelConfirm}</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               {texts.cancelWarning}
             </DialogDescription>
           </DialogHeader>

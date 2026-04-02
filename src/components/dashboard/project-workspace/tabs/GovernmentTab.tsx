@@ -33,11 +33,11 @@ export default function GovernmentTab({
 
   return (
     <div className="space-y-6">
-      <Card className="bg-slate-900/50 border-slate-800">
+      <Card className="bg-card border-border">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
             <Landmark className="h-5 w-5 text-amber-400" />
-            <CardTitle className="text-base text-white">
+            <CardTitle className="text-base text-foreground">
               {isAr
                 ? 'مراحل الموافقات الحكومية'
                 : 'Government Approval Phases'}
@@ -59,9 +59,9 @@ export default function GovernmentTab({
 
       {/* MUN Notes History */}
       {govPhases.some((p) => p.notes) && (
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base text-white">
+            <CardTitle className="text-base text-foreground">
               {isAr
                 ? 'ملاحظات البلدية (MUN NOT)'
                 : 'MUN Notes History'}
@@ -79,7 +79,7 @@ export default function GovernmentTab({
                 return (
                   <div
                     key={p.id}
-                    className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/50"
+                    className="bg-muted rounded-lg p-3 border border-border/50"
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <Badge
@@ -96,7 +96,7 @@ export default function GovernmentTab({
                         {isAr ? 'رفض' : 'rejections'}
                       </Badge>
                     </div>
-                    <p className="text-sm text-slate-300 whitespace-pre-wrap">
+                    <p className="text-sm text-foreground/80 whitespace-pre-wrap">
                       {p.notes}
                     </p>
                   </div>

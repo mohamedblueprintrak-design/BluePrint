@@ -86,7 +86,7 @@ export function ProposalsPage() {
   const getStatusBadge = (status: string) => {
     const statusConfig = PROPOSAL_STATUSES.find(s => s.value === status) || PROPOSAL_STATUSES[0];
     return (
-      <Badge variant="secondary" className={`${statusConfig.color} text-white`}>
+      <Badge variant="secondary" className={`${statusConfig.color} text-foreground`}>
         {language === 'ar' ? statusConfig.label : statusConfig.labelEn}
       </Badge>
     );
@@ -162,71 +162,71 @@ export function ProposalsPage() {
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-blue-500/20">
                 <FileText className="w-5 h-5 text-blue-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.total}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'إجمالي العروض' : 'Total'}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.total}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'إجمالي العروض' : 'Total'}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-slate-500/20">
-                <FileText className="w-5 h-5 text-slate-400" />
+                <FileText className="w-5 h-5 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.draft}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'مسودات' : 'Drafts'}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.draft}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'مسودات' : 'Drafts'}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-blue-500/20">
                 <Send className="w-5 h-5 text-blue-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.sent}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'مرسلة' : 'Sent'}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.sent}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'مرسلة' : 'Sent'}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-green-500/20">
                 <CheckCircle className="w-5 h-5 text-green-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.accepted}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'مقبولة' : 'Accepted'}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.accepted}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'مقبولة' : 'Accepted'}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-cyan-500/20">
                 <DollarSign className="w-5 h-5 text-cyan-400" />
               </div>
               <div>
-                <p className="text-xl font-bold text-white">{formatCurrency(stats.totalValue)}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'إجمالي القيمة' : 'Total Value'}</p>
+                <p className="text-xl font-bold text-foreground">{formatCurrency(stats.totalValue)}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'إجمالي القيمة' : 'Total Value'}</p>
               </div>
             </div>
           </CardContent>
@@ -237,20 +237,20 @@ export function ProposalsPage() {
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div className="flex flex-1 gap-3 w-full md:w-auto">
           <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder={t.search}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="ps-9 bg-slate-800/50 border-slate-700 text-white"
+              className="ps-9 bg-muted border-border text-foreground"
             />
           </div>
           
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[140px] bg-slate-800/50 border-slate-700 text-white">
+            <SelectTrigger className="w-[140px] bg-muted border-border text-foreground">
               <SelectValue placeholder={t.status} />
             </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-slate-800">
+            <SelectContent className="bg-card border-border">
               <SelectItem value="all">{t.all}</SelectItem>
               {PROPOSAL_STATUSES.map((status) => (
                 <SelectItem key={status.value} value={status.value}>
@@ -263,15 +263,15 @@ export function ProposalsPage() {
         
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
           <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-foreground">
               <Plus className="w-4 h-4 me-2" />
               {language === 'ar' ? 'عرض جديد' : 'New Proposal'}
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="bg-card border-border text-foreground max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{language === 'ar' ? 'عرض سعر جديد' : 'New Proposal'}</DialogTitle>
-              <DialogDescription className="text-slate-400">
+              <DialogDescription className="text-muted-foreground">
                 {language === 'ar' ? 'أدخل بيانات العرض' : 'Enter proposal details'}
               </DialogDescription>
             </DialogHeader>
@@ -279,20 +279,20 @@ export function ProposalsPage() {
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{language === 'ar' ? 'عنوان العرض' : 'Title'} *</Label>
+                  <Label className="text-foreground/80">{language === 'ar' ? 'عنوان العرض' : 'Title'} *</Label>
                   <Input
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="bg-slate-800/50 border-slate-700 text-white"
+                    className="bg-muted border-border text-foreground"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{t.clientName} *</Label>
+                  <Label className="text-foreground/80">{t.clientName} *</Label>
                   <Select value={formData.clientId} onValueChange={(v) => setFormData({ ...formData, clientId: v })}>
-                    <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                    <SelectTrigger className="bg-muted border-border text-foreground">
                       <SelectValue placeholder={language === 'ar' ? 'اختر العميل' : 'Select client'} />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-800">
+                    <SelectContent className="bg-card border-border">
                       {clients.map((client: any) => (
                         <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
                       ))}
@@ -303,12 +303,12 @@ export function ProposalsPage() {
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{t.project}</Label>
+                  <Label className="text-foreground/80">{t.project}</Label>
                   <Select value={formData.projectId} onValueChange={(v) => setFormData({ ...formData, projectId: v })}>
-                    <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                    <SelectTrigger className="bg-muted border-border text-foreground">
                       <SelectValue placeholder={language === 'ar' ? 'اختر المشروع' : 'Select project'} />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-800">
+                    <SelectContent className="bg-card border-border">
                       {projects.map((project: any) => (
                         <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
                       ))}
@@ -316,12 +316,12 @@ export function ProposalsPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{language === 'ar' ? 'صالح حتى' : 'Valid Until'}</Label>
+                  <Label className="text-foreground/80">{language === 'ar' ? 'صالح حتى' : 'Valid Until'}</Label>
                   <Input
                     type="date"
                     value={formData.validUntil}
                     onChange={(e) => setFormData({ ...formData, validUntil: e.target.value })}
-                    className="bg-slate-800/50 border-slate-700 text-white"
+                    className="bg-muted border-border text-foreground"
                   />
                 </div>
               </div>
@@ -329,44 +329,44 @@ export function ProposalsPage() {
               {/* Items */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <Label className="text-slate-300">{language === 'ar' ? 'بنود العرض' : 'Items'}</Label>
-                  <Button variant="outline" size="sm" onClick={handleAddItem} className="border-slate-700">
+                  <Label className="text-foreground/80">{language === 'ar' ? 'بنود العرض' : 'Items'}</Label>
+                  <Button variant="outline" size="sm" onClick={handleAddItem} className="border-border">
                     <Plus className="w-4 h-4 me-1" />
                     {language === 'ar' ? 'إضافة بند' : 'Add Item'}
                   </Button>
                 </div>
                 
                 {formData.items.map((item, index) => (
-                  <div key={index} className="grid grid-cols-12 gap-2 items-end p-3 bg-slate-800/30 rounded-lg">
+                  <div key={index} className="grid grid-cols-12 gap-2 items-end p-3 bg-muted/50 rounded-lg">
                     <div className="col-span-5 space-y-1">
-                      <Label className="text-xs text-slate-400">{language === 'ar' ? 'الوصف' : 'Description'}</Label>
+                      <Label className="text-xs text-muted-foreground">{language === 'ar' ? 'الوصف' : 'Description'}</Label>
                       <Input
                         value={item.description}
                         onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                        className="bg-slate-700/50 border-slate-600 text-white h-9"
+                        className="bg-secondary/50 border-border text-foreground h-9"
                       />
                     </div>
                     <div className="col-span-2 space-y-1">
-                      <Label className="text-xs text-slate-400">{language === 'ar' ? 'الكمية' : 'Qty'}</Label>
+                      <Label className="text-xs text-muted-foreground">{language === 'ar' ? 'الكمية' : 'Qty'}</Label>
                       <Input
                         type="number"
                         value={item.quantity}
                         onChange={(e) => handleItemChange(index, 'quantity', parseFloat(e.target.value) || 0)}
-                        className="bg-slate-700/50 border-slate-600 text-white h-9"
+                        className="bg-secondary/50 border-border text-foreground h-9"
                       />
                     </div>
                     <div className="col-span-2 space-y-1">
-                      <Label className="text-xs text-slate-400">{language === 'ar' ? 'السعر' : 'Price'}</Label>
+                      <Label className="text-xs text-muted-foreground">{language === 'ar' ? 'السعر' : 'Price'}</Label>
                       <Input
                         type="number"
                         value={item.unitPrice}
                         onChange={(e) => handleItemChange(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                        className="bg-slate-700/50 border-slate-600 text-white h-9"
+                        className="bg-secondary/50 border-border text-foreground h-9"
                       />
                     </div>
                     <div className="col-span-2 space-y-1">
-                      <Label className="text-xs text-slate-400">{language === 'ar' ? 'الإجمالي' : 'Total'}</Label>
-                      <div className="h-9 px-3 flex items-center bg-slate-700/30 rounded-md text-cyan-400">
+                      <Label className="text-xs text-muted-foreground">{language === 'ar' ? 'الإجمالي' : 'Total'}</Label>
+                      <div className="h-9 px-3 flex items-center bg-secondary/30 rounded-md text-cyan-400">
                         {formatCurrency(item.quantity * item.unitPrice)}
                       </div>
                     </div>
@@ -384,17 +384,17 @@ export function ProposalsPage() {
                 
                 {/* Totals */}
                 <div className="flex justify-end">
-                  <div className="w-64 space-y-2 pt-4 border-t border-slate-700">
+                  <div className="w-64 space-y-2 pt-4 border-t border-border">
                     <div className="flex justify-between text-sm">
-                      <span className="text-slate-400">{language === 'ar' ? 'المجموع' : 'Subtotal'}</span>
-                      <span className="text-white">{formatCurrency(calculateTotal())}</span>
+                      <span className="text-muted-foreground">{language === 'ar' ? 'المجموع' : 'Subtotal'}</span>
+                      <span className="text-foreground">{formatCurrency(calculateTotal())}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-slate-400">{language === 'ar' ? 'الضريبة (5%)' : 'VAT (5%)'}</span>
-                      <span className="text-white">{formatCurrency(calculateTotal() * 0.05)}</span>
+                      <span className="text-muted-foreground">{language === 'ar' ? 'الضريبة (5%)' : 'VAT (5%)'}</span>
+                      <span className="text-foreground">{formatCurrency(calculateTotal() * 0.05)}</span>
                     </div>
                     <div className="flex justify-between text-lg font-bold">
-                      <span className="text-white">{language === 'ar' ? 'الإجمالي' : 'Total'}</span>
+                      <span className="text-foreground">{language === 'ar' ? 'الإجمالي' : 'Total'}</span>
                       <span className="text-cyan-400">{formatCurrency(calculateTotal() * 1.05)}</span>
                     </div>
                   </div>
@@ -402,18 +402,18 @@ export function ProposalsPage() {
               </div>
               
               <div className="space-y-2">
-                <Label className="text-slate-300">{t.notes}</Label>
+                <Label className="text-foreground/80">{t.notes}</Label>
                 <Textarea
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  className="bg-slate-800/50 border-slate-700 text-white"
+                  className="bg-muted border-border text-foreground"
                   rows={2}
                 />
               </div>
             </div>
             
             <DialogFooter>
-              <Button variant="ghost" onClick={() => setShowAddDialog(false)} className="text-slate-400">
+              <Button variant="ghost" onClick={() => setShowAddDialog(false)} className="text-muted-foreground">
                 {t.cancel}
               </Button>
               <Button onClick={handleCreateProposal} className="bg-blue-600 hover:bg-blue-700">
@@ -427,10 +427,10 @@ export function ProposalsPage() {
       {/* Proposals Grid */}
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="text-slate-400">{t.loading}</div>
+          <div className="text-muted-foreground">{t.loading}</div>
         </div>
       ) : filteredProposals.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
           <FileText className="w-16 h-16 mb-4 opacity-50" />
           <p className="text-lg">{t.noData}</p>
           <Button variant="outline" className="mt-4" onClick={() => setShowAddDialog(true)}>
@@ -441,23 +441,23 @@ export function ProposalsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProposals.map((proposal: any) => (
-            <Card key={proposal.id} className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-colors group">
+            <Card key={proposal.id} className="bg-card border-border hover:border-border transition-colors group">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <Badge variant="outline" className="text-slate-400 border-slate-700">
+                      <Badge variant="outline" className="text-muted-foreground border-border">
                         {proposal.proposalNumber}
                       </Badge>
                       {getStatusBadge(proposal.status)}
                     </div>
-                    <CardTitle className="text-lg text-white line-clamp-1">{proposal.title || t.project}</CardTitle>
+                    <CardTitle className="text-lg text-foreground line-clamp-1">{proposal.title || t.project}</CardTitle>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
                 {proposal.client && (
-                  <div className="flex items-center gap-2 text-sm text-slate-400">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Users className="w-4 h-4" />
                     <span className="line-clamp-1">{proposal.client}</span>
                   </div>
@@ -471,19 +471,19 @@ export function ProposalsPage() {
                 )}
                 
                 {proposal.validUntil && (
-                  <div className="flex items-center gap-2 text-sm text-slate-400">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Clock className="w-4 h-4" />
                     <span>{language === 'ar' ? 'صالح حتى' : 'Valid until'}: {formatDate(proposal.validUntil)}</span>
                   </div>
                 )}
                 
                 <div className="flex items-center justify-between pt-2">
-                  <span className="text-xs text-slate-500">{formatDate(proposal.createdAt)}</span>
+                  <span className="text-xs text-muted-foreground">{formatDate(proposal.createdAt)}</span>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                       <Eye className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                       <Edit className="w-4 h-4" />
                     </Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-400 hover:text-blue-300">

@@ -139,7 +139,7 @@ export function QuickActionsFab() {
                 <span
                   className={cn(
                     'absolute whitespace-nowrap px-2.5 py-1 rounded-lg text-xs font-medium shadow-lg',
-                    'bg-slate-800 text-slate-200 border border-slate-700',
+                    'bg-muted text-foreground border border-border',
                     'opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none',
                     isRTL ? 'right-12' : 'left-12'
                   )}
@@ -153,7 +153,7 @@ export function QuickActionsFab() {
                   'transition-transform active:scale-90',
                   isDark ? action.bgColor : `${action.bgColor}/90`
                 )}>
-                  <Icon className="w-5 h-5 text-white" />
+                  <Icon className="w-5 h-5 text-foreground" />
                 </div>
               </motion.button>
             );
@@ -171,7 +171,7 @@ export function QuickActionsFab() {
           'fixed z-[35] md:hidden w-14 h-14 rounded-full shadow-2xl',
           'flex items-center justify-center',
           'bg-gradient-to-br from-slate-800 to-slate-900',
-          'border border-slate-700',
+          'border border-border',
           'transition-shadow active:scale-95',
           isOpen ? 'shadow-blue-500/20' : 'shadow-slate-900/50'
         )}
@@ -186,9 +186,9 @@ export function QuickActionsFab() {
           transition={{ type: 'spring', stiffness: 300, damping: 20 }}
         >
           {isOpen ? (
-            <X className="w-6 h-6 text-white" />
+            <X className="w-6 h-6 text-foreground" />
           ) : (
-            <Plus className="w-6 h-6 text-white" />
+            <Plus className="w-6 h-6 text-foreground" />
           )}
         </motion.div>
       </motion.button>

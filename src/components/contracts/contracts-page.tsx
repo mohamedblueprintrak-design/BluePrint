@@ -97,7 +97,7 @@ export function ContractsPage() {
   const getStatusBadge = (status: string) => {
     const statusConfig = CONTRACT_STATUSES.find(s => s.value === status) || CONTRACT_STATUSES[0];
     return (
-      <Badge variant="secondary" className={`${statusConfig.color} text-white`}>
+      <Badge variant="secondary" className={`${statusConfig.color} text-foreground`}>
         {language === 'ar' ? statusConfig.label : status}
       </Badge>
     );
@@ -123,57 +123,57 @@ export function ContractsPage() {
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-blue-500/20">
                 <FileCheck className="w-5 h-5 text-blue-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.total}</p>
-                <p className="text-sm text-slate-400">{t.contracts}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.total}</p>
+                <p className="text-sm text-muted-foreground">{t.contracts}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-green-500/20">
                 <FileCheck className="w-5 h-5 text-green-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.active}</p>
-                <p className="text-sm text-slate-400">{t.active}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.active}</p>
+                <p className="text-sm text-muted-foreground">{t.active}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-red-500/20">
                 <FileCheck className="w-5 h-5 text-red-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.expired}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'منتهية' : 'Expired'}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.expired}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'منتهية' : 'Expired'}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-cyan-500/20">
                 <DollarSign className="w-5 h-5 text-cyan-400" />
               </div>
               <div>
-                <p className="text-xl font-bold text-white">{formatCurrency(stats.totalValue)}</p>
-                <p className="text-sm text-slate-400">{t.total}</p>
+                <p className="text-xl font-bold text-foreground">{formatCurrency(stats.totalValue)}</p>
+                <p className="text-sm text-muted-foreground">{t.total}</p>
               </div>
             </div>
           </CardContent>
@@ -184,20 +184,20 @@ export function ContractsPage() {
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div className="flex flex-1 gap-3 w-full md:w-auto">
           <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder={t.search}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="ps-9 bg-slate-800/50 border-slate-700 text-white"
+              className="ps-9 bg-muted border-border text-foreground"
             />
           </div>
           
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[140px] bg-slate-800/50 border-slate-700 text-white">
+            <SelectTrigger className="w-[140px] bg-muted border-border text-foreground">
               <SelectValue placeholder={t.status} />
             </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-slate-800">
+            <SelectContent className="bg-card border-border">
               <SelectItem value="all">{t.all}</SelectItem>
               {CONTRACT_STATUSES.map((status) => (
                 <SelectItem key={status.value} value={status.value}>
@@ -210,38 +210,38 @@ export function ContractsPage() {
         
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
           <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-foreground">
               <Plus className="w-4 h-4 me-2" />
               {t.newContract}
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-lg">
+          <DialogContent className="bg-card border-border text-foreground max-w-lg">
             <DialogHeader>
               <DialogTitle>{t.newContract}</DialogTitle>
-              <DialogDescription className="text-slate-400">
+              <DialogDescription className="text-muted-foreground">
                 {language === 'ar' ? 'أدخل بيانات العقد الجديد' : 'Enter the new contract details'}
               </DialogDescription>
             </DialogHeader>
             
             <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
               <div className="space-y-2">
-                <Label className="text-slate-300">{t.contractTitle} *</Label>
+                <Label className="text-foreground/80">{t.contractTitle} *</Label>
                 <Input
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="bg-slate-800/50 border-slate-700 text-white"
+                  className="bg-muted border-border text-foreground"
                   placeholder={language === 'ar' ? 'عنوان العقد' : 'Contract title'}
                 />
               </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{t.clientName}</Label>
+                  <Label className="text-foreground/80">{t.clientName}</Label>
                   <Select value={formData.clientId} onValueChange={(v) => setFormData({ ...formData, clientId: v })}>
-                    <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                    <SelectTrigger className="bg-muted border-border text-foreground">
                       <SelectValue placeholder={language === 'ar' ? 'اختر العميل' : 'Select client'} />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-800">
+                    <SelectContent className="bg-card border-border">
                       {clients.map((client: any) => (
                         <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
                       ))}
@@ -249,12 +249,12 @@ export function ContractsPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{t.project}</Label>
+                  <Label className="text-foreground/80">{t.project}</Label>
                   <Select value={formData.projectId} onValueChange={(v) => setFormData({ ...formData, projectId: v })}>
-                    <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                    <SelectTrigger className="bg-muted border-border text-foreground">
                       <SelectValue placeholder={language === 'ar' ? 'اختر المشروع' : 'Select project'} />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-800">
+                    <SelectContent className="bg-card border-border">
                       {projects.map((project: any) => (
                         <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
                       ))}
@@ -265,12 +265,12 @@ export function ContractsPage() {
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{language === 'ar' ? 'نوع العقد' : 'Contract Type'}</Label>
+                  <Label className="text-foreground/80">{language === 'ar' ? 'نوع العقد' : 'Contract Type'}</Label>
                   <Select value={formData.contractType} onValueChange={(v) => setFormData({ ...formData, contractType: v })}>
-                    <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                    <SelectTrigger className="bg-muted border-border text-foreground">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-800">
+                    <SelectContent className="bg-card border-border">
                       {CONTRACT_TYPES.map((type) => (
                         <SelectItem key={type.value} value={type.value}>
                           {language === 'ar' ? type.label : type.labelEn}
@@ -280,12 +280,12 @@ export function ContractsPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{t.contractValue}</Label>
+                  <Label className="text-foreground/80">{t.contractValue}</Label>
                   <Input
                     type="number"
                     value={formData.contractValue}
                     onChange={(e) => setFormData({ ...formData, contractValue: e.target.value })}
-                    className="bg-slate-800/50 border-slate-700 text-white"
+                    className="bg-muted border-border text-foreground"
                     placeholder="0"
                   />
                 </div>
@@ -293,38 +293,38 @@ export function ContractsPage() {
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{t.startDate}</Label>
+                  <Label className="text-foreground/80">{t.startDate}</Label>
                   <Input
                     type="date"
                     value={formData.startDate}
                     onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    className="bg-slate-800/50 border-slate-700 text-white"
+                    className="bg-muted border-border text-foreground"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{t.endDate}</Label>
+                  <Label className="text-foreground/80">{t.endDate}</Label>
                   <Input
                     type="date"
                     value={formData.endDate}
                     onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                    className="bg-slate-800/50 border-slate-700 text-white"
+                    className="bg-muted border-border text-foreground"
                   />
                 </div>
               </div>
               
               <div className="space-y-2">
-                <Label className="text-slate-300">{t.notes}</Label>
+                <Label className="text-foreground/80">{t.notes}</Label>
                 <Textarea
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  className="bg-slate-800/50 border-slate-700 text-white"
+                  className="bg-muted border-border text-foreground"
                   rows={3}
                 />
               </div>
             </div>
             
             <DialogFooter>
-              <Button variant="ghost" onClick={() => setShowAddDialog(false)} className="text-slate-400">
+              <Button variant="ghost" onClick={() => setShowAddDialog(false)} className="text-muted-foreground">
                 {t.cancel}
               </Button>
               <Button onClick={handleCreateContract} className="bg-blue-600 hover:bg-blue-700">
@@ -338,10 +338,10 @@ export function ContractsPage() {
       {/* Contracts Grid */}
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="text-slate-400">{t.loading}</div>
+          <div className="text-muted-foreground">{t.loading}</div>
         </div>
       ) : filteredContracts.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
           <FileCheck className="w-16 h-16 mb-4 opacity-50" />
           <p className="text-lg">{t.noData}</p>
           <Button variant="outline" className="mt-4" onClick={() => setShowAddDialog(true)}>
@@ -352,23 +352,23 @@ export function ContractsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredContracts.map((contract: any) => (
-            <Card key={contract.id} className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-colors group">
+            <Card key={contract.id} className="bg-card border-border hover:border-border transition-colors group">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <Badge variant="outline" className="text-slate-400 border-slate-700">
+                      <Badge variant="outline" className="text-muted-foreground border-border">
                         {contract.contractNumber}
                       </Badge>
                       {getStatusBadge(contract.status)}
                     </div>
-                    <CardTitle className="text-lg text-white line-clamp-1">{contract.title}</CardTitle>
+                    <CardTitle className="text-lg text-foreground line-clamp-1">{contract.title}</CardTitle>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
                 {contract.client && (
-                  <div className="flex items-center gap-2 text-sm text-slate-400">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Users className="w-4 h-4" />
                     <span className="line-clamp-1">{contract.client}</span>
                   </div>
@@ -382,22 +382,22 @@ export function ContractsPage() {
                 )}
                 
                 {contract.startDate && contract.endDate && (
-                  <div className="flex items-center gap-2 text-sm text-slate-400">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="w-4 h-4" />
                     <span>{formatDate(contract.startDate)} - {formatDate(contract.endDate)}</span>
                   </div>
                 )}
                 
                 <div className="flex items-center justify-between pt-2">
-                  <span className="text-xs text-slate-500">{formatDate(contract.createdAt)}</span>
+                  <span className="text-xs text-muted-foreground">{formatDate(contract.createdAt)}</span>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                       <Eye className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                       <Edit className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                       <Download className="w-4 h-4" />
                     </Button>
                   </div>

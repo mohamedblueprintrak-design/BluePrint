@@ -47,30 +47,30 @@ export default function PhaseTable({
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-slate-700/50">
-            <th className="text-start p-3 text-slate-400 font-medium">
+          <tr className="border-b border-border/50">
+            <th className="text-start p-3 text-muted-foreground font-medium">
               {isAr ? 'المرحلة' : 'Phase'}
             </th>
-            <th className="text-start p-3 text-slate-400 font-medium">{t.status}</th>
-            <th className="text-start p-3 text-slate-400 font-medium">
+            <th className="text-start p-3 text-muted-foreground font-medium">{t.status}</th>
+            <th className="text-start p-3 text-muted-foreground font-medium">
               {isAr ? 'المسؤول' : 'Assigned'}
             </th>
-            <th className="text-start p-3 text-slate-400 font-medium">
+            <th className="text-start p-3 text-muted-foreground font-medium">
               {isAr ? 'تاريخ البداية' : 'Start'}
             </th>
-            <th className="text-start p-3 text-slate-400 font-medium">
+            <th className="text-start p-3 text-muted-foreground font-medium">
               {isAr ? 'المتبقي' : 'SLA'}
             </th>
-            <th className="text-start p-3 text-slate-400 font-medium">
+            <th className="text-start p-3 text-muted-foreground font-medium">
               {isAr ? 'الرفض' : 'Rejections'}
             </th>
-            <th className="text-center p-3 text-slate-400 font-medium">{t.actions}</th>
+            <th className="text-center p-3 text-muted-foreground font-medium">{t.actions}</th>
           </tr>
         </thead>
         <tbody>
           {categoryPhases.length === 0 ? (
             <tr>
-              <td colSpan={7} className="text-center py-8 text-slate-500">
+              <td colSpan={7} className="text-center py-8 text-muted-foreground">
                 {t.noData}
               </td>
             </tr>
@@ -91,7 +91,7 @@ export default function PhaseTable({
               return (
                 <tr
                   key={phase.id}
-                  className={`border-b border-slate-700/30 hover:bg-slate-800/40 transition-colors ${
+                  className={`border-b border-border/30 hover:bg-accent/40 transition-colors ${
                     isBlocked ? 'border-s-2 border-s-orange-500/60 bg-orange-500/5' : ''
                   }`}
                 >
@@ -104,7 +104,7 @@ export default function PhaseTable({
                           </TooltipTrigger>
                           <TooltipContent
                             side="top"
-                            className="bg-slate-800 border-slate-700 text-slate-200 max-w-xs"
+                            className="bg-muted border-border text-foreground max-w-xs"
                           >
                             <p className="font-medium mb-1">
                               {isAr ? '🔒 مرحلة محظورة' : '🔒 Phase Blocked'}
@@ -123,7 +123,7 @@ export default function PhaseTable({
                           className={`h-2 w-2 rounded-full shrink-0 ${ps.dot}`}
                         />
                       )}
-                      <span className="text-white font-medium">
+                      <span className="text-foreground font-medium">
                         {isAr ? ptl.ar : ptl.en}
                       </span>
                       {isBlocked && (
@@ -163,7 +163,7 @@ export default function PhaseTable({
                               {assignedName.charAt(0)}
                             </AvatarFallback>
                           </Avatar>
-                          <span className="text-slate-300 text-xs">{assignedName}</span>
+                          <span className="text-foreground/80 text-xs">{assignedName}</span>
                         </div>
                         {/* Draft Assignment */}
                         {phase.draftAssignedTo && (
@@ -171,7 +171,7 @@ export default function PhaseTable({
                             <PenTool className="h-3 w-3" />
                             <span>{phase.draftAssignedTo.name || phase.draftAssignedTo.fullName}</span>
                             {phase.draftStartDate && (
-                              <span className="text-slate-500">
+                              <span className="text-muted-foreground">
                                 ({formatDate(phase.draftStartDate)} - {phase.draftEndDate ? formatDate(phase.draftEndDate) : '...'})
                               </span>
                             )}
@@ -179,10 +179,10 @@ export default function PhaseTable({
                         )}
                       </div>
                     ) : (
-                      <span className="text-slate-600 text-xs">—</span>
+                      <span className="text-muted-foreground text-xs">—</span>
                     )}
                   </td>
-                  <td className="p-3 text-slate-400 text-xs">
+                  <td className="p-3 text-muted-foreground text-xs">
                     {phase.startDate ? formatDate(phase.startDate) : '—'}
                   </td>
                   <td className="p-3">
@@ -191,7 +191,7 @@ export default function PhaseTable({
                         {sla.text}
                       </span>
                     ) : (
-                      <span className="text-slate-600 text-xs">—</span>
+                      <span className="text-muted-foreground text-xs">—</span>
                     )}
                   </td>
                   <td className="p-3">
@@ -203,7 +203,7 @@ export default function PhaseTable({
                         {phase.rejectionCount}
                       </Badge>
                     ) : (
-                      <span className="text-slate-600 text-xs">0</span>
+                      <span className="text-muted-foreground text-xs">0</span>
                     )}
                   </td>
                   <td className="p-3 text-center">
@@ -242,11 +242,11 @@ export default function PhaseTable({
                                 }
                                 disabled
                               >
-                                <SelectTrigger className="h-7 w-auto border-slate-700 bg-slate-800 text-xs text-slate-500 px-2 opacity-50 cursor-not-allowed">
+                                <SelectTrigger className="h-7 w-auto border-border bg-muted text-xs text-muted-foreground px-2 opacity-50 cursor-not-allowed">
                                   <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent className="bg-slate-800 border-slate-700">
-                                  <SelectItem value="NOT_STARTED" className="text-slate-300">
+                                <SelectContent className="bg-muted border-border">
+                                  <SelectItem value="NOT_STARTED" className="text-foreground/80">
                                     {isAr ? 'لم يبدأ' : 'Not Started'}
                                   </SelectItem>
                                 </SelectContent>
@@ -260,7 +260,7 @@ export default function PhaseTable({
                           </TooltipTrigger>
                           <TooltipContent
                             side="top"
-                            className="bg-slate-800 border-slate-700 text-slate-200 max-w-xs"
+                            className="bg-muted border-border text-foreground max-w-xs"
                           >
                             {depInfo?.dependencyChain.map((chain, idx) => (
                               <p key={idx} className="text-xs text-orange-300">
@@ -276,23 +276,23 @@ export default function PhaseTable({
                             onStatusChange(phase.id, val)
                           }
                         >
-                          <SelectTrigger className="h-7 w-auto border-slate-700 bg-slate-800 text-xs text-slate-300 px-2">
+                          <SelectTrigger className="h-7 w-auto border-border bg-muted text-xs text-foreground/80 px-2">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent className="bg-slate-800 border-slate-700">
-                            <SelectItem value="NOT_STARTED" className="text-slate-300">
+                          <SelectContent className="bg-muted border-border">
+                            <SelectItem value="NOT_STARTED" className="text-foreground/80">
                               {isAr ? 'لم يبدأ' : 'Not Started'}
                             </SelectItem>
-                            <SelectItem value="IN_PROGRESS" className="text-slate-300">
+                            <SelectItem value="IN_PROGRESS" className="text-foreground/80">
                               {isAr ? 'قيد التنفيذ' : 'In Progress'}
                             </SelectItem>
-                            <SelectItem value="COMPLETED" className="text-slate-300">
+                            <SelectItem value="COMPLETED" className="text-foreground/80">
                               {isAr ? 'مكتمل' : 'Completed'}
                             </SelectItem>
-                            <SelectItem value="ON_HOLD" className="text-slate-300">
+                            <SelectItem value="ON_HOLD" className="text-foreground/80">
                               {isAr ? 'معلق' : 'On Hold'}
                             </SelectItem>
-                            <SelectItem value="DELAYED" className="text-slate-300">
+                            <SelectItem value="DELAYED" className="text-foreground/80">
                               {isAr ? 'متأخر' : 'Delayed'}
                             </SelectItem>
                           </SelectContent>

@@ -151,7 +151,7 @@ export default function ProjectWorkspace({ projectId, onBack }: ProjectWorkspace
       <div className="flex items-center justify-center h-full min-h-[400px]">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-10 w-10 animate-spin text-blue-500" />
-          <p className="text-slate-400 text-sm">
+          <p className="text-muted-foreground text-sm">
             {isAr ? 'جاري تحميل المشروع...' : 'Loading project...'}
           </p>
         </div>
@@ -164,13 +164,13 @@ export default function ProjectWorkspace({ projectId, onBack }: ProjectWorkspace
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[400px] gap-4">
         <XCircle className="h-12 w-12 text-red-400" />
-        <p className="text-slate-400">
+        <p className="text-muted-foreground">
           {error || (isAr ? 'لم يتم العثور على المشروع' : 'Project not found')}
         </p>
         <Button
           variant="outline"
           onClick={onBack}
-          className="border-slate-700 text-slate-300"
+          className="border-border text-foreground/80"
         >
           <ArrowLeft className={`h-4 w-4 ${isRTL ? 'rotate-180' : ''} me-2`} />
           {t.back}
@@ -348,7 +348,7 @@ export default function ProjectWorkspace({ projectId, onBack }: ProjectWorkspace
   // ===== Main render =====
   return (
     <div
-      className="flex h-full bg-slate-950 text-white"
+      className="flex h-full bg-background text-foreground"
       dir={isRTL ? 'rtl' : 'ltr'}
     >
       {/* Sidebar (handles overlay + aside internally) */}
@@ -370,16 +370,16 @@ export default function ProjectWorkspace({ projectId, onBack }: ProjectWorkspace
       {/* ===== Main Content ===== */}
       <main className="flex-1 min-w-0 overflow-hidden flex flex-col">
         {/* Mobile top bar */}
-        <div className="lg:hidden flex items-center gap-3 px-4 py-3 border-b border-slate-800">
+        <div className="lg:hidden flex items-center gap-3 px-4 py-3 border-b border-border">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setSidebarOpen(true)}
-            className="text-slate-400 h-8 w-8 p-0"
+            className="text-muted-foreground h-8 w-8 p-0"
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <h2 className="text-sm font-semibold text-white truncate">
+          <h2 className="text-sm font-semibold text-foreground truncate">
             {project.name}
           </h2>
           <Badge
@@ -397,13 +397,13 @@ export default function ProjectWorkspace({ projectId, onBack }: ProjectWorkspace
             className="h-full"
           >
             {/* Tab List */}
-            <div className="border-b border-slate-800 bg-slate-900/50 px-4 lg:px-6 overflow-x-auto">
+            <div className="border-b border-border bg-card px-4 lg:px-6 overflow-x-auto">
               <TabsList className="bg-transparent h-auto p-0 gap-0">
                 {visibleTabs.map((tab) => (
                   <TabsTrigger
                     key={tab.key}
                     value={tab.key}
-                    className="data-[state=active]:bg-transparent data-[state=active]:text-blue-400 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-blue-500 text-slate-400 hover:text-white rounded-none px-3 py-3 gap-1.5 text-xs font-medium whitespace-nowrap"
+                    className="data-[state=active]:bg-transparent data-[state=active]:text-blue-400 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-blue-500 text-muted-foreground hover:text-foreground rounded-none px-3 py-3 gap-1.5 text-xs font-medium whitespace-nowrap"
                   >
                     <tab.Icon className="h-3.5 w-3.5" />
                     {isAr ? tab.labelAr : tab.labelEn}

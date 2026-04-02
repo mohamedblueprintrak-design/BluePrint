@@ -112,18 +112,18 @@ export default function HelpPage() {
     <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-white mb-2">{isAr ? 'مركز المساعدة' : 'Help Center'}</h1>
-        <p className="text-slate-400">{isAr ? 'كيف يمكننا مساعدتك اليوم؟' : 'How can we help you today?'}</p>
+        <h1 className="text-3xl font-bold text-foreground mb-2">{isAr ? 'مركز المساعدة' : 'Help Center'}</h1>
+        <p className="text-muted-foreground">{isAr ? 'كيف يمكننا مساعدتك اليوم؟' : 'How can we help you today?'}</p>
       </div>
 
       {/* Search */}
-      <Card className="max-w-2xl mx-auto bg-slate-900/50 border-slate-800">
+      <Card className="max-w-2xl mx-auto bg-card border-border">
         <CardContent className="p-4">
           <div className="relative">
-            <Search className={`absolute top-1/2 transform -translate-y-1/2 text-slate-500 w-5 h-5 ${isRTL ? 'right-3' : 'left-3'}`} />
+            <Search className={`absolute top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5 ${isRTL ? 'right-3' : 'left-3'}`} />
             <Input
               placeholder={isAr ? 'ابحث في مركز المساعدة...' : 'Search help center...'}
-              className={`${isRTL ? 'pr-12' : 'pl-12'} py-6 text-lg bg-slate-800/50 border-slate-700 text-white`}
+              className={`${isRTL ? 'pr-12' : 'pl-12'} py-6 text-lg bg-muted border-border text-foreground`}
             />
           </div>
         </CardContent>
@@ -137,11 +137,11 @@ export default function HelpPage() {
           { icon: MessageCircle, title: isAr ? 'المجتمع' : 'Community', desc: isAr ? 'اطرح سؤالك' : 'Ask your question', color: 'text-violet-400' },
           { icon: Mail, title: isAr ? 'تواصل معنا' : 'Contact Us', desc: isAr ? 'دعم مباشر' : 'Direct support', color: 'text-amber-400' },
         ].map((item) => (
-          <Card key={item.title} className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-colors cursor-pointer">
+          <Card key={item.title} className="bg-card border-border hover:border-border transition-colors cursor-pointer">
             <CardContent className="p-4 text-center">
               <item.icon className={`w-8 h-8 ${item.color} mx-auto mb-2`} />
-              <h3 className="font-medium text-white">{item.title}</h3>
-              <p className="text-sm text-slate-400">{item.desc}</p>
+              <h3 className="font-medium text-foreground">{item.title}</h3>
+              <p className="text-sm text-muted-foreground">{item.desc}</p>
             </CardContent>
           </Card>
         ))}
@@ -152,9 +152,9 @@ export default function HelpPage() {
         {helpCategories.map((category) => {
           const Icon = category.icon;
           return (
-            <Card key={category.title} className="bg-slate-900/50 border-slate-800">
+            <Card key={category.title} className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white">
+                <CardTitle className="flex items-center gap-2 text-foreground">
                   <Icon className="w-5 h-5 text-blue-400" />
                   {isAr ? category.title : category.titleEn}
                 </CardTitle>
@@ -165,7 +165,7 @@ export default function HelpPage() {
                     <li key={i}>
                       <a
                         href={article.link}
-                        className="flex items-center justify-between text-slate-300 hover:text-blue-400 transition-colors py-1"
+                        className="flex items-center justify-between text-foreground/80 hover:text-blue-400 transition-colors py-1"
                       >
                         <span>{isAr ? article.title : (article as any).titleEn}</span>
                         <ExternalLink className="w-4 h-4 shrink-0" />
@@ -180,9 +180,9 @@ export default function HelpPage() {
       </div>
 
       {/* FAQs */}
-      <Card className="bg-slate-900/50 border-slate-800">
+      <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white">
+          <CardTitle className="flex items-center gap-2 text-foreground">
             <HelpCircle className="w-5 h-5 text-blue-400" />
             {isAr ? 'الأسئلة الشائعة' : 'FAQs'}
           </CardTitle>
@@ -190,11 +190,11 @@ export default function HelpPage() {
         <CardContent>
           <Accordion type="single" collapsible className="w-full">
             {faqs.map((faq, index) => (
-              <AccordionItem key={index} value={`item-${index}`} className="border-slate-800">
-                <AccordionTrigger className={`text-white hover:text-blue-400 ${isRTL ? 'text-right' : 'text-left'}`}>
+              <AccordionItem key={index} value={`item-${index}`} className="border-border">
+                <AccordionTrigger className={`text-foreground hover:text-blue-400 ${isRTL ? 'text-right' : 'text-left'}`}>
                   {isAr ? faq.question : (faq as any).questionEn}
                 </AccordionTrigger>
-                <AccordionContent className="text-slate-400">
+                <AccordionContent className="text-muted-foreground">
                   {isAr ? faq.answer : (faq as any).answerEn}
                 </AccordionContent>
               </AccordionItem>
@@ -207,14 +207,14 @@ export default function HelpPage() {
       <Card className="bg-blue-500/10 border-blue-500/20">
         <CardContent className="p-6">
           <div className="text-center">
-            <h3 className="text-lg font-semibold text-white mb-2">{isAr ? 'لم تجد ما تبحث عنه؟' : "Didn't find what you're looking for?"}</h3>
-            <p className="text-slate-400 mb-4">{isAr ? 'فريق الدعم الفني جاهز لمساعدتك' : 'Our support team is ready to help'}</p>
+            <h3 className="text-lg font-semibold text-foreground mb-2">{isAr ? 'لم تجد ما تبحث عنه؟' : "Didn't find what you're looking for?"}</h3>
+            <p className="text-muted-foreground mb-4">{isAr ? 'فريق الدعم الفني جاهز لمساعدتك' : 'Our support team is ready to help'}</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button className="bg-blue-600 hover:bg-blue-700">
                 <Mail className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                 support@blueprint.com
               </Button>
-              <Button variant="outline" className="border-slate-700 text-slate-300 hover:bg-slate-800">
+              <Button variant="outline" className="border-border text-foreground/80 hover:bg-accent">
                 <Phone className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                 +966 11 XXX XXXX
               </Button>

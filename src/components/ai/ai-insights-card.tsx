@@ -72,16 +72,16 @@ export function AIInsightsCard({
 
   return (
     <Card className={cn(
-      "bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700",
+      "bg-gradient-to-br from-slate-900 to-slate-800 border-border",
       className
     )}>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-white" />
+              <Sparkles className="w-4 h-4 text-foreground" />
             </div>
-            <CardTitle className="text-white text-sm font-medium">
+            <CardTitle className="text-foreground text-sm font-medium">
               {title}
             </CardTitle>
           </div>
@@ -91,7 +91,7 @@ export function AIInsightsCard({
                 variant="ghost"
                 size="icon"
                 onClick={handleCopy}
-                className="h-7 w-7 text-slate-400 hover:text-white"
+                className="h-7 w-7 text-muted-foreground hover:text-foreground"
               >
                 {copied ? (
                   <Check className="w-3.5 h-3.5 text-green-500" />
@@ -105,7 +105,7 @@ export function AIInsightsCard({
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="h-7 w-7 text-slate-400 hover:text-white"
+                className="h-7 w-7 text-muted-foreground hover:text-foreground"
               >
                 {isExpanded ? (
                   <ChevronUp className="w-4 h-4" />
@@ -119,7 +119,7 @@ export function AIInsightsCard({
               size="icon"
               onClick={generateInsights}
               disabled={isLoading}
-              className="h-7 w-7 text-slate-400 hover:text-white"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground"
             >
               {isLoading ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -135,8 +135,8 @@ export function AIInsightsCard({
         <CardContent className="pt-2">
           {!insights && !isLoading && (
             <div className="text-center py-6">
-              <Sparkles className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-              <p className="text-slate-500 text-sm">
+              <Sparkles className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-muted-foreground text-sm">
                 اضغط على زر التحديث لإنشاء رؤى ذكية
               </p>
               <Button
@@ -154,7 +154,7 @@ export function AIInsightsCard({
           {isLoading && (
             <div className="text-center py-6">
               <Loader2 className="w-8 h-8 text-purple-500 mx-auto mb-2 animate-spin" />
-              <p className="text-slate-500 text-sm">
+              <p className="text-muted-foreground text-sm">
                 جاري التحليل...
               </p>
             </div>
@@ -162,7 +162,7 @@ export function AIInsightsCard({
 
           {insights && !isLoading && (
             <ScrollArea className={cn("w-full", compact ? "h-[150px]" : "h-[250px]")}>
-              <div className="prose prose-invert prose-sm max-w-none whitespace-pre-wrap text-slate-300">
+              <div className="prose prose-invert prose-sm max-w-none whitespace-pre-wrap text-foreground/80">
                 {insights}
               </div>
             </ScrollArea>
@@ -269,7 +269,7 @@ export function AIQuickStats({
     switch (trend) {
       case 'up': return <TrendingUp className="w-4 h-4 text-green-400" />;
       case 'down': return <TrendingUp className="w-4 h-4 text-red-400 rotate-180" />;
-      default: return <TrendingUp className="w-4 h-4 text-slate-400 rotate-90" />;
+      default: return <TrendingUp className="w-4 h-4 text-muted-foreground rotate-90" />;
     }
   };
 
@@ -294,18 +294,18 @@ export function AIQuickStats({
         <div className="flex items-center gap-4 text-sm">
           <div className="flex items-center gap-1">
             <AlertTriangle className={cn("w-4 h-4", getRiskColor(stats.risk))} />
-            <span className="text-slate-400">الخطر:</span>
+            <span className="text-muted-foreground">الخطر:</span>
             <span className={getRiskColor(stats.risk)}>{stats.risk}</span>
           </div>
           <div className="flex items-center gap-1">
             {getTrendIcon(stats.trend)}
-            <span className="text-slate-400">التوجه:</span>
-            <span className="text-white">{stats.trend}</span>
+            <span className="text-muted-foreground">التوجه:</span>
+            <span className="text-foreground">{stats.trend}</span>
           </div>
           <div className="flex items-center gap-1">
             <CheckCircle className="w-4 h-4 text-blue-400" />
-            <span className="text-slate-400">الدرجة:</span>
-            <span className="text-white">{stats.score}/100</span>
+            <span className="text-muted-foreground">الدرجة:</span>
+            <span className="text-foreground">{stats.score}/100</span>
           </div>
         </div>
       )}

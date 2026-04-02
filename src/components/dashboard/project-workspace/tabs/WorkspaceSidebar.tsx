@@ -73,7 +73,7 @@ export default function WorkspaceSidebar({
       )}
 
       <aside
-        className={`fixed lg:static inset-y-0 z-50 w-[260px] bg-slate-900 border-slate-800 border-e flex flex-col transition-transform duration-300 ${
+        className={`fixed lg:static inset-y-0 z-50 w-[260px] bg-card border-border border-e flex flex-col transition-transform duration-300 ${
           sidebarOpen
             ? 'translate-x-0'
             : isRTL
@@ -81,26 +81,26 @@ export default function WorkspaceSidebar({
             : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="p-4 border-b border-slate-800">
+        <div className="p-4 border-b border-border">
           <div className="flex items-center gap-2 mb-3">
             <Button
               variant="ghost"
               size="sm"
               onClick={onBack}
-              className="text-slate-400 hover:text-white h-8 w-8 p-0"
+              className="text-muted-foreground hover:text-foreground h-8 w-8 p-0"
             >
               <ArrowLeft
                 className={`h-4 w-4 ${isRTL ? 'rotate-180' : ''}`}
               />
             </Button>
-            <span className="text-xs text-slate-500 font-medium">
+            <span className="text-xs text-muted-foreground font-medium">
               {isAr ? 'مساحة العمل' : 'Workspace'}
             </span>
           </div>
-          <h2 className="font-bold text-lg text-white leading-tight">
+          <h2 className="font-bold text-lg text-foreground leading-tight">
             {project.name}
           </h2>
-          <p className="text-xs text-slate-500 font-mono mt-1">
+          <p className="text-xs text-muted-foreground font-mono mt-1">
             {project.code}
           </p>
         </div>
@@ -117,44 +117,44 @@ export default function WorkspaceSidebar({
           {/* Info rows */}
           <div className="space-y-3 text-sm">
             {project.location && (
-              <div className="flex items-start gap-2 text-slate-400">
+              <div className="flex items-start gap-2 text-muted-foreground">
                 <MapPin className="h-3.5 w-3.5 shrink-0 mt-0.5" />
                 <span className="text-xs">{project.location}</span>
               </div>
             )}
-            <div className="flex items-center gap-2 text-slate-400">
+            <div className="flex items-center gap-2 text-muted-foreground">
               <FileSpreadsheet className="h-3.5 w-3.5 shrink-0" />
               <span className="text-xs">{project.plotNumber || '—'}</span>
             </div>
             {project.customerFileNumber && (
-              <div className="flex items-center gap-2 text-slate-400">
+              <div className="flex items-center gap-2 text-muted-foreground">
                 <span className="text-xs">{isAr ? 'رقم ملف العميل:' : 'Customer File No:'}</span>
-                <span className="text-xs text-slate-200">{project.customerFileNumber}</span>
+                <span className="text-xs text-foreground">{project.customerFileNumber}</span>
               </div>
             )}
-            <div className="flex items-center gap-2 text-slate-400">
+            <div className="flex items-center gap-2 text-muted-foreground">
               <Building2 className="h-3.5 w-3.5 shrink-0" />
               <span className="text-xs">{project.projectType || '—'}</span>
             </div>
             {project.client && (
-              <div className="flex items-center gap-2 text-slate-400">
+              <div className="flex items-center gap-2 text-muted-foreground">
                 <Building2 className="h-3.5 w-3.5 shrink-0" />
                 <span className="text-xs">{project.client.name}</span>
               </div>
             )}
-            <div className="flex items-center gap-2 text-slate-400">
+            <div className="flex items-center gap-2 text-muted-foreground">
               <Calendar className="h-3.5 w-3.5 shrink-0" />
               <span className="text-xs">{formatDate(project.startDate)}</span>
             </div>
           </div>
 
-          <Separator className="bg-slate-800" />
+          <Separator className="bg-muted" />
 
           {/* Task 1C: Government Approval Status */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <Shield className="h-3.5 w-3.5 text-amber-400" />
-              <span className="text-xs text-slate-400 font-medium">
+              <span className="text-xs text-muted-foreground font-medium">
                 {isAr ? 'الموافقة الحكومية' : 'Gov. Approval'}
               </span>
             </div>
@@ -165,7 +165,7 @@ export default function WorkspaceSidebar({
               {isAr ? govStatus.labelAr : govStatus.labelEn}
             </Badge>
             {project.licenseNumber && (
-              <div className="flex items-center gap-2 text-slate-400">
+              <div className="flex items-center gap-2 text-muted-foreground">
                 <FileText className="h-3 w-3 shrink-0" />
                 <span className="text-[10px] font-mono">
                   {project.licenseNumber}
@@ -175,7 +175,7 @@ export default function WorkspaceSidebar({
 
             {/* MEP Status Indicators */}
             <div className="space-y-2">
-              <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">
+              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
                 {isAr ? 'حالة الخدمات' : 'MEP Status'}
               </p>
               {[
@@ -202,7 +202,7 @@ export default function WorkspaceSidebar({
                     key={mep.key}
                     className="flex items-center justify-between gap-2"
                   >
-                    <div className="flex items-center gap-1.5 text-slate-400">
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
                       {mep.icon}
                       <span className="text-[11px]">{mep.label}</span>
                     </div>
@@ -218,60 +218,60 @@ export default function WorkspaceSidebar({
             </div>
           </div>
 
-          <Separator className="bg-slate-800" />
+          <Separator className="bg-muted" />
 
           {/* Progress */}
           <div>
             <div className="flex items-center justify-between text-xs mb-2">
-              <span className="text-slate-400">{t.progress}</span>
-              <span className="text-white font-semibold">
+              <span className="text-muted-foreground">{t.progress}</span>
+              <span className="text-foreground font-semibold">
                 {Math.round(project.progress)}%
               </span>
             </div>
-            <Progress value={project.progress} className="h-2 bg-slate-700" />
+            <Progress value={project.progress} className="h-2 bg-secondary" />
           </div>
 
-          <Separator className="bg-slate-800" />
+          <Separator className="bg-muted" />
 
           {/* Quick Stats */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-slate-800/50 rounded-lg p-3 text-center">
+            <div className="bg-muted rounded-lg p-3 text-center">
               <DollarSign className="h-4 w-4 text-blue-400 mx-auto mb-1" />
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted-foreground">
                 {isAr ? 'الميزانية' : 'Budget'}
               </p>
-              <p className="text-sm font-semibold text-white mt-0.5">
+              <p className="text-sm font-semibold text-foreground mt-0.5">
                 {formatCurrency(project.budget)}
               </p>
             </div>
-            <div className="bg-slate-800/50 rounded-lg p-3 text-center">
+            <div className="bg-muted rounded-lg p-3 text-center">
               <TrendingUp className="h-4 w-4 text-amber-400 mx-auto mb-1" />
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted-foreground">
                 {isAr ? 'المصروف' : 'Spent'}
               </p>
-              <p className="text-sm font-semibold text-white mt-0.5">
+              <p className="text-sm font-semibold text-foreground mt-0.5">
                 {formatCurrency(project.spent)}
               </p>
             </div>
-            <div className="bg-slate-800/50 rounded-lg p-3 text-center">
+            <div className="bg-muted rounded-lg p-3 text-center">
               <CheckCircle2 className="h-4 w-4 text-emerald-400 mx-auto mb-1" />
-              <p className="text-xs text-slate-500">{t.tasks}</p>
-              <p className="text-sm font-semibold text-white mt-0.5">
+              <p className="text-xs text-muted-foreground">{t.tasks}</p>
+              <p className="text-sm font-semibold text-foreground mt-0.5">
                 {taskStats.total}
               </p>
             </div>
-            <div className="bg-slate-800/50 rounded-lg p-3 text-center">
+            <div className="bg-muted rounded-lg p-3 text-center">
               <Layers className="h-4 w-4 text-violet-400 mx-auto mb-1" />
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted-foreground">
                 {isAr ? 'المراحل' : 'Phases'}
               </p>
-              <p className="text-sm font-semibold text-white mt-0.5">
+              <p className="text-sm font-semibold text-foreground mt-0.5">
                 {completedPhases}/{totalPhases}
               </p>
             </div>
           </div>
 
-          <Separator className="bg-slate-800" />
+          <Separator className="bg-muted" />
 
           {/* Ask Blue Button */}
           <Button

@@ -199,11 +199,11 @@ export default function WorkloadPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Briefcase className="w-7 h-7 text-violet-400" />
             {language === 'ar' ? 'إدارة الأحمال' : 'Workload Management'}
           </h1>
-          <p className="text-slate-400 mt-1">
+          <p className="text-muted-foreground mt-1">
             {language === 'ar' ? 'مراقبة توزيع المهام وأحمال الفريق' : 'Monitor task distribution and team capacity'}
           </p>
         </div>
@@ -212,7 +212,7 @@ export default function WorkloadPage() {
           size="sm"
           onClick={fetchWorkload}
           disabled={loading}
-          className="border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700"
+          className="border-border bg-muted text-foreground/80 hover:bg-secondary"
         >
           <RefreshCw className={`w-4 h-4 me-2 ${loading ? 'animate-spin' : ''}`} />
           {t.refresh}
@@ -222,58 +222,58 @@ export default function WorkloadPage() {
       {/* Team Summary */}
       {summary && (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
                 <Users className="w-4 h-4 text-blue-400" />
-                <p className="text-xs text-slate-400">{language === 'ar' ? 'إجمالي الفريق' : 'Total Team'}</p>
+                <p className="text-xs text-muted-foreground">{language === 'ar' ? 'إجمالي الفريق' : 'Total Team'}</p>
               </div>
-              <p className="text-xl font-bold text-white">{summary.totalEmployees}</p>
+              <p className="text-xl font-bold text-foreground">{summary.totalEmployees}</p>
             </CardContent>
           </Card>
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
                 <Gauge className="w-4 h-4 text-violet-400" />
-                <p className="text-xs text-slate-400">{language === 'ar' ? 'متوسط الاستخدام' : 'Avg Utilization'}</p>
+                <p className="text-xs text-muted-foreground">{language === 'ar' ? 'متوسط الاستخدام' : 'Avg Utilization'}</p>
               </div>
               <p className={`text-xl font-bold ${getUtilColor(summary.avgUtilizationPerEmployee)}`}>
                 {summary.avgUtilizationPerEmployee}%
               </p>
             </CardContent>
           </Card>
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
                 <TrendingUp className="w-4 h-4 text-cyan-400" />
-                <p className="text-xs text-slate-400">{language === 'ar' ? 'الطاقة الكلية' : 'Total Capacity'}</p>
+                <p className="text-xs text-muted-foreground">{language === 'ar' ? 'الطاقة الكلية' : 'Total Capacity'}</p>
               </div>
-              <p className="text-xl font-bold text-white">{summary.totalTeamCapacity}h</p>
+              <p className="text-xl font-bold text-foreground">{summary.totalTeamCapacity}h</p>
             </CardContent>
           </Card>
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
                 <Clock className="w-4 h-4 text-orange-400" />
-                <p className="text-xs text-slate-400">{language === 'ar' ? 'الحمل الحالي' : 'Current Load'}</p>
+                <p className="text-xs text-muted-foreground">{language === 'ar' ? 'الحمل الحالي' : 'Current Load'}</p>
               </div>
               <p className="text-xl font-bold text-orange-400">{summary.totalCurrentLoad}h</p>
             </CardContent>
           </Card>
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
                 <CheckCircle className="w-4 h-4 text-green-400" />
-                <p className="text-xs text-slate-400">{language === 'ar' ? 'متاح' : 'Available'}</p>
+                <p className="text-xs text-muted-foreground">{language === 'ar' ? 'متاح' : 'Available'}</p>
               </div>
               <p className="text-xl font-bold text-green-400">{summary.totalAvailableCapacity}h</p>
             </CardContent>
           </Card>
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
                 <AlertTriangle className="w-4 h-4 text-red-400" />
-                <p className="text-xs text-slate-400">{language === 'ar' ? 'متأخرة' : 'Overdue'}</p>
+                <p className="text-xs text-muted-foreground">{language === 'ar' ? 'متأخرة' : 'Overdue'}</p>
               </div>
               <p className="text-xl font-bold text-red-400">{summary.totalOverdueTasks}</p>
             </CardContent>
@@ -283,9 +283,9 @@ export default function WorkloadPage() {
 
       {/* Load Distribution */}
       {summary && (
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardHeader className="pb-3">
-            <CardTitle className="text-white text-lg">
+            <CardTitle className="text-foreground text-lg">
               {language === 'ar' ? 'توزيع الأحمال' : 'Load Distribution'}
             </CardTitle>
           </CardHeader>
@@ -295,28 +295,28 @@ export default function WorkloadPage() {
                 <div className="w-3 h-3 rounded-full bg-green-500" />
                 <div>
                   <p className="text-lg font-bold text-green-400">{summary.availableEmployees}</p>
-                  <p className="text-xs text-slate-400">{language === 'ar' ? 'متاح (≤60%)' : 'Available (≤60%)'}</p>
+                  <p className="text-xs text-muted-foreground">{language === 'ar' ? 'متاح (≤60%)' : 'Available (≤60%)'}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
                 <div className="w-3 h-3 rounded-full bg-amber-500" />
                 <div>
                   <p className="text-lg font-bold text-amber-400">{summary.moderateLoadEmployees}</p>
-                  <p className="text-xs text-slate-400">{language === 'ar' ? 'معتدل (≤80%)' : 'Moderate (≤80%)'}</p>
+                  <p className="text-xs text-muted-foreground">{language === 'ar' ? 'معتدل (≤80%)' : 'Moderate (≤80%)'}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
                 <div className="w-3 h-3 rounded-full bg-orange-500" />
                 <div>
                   <p className="text-lg font-bold text-orange-400">{summary.heavyLoadEmployees}</p>
-                  <p className="text-xs text-slate-400">{language === 'ar' ? 'ثقيل (≤100%)' : 'Heavy (≤100%)'}</p>
+                  <p className="text-xs text-muted-foreground">{language === 'ar' ? 'ثقيل (≤100%)' : 'Heavy (≤100%)'}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
                 <div className="w-3 h-3 rounded-full bg-red-500" />
                 <div>
                   <p className="text-lg font-bold text-red-400">{summary.overloadedEmployees}</p>
-                  <p className="text-xs text-slate-400">{language === 'ar' ? 'محمل (>100%)' : 'Overloaded (>100%)'}</p>
+                  <p className="text-xs text-muted-foreground">{language === 'ar' ? 'محمل (>100%)' : 'Overloaded (>100%)'}</p>
                 </div>
               </div>
             </div>
@@ -325,9 +325,9 @@ export default function WorkloadPage() {
       )}
 
       {/* Team Members Cards */}
-      <Card className="bg-slate-900/50 border-slate-800">
+      <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+          <CardTitle className="text-foreground flex items-center gap-2">
             <Users className="w-5 h-5 text-violet-400" />
             {language === 'ar' ? 'أعضاء الفريق' : 'Team Members'}
           </CardTitle>
@@ -338,7 +338,7 @@ export default function WorkloadPage() {
               <Loader2 className="w-8 h-8 text-violet-400 animate-spin" />
             </div>
           ) : members.length === 0 ? (
-            <div className="text-center py-12 text-slate-400">
+            <div className="text-center py-12 text-muted-foreground">
               <Briefcase className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p>{language === 'ar' ? 'لا يوجد أعضاء فريق' : 'No team members found'}</p>
             </div>
@@ -349,7 +349,7 @@ export default function WorkloadPage() {
                 return (
                   <Card
                     key={member.userId}
-                    className={`bg-slate-800/50 border-slate-700 hover:border-slate-600 transition-all ${
+                    className={`bg-muted border-border hover:border-border transition-all ${
                       member.suggestedAction === 'overloaded' ? 'ring-1 ring-red-500/30' : ''
                     }`}
                   >
@@ -357,15 +357,15 @@ export default function WorkloadPage() {
                       {/* Member Header */}
                       <div className="flex items-start gap-3 mb-4">
                         <Avatar className="w-11 h-11">
-                          <AvatarFallback className="bg-violet-600 text-white text-sm">
+                          <AvatarFallback className="bg-violet-600 text-foreground text-sm">
                             {member.fullName?.[0] || 'U'}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <h3 className="text-white font-medium truncate">{member.fullName}</h3>
+                            <h3 className="text-foreground font-medium truncate">{member.fullName}</h3>
                           </div>
-                          <p className="text-xs text-slate-400 mt-0.5">
+                          <p className="text-xs text-muted-foreground mt-0.5">
                             {getRoleLabel(member.role)}
                             {member.department ? ` · ${member.department}` : ''}
                           </p>
@@ -378,14 +378,14 @@ export default function WorkloadPage() {
                       {/* Utilization Bar */}
                       <div className="mb-4">
                         <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-xs text-slate-400">
+                          <span className="text-xs text-muted-foreground">
                             {language === 'ar' ? 'استخدام الطاقة' : 'Utilization'}
                           </span>
                           <span className={`text-sm font-semibold ${getUtilColor(member.utilizationPercentage)}`}>
                             {member.utilizationPercentage}%
                           </span>
                         </div>
-                        <div className="h-2.5 bg-slate-700 rounded-full overflow-hidden">
+                        <div className="h-2.5 bg-secondary rounded-full overflow-hidden">
                           <div
                             className={`h-full rounded-full transition-all duration-500 ${getUtilBarColor(member.utilizationPercentage)}`}
                             style={{ width: `${Math.min(member.utilizationPercentage, 100)}%` }}
@@ -395,24 +395,24 @@ export default function WorkloadPage() {
 
                       {/* Stats Grid */}
                       <div className="grid grid-cols-3 gap-2 mb-4 text-center">
-                        <div className="p-2 rounded-lg bg-slate-900/50">
-                          <p className="text-sm font-semibold text-white">{member.totalTasks}</p>
-                          <p className="text-[10px] text-slate-500">{language === 'ar' ? 'مهام' : 'Tasks'}</p>
+                        <div className="p-2 rounded-lg bg-card">
+                          <p className="text-sm font-semibold text-foreground">{member.totalTasks}</p>
+                          <p className="text-[10px] text-muted-foreground">{language === 'ar' ? 'مهام' : 'Tasks'}</p>
                         </div>
-                        <div className="p-2 rounded-lg bg-slate-900/50">
-                          <p className="text-sm font-semibold text-white">{member.currentLoad}h</p>
-                          <p className="text-[10px] text-slate-500">{language === 'ar' ? 'الحمّل' : 'Load'}</p>
+                        <div className="p-2 rounded-lg bg-card">
+                          <p className="text-sm font-semibold text-foreground">{member.currentLoad}h</p>
+                          <p className="text-[10px] text-muted-foreground">{language === 'ar' ? 'الحمّل' : 'Load'}</p>
                         </div>
-                        <div className="p-2 rounded-lg bg-slate-900/50">
+                        <div className="p-2 rounded-lg bg-card">
                           <p className={`text-sm font-semibold ${getUtilColor(member.utilizationPercentage)}`}>
                             {member.availableCapacity}h
                           </p>
-                          <p className="text-[10px] text-slate-500">{language === 'ar' ? 'متاح' : 'Avail.'}</p>
+                          <p className="text-[10px] text-muted-foreground">{language === 'ar' ? 'متاح' : 'Avail.'}</p>
                         </div>
                       </div>
 
                       {/* Task breakdown */}
-                      <div className="flex items-center gap-3 text-xs text-slate-500 mb-4">
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground mb-4">
                         <span className="flex items-center gap-1">
                           <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
                           {member.todoTasks} {language === 'ar' ? 'قيد الانتظار' : 'todo'}
@@ -456,13 +456,13 @@ export default function WorkloadPage() {
 
       {/* Reassignment Dialog */}
       <Dialog open={reassignDialogOpen} onOpenChange={setReassignDialogOpen}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
+        <DialogContent className="bg-card border-border text-foreground max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ArrowRightLeft className="w-5 h-5 text-orange-400" />
               {language === 'ar' ? 'إعادة تعيين مهمة' : 'Reassign Task'}
             </DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-muted-foreground">
               {selectedMember && (
                 language === 'ar'
                   ? `إعادة تعيين مهمة من ${selectedMember.fullName}`
@@ -473,14 +473,14 @@ export default function WorkloadPage() {
           <div className="space-y-4 py-4 flex-1 overflow-y-auto">
             {/* Select Task */}
             <div className="space-y-2">
-              <p className="text-sm text-slate-300 font-medium">
+              <p className="text-sm text-foreground/80 font-medium">
                 {language === 'ar' ? 'اختر المهمة' : 'Select Task'}
               </p>
               <Select value={selectedTaskId || ''} onValueChange={setSelectedTaskId}>
-                <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                <SelectTrigger className="bg-muted border-border text-foreground">
                   <SelectValue placeholder={language === 'ar' ? 'اختر مهمة...' : 'Select a task...'} />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800">
+                <SelectContent className="bg-card border-border">
                   {memberTasks.length === 0 ? (
                     <SelectItem value="_none" disabled>
                       {language === 'ar' ? 'لا توجد مهام نشطة' : 'No active tasks'}
@@ -490,7 +490,7 @@ export default function WorkloadPage() {
                       <SelectItem key={task.id} value={task.id}>
                         <div className="flex items-center gap-2">
                           <span>{task.title}</span>
-                          <Badge variant="outline" className="text-[10px] border-slate-600">
+                          <Badge variant="outline" className="text-[10px] border-border">
                             {task.estimatedHours}h
                           </Badge>
                         </div>
@@ -503,14 +503,14 @@ export default function WorkloadPage() {
 
             {/* Select Target Member */}
             <div className="space-y-2">
-              <p className="text-sm text-slate-300 font-medium">
+              <p className="text-sm text-foreground/80 font-medium">
                 {language === 'ar' ? 'إعادة تعيين إلى' : 'Reassign To'}
               </p>
               <Select value={reassignToId} onValueChange={setReassignToId}>
-                <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                <SelectTrigger className="bg-muted border-border text-foreground">
                   <SelectValue placeholder={language === 'ar' ? 'اختر عضو الفريق...' : 'Select team member...'} />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800">
+                <SelectContent className="bg-card border-border">
                   {members
                     .filter((m) => m.userId !== selectedMember?.userId)
                     .map((m) => {
@@ -532,26 +532,26 @@ export default function WorkloadPage() {
 
             {/* Recommendation */}
             {reassignToId && (
-              <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700">
-                <p className="text-xs text-slate-400">
+              <div className="p-3 rounded-lg bg-muted border border-border">
+                <p className="text-xs text-muted-foreground">
                   {language === 'ar' ? '💡 نصيحة: اختر عضوًا بحالة "متاح" أو "معتدل" لتوزيع أفضل للأحمال' :
                     '💡 Tip: Choose a member with "Available" or "Moderate" status for better load distribution'}
                 </p>
               </div>
             )}
           </div>
-          <DialogFooter className="gap-2 pt-2 border-t border-slate-800">
+          <DialogFooter className="gap-2 pt-2 border-t border-border">
             <Button
               variant="outline"
               onClick={() => setReassignDialogOpen(false)}
-              className="border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700"
+              className="border-border bg-muted text-foreground/80 hover:bg-secondary"
             >
               {t.cancel}
             </Button>
             <Button
               onClick={handleReassign}
               disabled={!selectedTaskId || !reassignToId || reassigning}
-              className="bg-violet-600 hover:bg-violet-700 text-white"
+              className="bg-violet-600 hover:bg-violet-700 text-foreground"
             >
               {reassigning ? (
                 <Loader2 className="w-4 h-4 me-2 animate-spin" />

@@ -64,22 +64,22 @@ function AdminTabs() {
     <div className="space-y-6" dir={isAr ? 'rtl' : 'ltr'}>
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
             <Shield className="w-6 h-6 text-blue-400" />
             {isAr ? 'الإدارة' : 'Administration'}
           </h2>
-          <p className="text-slate-400 mt-1">
+          <p className="text-muted-foreground mt-1">
             {isAr ? 'إدارة النظام والنشاطات' : 'System administration and activities'}
           </p>
         </div>
       </div>
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-        <TabsList className="bg-slate-800/50 border border-slate-700">
-          <TabsTrigger value="admin" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+        <TabsList className="bg-muted border border-border">
+          <TabsTrigger value="admin" className="data-[state=active]:bg-blue-600 data-[state=active]:text-foreground">
             <Shield className="w-4 h-4 me-2" />
             {isAr ? 'لوحة الإدارة' : 'Admin Panel'}
           </TabsTrigger>
-          <TabsTrigger value="activities" className="data-[state=active]:bg-amber-600 data-[state=active]:text-white">
+          <TabsTrigger value="activities" className="data-[state=active]:bg-amber-600 data-[state=active]:text-foreground">
             <Activity className="w-4 h-4 me-2" />
             {isAr ? 'النشاطات' : 'Activities'}
           </TabsTrigger>

@@ -81,7 +81,7 @@ function SidebarSection({
                   "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
                   currentPage === item.id 
                     ? "bg-blue-600/20 text-blue-400 border border-blue-500/30" 
-                    : "text-slate-400 hover:bg-slate-800 hover:text-white",
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
                   !isMobile && sidebarCollapsed && "justify-center"
                 )}
               >
@@ -90,7 +90,7 @@ function SidebarSection({
                   <>
                     <span className="flex-1 text-end">{item.label}</span>
                     {item.badge && (
-                      <Badge className="bg-red-500 text-white text-xs px-1.5 py-0.5">
+                      <Badge className="bg-red-500 text-foreground text-xs px-1.5 py-0.5">
                         {item.badge}
                       </Badge>
                     )}
@@ -152,7 +152,7 @@ function CollapsibleSection({
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
       <CollapsibleTrigger asChild>
         <button 
-          className="w-full flex items-center gap-3 px-3 py-2 text-slate-500 hover:text-slate-300 transition-colors"
+          className="w-full flex items-center gap-3 px-3 py-2 text-muted-foreground hover:text-foreground/80 transition-colors"
         >
           <Icon className="w-4 h-4 shrink-0" />
           <span className="flex-1 text-end text-sm font-medium">{title}</span>
@@ -307,14 +307,14 @@ function SidebarContent({
     <div className="flex flex-col h-full">
       {/* Logo Header - only show on mobile or when not collapsed on desktop */}
       {(isMobile || !sidebarCollapsed) && (
-        <div className="flex items-center justify-between h-16 px-4 border-b border-slate-800">
+        <div className="flex items-center justify-between h-16 px-4 border-b border-border">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
               <Image src="/logo.png" alt="BluePrint" width={32} height={32} className="rounded-md object-contain" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-white">{t.appName}</h1>
-              <p className="text-xs text-slate-400">{t.appSubtitle}</p>
+              <h1 className="text-lg font-bold text-foreground">{t.appName}</h1>
+              <p className="text-xs text-muted-foreground">{t.appSubtitle}</p>
             </div>
           </div>
           {isMobile && onClose && (
@@ -322,7 +322,7 @@ function SidebarContent({
               variant="ghost"
               size="icon"
               onClick={onClose}
-              className="text-slate-400 hover:text-white hover:bg-slate-800"
+              className="text-muted-foreground hover:text-foreground hover:bg-accent"
             >
               <X className="w-5 h-5" />
             </Button>
@@ -337,11 +337,11 @@ function SidebarContent({
             setCommandPaletteOpen(true);
             if (isMobile && onClose) onClose();
           }}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700 text-slate-400 text-sm hover:bg-slate-800 transition-colors"
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-muted border border-border text-muted-foreground text-sm hover:bg-accent transition-colors"
         >
           <Search className="w-4 h-4" />
           <span>{t.search}...</span>
-          <kbd className="ms-auto px-2 py-0.5 text-xs bg-slate-700 rounded">
+          <kbd className="ms-auto px-2 py-0.5 text-xs bg-secondary rounded">
             ⌘K
           </kbd>
         </button>
@@ -407,7 +407,7 @@ function SidebarContent({
           {/* ─── الإدارة (Administration) - ADMIN only ─── */}
           {user?.role === UserRole.ADMIN && filterByRole(adminItems).length > 0 && (
           <>
-            <Separator className="my-2 bg-slate-800" />
+            <Separator className="my-2 bg-muted" />
             <CollapsibleSection 
               title={language === 'ar' ? 'الإدارة' : 'Administration'}
               icon={Shield}
@@ -423,7 +423,7 @@ function SidebarContent({
           )}
 
           {/* ─── System ─── */}
-          <Separator className="my-2 bg-slate-800" />
+          <Separator className="my-2 bg-muted" />
           <SidebarSection 
             items={filterByRole(systemItems)} 
             currentPage={currentPage}
@@ -437,43 +437,43 @@ function SidebarContent({
       </div>
 
       {/* User Section */}
-      <div className="border-t border-slate-800 p-4">
+      <div className="border-t border-border p-4">
         <div className={cn("flex items-center gap-3", !isMobile && sidebarCollapsed && "justify-center")}>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className={cn("flex items-center gap-3 w-full", !isMobile && sidebarCollapsed && "justify-center")}>
-                <Avatar className="w-9 h-9 border-2 border-slate-700">
+                <Avatar className="w-9 h-9 border-2 border-border">
                   <AvatarImage src={user?.avatar} />
-                  <AvatarFallback className="bg-blue-600 text-white">
+                  <AvatarFallback className="bg-blue-600 text-foreground">
                     {user?.fullName?.[0] || user?.username?.[0]?.toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>
                 {(!isMobile && sidebarCollapsed ? false : true) && (
                   <div className="flex-1 text-end">
-                    <p className="text-sm font-medium text-white truncate">
+                    <p className="text-sm font-medium text-foreground truncate">
                       {user?.fullName || user?.username}
                     </p>
-                    <p className="text-xs text-slate-400 truncate">{user?.email}</p>
+                    <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                   </div>
                 )}
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent 
               align={isRTL ? 'start' : 'end'} 
-              className="w-56 bg-slate-900 border-slate-800"
+              className="w-56 bg-card border-border"
             >
-              <DropdownMenuLabel className="text-slate-200">
+              <DropdownMenuLabel className="text-foreground">
                 <div className="flex flex-col">
                   <span>{user?.fullName || user?.username}</span>
-                  <span className="text-xs text-slate-400 font-normal">{user?.email}</span>
+                  <span className="text-xs text-muted-foreground font-normal">{user?.email}</span>
                 </div>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator className="bg-slate-800" />
+              <DropdownMenuSeparator className="bg-muted" />
               
               {/* Theme Toggle */}
               <DropdownMenuItem 
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="text-slate-300 focus:bg-slate-800"
+                className="text-foreground/80 focus:bg-muted"
               >
                 {isDark ? <Sun className="w-4 h-4 me-2" /> : <Moon className="w-4 h-4 me-2" />}
                 {isDark ? t.lightMode : t.darkMode}
@@ -482,20 +482,20 @@ function SidebarContent({
               {/* Language Toggle */}
               <DropdownMenuItem 
                 onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
-                className="text-slate-300 focus:bg-slate-800"
+                className="text-foreground/80 focus:bg-muted"
               >
                 <Globe className="w-4 h-4 me-2" />
                 {language === 'ar' ? 'English' : 'العربية'}
               </DropdownMenuItem>
               
-              <DropdownMenuSeparator className="bg-slate-800" />
+              <DropdownMenuSeparator className="bg-muted" />
               
               <DropdownMenuItem 
                 onClick={() => {
                   handleItemClick('profile', '/dashboard/profile');
                   router.push('/dashboard/profile');
                 }}
-                className="text-slate-300 focus:bg-slate-800"
+                className="text-foreground/80 focus:bg-muted"
               >
                 <User className="w-4 h-4 me-2" />
                 {t.profile}
@@ -506,17 +506,17 @@ function SidebarContent({
                   handleItemClick('settings', '/dashboard/settings');
                   router.push('/dashboard/settings');
                 }}
-                className="text-slate-300 focus:bg-slate-800"
+                className="text-foreground/80 focus:bg-muted"
               >
                 <Settings className="w-4 h-4 me-2" />
                 {t.settings}
               </DropdownMenuItem>
               
-              <DropdownMenuSeparator className="bg-slate-800" />
+              <DropdownMenuSeparator className="bg-muted" />
               
               <DropdownMenuItem 
                 onClick={logout}
-                className="text-red-400 focus:bg-slate-800"
+                className="text-red-400 focus:bg-muted"
               >
                 <LogOut className="w-4 h-4 me-2" />
                 {t.logout}
@@ -556,14 +556,14 @@ export function Sidebar() {
               <Button 
                 variant="outline" 
                 size="icon"
-                className="bg-slate-900 border-slate-700 text-white hover:bg-slate-800"
+                className="bg-card border-border text-foreground hover:bg-accent"
               >
                 <Menu className="w-5 h-5" />
               </Button>
             </SheetTrigger>
             <SheetContent 
               side={isRTL ? "right" : "left"} 
-              className="w-72 p-0 bg-slate-950 border-slate-800"
+              className="w-72 p-0 bg-background border-border"
             >
               <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
               <SidebarContent 
@@ -576,11 +576,11 @@ export function Sidebar() {
 
         {/* Mobile Logo - Fixed */}
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-40 md:hidden">
-          <div className="flex items-center gap-2 px-4 py-2 bg-slate-900/90 rounded-full border border-slate-800">
+          <div className="flex items-center gap-2 px-4 py-2 bg-card/90 rounded-full border border-border">
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
               <Image src="/logo.png" alt="BluePrint" width={28} height={28} className="rounded-md object-contain" />
             </div>
-            <span className="text-sm font-bold text-white">BluePrint</span>
+            <span className="text-sm font-bold text-foreground">BluePrint</span>
           </div>
         </div>
       </>
@@ -592,22 +592,22 @@ export function Sidebar() {
     <aside 
       className={cn(
         "fixed top-0 z-40 h-screen",
-        "bg-slate-950 border-slate-800",
+        "bg-background border-border",
         "transition-all duration-300 flex flex-col",
         isRTL ? "right-0 border-l" : "left-0 border-r",
         sidebarCollapsed ? "w-20" : "w-64"
       )}
     >
       {/* Collapse Toggle Button */}
-      <div className="flex items-center justify-between h-16 px-4 border-b border-slate-800">
+      <div className="flex items-center justify-between h-16 px-4 border-b border-border">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shrink-0">
             <Image src="/logo.png" alt="BluePrint" width={32} height={32} className="rounded-md object-contain" />
           </div>
           {!sidebarCollapsed && (
             <div className="overflow-hidden transition-all duration-300">
-              <h1 className="text-lg font-bold text-white whitespace-nowrap">{t.appName}</h1>
-              <p className="text-xs text-slate-400 whitespace-nowrap">{t.appSubtitle}</p>
+              <h1 className="text-lg font-bold text-foreground whitespace-nowrap">{t.appName}</h1>
+              <p className="text-xs text-muted-foreground whitespace-nowrap">{t.appSubtitle}</p>
             </div>
           )}
         </div>
@@ -615,7 +615,7 @@ export function Sidebar() {
           variant="ghost"
           size="icon"
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="text-slate-400 hover:text-white hover:bg-slate-800 transition-all duration-200"
+          className="text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-200"
         >
           {sidebarCollapsed ? (
             <PanelLeft className="w-5 h-5" />

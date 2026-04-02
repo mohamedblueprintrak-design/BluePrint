@@ -119,16 +119,16 @@ export default function InteractionsTab({
         {/* Header with filter and add button */}
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-slate-400" />
+            <Filter className="h-4 w-4 text-muted-foreground" />
             <Select
               value={interactionFilter}
               onValueChange={setInteractionFilter}
             >
-              <SelectTrigger className="h-8 w-auto border-slate-700 bg-slate-800 text-xs text-slate-300 px-2">
+              <SelectTrigger className="h-8 w-auto border-border bg-muted text-xs text-foreground/80 px-2">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-700">
-                <SelectItem value="ALL" className="text-slate-300">
+              <SelectContent className="bg-muted border-border">
+                <SelectItem value="ALL" className="text-foreground/80">
                   {isAr ? 'الكل' : 'All'}
                 </SelectItem>
                 <SelectItem value="COMMENT" className="text-blue-400">
@@ -150,14 +150,14 @@ export default function InteractionsTab({
             </Select>
             <Badge
               variant="secondary"
-              className="bg-slate-700 text-slate-400 text-[10px]"
+              className="bg-secondary text-muted-foreground text-[10px]"
             >
               {filteredInteractions.length}
             </Badge>
           </div>
           <Button
             onClick={() => setInteractionDialogOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
+            className="bg-blue-600 hover:bg-blue-700 text-foreground gap-2"
           >
             <MessageSquare className="h-4 w-4" />
             {isAr ? 'إضافة تفاعل' : 'Add Interaction'}
@@ -167,10 +167,10 @@ export default function InteractionsTab({
         {/* Interactions List */}
         <div className="space-y-4 max-h-[600px] overflow-y-auto">
           {filteredInteractions.length === 0 ? (
-            <Card className="bg-slate-900/50 border-slate-800">
+            <Card className="bg-card border-border">
               <CardContent className="p-8 text-center">
-                <MessageSquare className="h-12 w-12 text-slate-600 mx-auto mb-3" />
-                <p className="text-slate-500">{t.noData}</p>
+                <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground">{t.noData}</p>
               </CardContent>
             </Card>
           ) : (
@@ -189,7 +189,7 @@ export default function InteractionsTab({
               return (
                 <Card
                   key={interaction.id}
-                  className={`bg-slate-900/50 ${itype.border}`}
+                  className={`bg-card ${itype.border}`}
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between gap-3">
@@ -205,19 +205,19 @@ export default function InteractionsTab({
                           {ptl && (
                             <Badge
                               variant="secondary"
-                              className="bg-slate-700 text-slate-400 text-[10px]"
+                              className="bg-secondary text-muted-foreground text-[10px]"
                             >
                               {isAr ? ptl.ar : ptl.en}
                             </Badge>
                           )}
-                          <span className="text-[10px] text-slate-500 ms-auto">
+                          <span className="text-[10px] text-muted-foreground ms-auto">
                             {formatDateTime(interaction.createdAt)}
                           </span>
                         </div>
 
                         {/* Client message */}
-                        <div className="bg-slate-800/60 rounded-lg p-3 mb-2">
-                          <p className="text-sm text-slate-200">
+                        <div className="bg-muted/60 rounded-lg p-3 mb-2">
+                          <p className="text-sm text-foreground">
                             {interaction.content}
                           </p>
                         </div>
@@ -231,19 +231,19 @@ export default function InteractionsTab({
                                 {isAr ? 'الرد' : 'Response'}
                               </span>
                               {responderName && (
-                                <span className="text-[10px] text-slate-500 ms-1">
+                                <span className="text-[10px] text-muted-foreground ms-1">
                                   — {responderName}
                                 </span>
                               )}
                             </div>
-                            <p className="text-sm text-slate-300">
+                            <p className="text-sm text-foreground/80">
                               {interaction.responseContent}
                             </p>
                           </div>
                         )}
 
                         {!interaction.responseContent && (
-                          <p className="text-xs text-slate-600 italic ms-6">
+                          <p className="text-xs text-muted-foreground italic ms-6">
                             {isAr
                               ? 'لا يوجد رد بعد'
                               : 'No response yet'}
@@ -268,7 +268,7 @@ export default function InteractionsTab({
                                 <CheckCircle2 className="h-3.5 w-3.5" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent className="bg-slate-800 border-slate-700 text-xs">
+                            <TooltipContent className="bg-muted border-border text-xs">
                               {isAr ? 'موافقة' : 'Approve'}
                             </TooltipContent>
                           </Tooltip>
@@ -286,7 +286,7 @@ export default function InteractionsTab({
                                 <Ban className="h-3.5 w-3.5" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent className="bg-slate-800 border-slate-700 text-xs">
+                            <TooltipContent className="bg-muted border-border text-xs">
                               {isAr ? 'رفض' : 'Reject'}
                             </TooltipContent>
                           </Tooltip>
@@ -304,7 +304,7 @@ export default function InteractionsTab({
                                 <RotateCcw className="h-3.5 w-3.5" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent className="bg-slate-800 border-slate-700 text-xs">
+                            <TooltipContent className="bg-muted border-border text-xs">
                               {isAr
                                 ? 'طلب تعديل'
                                 : 'Request Change'}
@@ -342,9 +342,9 @@ export default function InteractionsTab({
         </div>
 
         {/* Client Interaction Enhancement Panel */}
-        <Separator className="my-6 bg-slate-800" />
+        <Separator className="my-6 bg-muted" />
         <div>
-          <h3 className="text-sm font-medium text-slate-400 mb-3 flex items-center gap-2">
+          <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
             <Users className="h-4 w-4" />
             {isAr ? 'لوحة تفاعلات العميل' : 'Client Interaction Panel'}
           </h3>
@@ -357,15 +357,15 @@ export default function InteractionsTab({
         open={interactionDialogOpen}
         onOpenChange={setInteractionDialogOpen}
       >
-        <DialogContent className="bg-slate-900 border-slate-700 max-w-lg">
+        <DialogContent className="bg-card border-border max-w-lg">
           <DialogHeader>
-            <DialogTitle className="text-white text-lg">
+            <DialogTitle className="text-foreground text-lg">
               {isAr ? 'إضافة تفاعل عميل' : 'Add Client Interaction'}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label className="text-slate-300">
+              <Label className="text-foreground/80">
                 {isAr ? 'المرحلة' : 'Phase'}
               </Label>
               <Select
@@ -374,7 +374,7 @@ export default function InteractionsTab({
                   setInteractionForm({ ...interactionForm, phaseId: val })
                 }
               >
-                <SelectTrigger className="bg-slate-800 border-slate-600 text-white">
+                <SelectTrigger className="bg-muted border-border text-foreground">
                   <SelectValue
                     placeholder={
                       isAr
@@ -383,7 +383,7 @@ export default function InteractionsTab({
                     }
                   />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-600 max-h-60">
+                <SelectContent className="bg-muted border-border max-h-60">
                   {phases.map((p) => {
                     const ptl =
                       phaseTypeLabels[p.phaseType] || {
@@ -394,7 +394,7 @@ export default function InteractionsTab({
                       <SelectItem
                         key={p.id}
                         value={p.id}
-                        className="text-slate-300"
+                        className="text-foreground/80"
                       >
                         {isAr ? ptl.ar : ptl.en}
                       </SelectItem>
@@ -404,7 +404,7 @@ export default function InteractionsTab({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label className="text-slate-300">
+              <Label className="text-foreground/80">
                 {isAr ? 'نوع التفاعل' : 'Interaction Type'}
               </Label>
               <Select
@@ -416,10 +416,10 @@ export default function InteractionsTab({
                   })
                 }
               >
-                <SelectTrigger className="bg-slate-800 border-slate-600 text-white">
+                <SelectTrigger className="bg-muted border-border text-foreground">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-600">
+                <SelectContent className="bg-muted border-border">
                   <SelectItem
                     value="COMMENT"
                     className="text-blue-400"
@@ -451,7 +451,7 @@ export default function InteractionsTab({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label className="text-slate-300">
+              <Label className="text-foreground/80">
                 {isAr ? 'المحتوى' : 'Content'} *
               </Label>
               <Textarea
@@ -466,11 +466,11 @@ export default function InteractionsTab({
                   isAr ? 'محتوى التفاعل...' : 'Interaction content...'
                 }
                 rows={3}
-                className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 resize-none"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground resize-none"
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-slate-300">
+              <Label className="text-foreground/80">
                 {isAr ? 'الرد (اختياري)' : 'Response (optional)'}
               </Label>
               <Textarea
@@ -485,7 +485,7 @@ export default function InteractionsTab({
                   isAr ? 'رد على التفاعل...' : 'Response to interaction...'
                 }
                 rows={2}
-                className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 resize-none"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground resize-none"
               />
             </div>
           </div>
@@ -493,7 +493,7 @@ export default function InteractionsTab({
             <Button
               variant="outline"
               onClick={() => setInteractionDialogOpen(false)}
-              className="border-slate-600 text-slate-300"
+              className="border-border text-foreground/80"
             >
               {t.cancel}
             </Button>
@@ -502,7 +502,7 @@ export default function InteractionsTab({
               disabled={
                 !interactionForm.content.trim() || submittingInteraction
               }
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-blue-600 hover:bg-blue-700 text-foreground"
             >
               {submittingInteraction && (
                 <Loader2 className="h-4 w-4 animate-spin me-2" />
@@ -515,15 +515,15 @@ export default function InteractionsTab({
 
       {/* ===== Rejection Reason Dialog ===== */}
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-        <DialogContent className="bg-slate-900 border-slate-700 max-w-md">
+        <DialogContent className="bg-card border-border max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-white text-lg flex items-center gap-2">
+            <DialogTitle className="text-foreground text-lg flex items-center gap-2">
               <Ban className="h-5 w-5 text-red-400" />
               {isAr ? 'سبب الرفض' : 'Rejection Reason'}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-muted-foreground">
               {isAr
                 ? 'يرجى إدخال سبب الرفض. سيتم إرساله للعميل.'
                 : 'Please enter the reason for rejection. It will be sent to the client.'}
@@ -535,21 +535,21 @@ export default function InteractionsTab({
                 isAr ? 'أدخل سبب الرفض...' : 'Enter rejection reason...'
               }
               rows={4}
-              className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 resize-none"
+              className="bg-muted border-border text-foreground placeholder:text-muted-foreground resize-none"
             />
           </div>
           <DialogFooter className="gap-2">
             <Button
               variant="outline"
               onClick={() => setRejectDialogOpen(false)}
-              className="border-slate-600 text-slate-300"
+              className="border-border text-foreground/80"
             >
               {t.cancel}
             </Button>
             <Button
               onClick={handleSubmitRejection}
               disabled={!rejectReason.trim() || submittingAction}
-              className="bg-red-600 hover:bg-red-700 text-white"
+              className="bg-red-600 hover:bg-red-700 text-foreground"
             >
               {submittingAction && (
                 <Loader2 className="h-4 w-4 animate-spin me-2" />

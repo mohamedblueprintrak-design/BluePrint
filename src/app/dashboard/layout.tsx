@@ -42,10 +42,10 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   // Show loading while mounting or checking auth
   if (!mounted || isLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
-          <p className="text-slate-400">{t.loading}</p>
+          <p className="text-muted-foreground">{t.loading}</p>
         </div>
       </div>
     );
@@ -53,10 +53,10 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
-          <p className="text-slate-400">{language === 'ar' ? 'جاري التحويل...' : 'Redirecting...'}</p>
+          <p className="text-muted-foreground">{language === 'ar' ? 'جاري التحويل...' : 'Redirecting...'}</p>
         </div>
       </div>
     );
@@ -71,7 +71,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-slate-950">
+      <div className="min-h-screen bg-background">
         {/* Sidebar */}
         <Sidebar />
         

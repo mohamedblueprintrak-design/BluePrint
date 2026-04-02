@@ -264,15 +264,15 @@ export function InventoryPage() {
     <div className="space-y-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
       {/* Header Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-blue-500/20">
                 <Package className="w-5 h-5 text-blue-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{formatNumber(stats.totalMaterials)}</p>
-                <p className="text-sm text-slate-400">
+                <p className="text-2xl font-bold text-foreground">{formatNumber(stats.totalMaterials)}</p>
+                <p className="text-sm text-muted-foreground">
                   {language === 'ar' ? 'إجمالي المواد' : 'Total Materials'}
                 </p>
               </div>
@@ -280,15 +280,15 @@ export function InventoryPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-red-500/20">
                 <AlertTriangle className="w-5 h-5 text-red-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{formatNumber(stats.lowStockCount)}</p>
-                <p className="text-sm text-slate-400">
+                <p className="text-2xl font-bold text-foreground">{formatNumber(stats.lowStockCount)}</p>
+                <p className="text-sm text-muted-foreground">
                   {language === 'ar' ? 'مخزون منخفض' : 'Low Stock'}
                 </p>
               </div>
@@ -296,15 +296,15 @@ export function InventoryPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-cyan-500/20">
                 <DollarSign className="w-5 h-5 text-cyan-400" />
               </div>
               <div>
-                <p className="text-xl font-bold text-white">{formatCurrency(stats.totalValue)}</p>
-                <p className="text-sm text-slate-400">
+                <p className="text-xl font-bold text-foreground">{formatCurrency(stats.totalValue)}</p>
+                <p className="text-sm text-muted-foreground">
                   {language === 'ar' ? 'إجمالي القيمة' : 'Total Value'}
                 </p>
               </div>
@@ -312,15 +312,15 @@ export function InventoryPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-purple-500/20">
                 <Warehouse className="w-5 h-5 text-purple-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{formatNumber(stats.categories)}</p>
-                <p className="text-sm text-slate-400">
+                <p className="text-2xl font-bold text-foreground">{formatNumber(stats.categories)}</p>
+                <p className="text-sm text-muted-foreground">
                   {language === 'ar' ? 'الفئات' : 'Categories'}
                 </p>
               </div>
@@ -332,20 +332,20 @@ export function InventoryPage() {
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between mb-4">
-          <TabsList className="bg-slate-800/50 border-slate-700">
-            <TabsTrigger value="materials" className="data-[state=active]:bg-slate-700">
+          <TabsList className="bg-muted border-border">
+            <TabsTrigger value="materials" className="data-[state=active]:bg-secondary">
               <Package className="w-4 h-4 me-2" />
               {language === 'ar' ? 'المواد' : 'Materials'}
             </TabsTrigger>
-            <TabsTrigger value="movements" className="data-[state=active]:bg-slate-700">
+            <TabsTrigger value="movements" className="data-[state=active]:bg-secondary">
               <History className="w-4 h-4 me-2" />
               {language === 'ar' ? 'حركة المخزون' : 'Stock Movements'}
             </TabsTrigger>
-            <TabsTrigger value="low-stock" className="data-[state=active]:bg-slate-700">
+            <TabsTrigger value="low-stock" className="data-[state=active]:bg-secondary">
               <AlertTriangle className="w-4 h-4 me-2" />
               {language === 'ar' ? 'تنبيهات المخزون' : 'Low Stock Alerts'}
               {lowStockMaterials.length > 0 && (
-                <Badge className="ms-2 bg-red-500 text-white text-xs px-1.5 py-0.5">
+                <Badge className="ms-2 bg-red-500 text-foreground text-xs px-1.5 py-0.5">
                   {lowStockMaterials.length}
                 </Badge>
               )}
@@ -355,7 +355,7 @@ export function InventoryPage() {
           <div className="flex gap-2">
             <Button
               variant="outline"
-              className="border-slate-700 text-slate-300 hover:bg-slate-800"
+              className="border-border text-foreground/80 hover:bg-accent"
               onClick={() => {
                 setMovementType('in');
                 setShowMovementDialog(true);
@@ -366,7 +366,7 @@ export function InventoryPage() {
             </Button>
             <Button
               variant="outline"
-              className="border-slate-700 text-slate-300 hover:bg-slate-800"
+              className="border-border text-foreground/80 hover:bg-accent"
               onClick={() => {
                 setMovementType('out');
                 setShowMovementDialog(true);
@@ -377,15 +377,15 @@ export function InventoryPage() {
             </Button>
             <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
               <DialogTrigger asChild>
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-foreground">
                   <Plus className="w-4 h-4 me-2" />
                   {t.newMaterial}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-lg">
+              <DialogContent className="bg-card border-border text-foreground max-w-lg">
                 <DialogHeader>
                   <DialogTitle>{t.newMaterial}</DialogTitle>
-                  <DialogDescription className="text-slate-400">
+                  <DialogDescription className="text-muted-foreground">
                     {language === 'ar' ? 'أدخل بيانات المادة الجديدة' : 'Enter the new material details'}
                   </DialogDescription>
                 </DialogHeader>
@@ -393,20 +393,20 @@ export function InventoryPage() {
                 <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-slate-300">{t.materialCode}</Label>
+                      <Label className="text-foreground/80">{t.materialCode}</Label>
                       <Input
                         value={formData.materialCode}
                         onChange={(e) => setFormData({ ...formData, materialCode: e.target.value })}
-                        className="bg-slate-800/50 border-slate-700 text-white"
+                        className="bg-muted border-border text-foreground"
                         placeholder="MAT-001"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-slate-300">{t.materialName} *</Label>
+                      <Label className="text-foreground/80">{t.materialName} *</Label>
                       <Input
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="bg-slate-800/50 border-slate-700 text-white"
+                        className="bg-muted border-border text-foreground"
                         placeholder={language === 'ar' ? 'اسم المادة' : 'Material name'}
                       />
                     </div>
@@ -414,12 +414,12 @@ export function InventoryPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-slate-300">{t.category}</Label>
+                      <Label className="text-foreground/80">{t.category}</Label>
                       <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
-                        <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                        <SelectTrigger className="bg-muted border-border text-foreground">
                           <SelectValue placeholder={t.category} />
                         </SelectTrigger>
-                        <SelectContent className="bg-slate-900 border-slate-800">
+                        <SelectContent className="bg-card border-border">
                           {MATERIAL_CATEGORIES.map((cat) => (
                             <SelectItem key={cat.value} value={cat.value}>
                               {language === 'ar' ? cat.label : cat.labelEn}
@@ -429,12 +429,12 @@ export function InventoryPage() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-slate-300">{t.unit}</Label>
+                      <Label className="text-foreground/80">{t.unit}</Label>
                       <Select value={formData.unit} onValueChange={(v) => setFormData({ ...formData, unit: v })}>
-                        <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                        <SelectTrigger className="bg-muted border-border text-foreground">
                           <SelectValue placeholder={t.unit} />
                         </SelectTrigger>
-                        <SelectContent className="bg-slate-900 border-slate-800">
+                        <SelectContent className="bg-card border-border">
                           {MATERIAL_UNITS.map((unit) => (
                             <SelectItem key={unit.value} value={unit.value}>
                               {language === 'ar' ? unit.label : unit.labelEn}
@@ -447,32 +447,32 @@ export function InventoryPage() {
 
                   <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-slate-300">{t.unitPrice}</Label>
+                      <Label className="text-foreground/80">{t.unitPrice}</Label>
                       <Input
                         type="number"
                         value={formData.unitPrice}
                         onChange={(e) => setFormData({ ...formData, unitPrice: e.target.value })}
-                        className="bg-slate-800/50 border-slate-700 text-white"
+                        className="bg-muted border-border text-foreground"
                         placeholder="0.00"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-slate-300">{t.currentStock}</Label>
+                      <Label className="text-foreground/80">{t.currentStock}</Label>
                       <Input
                         type="number"
                         value={formData.currentStock}
                         onChange={(e) => setFormData({ ...formData, currentStock: e.target.value })}
-                        className="bg-slate-800/50 border-slate-700 text-white"
+                        className="bg-muted border-border text-foreground"
                         placeholder="0"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-slate-300">{t.minStock}</Label>
+                      <Label className="text-foreground/80">{t.minStock}</Label>
                       <Input
                         type="number"
                         value={formData.minStock}
                         onChange={(e) => setFormData({ ...formData, minStock: e.target.value })}
-                        className="bg-slate-800/50 border-slate-700 text-white"
+                        className="bg-muted border-border text-foreground"
                         placeholder="0"
                       />
                     </div>
@@ -480,35 +480,35 @@ export function InventoryPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-slate-300">{t.maxStock}</Label>
+                      <Label className="text-foreground/80">{t.maxStock}</Label>
                       <Input
                         type="number"
                         value={formData.maxStock}
                         onChange={(e) => setFormData({ ...formData, maxStock: e.target.value })}
-                        className="bg-slate-800/50 border-slate-700 text-white"
+                        className="bg-muted border-border text-foreground"
                         placeholder="0"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-slate-300">
+                      <Label className="text-foreground/80">
                         {language === 'ar' ? 'الموقع' : 'Location'}
                       </Label>
                       <Input
                         value={formData.location}
                         onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                        className="bg-slate-800/50 border-slate-700 text-white"
+                        className="bg-muted border-border text-foreground"
                         placeholder="A-1-01"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-slate-300">{t.supplier}</Label>
+                    <Label className="text-foreground/80">{t.supplier}</Label>
                     <Select value={formData.supplier} onValueChange={(v) => setFormData({ ...formData, supplier: v })}>
-                      <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                      <SelectTrigger className="bg-muted border-border text-foreground">
                         <SelectValue placeholder={language === 'ar' ? 'اختر المورد' : 'Select supplier'} />
                       </SelectTrigger>
-                      <SelectContent className="bg-slate-900 border-slate-800">
+                      <SelectContent className="bg-card border-border">
                         {suppliers.map((supplier: any) => (
                           <SelectItem key={supplier.id} value={supplier.id}>
                             {supplier.name}
@@ -520,7 +520,7 @@ export function InventoryPage() {
                 </div>
 
                 <DialogFooter>
-                  <Button variant="ghost" onClick={() => setShowAddDialog(false)} className="text-slate-400">
+                  <Button variant="ghost" onClick={() => setShowAddDialog(false)} className="text-muted-foreground">
                     {t.cancel}
                   </Button>
                   <Button onClick={handleCreateMaterial} className="bg-blue-600 hover:bg-blue-700" disabled={createMaterial.isPending}>
@@ -537,20 +537,20 @@ export function InventoryPage() {
           {/* Filters */}
           <div className="flex flex-col md:flex-row gap-4 mb-4">
             <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder={t.search}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="ps-9 bg-slate-800/50 border-slate-700 text-white"
+                className="ps-9 bg-muted border-border text-foreground"
               />
             </div>
 
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-[180px] bg-slate-800/50 border-slate-700 text-white">
+              <SelectTrigger className="w-[180px] bg-muted border-border text-foreground">
                 <SelectValue placeholder={t.category} />
               </SelectTrigger>
-              <SelectContent className="bg-slate-900 border-slate-800">
+              <SelectContent className="bg-card border-border">
                 <SelectItem value="all">{t.all}</SelectItem>
                 {MATERIAL_CATEGORIES.map((cat) => (
                   <SelectItem key={cat.value} value={cat.value}>
@@ -564,10 +564,10 @@ export function InventoryPage() {
           {/* Materials Table */}
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="text-slate-400">{t.loading}</div>
+              <div className="text-muted-foreground">{t.loading}</div>
             </div>
           ) : filteredMaterials.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
               <Package className="w-16 h-16 mb-4 opacity-50" />
               <p className="text-lg">{t.noData}</p>
               <Button variant="outline" className="mt-4" onClick={() => setShowAddDialog(true)}>
@@ -576,47 +576,47 @@ export function InventoryPage() {
               </Button>
             </div>
           ) : (
-            <Card className="bg-slate-900/50 border-slate-800">
+            <Card className="bg-card border-border">
               <ScrollArea className="max-h-[600px]">
                 <Table>
                   <TableHeader>
-                    <TableRow className="border-slate-800 hover:bg-slate-800/50">
-                      <TableHead className="text-slate-400">{t.materialCode}</TableHead>
-                      <TableHead className="text-slate-400">{t.materialName}</TableHead>
-                      <TableHead className="text-slate-400">{t.category}</TableHead>
-                      <TableHead className="text-slate-400">{t.unit}</TableHead>
-                      <TableHead className="text-slate-400">{t.unitPrice}</TableHead>
-                      <TableHead className="text-slate-400">{t.currentStock}</TableHead>
-                      <TableHead className="text-slate-400">{language === 'ar' ? 'الحدود' : 'Min/Max'}</TableHead>
-                      <TableHead className="text-slate-400">{language === 'ar' ? 'الموقع' : 'Location'}</TableHead>
-                      <TableHead className="text-slate-400">{t.actions}</TableHead>
+                    <TableRow className="border-border hover:bg-muted">
+                      <TableHead className="text-muted-foreground">{t.materialCode}</TableHead>
+                      <TableHead className="text-muted-foreground">{t.materialName}</TableHead>
+                      <TableHead className="text-muted-foreground">{t.category}</TableHead>
+                      <TableHead className="text-muted-foreground">{t.unit}</TableHead>
+                      <TableHead className="text-muted-foreground">{t.unitPrice}</TableHead>
+                      <TableHead className="text-muted-foreground">{t.currentStock}</TableHead>
+                      <TableHead className="text-muted-foreground">{language === 'ar' ? 'الحدود' : 'Min/Max'}</TableHead>
+                      <TableHead className="text-muted-foreground">{language === 'ar' ? 'الموقع' : 'Location'}</TableHead>
+                      <TableHead className="text-muted-foreground">{t.actions}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredMaterials.map((material: any) => {
                       const stockStatus = getStockStatus(material);
                       return (
-                        <TableRow key={material.id} className="border-slate-800 hover:bg-slate-800/50">
+                        <TableRow key={material.id} className="border-border hover:bg-muted">
                           <TableCell>
                             <div className="flex items-center gap-2">
-                              <Hash className="w-4 h-4 text-slate-500" />
-                              <span className="text-white font-mono text-sm">{material.materialCode || '-'}</span>
+                              <Hash className="w-4 h-4 text-muted-foreground" />
+                              <span className="text-foreground font-mono text-sm">{material.materialCode || '-'}</span>
                             </div>
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <Package className="w-4 h-4 text-blue-400" />
-                              <span className="text-white font-medium">{material.name}</span>
+                              <span className="text-foreground font-medium">{material.name}</span>
                             </div>
                           </TableCell>
                           <TableCell>
                             {material.category && (
-                              <Badge variant="outline" className="border-slate-700 text-slate-300">
+                              <Badge variant="outline" className="border-border text-foreground/80">
                                 {getCategoryLabel(material.category)}
                               </Badge>
                             )}
                           </TableCell>
-                          <TableCell className="text-slate-300">
+                          <TableCell className="text-foreground/80">
                             {getUnitLabel(material.unit)}
                           </TableCell>
                           <TableCell className="text-cyan-400 font-medium">
@@ -633,13 +633,13 @@ export function InventoryPage() {
                           <TableCell>
                             <div className="text-sm">
                               <span className="text-red-400">{material.minStock || 0}</span>
-                              <span className="text-slate-500 mx-1">/</span>
+                              <span className="text-muted-foreground mx-1">/</span>
                               <span className="text-green-400">{material.maxStock || 0}</span>
                             </div>
                           </TableCell>
                           <TableCell>
                             {material.location && (
-                              <div className="flex items-center gap-1 text-slate-400 text-sm">
+                              <div className="flex items-center gap-1 text-muted-foreground text-sm">
                                 <MapPin className="w-3 h-3" />
                                 {material.location}
                               </div>
@@ -648,21 +648,21 @@ export function InventoryPage() {
                           <TableCell>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white">
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                                   <MoreVertical className="w-4 h-4" />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align={language === 'ar' ? 'start' : 'end'} className="bg-slate-900 border-slate-800">
-                                <DropdownMenuItem className="text-slate-300 hover:bg-slate-800">
+                              <DropdownMenuContent align={language === 'ar' ? 'start' : 'end'} className="bg-card border-border">
+                                <DropdownMenuItem className="text-foreground/80 hover:bg-accent">
                                   <Eye className="w-4 h-4 me-2" />
                                   {t.view}
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="text-slate-300 hover:bg-slate-800">
+                                <DropdownMenuItem className="text-foreground/80 hover:bg-accent">
                                   <Edit className="w-4 h-4 me-2" />
                                   {t.edit}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                  className="text-red-400 hover:bg-slate-800 focus:text-red-400"
+                                  className="text-red-400 hover:bg-accent focus:text-red-400"
                                   onClick={() => {
                                     if (confirm(t.confirmDelete)) {
                                       toast({
@@ -691,13 +691,13 @@ export function InventoryPage() {
 
         {/* Stock Movements Tab */}
         <TabsContent value="movements">
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-foreground flex items-center gap-2">
                 <History className="w-5 h-5 text-blue-400" />
                 {language === 'ar' ? 'سجل حركة المخزون' : 'Stock Movement History'}
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-muted-foreground">
                 {language === 'ar' ? 'آخر عمليات الوارد والصادر' : 'Recent stock in and out transactions'}
               </CardDescription>
             </CardHeader>
@@ -705,24 +705,24 @@ export function InventoryPage() {
               <ScrollArea className="max-h-[500px]">
                 <Table>
                   <TableHeader>
-                    <TableRow className="border-slate-800 hover:bg-slate-800/50">
-                      <TableHead className="text-slate-400">{t.date}</TableHead>
-                      <TableHead className="text-slate-400">{t.materialName}</TableHead>
-                      <TableHead className="text-slate-400">{language === 'ar' ? 'النوع' : 'Type'}</TableHead>
-                      <TableHead className="text-slate-400">{language === 'ar' ? 'الكمية' : 'Quantity'}</TableHead>
-                      <TableHead className="text-slate-400">{t.notes}</TableHead>
+                    <TableRow className="border-border hover:bg-muted">
+                      <TableHead className="text-muted-foreground">{t.date}</TableHead>
+                      <TableHead className="text-muted-foreground">{t.materialName}</TableHead>
+                      <TableHead className="text-muted-foreground">{language === 'ar' ? 'النوع' : 'Type'}</TableHead>
+                      <TableHead className="text-muted-foreground">{language === 'ar' ? 'الكمية' : 'Quantity'}</TableHead>
+                      <TableHead className="text-muted-foreground">{t.notes}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {mockTransactions.map((transaction) => (
-                      <TableRow key={transaction.id} className="border-slate-800 hover:bg-slate-800/50">
-                        <TableCell className="text-slate-300">
+                      <TableRow key={transaction.id} className="border-border hover:bg-muted">
+                        <TableCell className="text-foreground/80">
                           {formatDate(transaction.date)}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Package className="w-4 h-4 text-blue-400" />
-                            <span className="text-white">{transaction.materialName}</span>
+                            <span className="text-foreground">{transaction.materialName}</span>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -738,7 +738,7 @@ export function InventoryPage() {
                             {transaction.type === 'in' ? '+' : '-'}{transaction.quantity}
                           </span>
                         </TableCell>
-                        <TableCell className="text-slate-400 text-sm">
+                        <TableCell className="text-muted-foreground text-sm">
                           {transaction.notes || '-'}
                         </TableCell>
                       </TableRow>
@@ -753,8 +753,8 @@ export function InventoryPage() {
         {/* Low Stock Alerts Tab */}
         <TabsContent value="low-stock">
           {lowStockMaterials.length === 0 ? (
-            <Card className="bg-slate-900/50 border-slate-800">
-              <CardContent className="flex flex-col items-center justify-center py-12 text-slate-400">
+            <Card className="bg-card border-border">
+              <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                 <Package className="w-16 h-16 mb-4 text-green-400 opacity-50" />
                 <p className="text-lg text-green-400">
                   {language === 'ar' ? 'جميع المواد ضمن الحد الآمن' : 'All materials are within safe limits'}
@@ -764,12 +764,12 @@ export function InventoryPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {lowStockMaterials.map((material: any) => (
-                <Card key={material.id} className="bg-slate-900/50 border-slate-800 border-s-4 border-s-red-500">
+                <Card key={material.id} className="bg-card border-border border-s-4 border-s-red-500">
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <AlertTriangle className="w-5 h-5 text-red-400" />
-                        <CardTitle className="text-white text-base">{material.name}</CardTitle>
+                        <CardTitle className="text-foreground text-base">{material.name}</CardTitle>
                       </div>
                       <Badge className="bg-red-500/20 text-red-400">
                         {language === 'ar' ? 'منخفض' : 'Low'}
@@ -778,15 +778,15 @@ export function InventoryPage() {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-400">{t.currentStock}:</span>
+                      <span className="text-muted-foreground">{t.currentStock}:</span>
                       <span className="text-red-400 font-bold">{formatNumber(material.currentStock || 0)}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-400">{t.minStock}:</span>
-                      <span className="text-slate-300">{formatNumber(material.minStock || 0)}</span>
+                      <span className="text-muted-foreground">{t.minStock}:</span>
+                      <span className="text-foreground/80">{formatNumber(material.minStock || 0)}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-400">{language === 'ar' ? 'النقص' : 'Shortage'}:</span>
+                      <span className="text-muted-foreground">{language === 'ar' ? 'النقص' : 'Shortage'}:</span>
                       <span className="text-orange-400 font-bold">
                         {formatNumber((material.minStock || 0) - (material.currentStock || 0))}
                       </span>
@@ -797,12 +797,12 @@ export function InventoryPage() {
                       className="h-2"
                     />
 
-                    <Separator className="bg-slate-800" />
+                    <Separator className="bg-muted" />
 
                     <div className="flex gap-2">
                       <Button
                         size="sm"
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-foreground"
                         onClick={() => handleQuickReorder(material)}
                       >
                         <ShoppingCart className="w-4 h-4 me-1" />
@@ -811,7 +811,7 @@ export function InventoryPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                        className="border-border text-foreground/80 hover:bg-accent"
                         onClick={() => {
                           setMovementType('in');
                           setMovementForm({ ...movementForm, materialId: material.id });
@@ -831,7 +831,7 @@ export function InventoryPage() {
 
       {/* Stock Movement Dialog */}
       <Dialog open={showMovementDialog} onOpenChange={setShowMovementDialog}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-md">
+        <DialogContent className="bg-card border-border text-foreground max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {movementType === 'in' ? (
@@ -846,7 +846,7 @@ export function InventoryPage() {
                 </>
               )}
             </DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-muted-foreground">
               {movementType === 'in'
                 ? (language === 'ar' ? 'تسجيل مواد واردة للمخزون' : 'Record incoming materials to stock')
                 : (language === 'ar' ? 'تسجيل مواد صادرة من المخزون' : 'Record outgoing materials from stock')
@@ -856,15 +856,15 @@ export function InventoryPage() {
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label className="text-slate-300">{t.materialName} *</Label>
+              <Label className="text-foreground/80">{t.materialName} *</Label>
               <Select
                 value={movementForm.materialId}
                 onValueChange={(v) => setMovementForm({ ...movementForm, materialId: v })}
               >
-                <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                <SelectTrigger className="bg-muted border-border text-foreground">
                   <SelectValue placeholder={language === 'ar' ? 'اختر المادة' : 'Select material'} />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800">
+                <SelectContent className="bg-card border-border">
                   {materials.map((material: any) => (
                     <SelectItem key={material.id} value={material.id}>
                       {material.name} ({material.materialCode || 'N/A'})
@@ -875,25 +875,25 @@ export function InventoryPage() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-slate-300">
+              <Label className="text-foreground/80">
                 {language === 'ar' ? 'الكمية' : 'Quantity'} *
               </Label>
               <Input
                 type="number"
                 value={movementForm.quantity}
                 onChange={(e) => setMovementForm({ ...movementForm, quantity: e.target.value })}
-                className="bg-slate-800/50 border-slate-700 text-white"
+                className="bg-muted border-border text-foreground"
                 placeholder="0"
                 min="0"
               />
             </div>
 
             <div className="space-y-2">
-              <Label className="text-slate-300">{t.notes}</Label>
+              <Label className="text-foreground/80">{t.notes}</Label>
               <Textarea
                 value={movementForm.notes}
                 onChange={(e) => setMovementForm({ ...movementForm, notes: e.target.value })}
-                className="bg-slate-800/50 border-slate-700 text-white"
+                className="bg-muted border-border text-foreground"
                 rows={3}
                 placeholder={language === 'ar' ? 'ملاحظات...' : 'Notes...'}
               />
@@ -901,7 +901,7 @@ export function InventoryPage() {
           </div>
 
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setShowMovementDialog(false)} className="text-slate-400">
+            <Button variant="ghost" onClick={() => setShowMovementDialog(false)} className="text-muted-foreground">
               {t.cancel}
             </Button>
             <Button

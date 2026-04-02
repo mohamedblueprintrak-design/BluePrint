@@ -129,7 +129,7 @@ export class ErrorBoundaryCore extends Component<ErrorBoundaryProps, ErrorBounda
       const isDev = process.env.NODE_ENV === 'development';
 
       return (
-        <Card className="border-red-500/30 bg-slate-950 shadow-lg">
+        <Card className="border-red-500/30 bg-background shadow-lg">
           <CardContent className="p-6">
             <div className="flex flex-col items-center text-center gap-4">
               {/* Icon */}
@@ -139,10 +139,10 @@ export class ErrorBoundaryCore extends Component<ErrorBoundaryProps, ErrorBounda
 
               {/* Title */}
               <div className="space-y-1">
-                <h3 className="text-lg font-semibold text-white">
+                <h3 className="text-lg font-semibold text-foreground">
                   {this.props.title || msgs.title}
                 </h3>
-                <p className="text-sm text-slate-400 max-w-md">
+                <p className="text-sm text-muted-foreground max-w-md">
                   {msgs.description}
                 </p>
                 {this.state.error?.message && (
@@ -158,7 +158,7 @@ export class ErrorBoundaryCore extends Component<ErrorBoundaryProps, ErrorBounda
                   variant="outline"
                   size="sm"
                   onClick={this.handleReset}
-                  className="gap-2 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
+                  className="gap-2 border-border text-foreground/80 hover:bg-muted hover:text-foreground"
                 >
                   <RefreshCw className="h-4 w-4" />
                   {msgs.retry}
@@ -168,7 +168,7 @@ export class ErrorBoundaryCore extends Component<ErrorBoundaryProps, ErrorBounda
                   variant="outline"
                   size="sm"
                   onClick={this.handleReportError}
-                  className="gap-2 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
+                  className="gap-2 border-border text-foreground/80 hover:bg-muted hover:text-foreground"
                 >
                   <Bug className="h-4 w-4" />
                   {msgs.reportError}
@@ -181,7 +181,7 @@ export class ErrorBoundaryCore extends Component<ErrorBoundaryProps, ErrorBounda
                   <button
                     type="button"
                     onClick={this.handleToggleDetails}
-                    className="flex items-center gap-1.5 mx-auto text-xs text-slate-500 hover:text-slate-300 transition-colors"
+                    className="flex items-center gap-1.5 mx-auto text-xs text-muted-foreground hover:text-foreground/80 transition-colors"
                   >
                     {this.state.showDetails ? (
                       <>
@@ -194,12 +194,12 @@ export class ErrorBoundaryCore extends Component<ErrorBoundaryProps, ErrorBounda
                         {msgs.showDetails}
                       </>
                     )}
-                    <span className="text-slate-600">— {msgs.devNote}</span>
+                    <span className="text-muted-foreground">— {msgs.devNote}</span>
                   </button>
 
                   {this.state.showDetails && (
-                    <div className="mt-3 rounded-lg border border-red-500/20 bg-slate-900 p-4 text-left">
-                      <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-2">
+                    <div className="mt-3 rounded-lg border border-red-500/20 bg-card p-4 text-left">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
                         {msgs.stackTrace}
                       </p>
                       <pre className="text-xs text-red-400/90 overflow-auto max-h-48 whitespace-pre-wrap break-words font-mono">

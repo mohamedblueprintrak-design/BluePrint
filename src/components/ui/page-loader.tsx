@@ -9,11 +9,11 @@ interface PageLoaderProps {
 
 export function PageLoader({ message }: PageLoaderProps) {
   return (
-    <Card className="border-slate-700 bg-slate-900/50">
+    <Card className="border-border bg-card">
       <CardContent className="p-12">
         <div className="flex flex-col items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-blue-500 mb-4" />
-          <p className="text-slate-400">
+          <p className="text-muted-foreground">
             {message || 'جاري التحميل...'}
           </p>
         </div>

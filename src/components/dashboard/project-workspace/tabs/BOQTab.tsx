@@ -37,48 +37,48 @@ export default function BOQTab({
     <div className="space-y-6">
       {/* BOQ Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-violet-500/20">
                 <FileSpreadsheet className="h-5 w-5 text-violet-400" />
               </div>
               <div>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-muted-foreground">
                   {isAr ? 'إجمالي BOQ' : 'Total BOQ'}
                 </p>
-                <p className="text-xl font-bold text-white">
+                <p className="text-xl font-bold text-foreground">
                   {formatCurrency(totalBOQ)}
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-blue-500/20">
                 <Layers className="h-5 w-5 text-blue-400" />
               </div>
               <div>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-muted-foreground">
                   {isAr ? 'عدد البنود' : 'Items Count'}
                 </p>
-                <p className="text-xl font-bold text-white">
+                <p className="text-xl font-bold text-foreground">
                   {boqItems.length}
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-amber-500/20">
                 <DollarSign className="h-5 w-5 text-amber-400" />
               </div>
               <div>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-muted-foreground">
                   {isAr ? 'المصروف الفعلي' : 'Actual Spent'}
                 </p>
                 <p className="text-xl font-bold text-amber-400">
@@ -91,44 +91,44 @@ export default function BOQTab({
       </div>
 
       {/* BOQ Category Breakdown */}
-      <Card className="bg-slate-900/50 border-slate-800">
+      <Card className="bg-card border-border">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
             <FileSpreadsheet className="h-5 w-5 text-violet-400" />
-            <CardTitle className="text-base text-white">
+            <CardTitle className="text-base text-foreground">
               {isAr ? 'جدول الكميات (BOQ)' : 'Bill of Quantities'}
             </CardTitle>
           </div>
         </CardHeader>
         <CardContent>
           {boqItems.length === 0 ? (
-            <p className="text-slate-500 text-sm text-center py-8">
+            <p className="text-muted-foreground text-sm text-center py-8">
               {t.noData}
             </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-700/50">
-                    <th className="text-start p-3 text-slate-400 font-medium">
+                  <tr className="border-b border-border/50">
+                    <th className="text-start p-3 text-muted-foreground font-medium">
                       {isAr ? '#' : '#'}
                     </th>
-                    <th className="text-start p-3 text-slate-400 font-medium">
+                    <th className="text-start p-3 text-muted-foreground font-medium">
                       {isAr ? 'الوصف' : 'Description'}
                     </th>
-                    <th className="text-start p-3 text-slate-400 font-medium">
+                    <th className="text-start p-3 text-muted-foreground font-medium">
                       {isAr ? 'الفئة' : 'Category'}
                     </th>
-                    <th className="text-center p-3 text-slate-400 font-medium">
+                    <th className="text-center p-3 text-muted-foreground font-medium">
                       {isAr ? 'الوحدة' : 'Unit'}
                     </th>
-                    <th className="text-center p-3 text-slate-400 font-medium">
+                    <th className="text-center p-3 text-muted-foreground font-medium">
                       {isAr ? 'الكمية' : 'Qty'}
                     </th>
-                    <th className="text-end p-3 text-slate-400 font-medium">
+                    <th className="text-end p-3 text-muted-foreground font-medium">
                       {isAr ? 'سعر الوحدة' : 'Unit Price'}
                     </th>
-                    <th className="text-end p-3 text-slate-400 font-medium">
+                    <th className="text-end p-3 text-muted-foreground font-medium">
                       {isAr ? 'الإجمالي' : 'Total'}
                     </th>
                   </tr>
@@ -136,7 +136,7 @@ export default function BOQTab({
                 <tbody>
                   {boqItems.map((item, idx) => {
                     const catCfg = boqCategoryConfig[item.category || ''] || {
-                      color: 'text-slate-400',
+                      color: 'text-muted-foreground',
                       bg: 'bg-slate-500/15',
                       labelAr: item.category || '—',
                       labelEn: item.category || '—',
@@ -144,12 +144,12 @@ export default function BOQTab({
                     return (
                       <tr
                         key={item.id}
-                        className="border-b border-slate-700/30 hover:bg-slate-800/40"
+                        className="border-b border-border/30 hover:bg-accent/40"
                       >
-                        <td className="p-3 text-slate-500 font-mono text-xs">
+                        <td className="p-3 text-muted-foreground font-mono text-xs">
                           {item.code || item.itemNumber || idx + 1}
                         </td>
-                        <td className="p-3 text-white text-xs">
+                        <td className="p-3 text-foreground text-xs">
                           {item.description}
                         </td>
                         <td className="p-3">
@@ -160,16 +160,16 @@ export default function BOQTab({
                             {isAr ? catCfg.labelAr : catCfg.labelEn}
                           </Badge>
                         </td>
-                        <td className="p-3 text-center text-slate-300 text-xs">
+                        <td className="p-3 text-center text-foreground/80 text-xs">
                           {item.unit || '—'}
                         </td>
-                        <td className="p-3 text-center text-white text-xs">
+                        <td className="p-3 text-center text-foreground text-xs">
                           {item.quantity}
                         </td>
-                        <td className="p-3 text-end text-slate-300 text-xs">
+                        <td className="p-3 text-end text-foreground/80 text-xs">
                           {formatCurrency(item.unitPrice)}
                         </td>
-                        <td className="p-3 text-end text-white font-medium text-xs">
+                        <td className="p-3 text-end text-foreground font-medium text-xs">
                           {formatCurrency(item.totalPrice)}
                         </td>
                       </tr>
@@ -177,10 +177,10 @@ export default function BOQTab({
                   })}
                 </tbody>
                 <tfoot>
-                  <tr className="border-t-2 border-slate-600">
+                  <tr className="border-t-2 border-border">
                     <td
                       colSpan={6}
-                      className="p-3 text-end text-slate-400 font-semibold text-sm"
+                      className="p-3 text-end text-muted-foreground font-semibold text-sm"
                     >
                       {isAr ? 'الإجمالي الكلي' : 'Grand Total'}
                     </td>
@@ -196,35 +196,35 @@ export default function BOQTab({
       </Card>
 
       {/* Budget vs Actual Comparison */}
-      <Card className="bg-slate-900/50 border-slate-800">
+      <Card className="bg-card border-border">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-amber-400" />
-            <CardTitle className="text-base text-white">
+            <CardTitle className="text-base text-foreground">
               {isAr ? 'الميزانية مقابل الفعلي' : 'Budget vs Actual'}
             </CardTitle>
           </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-            <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/30">
-              <p className="text-xs text-slate-500">
+            <div className="bg-muted rounded-lg p-3 border border-border/30">
+              <p className="text-xs text-muted-foreground">
                 {isAr ? 'ميزانية BOQ' : 'BOQ Budget'}
               </p>
               <p className="text-lg font-bold text-violet-400 mt-1">
                 {formatCurrency(totalBOQ)}
               </p>
             </div>
-            <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/30">
-              <p className="text-xs text-slate-500">
+            <div className="bg-muted rounded-lg p-3 border border-border/30">
+              <p className="text-xs text-muted-foreground">
                 {isAr ? 'المصروف الفعلي' : 'Actual Spent'}
               </p>
               <p className="text-lg font-bold text-amber-400 mt-1">
                 {formatCurrency(project.spent)}
               </p>
             </div>
-            <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/30">
-              <p className="text-xs text-slate-500">
+            <div className="bg-muted rounded-lg p-3 border border-border/30">
+              <p className="text-xs text-muted-foreground">
                 {isAr ? 'الفرق' : 'Variance'}
               </p>
               <p
@@ -237,8 +237,8 @@ export default function BOQTab({
                 {formatCurrency(totalBOQ - project.spent)}
               </p>
             </div>
-            <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/30">
-              <p className="text-xs text-slate-500">
+            <div className="bg-muted rounded-lg p-3 border border-border/30">
+              <p className="text-xs text-muted-foreground">
                 {isAr ? 'نسبة الاستنفاذ' : 'Utilization'}
               </p>
               <p
@@ -268,14 +268,14 @@ export default function BOQTab({
                       )
                     : 0
                 }
-                className="h-1.5 bg-slate-700 mt-2"
+                className="h-1.5 bg-secondary mt-2"
               />
             </div>
           </div>
 
           {/* Category breakdown */}
           <div className="space-y-2">
-            <p className="text-xs text-slate-400 font-medium">
+            <p className="text-xs text-muted-foreground font-medium">
               {isAr ? 'تفصيل حسب الفئة' : 'By Category'}
             </p>
             {Object.entries(boqByCategory).map(
@@ -293,7 +293,7 @@ export default function BOQTab({
                 return (
                   <div
                     key={cat}
-                    className="flex items-center gap-3 bg-slate-800/30 rounded-lg px-3 py-2"
+                    className="flex items-center gap-3 bg-muted/50 rounded-lg px-3 py-2"
                   >
                     <Badge
                       variant="secondary"
@@ -304,13 +304,13 @@ export default function BOQTab({
                     <div className="flex-1">
                       <Progress
                         value={pct}
-                        className="h-2 bg-slate-700"
+                        className="h-2 bg-secondary"
                       />
                     </div>
-                    <span className="text-xs text-slate-300 font-medium w-12 text-end">
+                    <span className="text-xs text-foreground/80 font-medium w-12 text-end">
                       {pct}%
                     </span>
-                    <span className="text-xs text-white font-medium w-24 text-end">
+                    <span className="text-xs text-foreground font-medium w-24 text-end">
                       {formatCurrency(catTotal)}
                     </span>
                   </div>
@@ -323,12 +323,12 @@ export default function BOQTab({
 
       {/* BOQ Cost Variance Analysis */}
       {boqVariance && boqVariance.items.length > 0 && (
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-rose-400" />
-                <CardTitle className="text-base text-white">
+                <CardTitle className="text-base text-foreground">
                   {isAr ? 'تحليل تباين التكاليف' : 'Cost Variance Analysis'}
                 </CardTitle>
               </div>
@@ -343,22 +343,22 @@ export default function BOQTab({
           <CardContent>
             {/* Variance Summary Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-              <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/30">
-                <p className="text-[10px] text-slate-500">{isAr ? 'إجمالي الميزانية' : 'Total Budget'}</p>
+              <div className="bg-muted rounded-lg p-3 border border-border/30">
+                <p className="text-[10px] text-muted-foreground">{isAr ? 'إجمالي الميزانية' : 'Total Budget'}</p>
                 <p className="text-sm font-bold text-violet-400 mt-1">{formatCurrency(boqVariance.totalBudget)}</p>
               </div>
-              <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/30">
-                <p className="text-[10px] text-slate-500">{isAr ? 'إجمالي الفعلي' : 'Total Actual'}</p>
+              <div className="bg-muted rounded-lg p-3 border border-border/30">
+                <p className="text-[10px] text-muted-foreground">{isAr ? 'إجمالي الفعلي' : 'Total Actual'}</p>
                 <p className="text-sm font-bold text-amber-400 mt-1">{formatCurrency(boqVariance.totalActual)}</p>
               </div>
-              <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/30">
-                <p className="text-[10px] text-slate-500">{isAr ? 'التباين الكلي' : 'Total Variance'}</p>
+              <div className="bg-muted rounded-lg p-3 border border-border/30">
+                <p className="text-[10px] text-muted-foreground">{isAr ? 'التباين الكلي' : 'Total Variance'}</p>
                 <p className={`text-sm font-bold mt-1 ${boqVariance.totalVariance >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   {formatCurrency(boqVariance.totalVariance)}
                 </p>
               </div>
-              <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/30">
-                <p className="text-[10px] text-slate-500">{isAr ? 'نسبة التباين' : 'Variance %'}</p>
+              <div className="bg-muted rounded-lg p-3 border border-border/30">
+                <p className="text-[10px] text-muted-foreground">{isAr ? 'نسبة التباين' : 'Variance %'}</p>
                 <p className={`text-sm font-bold mt-1 ${Math.abs(boqVariance.totalVariancePercent) > 20 ? 'text-red-400' : 'text-emerald-400'}`}>
                   {boqVariance.totalVariancePercent.toFixed(1)}%
                 </p>
@@ -368,24 +368,24 @@ export default function BOQTab({
             {/* Variance Items Table */}
             <div className="overflow-x-auto max-h-96 overflow-y-auto">
               <table className="w-full text-sm">
-                <thead className="sticky top-0 bg-slate-900">
-                  <tr className="border-b border-slate-700/50">
-                    <th className="text-start p-2.5 text-slate-400 font-medium text-xs">
+                <thead className="sticky top-0 bg-card">
+                  <tr className="border-b border-border/50">
+                    <th className="text-start p-2.5 text-muted-foreground font-medium text-xs">
                       {isAr ? 'البنود' : 'Item'}
                     </th>
-                    <th className="text-end p-2.5 text-slate-400 font-medium text-xs">
+                    <th className="text-end p-2.5 text-muted-foreground font-medium text-xs">
                       {isAr ? 'الميزانية' : 'Budget'}
                     </th>
-                    <th className="text-end p-2.5 text-slate-400 font-medium text-xs">
+                    <th className="text-end p-2.5 text-muted-foreground font-medium text-xs">
                       {isAr ? 'الفعلي' : 'Actual'}
                     </th>
-                    <th className="text-end p-2.5 text-slate-400 font-medium text-xs">
+                    <th className="text-end p-2.5 text-muted-foreground font-medium text-xs">
                       {isAr ? 'التباين' : 'Variance'}
                     </th>
-                    <th className="text-end p-2.5 text-slate-400 font-medium text-xs">
+                    <th className="text-end p-2.5 text-muted-foreground font-medium text-xs">
                       %
                     </th>
-                    <th className="text-center p-2.5 text-slate-400 font-medium text-xs">
+                    <th className="text-center p-2.5 text-muted-foreground font-medium text-xs">
                       {isAr ? 'الحالة' : 'Status'}
                     </th>
                   </tr>
@@ -397,7 +397,7 @@ export default function BOQTab({
                     return (
                       <tr
                         key={item.boqItemId}
-                        className={`border-b border-slate-700/30 ${
+                        className={`border-b border-border/30 ${
                           isFlagged ? 'bg-red-500/5 border-l-2 border-l-red-500/60' : ''
                         }`}
                       >
@@ -406,15 +406,15 @@ export default function BOQTab({
                             {isFlagged && (
                               <AlertTriangle className={`h-3 w-3 shrink-0 ${isOver ? 'text-red-400' : 'text-amber-400'}`} />
                             )}
-                            <span className="text-white text-xs truncate max-w-[200px]" title={item.description}>
+                            <span className="text-foreground text-xs truncate max-w-[200px]" title={item.description}>
                               {item.description}
                             </span>
                           </div>
                         </td>
-                        <td className="p-2.5 text-end text-slate-300 text-xs">
+                        <td className="p-2.5 text-end text-foreground/80 text-xs">
                           {formatCurrency(item.budget)}
                         </td>
-                        <td className="p-2.5 text-end text-xs text-white">
+                        <td className="p-2.5 text-end text-xs text-foreground">
                           {formatCurrency(item.actual)}
                         </td>
                         <td className={`p-2.5 text-end text-xs font-medium ${item.variance >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>

@@ -259,7 +259,7 @@ export function FloatingAIButton({
           className={cn(
             "w-14 h-14 rounded-full shadow-lg shadow-purple-500/20",
             "bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700",
-            "text-white transition-all duration-300 hover:scale-110",
+            "text-foreground transition-all duration-300 hover:scale-110",
             isOpen && "scale-0 opacity-0"
           )}
         >
@@ -271,7 +271,7 @@ export function FloatingAIButton({
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent 
           className={cn(
-            "bg-slate-900 border-slate-800 text-white transition-all duration-300",
+            "bg-card border-border text-foreground transition-all duration-300",
             isExpanded ? "sm:max-w-[700px]" : "sm:max-w-[450px]"
           )}
         >
@@ -279,13 +279,13 @@ export function FloatingAIButton({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center">
-                  <Bot className="w-5 h-5 text-white" />
+                  <Bot className="w-5 h-5 text-foreground" />
                 </div>
                 <div>
                   <DialogTitle className="text-lg">
                     {isRTL ? 'المساعد الذكي' : 'AI Assistant'}
                   </DialogTitle>
-                  <DialogDescription className="text-slate-400 text-sm">
+                  <DialogDescription className="text-muted-foreground text-sm">
                     {isRTL ? 'اسأل أي سؤال عن بياناتك' : 'Ask anything about your data'}
                   </DialogDescription>
                 </div>
@@ -294,7 +294,7 @@ export function FloatingAIButton({
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="text-slate-400 hover:text-white"
+                className="text-muted-foreground hover:text-foreground"
               >
                 {isExpanded ? (
                   <Minimize2 className="w-4 h-4" />
@@ -324,7 +324,7 @@ export function FloatingAIButton({
             {/* Response Area */}
             {response && (
               <div className="relative">
-                <ScrollArea className="h-[200px] w-full rounded-lg bg-slate-800/50 p-4">
+                <ScrollArea className="h-[200px] w-full rounded-lg bg-muted p-4">
                   <div className="prose prose-invert prose-sm max-w-none whitespace-pre-wrap">
                     {response}
                   </div>
@@ -333,7 +333,7 @@ export function FloatingAIButton({
                   variant="ghost"
                   size="icon"
                   onClick={handleCopy}
-                  className="absolute top-2 end-2 h-8 w-8 text-slate-400 hover:text-white"
+                  className="absolute top-2 end-2 h-8 w-8 text-muted-foreground hover:text-foreground"
                 >
                   {copied ? (
                     <Check className="w-4 h-4 text-green-500" />
@@ -352,7 +352,7 @@ export function FloatingAIButton({
                 placeholder={isRTL 
                   ? 'اكتب سؤالك هنا...' 
                   : 'Type your question here...'}
-                className="min-h-[80px] bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 resize-none"
+                className="min-h-[80px] bg-muted border-border text-foreground placeholder:text-muted-foreground resize-none"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
@@ -376,15 +376,15 @@ export function FloatingAIButton({
 
             {/* Context Info */}
             {context && (
-              <div className="text-xs text-slate-500 text-center">
+              <div className="text-xs text-muted-foreground text-center">
                 {isRTL ? `السياق: ${context}` : `Context: ${context}`}
               </div>
             )}
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-800">
-            <span className="text-xs text-slate-500">
+          <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
+            <span className="text-xs text-muted-foreground">
               {isRTL ? 'مدعوم بـ BluePrint AI' : 'Powered by BluePrint AI'}
             </span>
             <div className="flex gap-2">
@@ -392,7 +392,7 @@ export function FloatingAIButton({
                 variant="ghost"
                 size="sm"
                 onClick={handleClose}
-                className="text-slate-400 hover:text-white"
+                className="text-muted-foreground hover:text-foreground"
               >
                 {isRTL ? 'إغلاق' : 'Close'}
               </Button>

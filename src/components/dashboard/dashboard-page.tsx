@@ -257,7 +257,7 @@ export function DashboardPage() {
         { title: 'المشاريع النشطة', titleEn: 'Active Projects', value: stats?.projects?.active || 0, icon: Building2, color: 'text-blue-400', bgColor: 'bg-blue-500/10' },
         { title: 'المهام النشطة', titleEn: 'Active Tasks', value: stats?.tasks?.total || 0, icon: CheckSquare, color: 'text-green-400', bgColor: 'bg-green-500/10' },
         { title: 'التحديثات الأخيرة', titleEn: 'Recent Updates', value: 0, icon: TrendingUp, color: 'text-cyan-400', bgColor: 'bg-cyan-500/10' },
-        { title: isAr ? '—' : '—', titleEn: '—', value: '—', icon: Eye, color: 'text-slate-400', bgColor: 'bg-slate-500/10' },
+        { title: isAr ? '—' : '—', titleEn: '—', value: '—', icon: Eye, color: 'text-muted-foreground', bgColor: 'bg-slate-500/10' },
       ],
     };
     return map[role] || map.VIEWER;
@@ -361,7 +361,7 @@ export function DashboardPage() {
       <OnboardingWizard isOpen={showOnboardingWizard} onClose={() => setShowOnboardingWizard(false)} />
 
       {/* ═══ 1. Welcome Banner ═══ */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 p-6 text-white shadow-lg shadow-blue-500/20">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 p-6 text-foreground shadow-lg shadow-blue-500/20">
         <div className="relative z-10">
           <h2 className="text-2xl font-bold mb-1">
             {getGreeting(language)} يا {user?.fullName || (isAr ? 'مستخدم' : 'User')} 👋
@@ -386,13 +386,13 @@ export function DashboardPage() {
 
       {/* ═══ Empty State ═══ */}
       {projects.length === 0 && !projectsLoading && (
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-8">
             <div className="flex flex-col items-center text-center">
               <div className="p-4 rounded-2xl bg-blue-500/10 mb-4"><Rocket className="w-12 h-12 text-blue-400" /></div>
-              <h3 className="text-xl font-bold text-white mb-2">{isAr ? 'مرحبًا بك في BluePrint!' : 'Welcome to BluePrint!'}</h3>
-              <p className="text-slate-400 max-w-md mb-6">{isAr ? 'ابدأ بإنشاء مشروعك الأول' : 'Start by creating your first project'}</p>
-              <Button onClick={() => router.push('/dashboard/projects')} className="bg-blue-600 hover:bg-blue-700 text-white">
+              <h3 className="text-xl font-bold text-foreground mb-2">{isAr ? 'مرحبًا بك في BluePrint!' : 'Welcome to BluePrint!'}</h3>
+              <p className="text-muted-foreground max-w-md mb-6">{isAr ? 'ابدأ بإنشاء مشروعك الأول' : 'Start by creating your first project'}</p>
+              <Button onClick={() => router.push('/dashboard/projects')} className="bg-blue-600 hover:bg-blue-700 text-foreground">
                 <Plus className="w-4 h-4 me-2" />{t.newProject}
               </Button>
             </div>
@@ -403,16 +403,16 @@ export function DashboardPage() {
       {/* ═══ 2. Stat Cards ═══ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((stat, i) => (
-          <Card key={i} className="bg-slate-900/50 border-slate-800 hover:border-slate-700 hover:shadow-lg hover:shadow-slate-900/50 transition-all duration-300 hover:-translate-y-1 group">
+          <Card key={i} className="bg-card border-border hover:border-border hover:shadow-lg hover:shadow-slate-900/50 transition-all duration-300 hover:-translate-y-1 group">
             <CardContent className="p-5">
               <div className={`p-2.5 rounded-xl ${stat.bgColor} w-fit group-hover:scale-110 transition-transform duration-300`}>
                 <stat.icon className={`w-5 h-5 ${stat.color}`} />
               </div>
               <div className="mt-4">
-                <p className="text-2xl font-bold text-white">{stat.value}</p>
-                {stat.subtitle && <p className="text-sm text-slate-400 mt-0.5">{stat.subtitle}</p>}
+                <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                {stat.subtitle && <p className="text-sm text-muted-foreground mt-0.5">{stat.subtitle}</p>}
               </div>
-              <p className="text-sm text-slate-400 mt-1">{isAr ? stat.title : stat.titleEn}</p>
+              <p className="text-sm text-muted-foreground mt-1">{isAr ? stat.title : stat.titleEn}</p>
             </CardContent>
           </Card>
         ))}
@@ -420,9 +420,9 @@ export function DashboardPage() {
 
       {/* ═══ 3. Alerts Banner ═══ */}
       {alerts.length > 0 && (
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardHeader className="pb-3">
-            <CardTitle className="text-white flex items-center gap-2 text-base">
+            <CardTitle className="text-foreground flex items-center gap-2 text-base">
               <AlertCircle className="w-4 h-4 text-amber-400" />
               {isAr ? 'تنبيهات تحتاج اهتمامك' : 'Alerts Needing Attention'}
             </CardTitle>
@@ -452,9 +452,9 @@ export function DashboardPage() {
       )}
 
       {/* ═══ 4. Quick Actions ═══ */}
-      <Card className="bg-slate-900/50 border-slate-800">
+      <Card className="bg-card border-border">
         <CardHeader className="pb-3">
-          <CardTitle className="text-white text-lg">{isAr ? 'إجراءات سريعة' : 'Quick Actions'}</CardTitle>
+          <CardTitle className="text-foreground text-lg">{isAr ? 'إجراءات سريعة' : 'Quick Actions'}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -462,13 +462,13 @@ export function DashboardPage() {
               <Button
                 key={i}
                 variant="outline"
-                className="h-20 flex flex-col gap-2 bg-slate-800/50 border-slate-700 hover:border-slate-500 transition-all duration-300 group"
+                className="h-20 flex flex-col gap-2 bg-muted border-border hover:border-border transition-all duration-300 group"
                 onClick={() => router.push(action.href)}
               >
                 <div className={`p-2 rounded-lg ${action.bgColor} group-hover:scale-110 transition-transform duration-300`}>
                   <action.icon className={`w-5 h-5 ${action.color}`} />
                 </div>
-                <span className="text-xs text-slate-300 group-hover:text-white truncate">{isAr ? action.label : action.labelEn}</span>
+                <span className="text-xs text-foreground/80 group-hover:text-foreground truncate">{isAr ? action.label : action.labelEn}</span>
               </Button>
             ))}
           </div>
@@ -477,10 +477,10 @@ export function DashboardPage() {
 
       {/* ═══ 5. Active Content Section (role-adaptive) ═══ */}
       {(role === 'ADMIN' || role === 'MANAGER' || role === 'PROJECT_MANAGER') && (
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-foreground flex items-center gap-2">
                 <Building2 className="w-5 h-5 text-blue-400" />
                 {isAr ? 'المشاريع النشطة' : 'Active Projects'}
               </CardTitle>
@@ -495,7 +495,7 @@ export function DashboardPage() {
             ) : (
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {activeProjects.length === 0 ? (
-                  <div className="text-center py-8 text-slate-500 text-sm">{isAr ? 'لا توجد مشاريع نشطة' : 'No active projects'}</div>
+                  <div className="text-center py-8 text-muted-foreground text-sm">{isAr ? 'لا توجد مشاريع نشطة' : 'No active projects'}</div>
                 ) : (
                   activeProjects.slice(0, 6).map((project: any) => {
                     const projectTasks = allTasks.filter((tk: any) => tk.projectId === project.id);
@@ -505,13 +505,13 @@ export function DashboardPage() {
                     const overdue = projectTasks.filter((tk: any) => tk.dueDate && tk.status !== 'done' && new Date(tk.dueDate) < now).length;
                     return (
                       <Link key={project.id} href={`/dashboard/projects/${project.id}`}>
-                        <div className="flex items-center gap-4 p-3 rounded-lg bg-slate-800/30 hover:bg-slate-800/50 transition-colors cursor-pointer group">
+                        <div className="flex items-center gap-4 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer group">
                           <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center shrink-0">
                             <Building2 className="w-5 h-5 text-blue-400" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <p className="text-sm font-medium text-white truncate">{project.name}</p>
+                              <p className="text-sm font-medium text-foreground truncate">{project.name}</p>
                               {overdue > 0 && (
                                 <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-red-500/30 text-red-400 bg-red-500/10">
                                   {overdue} {isAr ? 'متأخر' : 'overdue'}
@@ -520,11 +520,11 @@ export function DashboardPage() {
                             </div>
                             <div className="flex items-center gap-3 mt-1.5">
                               <Progress value={progress} className="h-1.5 flex-1" />
-                              <span className="text-xs text-slate-400">{progress}%</span>
-                              <span className="text-[10px] text-slate-500">{done}/{total}</span>
+                              <span className="text-xs text-muted-foreground">{progress}%</span>
+                              <span className="text-[10px] text-muted-foreground">{done}/{total}</span>
                             </div>
                           </div>
-                          <ArrowUpRight className="w-4 h-4 text-slate-500 group-hover:text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground/80 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
                       </Link>
                     );
@@ -537,10 +537,10 @@ export function DashboardPage() {
       )}
 
       {role === 'ENGINEER' && (
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-foreground flex items-center gap-2">
                 <CheckSquare className="w-5 h-5 text-blue-400" />
                 {isAr ? 'مهامي النهارده' : "Today's Tasks"}
               </CardTitle>
@@ -555,19 +555,19 @@ export function DashboardPage() {
             ) : (
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {todayTasks.length === 0 ? (
-                  <div className="text-center py-8 text-slate-500 text-sm">{isAr ? 'لا توجد مهام لليوم' : 'No tasks for today'}</div>
+                  <div className="text-center py-8 text-muted-foreground text-sm">{isAr ? 'لا توجد مهام لليوم' : 'No tasks for today'}</div>
                 ) : (
                   todayTasks.map((task: any) => {
                     const slaStatus = getTaskSLAStatus(task);
                     const isOverdue = task.dueDate && new Date(task.dueDate) < now && task.status !== 'done';
                     const priorityColors: Record<string, string> = { urgent: 'bg-red-500', high: 'bg-orange-500', medium: 'bg-yellow-500', low: 'bg-green-500' };
                     return (
-                      <div key={task.id} className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/30 hover:bg-slate-800/50 transition-colors cursor-pointer" onClick={() => router.push('/dashboard/tasks')}>
+                      <div key={task.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer" onClick={() => router.push('/dashboard/tasks')}>
                         <div className={`w-2 h-2 rounded-full ${priorityColors[task.priority] || 'bg-gray-500'} shrink-0`} />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-white truncate">{task.title}</p>
+                          <p className="text-sm text-foreground truncate">{task.title}</p>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[10px] text-slate-500">{task.project?.name || ''}</span>
+                            <span className="text-[10px] text-muted-foreground">{task.project?.name || ''}</span>
                             {slaStatus && (
                               <Badge variant="outline" className={`text-[9px] px-1 py-0 h-4 border ${slaStatus.color}`}>
                                 SLA: {slaStatus.remaining}{isAr ? 'ي' : 'd'}
@@ -587,10 +587,10 @@ export function DashboardPage() {
       )}
 
       {role === 'ACCOUNTANT' && (
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-foreground flex items-center gap-2">
                 <CreditCard className="w-5 h-5 text-cyan-400" />
                 {isAr ? 'الفواتير المعلقة' : 'Pending Invoices'}
               </CardTitle>
@@ -602,19 +602,19 @@ export function DashboardPage() {
           <CardContent>
             <div className="space-y-2 max-h-96 overflow-y-auto">
               {invoices.length === 0 ? (
-                <div className="text-center py-8 text-slate-500 text-sm">{isAr ? 'لا توجد فواتير معلقة' : 'No pending invoices'}</div>
+                <div className="text-center py-8 text-muted-foreground text-sm">{isAr ? 'لا توجد فواتير معلقة' : 'No pending invoices'}</div>
               ) : (
                 invoices.slice(0, 8).map((inv: any) => (
-                  <div key={inv.id} className="flex items-center gap-4 p-3 rounded-lg bg-slate-800/30 hover:bg-slate-800/50 transition-colors cursor-pointer" onClick={() => router.push('/dashboard/finance')}>
+                  <div key={inv.id} className="flex items-center gap-4 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer" onClick={() => router.push('/dashboard/finance')}>
                     <div className="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center shrink-0">
                       <CreditCard className="w-5 h-5 text-cyan-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white truncate">{inv.invoiceNumber || (isAr ? 'فاتورة' : 'Invoice')}</p>
-                      <p className="text-xs text-slate-500">{inv.client?.name || ''}</p>
+                      <p className="text-sm text-foreground truncate">{inv.invoiceNumber || (isAr ? 'فاتورة' : 'Invoice')}</p>
+                      <p className="text-xs text-muted-foreground">{inv.client?.name || ''}</p>
                     </div>
                     <div className="text-end shrink-0">
-                      <p className="text-sm font-medium text-white">{formatCurrency(inv.amount || 0)}</p>
+                      <p className="text-sm font-medium text-foreground">{formatCurrency(inv.amount || 0)}</p>
                       <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-amber-500/30 text-amber-400 bg-amber-500/10 mt-1">
                         {isAr ? 'معلق' : 'Pending'}
                       </Badge>
@@ -628,15 +628,15 @@ export function DashboardPage() {
       )}
 
       {role === 'HR' && (
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardHeader className="pb-3">
-            <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className="text-foreground flex items-center gap-2">
               <HeartHandshake className="w-5 h-5 text-amber-400" />
               {isAr ? 'طلبات الإجازة المعلقة' : 'Pending Leave Requests'}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-8 text-slate-500 text-sm">{isAr ? 'لا توجد طلبات معلقة حاليًا' : 'No pending requests right now'}</div>
+            <div className="text-center py-8 text-muted-foreground text-sm">{isAr ? 'لا توجد طلبات معلقة حاليًا' : 'No pending requests right now'}</div>
           </CardContent>
         </Card>
       )}
@@ -662,18 +662,18 @@ export function DashboardPage() {
 
       {/* ═══ 7. Charts Section (Collapsible) ═══ */}
       <Collapsible open={chartsOpen} onOpenChange={setChartsOpen}>
-        <Card className="bg-slate-900/50 border-slate-800 overflow-hidden">
+        <Card className="bg-card border-border overflow-hidden">
           <CollapsibleTrigger asChild>
-            <button className="w-full flex items-center justify-between p-4 hover:bg-slate-800/30 transition-colors cursor-pointer">
+            <button className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors cursor-pointer">
               <div className="flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-blue-400" />
-                <span className="text-white font-medium">{isAr ? '📊 التحليلات والرسوم البيانية' : '📊 Analytics & Charts'}</span>
+                <span className="text-foreground font-medium">{isAr ? '📊 التحليلات والرسوم البيانية' : '📊 Analytics & Charts'}</span>
               </div>
               <motion.div
                 animate={{ rotate: chartsOpen ? 180 : 0 }}
                 transition={{ duration: 0.2 }}
               >
-                <ChevronDown className="w-5 h-5 text-slate-400" />
+                <ChevronDown className="w-5 h-5 text-muted-foreground" />
               </motion.div>
             </button>
           </CollapsibleTrigger>
@@ -691,10 +691,10 @@ export function DashboardPage() {
                     {/* Period selector inside charts */}
                     <div className="flex justify-end pt-2">
                       <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
-                        <SelectTrigger className="w-32 bg-slate-800 border-slate-700">
+                        <SelectTrigger className="w-32 bg-muted border-border">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="bg-slate-800 border-slate-700">
+                        <SelectContent className="bg-muted border-border">
                           <SelectItem value="7d">{isAr ? 'آخر 7 أيام' : 'Last 7 days'}</SelectItem>
                           <SelectItem value="30d">{isAr ? 'آخر 30 يوم' : 'Last 30 days'}</SelectItem>
                           <SelectItem value="90d">{isAr ? 'آخر 90 يوم' : 'Last 90 days'}</SelectItem>
@@ -706,18 +706,18 @@ export function DashboardPage() {
                     {/* Row 1 */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       {canSeeFinancials ? (
-                        <Card className="bg-slate-800/50 border-slate-700">
+                        <Card className="bg-muted border-border">
                           <CardHeader>
-                            <CardTitle className="text-white text-base">{isAr ? 'الإيرادات الشهرية' : 'Monthly Revenue'}</CardTitle>
+                            <CardTitle className="text-foreground text-base">{isAr ? 'الإيرادات الشهرية' : 'Monthly Revenue'}</CardTitle>
                           </CardHeader>
                           <CardContent>
                             {dashboardLoading ? <ChartLoader /> : <RevenueChart data={revenueData} formatCurrency={formatCurrency} language={language} />}
                           </CardContent>
                         </Card>
                       ) : (
-                        <Card className="bg-slate-800/50 border-slate-700">
+                        <Card className="bg-muted border-border">
                           <CardHeader>
-                            <CardTitle className="text-white text-base">{isAr ? 'تقدم المشاريع' : 'Project Progress'}</CardTitle>
+                            <CardTitle className="text-foreground text-base">{isAr ? 'تقدم المشاريع' : 'Project Progress'}</CardTitle>
                           </CardHeader>
                           <CardContent>
                             <ScrollArea className="h-[300px]">
@@ -725,10 +725,10 @@ export function DashboardPage() {
                                 {projects.slice(0, 5).map((project: any) => (
                                   <div key={project.id} className="space-y-2">
                                     <div className="flex items-center justify-between">
-                                      <p className="text-sm font-medium text-white truncate">{project.name}</p>
-                                      <span className="text-xs text-slate-400">{project.progressPercentage || 0}%</span>
+                                      <p className="text-sm font-medium text-foreground truncate">{project.name}</p>
+                                      <span className="text-xs text-muted-foreground">{project.progressPercentage || 0}%</span>
                                     </div>
-                                    <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+                                    <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
                                       <div className="h-full bg-blue-500 rounded-full transition-all duration-500" style={{ width: `${project.progressPercentage || 0}%` }} />
                                     </div>
                                   </div>
@@ -738,9 +738,9 @@ export function DashboardPage() {
                           </CardContent>
                         </Card>
                       )}
-                      <Card className="bg-slate-800/50 border-slate-700">
+                      <Card className="bg-muted border-border">
                         <CardHeader>
-                          <CardTitle className="text-white text-base">{isAr ? 'حالة المشاريع' : 'Project Status'}</CardTitle>
+                          <CardTitle className="text-foreground text-base">{isAr ? 'حالة المشاريع' : 'Project Status'}</CardTitle>
                         </CardHeader>
                         <CardContent>
                           {projectsLoading ? <ChartLoader /> : <ProjectDonutChart data={projectStatusData} language={language} />}
@@ -750,27 +750,27 @@ export function DashboardPage() {
 
                     {/* Row 2 */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <Card className="bg-slate-800/50 border-slate-700">
+                      <Card className="bg-muted border-border">
                         <CardHeader>
-                          <CardTitle className="text-white text-base">{isAr ? 'اتجاه إنجاز المهام' : 'Task Completion Trend'}</CardTitle>
+                          <CardTitle className="text-foreground text-base">{isAr ? 'اتجاه إنجاز المهام' : 'Task Completion Trend'}</CardTitle>
                         </CardHeader>
                         <CardContent>
                           {tasksLoading ? <ChartLoader /> : <TaskCompletionChart data={taskCompletionData} language={language} />}
                         </CardContent>
                       </Card>
                       {canSeeFinancials ? (
-                        <Card className="bg-slate-800/50 border-slate-700">
+                        <Card className="bg-muted border-border">
                           <CardHeader>
-                            <CardTitle className="text-white text-base">{isAr ? 'المصروفات حسب الفئة' : 'Expenses by Category'}</CardTitle>
+                            <CardTitle className="text-foreground text-base">{isAr ? 'المصروفات حسب الفئة' : 'Expenses by Category'}</CardTitle>
                           </CardHeader>
                           <CardContent>
                             {dashboardLoading ? <ChartLoader /> : <ExpenseDonutChart data={expenseData} formatCurrency={formatCurrency} language={language} />}
                           </CardContent>
                         </Card>
                       ) : (
-                        <Card className="bg-slate-800/50 border-slate-700">
+                        <Card className="bg-muted border-border">
                           <CardHeader>
-                            <CardTitle className="text-white text-base">{isAr ? 'نشاط الفريق' : 'Team Activity'}</CardTitle>
+                            <CardTitle className="text-foreground text-base">{isAr ? 'نشاط الفريق' : 'Team Activity'}</CardTitle>
                           </CardHeader>
                           <CardContent>
                             {tasksLoading ? <ChartLoader /> : <TaskCompletionChart data={taskCompletionData} language={language} />}

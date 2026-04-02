@@ -70,7 +70,7 @@ export function MobileBottomNav() {
         className={cn(
           "fixed bottom-0 left-0 right-0 border-t z-40 lg:hidden pb-[env(safe-area-inset-bottom)]",
           isDark
-            ? "bg-slate-950 border-slate-800"
+            ? "bg-background border-border"
             : "bg-white border-gray-200"
         )}
         dir={isRTL ? 'rtl' : 'ltr'}
@@ -88,7 +88,7 @@ export function MobileBottomNav() {
                   'flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors relative',
                   isActive
                     ? isDark ? 'text-blue-400' : 'text-blue-600'
-                    : isDark ? 'text-slate-400' : 'text-gray-500'
+                    : isDark ? 'text-muted-foreground' : 'text-gray-500'
                 )}
               >
                 <div className="relative">
@@ -113,7 +113,7 @@ export function MobileBottomNav() {
               <button
                 className={cn(
                   'flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors relative',
-                  isDark ? 'text-slate-400' : 'text-gray-500'
+                  isDark ? 'text-muted-foreground' : 'text-gray-500'
                 )}
               >
                 <Settings className="w-5 h-5" />
@@ -124,15 +124,15 @@ export function MobileBottomNav() {
             </SheetTrigger>
             <SheetContent
               side={isRTL ? 'right' : 'left'}
-              className="w-72 p-0 bg-slate-950 border-slate-800"
+              className="w-72 p-0 bg-background border-border"
             >
               <SheetTitle className="sr-only">
                 {language === 'ar' ? 'المزيد من الخيارات' : 'More Options'}
               </SheetTitle>
-              <div className="flex items-center h-14 px-4 border-b border-slate-800">
+              <div className="flex items-center h-14 px-4 border-b border-border">
                 <h3 className={cn(
                   "text-base font-semibold",
-                  isDark ? 'text-white' : 'text-gray-900'
+                  isDark ? 'text-foreground' : 'text-gray-900'
                 )}>
                   {language === 'ar' ? 'المزيد' : 'More'}
                 </h3>
@@ -153,7 +153,7 @@ export function MobileBottomNav() {
                           isActive
                             ? "bg-blue-600/20 text-blue-400 border border-blue-500/30"
                             : isDark
-                              ? "text-slate-400 hover:bg-slate-800 hover:text-white"
+                              ? "text-muted-foreground hover:bg-accent hover:text-foreground"
                               : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                         )}
                       >

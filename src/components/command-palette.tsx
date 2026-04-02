@@ -175,17 +175,17 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl p-0" dir="rtl">
         {/* Search Input */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-700">
-          <Search className="w-5 h-5 text-slate-400" />
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
+          <Search className="w-5 h-5 text-muted-foreground" />
           <Input
             ref={inputRef}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="ابحث عن صفحة أو إجراء..."
-            className="border-0 shadow-none focus-visible:ring-0 px-0 bg-transparent text-white"
+            className="border-0 shadow-none focus-visible:ring-0 px-0 bg-transparent text-foreground"
           />
-          <kbd className="px-2 py-1 bg-slate-800 text-slate-400 text-xs rounded hidden sm:inline-block border border-slate-700">
+          <kbd className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded hidden sm:inline-block border border-border">
             ESC
           </kbd>
         </div>
@@ -194,7 +194,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         <div className="max-h-80 overflow-y-auto p-2">
           {Object.entries(groupedCommands).map(([category, cmds]) => (
             <div key={category}>
-              <p className="px-3 py-2 text-xs text-slate-400 font-medium">{category}</p>
+              <p className="px-3 py-2 text-xs text-muted-foreground font-medium">{category}</p>
               {cmds.map((cmd) => {
                 const Icon = cmd.icon;
                 const globalIndex = filteredCommands.indexOf(cmd);
@@ -207,13 +207,13 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                       selectedIndex === globalIndex
                         ? 'bg-violet-500/20 text-violet-300'
-                        : 'text-slate-300 hover:bg-slate-800'
+                        : 'text-foreground/80 hover:bg-accent'
                     }`}
                   >
                     <Icon className="w-5 h-5" />
                     <span className="flex-1 text-right">{cmd.label}</span>
                     {isAction && (
-                      <Badge variant="outline" className="text-[10px] border-slate-700 text-slate-500">
+                      <Badge variant="outline" className="text-[10px] border-border text-muted-foreground">
                         إجراء
                       </Badge>
                     )}
@@ -227,7 +227,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           ))}
 
           {filteredCommands.length === 0 && (
-            <div className="py-8 text-center text-slate-400">
+            <div className="py-8 text-center text-muted-foreground">
               <Search className="w-8 h-8 mx-auto mb-2" />
               <p>لا توجد نتائج لـ &quot;{search}&quot;</p>
             </div>
@@ -235,14 +235,14 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-2 border-t border-slate-700 flex items-center justify-between text-xs text-slate-400">
+        <div className="px-4 py-2 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-700">↑↓</kbd>
+              <kbd className="px-1.5 py-0.5 bg-muted rounded border border-border">↑↓</kbd>
               للتنقل
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-700">↵</kbd>
+              <kbd className="px-1.5 py-0.5 bg-muted rounded border border-border">↵</kbd>
               للتأكيد
             </span>
           </div>

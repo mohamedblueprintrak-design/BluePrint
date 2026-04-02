@@ -461,15 +461,15 @@ export function GanttChart({
   }
 
   return (
-    <div className={cn("bg-slate-900/50 rounded-xl border border-slate-800", isRTL ? 'rtl' : 'ltr')} dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className={cn("bg-card rounded-xl border border-border", isRTL ? 'rtl' : 'ltr')} dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}
-      <div className="p-4 border-b border-slate-800">
+      <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-4">
-            <h2 className="text-xl font-bold text-white">
+            <h2 className="text-xl font-bold text-foreground">
               {lang === 'ar' ? 'مخطط جانت' : 'Gantt Chart'}
             </h2>
-            <Badge variant="secondary" className="bg-slate-800">
+            <Badge variant="secondary" className="bg-muted">
               {tasks.length} {lang === 'ar' ? 'مهمة' : 'tasks'}
             </Badge>
           </div>
@@ -480,7 +480,7 @@ export function GanttChart({
               variant={showPhaseGroups ? 'default' : 'outline'}
               size="sm"
               className={cn(
-                showPhaseGroups ? 'bg-purple-600 hover:bg-purple-700' : 'border-slate-700 text-slate-400'
+                showPhaseGroups ? 'bg-purple-600 hover:bg-purple-700' : 'border-border text-muted-foreground'
               )}
               onClick={() => setShowPhaseGroups(!showPhaseGroups)}
             >
@@ -491,7 +491,7 @@ export function GanttChart({
             </Button>
 
             {/* View Mode Toggle */}
-            <div className="flex items-center bg-slate-800 rounded-lg p-1">
+            <div className="flex items-center bg-muted rounded-lg p-1">
               {(['day', 'week', 'month'] as const).map((mode) => (
                 <button
                   key={mode}
@@ -499,8 +499,8 @@ export function GanttChart({
                   className={cn(
                     "px-3 py-1 rounded text-sm transition-colors",
                     viewMode === mode
-                      ? 'bg-blue-500 text-white'
-                      : 'text-slate-400 hover:text-white'
+                      ? 'bg-blue-500 text-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
                   )}
                 >
                   {mode === 'day' ? (lang === 'ar' ? 'يوم' : 'Day') :
@@ -534,9 +534,9 @@ export function GanttChart({
       {/* Gantt Chart Body */}
       <div className="flex">
         {/* Task List */}
-        <div className="w-80 border-r border-slate-800 flex-shrink-0">
-          <div className="h-12 border-b border-slate-800 flex items-center px-4 bg-slate-800/50">
-            <span className="text-sm font-medium text-slate-400">
+        <div className="w-80 border-r border-border flex-shrink-0">
+          <div className="h-12 border-b border-border flex items-center px-4 bg-muted">
+            <span className="text-sm font-medium text-muted-foreground">
               {lang === 'ar' ? 'المهمة' : 'Task'}
             </span>
           </div>
@@ -553,14 +553,14 @@ export function GanttChart({
                 return (
                   <div 
                     key={`phase-${category}`}
-                    className={cn("h-10 flex items-center px-4 bg-slate-800/80 border-b border-slate-700/50", colorInfo?.bg)}
+                    className={cn("h-10 flex items-center px-4 bg-muted/80 border-b border-border/50", colorInfo?.bg)}
                   >
                     <div className={cn("flex items-center gap-2 font-semibold text-sm", colorInfo?.text)}>
                       <div className="w-2 h-2 rounded-full" style={{ backgroundColor: colorInfo?.bar }} />
                       {phaseInfo 
                         ? (lang === 'ar' ? phaseInfo.ar : phaseInfo.en) 
                         : category}
-                      <Badge variant="outline" className="text-[10px] border-slate-600 text-slate-400">
+                      <Badge variant="outline" className="text-[10px] border-border text-muted-foreground">
                         {taskCount}
                       </Badge>
                     </div>
@@ -573,7 +573,7 @@ export function GanttChart({
               return (
                 <div
                   key={task.id}
-                  className="h-12 border-b border-slate-800 flex items-center px-4 hover:bg-slate-800/30 cursor-pointer"
+                  className="h-12 border-b border-border flex items-center px-4 hover:bg-muted/50 cursor-pointer"
                   onClick={() => handleTaskClick(task)}
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -585,7 +585,7 @@ export function GanttChart({
                     {task.isMilestone && (
                       <Diamond className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />
                     )}
-                    <span className="text-sm text-white truncate">{task.title}</span>
+                    <span className="text-sm text-foreground truncate">{task.title}</span>
                     {/* Government entity */}
                     {task.governmentEntity && (
                       <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-amber-500/30 text-amber-400 bg-amber-500/10 shrink-0">
@@ -595,7 +595,7 @@ export function GanttChart({
                   </div>
                   <div className="flex items-center gap-1">
                     {STATUS_ICONS[task.status]}
-                    <span className="text-xs text-slate-400">{task.progress}%</span>
+                    <span className="text-xs text-muted-foreground">{task.progress}%</span>
                   </div>
                 </div>
               );
@@ -606,11 +606,11 @@ export function GanttChart({
         {/* Timeline */}
         <div className="flex-1 overflow-x-auto" ref={timelineRef}>
           {/* Month labels row */}
-          <div className="h-6 border-b border-slate-800 flex bg-slate-900/80 sticky top-0 z-20">
+          <div className="h-6 border-b border-border flex bg-card/80 sticky top-0 z-20">
             {monthLabels.map((ml, idx) => (
               <div
                 key={idx}
-                className="flex-shrink-0 h-6 flex items-center px-2 text-[10px] font-medium text-slate-500 border-r border-slate-700/50"
+                className="flex-shrink-0 h-6 flex items-center px-2 text-[10px] font-medium text-muted-foreground border-r border-border/50"
                 style={{ width: `${(ml.count / timelineHeaders.length) * 100}%` }}
               >
                 {ml.label}
@@ -619,18 +619,18 @@ export function GanttChart({
           </div>
           
           {/* Day headers row */}
-          <div className="h-8 border-b border-slate-800 flex bg-slate-800/50 sticky top-6 z-20">
+          <div className="h-8 border-b border-border flex bg-muted sticky top-6 z-20">
             {timelineHeaders.map((header, index) => (
               <div
                 key={index}
                 className={cn(
-                  "flex-shrink-0 w-10 h-8 flex flex-col items-center justify-center text-[10px] border-r border-slate-700/30 last:border-r-0",
-                  header.dayOfWeek === 5 || header.dayOfWeek === 6 ? 'bg-slate-800/30' : '',
+                  "flex-shrink-0 w-10 h-8 flex flex-col items-center justify-center text-[10px] border-r border-border/30 last:border-r-0",
+                  header.dayOfWeek === 5 || header.dayOfWeek === 6 ? 'bg-muted/50' : '',
                   header.isToday ? 'bg-blue-500/20' : ''
                 )}
               >
                 <span className={cn(
-                  header.isToday ? 'text-blue-400 font-bold' : 'text-slate-500'
+                  header.isToday ? 'text-blue-400 font-bold' : 'text-muted-foreground'
                 )}>
                   {header.label}
                 </span>
@@ -646,7 +646,7 @@ export function GanttChart({
                 className="absolute top-0 bottom-0 w-0.5 bg-blue-500 z-10 pointer-events-none"
                 style={{ left: `${todayPosition}%` }}
               >
-                <div className="absolute -top-5 -translate-x-1/2 bg-blue-500 text-white text-[9px] px-1.5 py-0.5 rounded whitespace-nowrap">
+                <div className="absolute -top-5 -translate-x-1/2 bg-blue-500 text-foreground text-[9px] px-1.5 py-0.5 rounded whitespace-nowrap">
                   {lang === 'ar' ? 'اليوم' : 'Today'}
                 </div>
               </div>
@@ -669,8 +669,8 @@ export function GanttChart({
                   className={cn(
                     "absolute top-1 -translate-x-1/2 text-[8px] px-1 py-0.5 rounded max-w-[60px] truncate",
                     sla.breached 
-                      ? "bg-red-500/80 text-white" 
-                      : "bg-amber-500/60 text-white"
+                      ? "bg-red-500/80 text-foreground" 
+                      : "bg-amber-500/60 text-foreground"
                   )}
                 >
                   SLA
@@ -687,7 +687,7 @@ export function GanttChart({
                 return (
                   <div
                     key={`phase-bar-${category}`}
-                    className="h-10 border-b border-slate-700/50 bg-slate-800/40"
+                    className="h-10 border-b border-border/50 bg-muted"
                   />
                 );
               }
@@ -701,7 +701,7 @@ export function GanttChart({
               return (
                 <div
                   key={task.id}
-                  className="h-12 border-b border-slate-800 relative"
+                  className="h-12 border-b border-border relative"
                 >
                   {position && (
                     <div
@@ -725,7 +725,7 @@ export function GanttChart({
                           handleDragStart(e, task, 'resize-left');
                         }}
                       >
-                        <GripHorizontal className="w-3 h-3 text-white/50" />
+                        <GripHorizontal className="w-3 h-3 text-foreground/50" />
                       </div>
 
                       {/* Progress Bar */}
@@ -743,7 +743,7 @@ export function GanttChart({
                         onMouseDown={(e) => handleDragStart(e, task, 'move')}
                         onClick={() => !draggedTask && handleTaskClick(task)}
                       >
-                        <span className="text-xs text-white truncate block">
+                        <span className="text-xs text-foreground truncate block">
                           {task.title}
                         </span>
                       </div>
@@ -756,7 +756,7 @@ export function GanttChart({
                           handleDragStart(e, task, 'resize-right');
                         }}
                       >
-                        <GripHorizontal className="w-3 h-3 text-white/50" />
+                        <GripHorizontal className="w-3 h-3 text-foreground/50" />
                       </div>
                     </div>
                   )}
@@ -786,32 +786,32 @@ export function GanttChart({
       </div>
 
       {/* Legend */}
-      <div className="p-3 border-t border-slate-800 flex items-center gap-4 flex-wrap text-xs">
-        <span className="text-slate-500">{lang === 'ar' ? 'ألوان SLA:' : 'SLA Colors:'}</span>
+      <div className="p-3 border-t border-border flex items-center gap-4 flex-wrap text-xs">
+        <span className="text-muted-foreground">{lang === 'ar' ? 'ألوان SLA:' : 'SLA Colors:'}</span>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-sm bg-green-500" />
-          <span className="text-slate-400">{lang === 'ar' ? 'على المسار' : 'On Track'}</span>
+          <span className="text-muted-foreground">{lang === 'ar' ? 'على المسار' : 'On Track'}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-sm bg-amber-500" />
-          <span className="text-slate-400">{lang === 'ar' ? 'تحذير' : 'Warning'}</span>
+          <span className="text-muted-foreground">{lang === 'ar' ? 'تحذير' : 'Warning'}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-sm bg-red-500" />
-          <span className="text-slate-400">{lang === 'ar' ? 'خطر' : 'At Risk'}</span>
+          <span className="text-muted-foreground">{lang === 'ar' ? 'خطر' : 'At Risk'}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-sm bg-red-900 animate-pulse" />
-          <span className="text-slate-400">{lang === 'ar' ? 'مخالف' : 'Breached'}</span>
+          <span className="text-muted-foreground">{lang === 'ar' ? 'مخالف' : 'Breached'}</span>
         </div>
-        <span className="text-slate-600 mx-1">|</span>
+        <span className="text-muted-foreground mx-1">|</span>
         <div className="flex items-center gap-1.5">
           <Diamond className="w-3 h-3 text-amber-400 fill-amber-400" />
-          <span className="text-slate-400">{lang === 'ar' ? 'معلم' : 'Milestone'}</span>
+          <span className="text-muted-foreground">{lang === 'ar' ? 'معلم' : 'Milestone'}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-4 h-0 border-t-2 border-dashed border-amber-500/60" />
-          <span className="text-slate-400">SLA {lang === 'ar' ? 'موعد نهائي' : 'Deadline'}</span>
+          <span className="text-muted-foreground">SLA {lang === 'ar' ? 'موعد نهائي' : 'Deadline'}</span>
         </div>
       </div>
 

@@ -29,11 +29,11 @@ export default function StructuralTab({
   t,
 }: StructuralTabProps) {
   return (
-    <Card className="bg-slate-900/50 border-slate-800">
+    <Card className="bg-card border-border">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
           <Building2 className="h-5 w-5 text-orange-400" />
-          <CardTitle className="text-base text-white">
+          <CardTitle className="text-base text-foreground">
             {isAr ? 'المراحل الإنشائية' : 'Structural Phases'}
           </CardTitle>
         </div>

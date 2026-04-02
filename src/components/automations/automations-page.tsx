@@ -152,14 +152,14 @@ export default function AutomationsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">
+          <h1 className="text-2xl font-bold text-foreground">
             {isArabic ? 'الأتمتة' : 'Automations'}
           </h1>
-          <p className="text-slate-400 mt-1">
+          <p className="text-muted-foreground mt-1">
             {isArabic ? 'أتمتة المهام والعمليات المتكررة' : 'Automate repetitive tasks and workflows'}
           </p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+        <Button className="bg-blue-600 hover:bg-blue-700 text-foreground">
           <Plus className={`w-4 h-4 ${isRTL ? 'me-2' : 'ms-2'}`} />
           {isArabic ? 'إنشاء أتمتة جديدة' : 'New Automation'}
         </Button>
@@ -167,12 +167,12 @@ export default function AutomationsPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-400">{isArabic ? 'إجمالي الأتمتة' : 'Total'}</p>
-                <p className="text-2xl font-bold text-white">{automations.length}</p>
+                <p className="text-sm text-muted-foreground">{isArabic ? 'إجمالي الأتمتة' : 'Total'}</p>
+                <p className="text-2xl font-bold text-foreground">{automations.length}</p>
               </div>
               <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center">
                 <Zap className="w-5 h-5 text-blue-400" />
@@ -195,15 +195,15 @@ export default function AutomationsPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-400">{isArabic ? 'غير نشطة' : 'Inactive'}</p>
-                <p className="text-2xl font-bold text-slate-300">{inactiveCount}</p>
+                <p className="text-sm text-muted-foreground">{isArabic ? 'غير نشطة' : 'Inactive'}</p>
+                <p className="text-2xl font-bold text-foreground/80">{inactiveCount}</p>
               </div>
-              <div className="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center">
-                <Pause className="w-5 h-5 text-slate-400" />
+              <div className="w-10 h-10 bg-secondary rounded-full flex items-center justify-center">
+                <Pause className="w-5 h-5 text-muted-foreground" />
               </div>
             </div>
           </CardContent>
@@ -226,48 +226,48 @@ export default function AutomationsPage() {
 
       {/* Automations List */}
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-white">
+        <h2 className="text-lg font-semibold text-foreground">
           {isArabic ? 'الأتمتة النشطة' : 'Active Automations'}
         </h2>
         {automations.map((automation) => (
-          <Card key={automation.id} className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-colors">
+          <Card key={automation.id} className="bg-card border-border hover:border-border transition-colors">
             <CardContent className="p-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="font-semibold text-white text-lg">{automation.name}</h3>
+                    <h3 className="font-semibold text-foreground text-lg">{automation.name}</h3>
                     <Badge variant={statusVariants[automation.status]}>
                       {statusLabels[automation.status][isRTL ? 'ar' : 'en']}
                     </Badge>
                   </div>
                   {automation.description && (
-                    <p className="text-slate-400 mb-4">{automation.description}</p>
+                    <p className="text-muted-foreground mb-4">{automation.description}</p>
                   )}
                   <div className="flex flex-wrap items-center gap-6">
                     <div className="flex items-center gap-2">
-                      <Zap className="w-4 h-4 text-slate-500" />
-                      <span className="text-slate-500">{isArabic ? 'المحفز:' : 'Trigger:'}</span>
-                      <span className="text-sm font-medium text-slate-300">
+                      <Zap className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">{isArabic ? 'المحفز:' : 'Trigger:'}</span>
+                      <span className="text-sm font-medium text-foreground/80">
                         {triggerTypeLabels[automation.triggerType]?.[isRTL ? 'ar' : 'en'] || automation.triggerType}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Settings className="w-4 h-4 text-slate-500" />
-                      <span className="text-slate-500">{isArabic ? 'الإجراء:' : 'Action:'}</span>
-                      <span className="text-sm font-medium text-slate-300">
+                      <Settings className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">{isArabic ? 'الإجراء:' : 'Action:'}</span>
+                      <span className="text-sm font-medium text-foreground/80">
                         {actionTypeLabels[automation.actionType]?.[isRTL ? 'ar' : 'en'] || automation.actionType}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Play className="w-4 h-4 text-slate-500" />
-                      <span className="text-slate-500">{isArabic ? 'عدد التشغيلات:' : 'Runs:'}</span>
-                      <span className="text-sm font-medium text-slate-300">{automation.runCount}</span>
+                      <Play className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">{isArabic ? 'عدد التشغيلات:' : 'Runs:'}</span>
+                      <span className="text-sm font-medium text-foreground/80">{automation.runCount}</span>
                     </div>
                     {automation.lastRunAt && (
                       <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-slate-500" />
-                        <span className="text-slate-500">{isArabic ? 'آخر تشغيل:' : 'Last run:'}</span>
-                        <span className="text-sm font-medium text-slate-300">
+                        <Clock className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">{isArabic ? 'آخر تشغيل:' : 'Last run:'}</span>
+                        <span className="text-sm font-medium text-foreground/80">
                           {new Date(automation.lastRunAt).toLocaleString(isArabic ? 'ar-SA' : 'en-US')}
                         </span>
                       </div>
@@ -287,7 +287,7 @@ export default function AutomationsPage() {
                       }`}
                     />
                   </button>
-                  <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white hover:bg-slate-800">
+                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-accent">
                     <Edit className="w-4 h-4" />
                   </Button>
                 </div>
@@ -299,7 +299,7 @@ export default function AutomationsPage() {
 
       {/* Templates */}
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-white">
+        <h2 className="text-lg font-semibold text-foreground">
           {isArabic ? 'قوالب جاهزة' : 'Templates'}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -308,7 +308,7 @@ export default function AutomationsPage() {
             return (
               <Card
                 key={index}
-                className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-colors cursor-pointer"
+                className="bg-card border-border hover:border-border transition-colors cursor-pointer"
               >
                 <CardContent className="p-4">
                   <div className="flex items-center gap-4">
@@ -316,8 +316,8 @@ export default function AutomationsPage() {
                       <Icon className="w-6 h-6 text-blue-400" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-white">{template.name[isRTL ? 'ar' : 'en']}</h3>
-                      <p className="text-sm text-slate-400">{template.description[isRTL ? 'ar' : 'en']}</p>
+                      <h3 className="font-semibold text-foreground">{template.name[isRTL ? 'ar' : 'en']}</h3>
+                      <p className="text-sm text-muted-foreground">{template.description[isRTL ? 'ar' : 'en']}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -328,11 +328,11 @@ export default function AutomationsPage() {
       </div>
 
       {automations.length === 0 && (
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-8 text-center">
-            <Zap className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-            <p className="text-slate-400 mb-4">{isArabic ? 'لا توجد أتمتة' : 'No automations'}</p>
-            <p className="text-sm text-slate-500">
+            <Zap className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground mb-4">{isArabic ? 'لا توجد أتمتة' : 'No automations'}</p>
+            <p className="text-sm text-muted-foreground">
               {isArabic
                 ? 'ابدأ بإنشاء أتمتة جديدة أو استخدم أحد القوالب الجاهزة'
                 : 'Create a new automation or use one of the ready-made templates'}

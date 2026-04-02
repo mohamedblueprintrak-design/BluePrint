@@ -76,13 +76,13 @@ export function ModelSelector({
           <Button
             variant="ghost"
             size="sm"
-            className="text-slate-400 hover:text-white hover:bg-slate-800"
+            className="text-muted-foreground hover:text-foreground hover:bg-accent"
           >
             <Settings2 className="w-4 h-4 me-2" />
             {currentModel?.name || selectedModel}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-72 bg-slate-900 border-slate-700" align="end">
+        <PopoverContent className="w-72 bg-card border-border" align="end">
           <ModelList
             selectedModel={selectedModel}
             onSelect={handleModelChange}
@@ -96,7 +96,7 @@ export function ModelSelector({
   return (
     <div className="space-y-2">
       <Select value={selectedModel} onValueChange={handleModelChange}>
-        <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
+        <SelectTrigger className="bg-muted border-border text-foreground">
           <SelectValue placeholder="اختر النموذج">
             {currentModel && (
               <div className="flex items-center gap-2">
@@ -109,12 +109,12 @@ export function ModelSelector({
             )}
           </SelectValue>
         </SelectTrigger>
-        <SelectContent className="bg-slate-800 border-slate-700 text-white max-h-[300px]">
+        <SelectContent className="bg-muted border-border text-foreground max-h-[300px]">
           {AVAILABLE_MODELS.map((model) => (
             <SelectItem
               key={model.id}
               value={model.id}
-              className="focus:bg-slate-700"
+              className="focus:bg-secondary"
             >
               <div className="flex items-center gap-2">
                 <span>{PROVIDER_ICONS[model.provider]}</span>
@@ -138,10 +138,10 @@ export function ModelSelector({
       </Select>
 
       {showDetails && currentModel && (
-        <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700">
+        <div className="p-3 rounded-lg bg-muted border border-border">
           <div className="flex items-start gap-3">
             <div className="flex-1">
-              <p className="text-sm text-slate-300">{currentModel.description}</p>
+              <p className="text-sm text-foreground/80">{currentModel.description}</p>
               <div className="flex items-center gap-2 mt-2">
                 <Badge variant="outline" className="text-xs">
                   {currentModel.maxTokens.toLocaleString()} tokens
@@ -189,13 +189,13 @@ function ModelList({
   return (
     <ScrollArea className="h-[400px]">
       <div className="space-y-4 p-2">
-        <div className="text-xs text-slate-500 uppercase tracking-wider px-2">
+        <div className="text-xs text-muted-foreground uppercase tracking-wider px-2">
           اختر النموذج
         </div>
 
         {Object.entries(groupedModels).map(([provider, models]) => (
           <div key={provider}>
-            <div className="text-xs text-slate-400 font-medium px-2 mb-1 capitalize">
+            <div className="text-xs text-muted-foreground font-medium px-2 mb-1 capitalize">
               {PROVIDER_ICONS[provider]} {provider}
             </div>
             <div className="space-y-1">
@@ -205,13 +205,13 @@ function ModelList({
                   onClick={() => onSelect(model.id)}
                   className={cn(
                     "w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left",
-                    "hover:bg-slate-800 transition-colors",
-                    selectedModel === model.id && "bg-slate-800 ring-1 ring-purple-500/30"
+                    "hover:bg-accent transition-colors",
+                    selectedModel === model.id && "bg-muted ring-1 ring-purple-500/30"
                   )}
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-white truncate">{model.name}</span>
+                      <span className="text-sm text-foreground truncate">{model.name}</span>
                       {selectedModel === model.id && (
                         <Check className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" />
                       )}
@@ -252,7 +252,7 @@ export function QuickModelSwitch() {
   ];
 
   return (
-    <div className="flex items-center gap-1 p-1 rounded-lg bg-slate-800/50">
+    <div className="flex items-center gap-1 p-1 rounded-lg bg-muted">
       {quickModels.map((model) => (
         <button
           key={model.id}
@@ -260,8 +260,8 @@ export function QuickModelSwitch() {
           className={cn(
             "flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-colors",
             preferredModel === model.id
-              ? "bg-slate-700 text-white"
-              : "text-slate-400 hover:text-white hover:bg-slate-700/50"
+              ? "bg-secondary text-foreground"
+              : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
           )}
         >
           <span>{model.icon}</span>

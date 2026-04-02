@@ -3,7 +3,7 @@
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
-const SK = 'bg-slate-800 animate-pulse rounded-md';
+const SK = 'bg-muted animate-pulse rounded-md';
 
 /**
  * TasksSkeleton
@@ -27,7 +27,7 @@ export function TasksSkeleton({
       {/* Stats row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="bg-slate-900/50 border border-slate-800 rounded-xl p-4">
+          <div key={i} className="bg-card border border-border rounded-xl p-4">
             <div className="flex items-center gap-3">
               <Skeleton className={cn('h-10 w-10 rounded-lg', SK)} />
               <div className="space-y-2">
@@ -56,7 +56,7 @@ export function TasksSkeleton({
         /* Kanban-style columns */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {['To Do', 'In Progress', 'Review', 'Done'].map((col) => (
-            <div key={col} className="bg-slate-900/30 border border-slate-800 rounded-xl p-4 space-y-3">
+            <div key={col} className="bg-card/50 border border-border rounded-xl p-4 space-y-3">
               {/* Column header */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -67,7 +67,7 @@ export function TasksSkeleton({
               </div>
               {/* Cards */}
               {Array.from({ length: Math.ceil(count / 4) }).map((_, i) => (
-                <div key={i} className="bg-slate-900/50 border border-slate-800 rounded-lg p-3 space-y-2">
+                <div key={i} className="bg-card border border-border rounded-lg p-3 space-y-2">
                   <Skeleton className={cn('h-4 w-full', SK)} />
                   <div className="flex gap-2">
                     <Skeleton className={cn('h-5 w-16', SK)} />
@@ -86,7 +86,7 @@ export function TasksSkeleton({
         /* List view */
         <div className="space-y-3">
           {Array.from({ length: count }).map((_, i) => (
-            <div key={i} className="bg-slate-900/50 border border-slate-800 rounded-xl p-4">
+            <div key={i} className="bg-card border border-border rounded-xl p-4">
               <div className="flex items-center gap-3">
                 {/* Priority dot */}
                 <Skeleton className={cn('h-3 w-3 rounded-full shrink-0', SK)} />

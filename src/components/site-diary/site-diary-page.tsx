@@ -108,7 +108,7 @@ export function SiteDiaryPage() {
   const getStatusBadge = (status: string) => {
     const statusConfig = REPORT_STATUSES.find(s => s.value === status) || REPORT_STATUSES[0];
     return (
-      <Badge variant="secondary" className={`${statusConfig.color} text-white`}>
+      <Badge variant="secondary" className={`${statusConfig.color} text-foreground`}>
         {language === 'ar' ? statusConfig.label : status}
       </Badge>
     );
@@ -172,57 +172,57 @@ export function SiteDiaryPage() {
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-blue-500/20">
                 <FileText className="w-5 h-5 text-blue-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.total}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'إجمالي التقارير' : 'Total Reports'}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.total}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'إجمالي التقارير' : 'Total Reports'}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-green-500/20">
                 <Calendar className="w-5 h-5 text-green-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.thisWeek}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'هذا الأسبوع' : 'This Week'}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.thisWeek}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'هذا الأسبوع' : 'This Week'}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-purple-500/20">
                 <Calendar className="w-5 h-5 text-purple-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.thisMonth}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'هذا الشهر' : 'This Month'}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.thisMonth}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'هذا الشهر' : 'This Month'}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-red-500/20">
                 <AlertTriangle className="w-5 h-5 text-red-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.openIssues}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'مشاكل مفتوحة' : 'Open Issues'}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.openIssues}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'مشاكل مفتوحة' : 'Open Issues'}</p>
               </div>
             </div>
           </CardContent>
@@ -233,20 +233,20 @@ export function SiteDiaryPage() {
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div className="flex flex-1 gap-3 w-full md:w-auto">
           <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder={t.search}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="ps-9 bg-slate-800/50 border-slate-700 text-white"
+              className="ps-9 bg-muted border-border text-foreground"
             />
           </div>
           
           <Select value={projectFilter} onValueChange={setProjectFilter}>
-            <SelectTrigger className="w-[200px] bg-slate-800/50 border-slate-700 text-white">
+            <SelectTrigger className="w-[200px] bg-muted border-border text-foreground">
               <SelectValue placeholder={t.project} />
             </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-slate-800">
+            <SelectContent className="bg-card border-border">
               <SelectItem value="all">{t.all}</SelectItem>
               {projects.map((project: any) => (
                 <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
@@ -257,15 +257,15 @@ export function SiteDiaryPage() {
         
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
           <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-foreground">
               <Plus className="w-4 h-4 me-2" />
               {language === 'ar' ? 'تقرير جديد' : 'New Report'}
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="bg-card border-border text-foreground max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{language === 'ar' ? 'تقرير موقع جديد' : 'New Site Report'}</DialogTitle>
-              <DialogDescription className="text-slate-400">
+              <DialogDescription className="text-muted-foreground">
                 {language === 'ar' ? 'أدخل تفاصيل تقرير الموقع' : 'Enter site report details'}
               </DialogDescription>
             </DialogHeader>
@@ -273,12 +273,12 @@ export function SiteDiaryPage() {
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{t.project} *</Label>
+                  <Label className="text-foreground/80">{t.project} *</Label>
                   <Select value={formData.projectId} onValueChange={(v) => setFormData({ ...formData, projectId: v })}>
-                    <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                    <SelectTrigger className="bg-muted border-border text-foreground">
                       <SelectValue placeholder={language === 'ar' ? 'اختر المشروع' : 'Select project'} />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-800">
+                    <SelectContent className="bg-card border-border">
                       {projects.map((project: any) => (
                         <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
                       ))}
@@ -286,24 +286,24 @@ export function SiteDiaryPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{t.date}</Label>
+                  <Label className="text-foreground/80">{t.date}</Label>
                   <Input
                     type="date"
                     value={formData.reportDate}
                     onChange={(e) => setFormData({ ...formData, reportDate: e.target.value })}
-                    className="bg-slate-800/50 border-slate-700 text-white"
+                    className="bg-muted border-border text-foreground"
                   />
                 </div>
               </div>
               
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{t.weather}</Label>
+                  <Label className="text-foreground/80">{t.weather}</Label>
                   <Select value={formData.weather} onValueChange={(v) => setFormData({ ...formData, weather: v })}>
-                    <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                    <SelectTrigger className="bg-muted border-border text-foreground">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-800">
+                    <SelectContent className="bg-card border-border">
                       {WEATHER_OPTIONS.map((weather) => (
                         <SelectItem key={weather.value} value={weather.value}>
                           {weather.icon} {language === 'ar' ? weather.label : weather.value}
@@ -313,33 +313,33 @@ export function SiteDiaryPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{t.temperature} °C</Label>
+                  <Label className="text-foreground/80">{t.temperature} °C</Label>
                   <Input
                     type="number"
                     value={formData.temperature}
                     onChange={(e) => setFormData({ ...formData, temperature: e.target.value })}
-                    className="bg-slate-800/50 border-slate-700 text-white"
+                    className="bg-muted border-border text-foreground"
                     placeholder="35"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{t.workersCount}</Label>
+                  <Label className="text-foreground/80">{t.workersCount}</Label>
                   <Input
                     type="number"
                     value={formData.workersCount}
                     onChange={(e) => setFormData({ ...formData, workersCount: e.target.value })}
-                    className="bg-slate-800/50 border-slate-700 text-white"
+                    className="bg-muted border-border text-foreground"
                     placeholder="50"
                   />
                 </div>
               </div>
               
               <div className="space-y-2">
-                <Label className="text-slate-300">{t.workDescription}</Label>
+                <Label className="text-foreground/80">{t.workDescription}</Label>
                 <Textarea
                   value={formData.workDescription}
                   onChange={(e) => setFormData({ ...formData, workDescription: e.target.value })}
-                  className="bg-slate-800/50 border-slate-700 text-white"
+                  className="bg-muted border-border text-foreground"
                   rows={3}
                   placeholder={language === 'ar' ? 'وصف العمل المنجز اليوم...' : 'Description of work done today...'}
                 />
@@ -347,31 +347,31 @@ export function SiteDiaryPage() {
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{t.issues}</Label>
+                  <Label className="text-foreground/80">{t.issues}</Label>
                   <Textarea
                     value={formData.issues}
                     onChange={(e) => setFormData({ ...formData, issues: e.target.value })}
-                    className="bg-slate-800/50 border-slate-700 text-white"
+                    className="bg-muted border-border text-foreground"
                     rows={2}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{t.safetyIssues}</Label>
+                  <Label className="text-foreground/80">{t.safetyIssues}</Label>
                   <Textarea
                     value={formData.safetyIssues}
                     onChange={(e) => setFormData({ ...formData, safetyIssues: e.target.value })}
-                    className="bg-slate-800/50 border-slate-700 text-white"
+                    className="bg-muted border-border text-foreground"
                     rows={2}
                   />
                 </div>
               </div>
               
               <div className="space-y-2">
-                <Label className="text-slate-300">{t.nextSteps}</Label>
+                <Label className="text-foreground/80">{t.nextSteps}</Label>
                 <Textarea
                   value={formData.nextSteps}
                   onChange={(e) => setFormData({ ...formData, nextSteps: e.target.value })}
-                  className="bg-slate-800/50 border-slate-700 text-white"
+                  className="bg-muted border-border text-foreground"
                   rows={2}
                   placeholder={language === 'ar' ? 'خطة الغد...' : "Tomorrow's plan..."}
                 />
@@ -379,7 +379,7 @@ export function SiteDiaryPage() {
             </div>
             
             <DialogFooter>
-              <Button variant="ghost" onClick={() => setShowAddDialog(false)} className="text-slate-400">
+              <Button variant="ghost" onClick={() => setShowAddDialog(false)} className="text-muted-foreground">
                 {t.cancel}
               </Button>
               <Button onClick={handleCreateReport} className="bg-blue-600 hover:bg-blue-700">
@@ -393,10 +393,10 @@ export function SiteDiaryPage() {
       {/* Reports Grid */}
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="text-slate-400">{t.loading}</div>
+          <div className="text-muted-foreground">{t.loading}</div>
         </div>
       ) : filteredReports.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
           <FileText className="w-16 h-16 mb-4 opacity-50" />
           <p className="text-lg">{t.noData}</p>
           <Button variant="outline" className="mt-4" onClick={() => setShowAddDialog(true)}>
@@ -407,19 +407,19 @@ export function SiteDiaryPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredReports.map((report: any) => (
-            <Card key={report.id} className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-colors group">
+            <Card key={report.id} className="bg-card border-border hover:border-border transition-colors group">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       {report.reportNumber && (
-                        <Badge variant="outline" className="text-slate-400 border-slate-700">
+                        <Badge variant="outline" className="text-muted-foreground border-border">
                           {report.reportNumber}
                         </Badge>
                       )}
                       {getStatusBadge(report.status)}
                     </div>
-                    <CardTitle className="text-lg text-white line-clamp-1">
+                    <CardTitle className="text-lg text-foreground line-clamp-1">
                       {report.project?.name || t.project}
                     </CardTitle>
                   </div>
@@ -427,18 +427,18 @@ export function SiteDiaryPage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex items-center gap-4 text-sm">
-                  <div className="flex items-center gap-1 text-slate-400">
+                  <div className="flex items-center gap-1 text-muted-foreground">
                     <Calendar className="w-4 h-4" />
                     <span>{formatDate(report.reportDate)}</span>
                   </div>
                   {report.weather && (
-                    <div className="flex items-center gap-1 text-slate-400">
+                    <div className="flex items-center gap-1 text-muted-foreground">
                       <Cloud className="w-4 h-4" />
                       <span>{report.weather}</span>
                     </div>
                   )}
                   {report.temperature && (
-                    <div className="flex items-center gap-1 text-slate-400">
+                    <div className="flex items-center gap-1 text-muted-foreground">
                       <Thermometer className="w-4 h-4" />
                       <span>{report.temperature}°C</span>
                     </div>
@@ -446,14 +446,14 @@ export function SiteDiaryPage() {
                 </div>
                 
                 {report.workersCount && (
-                  <div className="flex items-center gap-2 text-sm text-slate-400">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Users className="w-4 h-4" />
                     <span>{report.workersCount} {language === 'ar' ? 'عامل' : 'workers'}</span>
                   </div>
                 )}
                 
                 {report.workDescription && (
-                  <p className="text-sm text-slate-400 line-clamp-2">{report.workDescription}</p>
+                  <p className="text-sm text-muted-foreground line-clamp-2">{report.workDescription}</p>
                 )}
                 
                 {report.issues && (
@@ -464,7 +464,7 @@ export function SiteDiaryPage() {
                 )}
                 
                 <div className="flex items-center justify-between pt-2">
-                  <span className="text-xs text-slate-500">{formatDate(report.createdAt)}</span>
+                  <span className="text-xs text-muted-foreground">{formatDate(report.createdAt)}</span>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     {report.status === 'draft' && (
                       <Button
@@ -504,10 +504,10 @@ export function SiteDiaryPage() {
                         <span className="text-xs">{language === 'ar' ? 'معتمد' : 'Approved'}</span>
                       </Badge>
                     )}
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                       <Eye className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                       <Edit className="w-4 h-4" />
                     </Button>
                   </div>

@@ -552,7 +552,7 @@ export function KnowledgePage() {
     return (
       <Card 
         key={item.id}
-        className={`bg-slate-800/50 border-slate-700 hover:border-slate-600 transition-all group ${config.borderColor}`}
+        className={`bg-muted border-border hover:border-border transition-all group ${config.borderColor}`}
       >
         <CardHeader className="pb-2">
           <div className="flex items-start justify-between gap-2">
@@ -561,10 +561,10 @@ export function KnowledgePage() {
                 {item.icon || <Building2 className="w-4 h-4" />}
               </div>
               <div className="min-w-0">
-                <CardTitle className="text-white text-sm line-clamp-1">
+                <CardTitle className="text-foreground text-sm line-clamp-1">
                   {language === 'ar' ? item.titleAr : item.titleEn}
                 </CardTitle>
-                <CardDescription className="text-slate-400 text-xs mt-0.5">
+                <CardDescription className="text-muted-foreground text-xs mt-0.5">
                   {config.icon && <span className="inline-block me-1">{config.icon}</span>}
                   {language === 'ar' ? config.labelAr : config.labelEn}
                 </CardDescription>
@@ -573,7 +573,7 @@ export function KnowledgePage() {
             <Button
               variant="ghost"
               size="icon"
-              className={`h-8 w-8 flex-shrink-0 ${isCopied ? 'text-green-400' : 'text-slate-400 hover:text-white'}`}
+              className={`h-8 w-8 flex-shrink-0 ${isCopied ? 'text-green-400' : 'text-muted-foreground hover:text-foreground'}`}
               onClick={() => handleCopy(item)}
             >
               {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -582,14 +582,14 @@ export function KnowledgePage() {
         </CardHeader>
         <CardContent className="pt-0">
           {/* Value */}
-          <div className="bg-slate-900/50 rounded-lg p-3 mb-3">
-            <p className="text-white font-mono text-lg text-center">
+          <div className="bg-card rounded-lg p-3 mb-3">
+            <p className="text-foreground font-mono text-lg text-center">
               {language === 'ar' ? item.valueAr : item.valueEn}
             </p>
           </div>
           
           {/* Description */}
-          <p className="text-slate-400 text-sm mb-3 line-clamp-2">
+          <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
             {language === 'ar' ? item.descriptionAr : item.descriptionEn}
           </p>
           
@@ -599,7 +599,7 @@ export function KnowledgePage() {
               <Badge 
                 key={index} 
                 variant="secondary" 
-                className="text-xs bg-slate-700/50 text-slate-400 hover:text-slate-300"
+                className="text-xs bg-secondary/50 text-muted-foreground hover:text-foreground/80"
               >
                 {tag}
               </Badge>
@@ -622,7 +622,7 @@ export function KnowledgePage() {
             <div className={`inline-flex p-4 rounded-full ${config.color} mb-4`}>
               <Search className="w-8 h-8" />
             </div>
-            <p className="text-slate-400">
+            <p className="text-muted-foreground">
               {language === 'ar' ? 'لا توجد نتائج مطابقة' : 'No matching results found'}
             </p>
           </div>
@@ -652,11 +652,11 @@ export function KnowledgePage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Building2 className="w-6 h-6 text-blue-400" />
             {language === 'ar' ? 'قاعدة المعرفة' : 'Knowledge Base'}
           </h1>
-          <p className="text-slate-400 mt-1">
+          <p className="text-muted-foreground mt-1">
             {language === 'ar' 
               ? 'مرجع شامل لأكواد ومواصفات البناء في الإمارات'
               : 'Comprehensive reference for UAE building codes and specifications'}
@@ -666,55 +666,55 @@ export function KnowledgePage() {
       
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-3 text-center">
-            <p className="text-2xl font-bold text-white">{stats.total}</p>
-            <p className="text-xs text-slate-400">{language === 'ar' ? 'إجمالي' : 'Total'}</p>
+            <p className="text-2xl font-bold text-foreground">{stats.total}</p>
+            <p className="text-xs text-muted-foreground">{language === 'ar' ? 'إجمالي' : 'Total'}</p>
           </CardContent>
         </Card>
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-3 text-center">
             <div className="flex items-center justify-center gap-1 mb-1">
               <Layers className="w-3 h-3 text-blue-400" />
             </div>
-            <p className="text-xl font-bold text-white">{stats.concrete}</p>
-            <p className="text-xs text-slate-400">{language === 'ar' ? 'خرسانة' : 'Concrete'}</p>
+            <p className="text-xl font-bold text-foreground">{stats.concrete}</p>
+            <p className="text-xs text-muted-foreground">{language === 'ar' ? 'خرسانة' : 'Concrete'}</p>
           </CardContent>
         </Card>
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-3 text-center">
             <div className="flex items-center justify-center gap-1 mb-1">
               <Hammer className="w-3 h-3 text-orange-400" />
             </div>
-            <p className="text-xl font-bold text-white">{stats.steel}</p>
-            <p className="text-xs text-slate-400">{language === 'ar' ? 'حديد' : 'Steel'}</p>
+            <p className="text-xl font-bold text-foreground">{stats.steel}</p>
+            <p className="text-xs text-muted-foreground">{language === 'ar' ? 'حديد' : 'Steel'}</p>
           </CardContent>
         </Card>
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-3 text-center">
             <div className="flex items-center justify-center gap-1 mb-1">
               <ArrowDownNarrowWide className="w-3 h-3 text-green-400" />
             </div>
-            <p className="text-xl font-bold text-white">{stats.loads}</p>
-            <p className="text-xs text-slate-400">{language === 'ar' ? 'أحمال' : 'Loads'}</p>
+            <p className="text-xl font-bold text-foreground">{stats.loads}</p>
+            <p className="text-xs text-muted-foreground">{language === 'ar' ? 'أحمال' : 'Loads'}</p>
           </CardContent>
         </Card>
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-3 text-center">
             <div className="flex items-center justify-center gap-1 mb-1">
               <Building className="w-3 h-3 text-purple-400" />
             </div>
-            <p className="text-xl font-bold text-white">{stats.foundations}</p>
-            <p className="text-xs text-slate-400">{language === 'ar' ? 'أساسات' : 'Found.'}</p>
+            <p className="text-xl font-bold text-foreground">{stats.foundations}</p>
+            <p className="text-xs text-muted-foreground">{language === 'ar' ? 'أساسات' : 'Found.'}</p>
           </CardContent>
         </Card>
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-3 text-center">
             <div className="flex items-center justify-center gap-1 mb-1">
               <DollarSign className="w-3 h-3 text-yellow-400" />
             </div>
-            <p className="text-xl font-bold text-white">{stats.prices}</p>
-            <p className="text-xs text-slate-400">{language === 'ar' ? 'أسعار' : 'Prices'}</p>
+            <p className="text-xl font-bold text-foreground">{stats.prices}</p>
+            <p className="text-xs text-muted-foreground">{language === 'ar' ? 'أسعار' : 'Prices'}</p>
           </CardContent>
         </Card>
       </div>
@@ -722,19 +722,19 @@ export function KnowledgePage() {
       {/* Search and Filter */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder={language === 'ar' ? 'ابحث في قاعدة المعرفة...' : 'Search knowledge base...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="ps-9 bg-slate-800/50 border-slate-700 text-white"
+            className="ps-9 bg-muted border-border text-foreground"
           />
         </div>
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-          <SelectTrigger className="w-full sm:w-[180px] bg-slate-800/50 border-slate-700 text-white">
+          <SelectTrigger className="w-full sm:w-[180px] bg-muted border-border text-foreground">
             <SelectValue placeholder={language === 'ar' ? 'جميع الفئات' : 'All Categories'} />
           </SelectTrigger>
-          <SelectContent className="bg-slate-900 border-slate-800">
+          <SelectContent className="bg-card border-border">
             <SelectItem value="all">{language === 'ar' ? 'جميع الفئات' : 'All Categories'}</SelectItem>
             {Object.entries(CATEGORY_CONFIG).map(([key, config]) => (
               <SelectItem key={key} value={key}>
@@ -750,12 +750,12 @@ export function KnowledgePage() {
       
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-5 bg-slate-900/50 border border-slate-800 p-1 h-auto">
+        <TabsList className="grid grid-cols-5 bg-card border border-border p-1 h-auto">
           {Object.entries(CATEGORY_CONFIG).map(([key, config]) => (
             <TabsTrigger
               key={key}
               value={key}
-              className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 px-2 data-[state=active]:bg-slate-800 data-[state=active]:text-white"
+              className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 px-2 data-[state=active]:bg-muted data-[state=active]:text-foreground"
             >
               {config.icon}
               <span className="text-xs sm:text-sm">
@@ -763,7 +763,7 @@ export function KnowledgePage() {
               </span>
               <Badge 
                 variant="secondary" 
-                className="h-4 min-w-4 px-1 text-[10px] bg-slate-700/50 text-slate-400"
+                className="h-4 min-w-4 px-1 text-[10px] bg-secondary/50 text-muted-foreground"
               >
                 {itemsByCategory[key]?.length || 0}
               </Badge>
@@ -779,17 +779,17 @@ export function KnowledgePage() {
       </Tabs>
       
       {/* Footer Note */}
-      <Card className="bg-slate-900/30 border-slate-800">
+      <Card className="bg-card/50 border-border">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
             <div className="p-2 rounded-lg bg-blue-500/20 flex-shrink-0">
               <Building2 className="w-4 h-4 text-blue-400" />
             </div>
             <div>
-              <h4 className="text-white text-sm font-medium">
+              <h4 className="text-foreground text-sm font-medium">
                 {language === 'ar' ? 'ملاحظة هامة' : 'Important Note'}
               </h4>
-              <p className="text-slate-400 text-xs mt-1">
+              <p className="text-muted-foreground text-xs mt-1">
                 {language === 'ar' 
                   ? 'القيم المذكورة هي للإرشاد العام فقط. يرجى الرجوع للكود الإماراتي للبناء والمواصفات الرسمية للحصول على القيم الدقيقة.'
                   : 'Values mentioned are for general guidance only. Please refer to UAE Building Code and official specifications for accurate values.'}

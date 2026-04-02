@@ -34,15 +34,15 @@ export default function CategoryProgressCard({
   ).length;
 
   return (
-    <div className="bg-slate-800/40 rounded-lg p-4">
+    <div className="bg-muted rounded-lg p-4">
       <div className="flex items-center gap-2 mb-3">
         {icon || catConfig?.icon}
-        <span className="text-sm font-medium text-white">
+        <span className="text-sm font-medium text-foreground">
           {catConfig ? (isAr ? catConfig.ar : catConfig.en) : category}
         </span>
         <Badge
           variant="secondary"
-          className="bg-slate-700 text-slate-400 text-[10px] ms-auto"
+          className="bg-secondary text-muted-foreground text-[10px] ms-auto"
         >
           {completed}/{catPhases.length}
         </Badge>
@@ -55,8 +55,8 @@ export default function CategoryProgressCard({
           </Badge>
         )}
       </div>
-      <Progress value={pct} className="h-1.5 bg-slate-700" />
-      <p className="text-xs text-slate-500 mt-1.5">{pct}%</p>
+      <Progress value={pct} className="h-1.5 bg-secondary" />
+      <p className="text-xs text-muted-foreground mt-1.5">{pct}%</p>
     </div>
   );
 }

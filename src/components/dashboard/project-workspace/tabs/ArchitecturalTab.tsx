@@ -29,11 +29,11 @@ export default function ArchitecturalTab({
   t,
 }: ArchitecturalTabProps) {
   return (
-    <Card className="bg-slate-900/50 border-slate-800">
+    <Card className="bg-card border-border">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
           <Layers className="h-5 w-5 text-violet-400" />
-          <CardTitle className="text-base text-white">
+          <CardTitle className="text-base text-foreground">
             {isAr ? 'المراحل المعمارية' : 'Architectural Phases'}
           </CardTitle>
         </div>

@@ -39,13 +39,13 @@ export default function PlaceholderPage({ pageKey }: PlaceholderPageProps) {
         <div className="mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500/20 to-blue-700/20 border border-blue-500/20 flex items-center justify-center mb-6">
           <Construction className="h-10 w-10 text-blue-400" />
         </div>
-        <h3 className="text-xl font-bold text-white mb-2">
+        <h3 className="text-xl font-bold text-foreground mb-2">
           {info ? (isRTL ? info.ar : info.en) : pageKey}
         </h3>
-        <p className="text-slate-400 text-sm mb-6">
+        <p className="text-muted-foreground text-sm mb-6">
           {info ? (isRTL ? info.descAr : info.descEn) : (isRTL ? 'قريباً...' : 'Coming soon...')}
         </p>
-        <div className="flex items-center justify-center gap-2 text-slate-500 text-xs">
+        <div className="flex items-center justify-center gap-2 text-muted-foreground text-xs">
           <Sparkles className="h-3.5 w-3.5" />
           <span>{isRTL ? 'هذه الصفحة قيد التطوير وستتوفر قريباً' : 'This page is under development and will be available soon'}</span>
         </div>

@@ -8,17 +8,17 @@ export function Footer() {
 
   return (
     <footer
-      className="border-t border-slate-800 bg-slate-950 mt-auto"
+      className="border-t border-border bg-background mt-auto"
       dir={isRTL ? 'rtl' : 'ltr'}
     >
       <div className="px-4 md:px-6 py-3">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-1">
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted-foreground">
             {isRTL
               ? `© ${new Date().getFullYear()} BluePrint. جميع الحقوق محفوظة.`
               : `© ${new Date().getFullYear()} BluePrint. All rights reserved.`}
           </p>
-          <p className="text-xs text-slate-600">
+          <p className="text-xs text-muted-foreground">
             {isRTL
               ? 'بدعم من منصة BluePrint للهندسة بالذكاء الاصطناعي'
               : 'Powered by BluePrint AI Engineering Platform'}

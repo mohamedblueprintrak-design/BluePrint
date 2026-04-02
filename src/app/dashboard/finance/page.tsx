@@ -15,27 +15,27 @@ export default function FinancePage() {
   return (
     <div className="p-6 space-y-4">
       <div>
-        <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+        <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
           <DollarSign className="w-7 h-7 text-blue-400" />
           {isRTL ? 'المالية' : 'Finance'}
         </h1>
-        <p className="text-slate-400 mt-1">{isRTL ? 'إدارة الفواتير والسندات والميزانيات وجداول الكميات' : 'Manage invoices, vouchers, budgets, and bills of quantities'}</p>
+        <p className="text-muted-foreground mt-1">{isRTL ? 'إدارة الفواتير والسندات والميزانيات وجداول الكميات' : 'Manage invoices, vouchers, budgets, and bills of quantities'}</p>
       </div>
       <Tabs defaultValue="invoices" dir={isRTL ? 'rtl' : 'ltr'}>
-        <TabsList className="bg-slate-800 w-full sm:w-auto">
-          <TabsTrigger value="invoices" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white gap-2">
+        <TabsList className="bg-muted w-full sm:w-auto">
+          <TabsTrigger value="invoices" className="data-[state=active]:bg-blue-600 data-[state=active]:text-foreground gap-2">
             <DollarSign className="w-4 h-4" />
             {isRTL ? 'الفواتير' : 'Invoices'}
           </TabsTrigger>
-          <TabsTrigger value="vouchers" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white gap-2">
+          <TabsTrigger value="vouchers" className="data-[state=active]:bg-blue-600 data-[state=active]:text-foreground gap-2">
             <Receipt className="w-4 h-4" />
             {isRTL ? 'السندات' : 'Vouchers'}
           </TabsTrigger>
-          <TabsTrigger value="budgets" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white gap-2">
+          <TabsTrigger value="budgets" className="data-[state=active]:bg-blue-600 data-[state=active]:text-foreground gap-2">
             <Calculator className="w-4 h-4" />
             {isRTL ? 'الميزانيات' : 'Budgets'}
           </TabsTrigger>
-          <TabsTrigger value="boq" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white gap-2">
+          <TabsTrigger value="boq" className="data-[state=active]:bg-blue-600 data-[state=active]:text-foreground gap-2">
             <FileSpreadsheet className="w-4 h-4" />
             {isRTL ? 'جدول الكميات' : 'BOQ'}
           </TabsTrigger>

@@ -265,11 +265,11 @@ export function TransmittalSystem({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
             <Send className="w-8 h-8 text-blue-500" />
             {lang === 'ar' ? 'نظام الإرسال' : 'Transmittal System'}
           </h1>
-          <p className="text-slate-400 mt-1">
+          <p className="text-muted-foreground mt-1">
             {lang === 'ar' 
               ? 'إدارة إرسال واستلام المستندات' 
               : 'Manage document transmittals'}
@@ -284,55 +284,55 @@ export function TransmittalSystem({
 
       {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-3xl font-bold text-white">{stats.total}</p>
-              <p className="text-sm text-slate-400">
+              <p className="text-3xl font-bold text-foreground">{stats.total}</p>
+              <p className="text-sm text-muted-foreground">
                 {lang === 'ar' ? 'إجمالي' : 'Total'}
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-3xl font-bold text-slate-400">{stats.draft}</p>
-              <p className="text-sm text-slate-400">
+              <p className="text-3xl font-bold text-muted-foreground">{stats.draft}</p>
+              <p className="text-sm text-muted-foreground">
                 {lang === 'ar' ? 'مسودات' : 'Drafts'}
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="pt-6">
             <div className="text-center">
               <p className="text-3xl font-bold text-blue-400">{stats.sent}</p>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-muted-foreground">
                 {lang === 'ar' ? 'مرسلة' : 'Sent'}
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="pt-6">
             <div className="text-center">
               <p className="text-3xl font-bold text-green-400">{stats.acknowledged}</p>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-muted-foreground">
                 {lang === 'ar' ? 'مستلمة' : 'Acknowledged'}
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="pt-6">
             <div className="text-center">
               <p className="text-3xl font-bold text-amber-400">{stats.overdue}</p>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-muted-foreground">
                 {lang === 'ar' ? 'متأخرة' : 'Overdue'}
               </p>
             </div>
@@ -343,7 +343,7 @@ export function TransmittalSystem({
       {/* Filter */}
       <div className="flex items-center gap-4">
         <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-40 bg-slate-800 border-slate-700">
+          <SelectTrigger className="w-40 bg-muted border-border">
             <SelectValue placeholder={lang === 'ar' ? 'الحالة' : 'Status'} />
           </SelectTrigger>
           <SelectContent>
@@ -356,30 +356,30 @@ export function TransmittalSystem({
       </div>
 
       {/* Transmittals Table */}
-      <Card className="bg-slate-900/50 border-slate-800">
+      <Card className="bg-card border-border">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow className="border-slate-800 hover:bg-slate-800/50">
-                <TableHead className="text-slate-400">
+              <TableRow className="border-border hover:bg-muted">
+                <TableHead className="text-muted-foreground">
                   {lang === 'ar' ? 'رقم الإرسال' : 'Number'}
                 </TableHead>
-                <TableHead className="text-slate-400">
+                <TableHead className="text-muted-foreground">
                   {lang === 'ar' ? 'الموضوع' : 'Subject'}
                 </TableHead>
-                <TableHead className="text-slate-400">
+                <TableHead className="text-muted-foreground">
                   {lang === 'ar' ? 'المستلم' : 'Recipient'}
                 </TableHead>
-                <TableHead className="text-slate-400">
+                <TableHead className="text-muted-foreground">
                   {lang === 'ar' ? 'تاريخ الإرسال' : 'Send Date'}
                 </TableHead>
-                <TableHead className="text-slate-400">
+                <TableHead className="text-muted-foreground">
                   {lang === 'ar' ? 'الأولوية' : 'Priority'}
                 </TableHead>
-                <TableHead className="text-slate-400">
+                <TableHead className="text-muted-foreground">
                   {lang === 'ar' ? 'الحالة' : 'Status'}
                 </TableHead>
-                <TableHead className="text-slate-400 text-right">
+                <TableHead className="text-muted-foreground text-right">
                   {lang === 'ar' ? 'إجراءات' : 'Actions'}
                 </TableHead>
               </TableRow>
@@ -388,7 +388,7 @@ export function TransmittalSystem({
               {filteredTransmittals.map((transmittal) => (
                 <TableRow 
                   key={transmittal.id} 
-                  className="border-slate-800 hover:bg-slate-800/30 cursor-pointer"
+                  className="border-border hover:bg-muted/50 cursor-pointer"
                   onClick={() => {
                     setSelectedTransmittal(transmittal);
                     setIsViewDialogOpen(true);
@@ -398,20 +398,20 @@ export function TransmittalSystem({
                     {transmittal.transmittalNumber}
                   </TableCell>
                   <TableCell>
-                    <p className="text-white font-medium">{transmittal.subject}</p>
+                    <p className="text-foreground font-medium">{transmittal.subject}</p>
                     {transmittal.items && transmittal.items.length > 0 && (
-                      <p className="text-slate-400 text-sm">
+                      <p className="text-muted-foreground text-sm">
                         {transmittal.items.length} {lang === 'ar' ? 'مستندات' : 'documents'}
                       </p>
                     )}
                   </TableCell>
                   <TableCell>
-                    <p className="text-white">{transmittal.recipientName}</p>
+                    <p className="text-foreground">{transmittal.recipientName}</p>
                     {transmittal.recipientCompany && (
-                      <p className="text-slate-400 text-sm">{transmittal.recipientCompany}</p>
+                      <p className="text-muted-foreground text-sm">{transmittal.recipientCompany}</p>
                     )}
                   </TableCell>
-                  <TableCell className="text-slate-300">
+                  <TableCell className="text-foreground/80">
                     {transmittal.sendDate.toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')}
                   </TableCell>
                   <TableCell>
@@ -425,7 +425,7 @@ export function TransmittalSystem({
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge className={TRANSMITTAL_STATUS[transmittal.status]?.color + ' text-white'}>
+                    <Badge className={TRANSMITTAL_STATUS[transmittal.status]?.color + ' text-foreground'}>
                       {TRANSMITTAL_STATUS[transmittal.status]?.[lang]}
                     </Badge>
                   </TableCell>
@@ -522,30 +522,30 @@ function TransmittalDetails({
       {/* Header Info */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label className="text-slate-400">{lang === 'ar' ? 'الموضوع' : 'Subject'}</Label>
-          <p className="text-white">{transmittal.subject}</p>
+          <Label className="text-muted-foreground">{lang === 'ar' ? 'الموضوع' : 'Subject'}</Label>
+          <p className="text-foreground">{transmittal.subject}</p>
         </div>
         <div>
-          <Label className="text-slate-400">{lang === 'ar' ? 'تاريخ الإرسال' : 'Send Date'}</Label>
-          <p className="text-white">
+          <Label className="text-muted-foreground">{lang === 'ar' ? 'تاريخ الإرسال' : 'Send Date'}</Label>
+          <p className="text-foreground">
             {transmittal.sendDate.toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')}
           </p>
         </div>
         <div>
-          <Label className="text-slate-400">{lang === 'ar' ? 'المستلم' : 'Recipient'}</Label>
-          <p className="text-white">{transmittal.recipientName}</p>
+          <Label className="text-muted-foreground">{lang === 'ar' ? 'المستلم' : 'Recipient'}</Label>
+          <p className="text-foreground">{transmittal.recipientName}</p>
           {transmittal.recipientCompany && (
-            <p className="text-slate-400 text-sm">{transmittal.recipientCompany}</p>
+            <p className="text-muted-foreground text-sm">{transmittal.recipientCompany}</p>
           )}
         </div>
         <div>
-          <Label className="text-slate-400">{lang === 'ar' ? 'طريقة التسليم' : 'Delivery Method'}</Label>
-          <p className="text-white">{DELIVERY_METHODS[transmittal.deliveryMethod]?.[lang]}</p>
+          <Label className="text-muted-foreground">{lang === 'ar' ? 'طريقة التسليم' : 'Delivery Method'}</Label>
+          <p className="text-foreground">{DELIVERY_METHODS[transmittal.deliveryMethod]?.[lang]}</p>
         </div>
         {transmittal.description && (
           <div className="col-span-2">
-            <Label className="text-slate-400">{lang === 'ar' ? 'الوصف' : 'Description'}</Label>
-            <p className="text-white">{transmittal.description}</p>
+            <Label className="text-muted-foreground">{lang === 'ar' ? 'الوصف' : 'Description'}</Label>
+            <p className="text-foreground">{transmittal.description}</p>
           </div>
         )}
       </div>
@@ -553,43 +553,43 @@ function TransmittalDetails({
       {/* Items */}
       {transmittal.items && transmittal.items.length > 0 && (
         <div>
-          <h3 className="text-lg font-semibold text-white mb-4">
+          <h3 className="text-lg font-semibold text-foreground mb-4">
             {lang === 'ar' ? 'المستندات المرفقة' : 'Attached Documents'}
           </h3>
           <Table>
             <TableHeader>
-              <TableRow className="border-slate-800">
-                <TableHead className="text-slate-400">
+              <TableRow className="border-border">
+                <TableHead className="text-muted-foreground">
                   {lang === 'ar' ? 'رقم المستند' : 'Doc No.'}
                 </TableHead>
-                <TableHead className="text-slate-400">
+                <TableHead className="text-muted-foreground">
                   {lang === 'ar' ? 'العنوان' : 'Title'}
                 </TableHead>
-                <TableHead className="text-slate-400">
+                <TableHead className="text-muted-foreground">
                   {lang === 'ar' ? 'المراجعة' : 'Rev'}
                 </TableHead>
-                <TableHead className="text-slate-400">
+                <TableHead className="text-muted-foreground">
                   {lang === 'ar' ? 'النسخ' : 'Copies'}
                 </TableHead>
-                <TableHead className="text-slate-400">
+                <TableHead className="text-muted-foreground">
                   {lang === 'ar' ? 'النوع' : 'Type'}
                 </TableHead>
-                <TableHead className="text-slate-400">
+                <TableHead className="text-muted-foreground">
                   {lang === 'ar' ? 'الغرض' : 'Purpose'}
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {transmittal.items.map((item) => (
-                <TableRow key={item.id} className="border-slate-800">
+                <TableRow key={item.id} className="border-border">
                   <TableCell className="text-blue-400 font-mono">{item.documentNumber}</TableCell>
-                  <TableCell className="text-white">{item.documentTitle}</TableCell>
-                  <TableCell className="text-white">{item.revision}</TableCell>
-                  <TableCell className="text-white">{item.copies}</TableCell>
-                  <TableCell className="text-slate-300">
+                  <TableCell className="text-foreground">{item.documentTitle}</TableCell>
+                  <TableCell className="text-foreground">{item.revision}</TableCell>
+                  <TableCell className="text-foreground">{item.copies}</TableCell>
+                  <TableCell className="text-foreground/80">
                     {item.documentType ? DOCUMENT_TYPES[item.documentType]?.[lang] : '-'}
                   </TableCell>
-                  <TableCell className="text-slate-300">
+                  <TableCell className="text-foreground/80">
                     {ITEM_STATUS[item.status]?.[lang]}
                   </TableCell>
                 </TableRow>
@@ -600,7 +600,7 @@ function TransmittalDetails({
       )}
 
       {/* Actions */}
-      <div className="flex justify-between pt-4 border-t border-slate-800">
+      <div className="flex justify-between pt-4 border-t border-border">
         <Button variant="destructive" onClick={onDelete}>
           <Trash2 className="w-4 h-4 mr-2" />
           {lang === 'ar' ? 'حذف' : 'Delete'}
@@ -767,12 +767,12 @@ function TransmittalForm({
 
       {/* Documents */}
       <div>
-        <Label className="text-lg font-semibold text-white">
+        <Label className="text-lg font-semibold text-foreground">
           {lang === 'ar' ? 'المستندات' : 'Documents'}
         </Label>
         
         {/* Add Item Form */}
-        <div className="grid grid-cols-6 gap-2 mt-2 p-4 bg-slate-800 rounded-lg">
+        <div className="grid grid-cols-6 gap-2 mt-2 p-4 bg-muted rounded-lg">
           <Input
             placeholder={lang === 'ar' ? 'رقم المستند' : 'Doc No.'}
             value={newItem.documentNumber}
@@ -804,11 +804,11 @@ function TransmittalForm({
         {items.length > 0 && (
           <div className="mt-4 space-y-2">
             {items.map((item, index) => (
-              <div key={index} className="flex items-center gap-2 p-2 bg-slate-800/50 rounded">
+              <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded">
                 <span className="text-blue-400 font-mono">{item.documentNumber}</span>
-                <span className="text-white flex-1">{item.documentTitle}</span>
-                <span className="text-slate-400">Rev {item.revision}</span>
-                <span className="text-slate-400">{item.copies}x</span>
+                <span className="text-foreground flex-1">{item.documentTitle}</span>
+                <span className="text-muted-foreground">Rev {item.revision}</span>
+                <span className="text-muted-foreground">{item.copies}x</span>
                 <Button variant="ghost" size="icon" onClick={() => removeItem(index)}>
                   <Trash2 className="w-4 h-4 text-red-400" />
                 </Button>

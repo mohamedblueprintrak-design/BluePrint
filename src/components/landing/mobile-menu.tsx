@@ -17,14 +17,14 @@ export function MobileMenu({ navLinks }: { navLinks: NavLink[] }) {
     <>
       <button
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        className="md:hidden text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800/50 transition-colors"
+        className="md:hidden text-muted-foreground hover:text-foreground p-2 rounded-lg hover:bg-muted transition-colors"
         aria-label="القائمة"
       >
         {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
 
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-800 bg-slate-950/95 backdrop-blur-xl">
+        <div className="md:hidden border-t border-border bg-background/95 backdrop-blur-xl">
           <nav className="flex flex-col p-4 gap-1">
             {navLinks.map((link) => (
               link.external ? (
@@ -33,7 +33,7 @@ export function MobileMenu({ navLinks }: { navLinks: NavLink[] }) {
                   href={link.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-slate-400 hover:text-white transition-colors text-sm px-4 py-3 rounded-lg hover:bg-slate-800/50"
+                  className="text-muted-foreground hover:text-foreground transition-colors text-sm px-4 py-3 rounded-lg hover:bg-muted"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {link.label}
@@ -42,7 +42,7 @@ export function MobileMenu({ navLinks }: { navLinks: NavLink[] }) {
                 <a
                   key={link.label}
                   href={link.href}
-                  className="text-slate-400 hover:text-white transition-colors text-sm px-4 py-3 rounded-lg hover:bg-slate-800/50"
+                  className="text-muted-foreground hover:text-foreground transition-colors text-sm px-4 py-3 rounded-lg hover:bg-muted"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {link.label}
@@ -51,7 +51,7 @@ export function MobileMenu({ navLinks }: { navLinks: NavLink[] }) {
             ))}
             <Link
               href="/login"
-              className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-5 py-3 rounded-lg text-sm font-medium mt-2"
+              className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-foreground px-5 py-3 rounded-lg text-sm font-medium mt-2"
               onClick={() => setMobileMenuOpen(false)}
             >
               تسجيل الدخول

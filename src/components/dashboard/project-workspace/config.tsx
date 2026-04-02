@@ -159,7 +159,7 @@ export const typeConfig: Record<string, { labelAr: string; labelEn: string }> = 
 };
 
 export const phaseStatusConfig: Record<string, { color: string; bg: string; labelAr: string; labelEn: string; dot: string }> = {
-  NOT_STARTED: { color: 'text-slate-400', bg: 'bg-slate-500/15', labelAr: 'لم يبدأ', labelEn: 'Not Started', dot: 'bg-slate-400' },
+  NOT_STARTED: { color: 'text-muted-foreground', bg: 'bg-slate-500/15', labelAr: 'لم يبدأ', labelEn: 'Not Started', dot: 'bg-slate-400' },
   IN_PROGRESS: { color: 'text-blue-400', bg: 'bg-blue-500/15', labelAr: 'قيد التنفيذ', labelEn: 'In Progress', dot: 'bg-blue-400' },
   COMPLETED: { color: 'text-emerald-400', bg: 'bg-emerald-500/15', labelAr: 'مكتمل', labelEn: 'Completed', dot: 'bg-emerald-400' },
   ON_HOLD: { color: 'text-amber-400', bg: 'bg-amber-500/15', labelAr: 'معلق', labelEn: 'On Hold', dot: 'bg-amber-400' },
@@ -284,12 +284,12 @@ export const _mepSubGroupLabels: Record<string, { ar: string; en: string }> = {
 export const _mepGroupOrder = ['NOC', 'ELECTRICAL', 'AC_CALCULATIONS', 'SOLAR_HEATING', 'LOAD_SCHEDULE', 'PANEL_SCHEDULE', 'ELEC_SPECIFICATIONS', 'LIGHTING', 'DRAINAGE', 'SITE_DRAINAGE', 'RAIN_DRAINAGE', 'TANK_DETAILS', 'WATER_SUPPLY', 'SITE_WATER', 'GROUND_FLOOR_WATER', 'ROOF_WATER', 'ETISALAT', 'ETISALAT_GF', 'HVAC', 'CD_FIRE_SYSTEM', 'CD_EMERGENCY_LIGHTING', 'CD_FIRE_FITTING', 'CD_SCHEMATIC', 'MEP_COORDINATION'];
 
 export const invoiceStatusConfig: Record<string, { color: string; bg: string; labelAr: string; labelEn: string }> = {
-  DRAFT: { color: 'text-slate-400', bg: 'bg-slate-500/15', labelAr: 'مسودة', labelEn: 'Draft' },
+  DRAFT: { color: 'text-muted-foreground', bg: 'bg-slate-500/15', labelAr: 'مسودة', labelEn: 'Draft' },
   SENT: { color: 'text-blue-400', bg: 'bg-blue-500/15', labelAr: 'مرسلة', labelEn: 'Sent' },
   PAID: { color: 'text-emerald-400', bg: 'bg-emerald-500/15', labelAr: 'مدفوعة', labelEn: 'Paid' },
   PARTIALLY_PAID: { color: 'text-amber-400', bg: 'bg-amber-500/15', labelAr: 'مدفوعة جزئياً', labelEn: 'Partially Paid' },
   OVERDUE: { color: 'text-red-400', bg: 'bg-red-500/15', labelAr: 'متأخرة', labelEn: 'Overdue' },
-  CANCELLED: { color: 'text-slate-500', bg: 'bg-slate-500/15', labelAr: 'ملغاة', labelEn: 'Cancelled' },
+  CANCELLED: { color: 'text-muted-foreground', bg: 'bg-slate-500/15', labelAr: 'ملغاة', labelEn: 'Cancelled' },
 };
 
 export const defectSeverityConfig: Record<string, { color: string; bg: string; labelAr: string; labelEn: string }> = {
@@ -303,7 +303,7 @@ export const defectStatusConfig: Record<string, { color: string; bg: string; lab
   OPEN: { color: 'text-red-400', bg: 'bg-red-500/15', labelAr: 'مفتوح', labelEn: 'Open' },
   IN_PROGRESS: { color: 'text-blue-400', bg: 'bg-blue-500/15', labelAr: 'قيد التنفيذ', labelEn: 'In Progress' },
   RESOLVED: { color: 'text-emerald-400', bg: 'bg-emerald-500/15', labelAr: 'تم الحل', labelEn: 'Resolved' },
-  CLOSED: { color: 'text-slate-400', bg: 'bg-slate-500/15', labelAr: 'مغلق', labelEn: 'Closed' },
+  CLOSED: { color: 'text-muted-foreground', bg: 'bg-slate-500/15', labelAr: 'مغلق', labelEn: 'Closed' },
 };
 
 export const boqCategoryConfig: Record<string, { color: string; bg: string; labelAr: string; labelEn: string }> = {
@@ -330,7 +330,7 @@ export const govApprovalConfig: Record<string, { color: string; bg: string; labe
 };
 
 export const mepStatusConfig: Record<string, { color: string; bg: string; labelAr: string; labelEn: string }> = {
-  NOT_STARTED: { color: 'text-slate-400', bg: 'bg-slate-500/15', labelAr: 'لم يبدأ', labelEn: 'Not Started' },
+  NOT_STARTED: { color: 'text-muted-foreground', bg: 'bg-slate-500/15', labelAr: 'لم يبدأ', labelEn: 'Not Started' },
   IN_PROGRESS: { color: 'text-blue-400', bg: 'bg-blue-500/15', labelAr: 'قيد التنفيذ', labelEn: 'In Progress' },
   COMPLETED: { color: 'text-emerald-400', bg: 'bg-emerald-500/15', labelAr: 'مكتمل', labelEn: 'Completed' },
 };
@@ -351,7 +351,7 @@ export const ROLE_TABS: Record<string, string[]> = {
 // ===== SLA Helper =====
 export function calculateSLA(phase: WorkflowPhase, isAr: boolean): { text: string; color: string } {
   if (phase.status !== 'IN_PROGRESS' || !phase.startDate || !phase.slaDays) {
-    return { text: '—', color: 'text-slate-500' };
+    return { text: '—', color: 'text-muted-foreground' };
   }
   const start = new Date(phase.startDate).getTime();
   const now = Date.now();

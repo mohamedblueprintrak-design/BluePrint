@@ -118,7 +118,7 @@ const MEETINGS_STATUS_MAP: Record<string, { ar: string; en: string; color: strin
   confirmed: { ar: 'مؤكد', en: 'Confirmed', color: 'bg-green-500/20 text-green-400 border-green-500/30' },
   pending: { ar: 'قيد التأكيد', en: 'Pending', color: 'bg-amber-500/20 text-amber-400 border-amber-500/30' },
   cancelled: { ar: 'ملغي', en: 'Cancelled', color: 'bg-red-500/20 text-red-400 border-red-500/30' },
-  completed: { ar: 'مكتمل', en: 'Completed', color: 'bg-slate-500/20 text-slate-400 border-slate-500/30' },
+  completed: { ar: 'مكتمل', en: 'Completed', color: 'bg-muted text-muted-foreground border-border' },
 };
 
 // ─── Correspondence Data ────────────────────────────────────────
@@ -237,17 +237,17 @@ function MeetingsContent() {
       {/* Header */}
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Calendar className="w-7 h-7 text-indigo-400" />
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <Calendar className="w-7 h-7 text-blue-400" />
             {isAr ? 'الاجتماعات' : 'Meetings'}
           </h1>
-          <p className="text-slate-400 mt-1">
+          <p className="text-muted-foreground mt-1">
             {upcoming.length} {isAr ? 'اجتماع قادم' : 'upcoming meetings'}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-36 bg-slate-800/50 border-slate-700 text-sm">
+            <SelectTrigger className="w-36 bg-muted border-border text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -257,7 +257,7 @@ function MeetingsContent() {
               ))}
             </SelectContent>
           </Select>
-          <Button onClick={() => setCreateDialog(true)} className="bg-indigo-600 hover:bg-indigo-700">
+          <Button onClick={() => setCreateDialog(true)} className="bg-blue-600 hover:bg-blue-700">
             <Plus className="w-4 h-4 me-2" />
             {isAr ? 'اجتماع جديد' : 'New Meeting'}
           </Button>
@@ -267,15 +267,15 @@ function MeetingsContent() {
       {/* Quick Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: isAr ? 'القادمة' : 'Upcoming', value: upcoming.length, color: 'text-indigo-400' },
+          { label: isAr ? 'القادمة' : 'Upcoming', value: upcoming.length, color: 'text-blue-400' },
           { label: isAr ? 'مؤكدة' : 'Confirmed', value: MOCK_MEETINGS.filter(m => m.status === 'confirmed').length, color: 'text-green-400' },
           { label: isAr ? 'قيد التأكيد' : 'Pending', value: MOCK_MEETINGS.filter(m => m.status === 'pending').length, color: 'text-amber-400' },
           { label: isAr ? 'هذا الأسبوع' : 'This Week', value: upcoming.filter(m => { const d = new Date(m.date); const now = new Date(); const week = 7 * 24 * 60 * 60 * 1000; return d.getTime() - now.getTime() <= week && d.getTime() >= now.getTime(); }).length, color: 'text-cyan-400' },
         ].map((stat) => (
-          <Card key={stat.label} className="bg-slate-900/50 border-slate-800">
+          <Card key={stat.label} className="bg-card border-border">
             <CardContent className="p-4 text-center">
               <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
-              <p className="text-xs text-slate-400 mt-1">{stat.label}</p>
+              <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
             </CardContent>
           </Card>
         ))}
@@ -285,9 +285,9 @@ function MeetingsContent() {
       {Object.entries(grouped).map(([date, meetings]) => (
         <div key={date} className="space-y-3">
           <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-slate-500" />
-            <h2 className="text-sm font-semibold text-slate-400">{formatDate(date)}</h2>
-            <div className="flex-1 h-px bg-slate-800" />
+            <Calendar className="w-4 h-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold text-muted-foreground">{formatDate(date)}</h2>
+            <div className="flex-1 h-px bg-muted" />
           </div>
           <div className="space-y-2">
             {meetings.map((meeting) => {
@@ -295,26 +295,26 @@ function MeetingsContent() {
               return (
                 <Card
                   key={meeting.id}
-                  className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-all cursor-pointer"
+                  className="bg-card border-border hover:border-border transition-all cursor-pointer"
                   onClick={() => setViewMeeting(meeting)}
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start gap-4">
                       {/* Time */}
                       <div className="text-center min-w-[60px]">
-                        <p className="text-lg font-bold text-indigo-400">{meeting.time}</p>
-                        <p className="text-xs text-slate-500">{meeting.duration} {isAr ? 'دقيقة' : 'min'}</p>
+                        <p className="text-lg font-bold text-blue-400">{meeting.time}</p>
+                        <p className="text-xs text-muted-foreground">{meeting.duration} {isAr ? 'دقيقة' : 'min'}</p>
                       </div>
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-white font-medium truncate">{meeting.title}</h3>
+                          <h3 className="text-foreground font-medium truncate">{meeting.title}</h3>
                           <Badge variant="outline" className={`text-[10px] shrink-0 ${statusInfo.color}`}>
                             {isAr ? statusInfo.ar : statusInfo.en}
                           </Badge>
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                           {meeting.type === 'online' ? (
                             <span className="flex items-center gap-1"><Video className="w-3 h-3 text-blue-400" />{meeting.location}</span>
                           ) : (
@@ -322,12 +322,12 @@ function MeetingsContent() {
                           )}
                           <span className="flex items-center gap-1"><Users className="w-3 h-3" />{meeting.attendees.length} {isAr ? 'حاضر' : 'attendees'}</span>
                           {meeting.project && (
-                            <Badge variant="outline" className="border-slate-700 text-slate-400 text-[10px]">{meeting.project}</Badge>
+                            <Badge variant="outline" className="border-border text-muted-foreground text-[10px]">{meeting.project}</Badge>
                           )}
                         </div>
 
                         {meeting.agenda && (
-                          <p className="text-xs text-slate-500 mt-2 line-clamp-1">{meeting.agenda}</p>
+                          <p className="text-xs text-muted-foreground mt-2 line-clamp-1">{meeting.agenda}</p>
                         )}
                       </div>
                     </div>
@@ -340,8 +340,8 @@ function MeetingsContent() {
       ))}
 
       {filtered.length === 0 && (
-        <Card className="bg-slate-900/50 border-slate-800">
-          <CardContent className="py-16 text-center text-slate-500">
+        <Card className="bg-card border-border">
+          <CardContent className="py-16 text-center text-muted-foreground">
             <Calendar className="w-12 h-12 mx-auto mb-4 opacity-40" />
             <p>{isAr ? 'لا توجد اجتماعات' : 'No meetings found'}</p>
           </CardContent>
@@ -350,10 +350,10 @@ function MeetingsContent() {
 
       {/* View Meeting Dialog */}
       <Dialog open={!!viewMeeting} onOpenChange={() => setViewMeeting(null)}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-lg">
+        <DialogContent className="bg-card border-border text-foreground max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-indigo-400" />
+              <Calendar className="w-5 h-5 text-blue-400" />
               {viewMeeting?.title}
             </DialogTitle>
           </DialogHeader>
@@ -361,33 +361,33 @@ function MeetingsContent() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-slate-500" />
+                  <Clock className="w-4 h-4 text-muted-foreground" />
                   <div>
-                    <p className="text-xs text-slate-400">{isAr ? 'الوقت' : 'Time'}</p>
-                    <p className="text-white">{viewMeeting.time} ({viewMeeting.duration} {isAr ? 'دقيقة' : 'min'})</p>
+                    <p className="text-xs text-muted-foreground">{isAr ? 'الوقت' : 'Time'}</p>
+                    <p className="text-foreground">{viewMeeting.time} ({viewMeeting.duration} {isAr ? 'دقيقة' : 'min'})</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {viewMeeting.type === 'online' ? <Video className="w-4 h-4 text-blue-400" /> : <MapPin className="w-4 h-4 text-amber-400" />}
                   <div>
-                    <p className="text-xs text-slate-400">{isAr ? 'المكان' : 'Location'}</p>
-                    <p className="text-white">{viewMeeting.location}</p>
+                    <p className="text-xs text-muted-foreground">{isAr ? 'المكان' : 'Location'}</p>
+                    <p className="text-foreground">{viewMeeting.location}</p>
                   </div>
                 </div>
               </div>
 
               {viewMeeting.project && (
                 <div>
-                  <p className="text-xs text-slate-400">{isAr ? 'المشروع' : 'Project'}</p>
-                  <Badge variant="outline" className="border-slate-600 text-slate-300 mt-1">{viewMeeting.project}</Badge>
+                  <p className="text-xs text-muted-foreground">{isAr ? 'المشروع' : 'Project'}</p>
+                  <Badge variant="outline" className="border-border text-foreground/80 mt-1">{viewMeeting.project}</Badge>
                 </div>
               )}
 
               <div>
-                <p className="text-xs text-slate-400 mb-2">{isAr ? 'الحضور' : 'Attendees'}</p>
+                <p className="text-xs text-muted-foreground mb-2">{isAr ? 'الحضور' : 'Attendees'}</p>
                 <div className="flex flex-wrap gap-2">
                   {viewMeeting.attendees.map((a: string, i: number) => (
-                    <Badge key={i} variant="outline" className="border-slate-700 text-slate-300">
+                    <Badge key={i} variant="outline" className="border-border text-foreground/80">
                       <Users className="w-3 h-3 me-1" />{a}
                     </Badge>
                   ))}
@@ -395,11 +395,11 @@ function MeetingsContent() {
               </div>
 
               <div>
-                <p className="text-xs text-slate-400 mb-1">{isAr ? 'جدول الأعمال' : 'Agenda'}</p>
-                <div className="bg-slate-800/50 p-3 rounded-lg text-sm text-slate-300 space-y-1">
+                <p className="text-xs text-muted-foreground mb-1">{isAr ? 'جدول الأعمال' : 'Agenda'}</p>
+                <div className="bg-muted p-3 rounded-lg text-sm text-foreground/80 space-y-1">
                   {viewMeeting.agenda.split(' - ').map((item: string, i: number) => (
                     <p key={i} className="flex items-start gap-2">
-                      <span className="text-indigo-400 mt-0.5">•</span>
+                      <span className="text-blue-400 mt-0.5">•</span>
                       {item}
                     </p>
                   ))}
@@ -408,14 +408,14 @@ function MeetingsContent() {
 
               {viewMeeting.notes && (
                 <div>
-                  <p className="text-xs text-slate-400 mb-1">{isAr ? 'ملاحظات' : 'Notes'}</p>
-                  <p className="text-sm text-slate-300">{viewMeeting.notes}</p>
+                  <p className="text-xs text-muted-foreground mb-1">{isAr ? 'ملاحظات' : 'Notes'}</p>
+                  <p className="text-sm text-foreground/80">{viewMeeting.notes}</p>
                 </div>
               )}
             </div>
           )}
           <DialogFooter className="gap-2">
-            <Button variant="outline" size="sm" onClick={() => setViewMeeting(null)} className="border-slate-700 text-slate-300">
+            <Button variant="outline" size="sm" onClick={() => setViewMeeting(null)} className="border-border text-foreground/80">
               {isAr ? 'إغلاق' : 'Close'}
             </Button>
             {viewMeeting?.status !== 'completed' && (
@@ -430,52 +430,52 @@ function MeetingsContent() {
 
       {/* Create Dialog */}
       <Dialog open={createDialog} onOpenChange={setCreateDialog}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-lg">
+        <DialogContent className="bg-card border-border text-foreground max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Plus className="w-5 h-5 text-indigo-400" />
+              <Plus className="w-5 h-5 text-blue-400" />
               {isAr ? 'اجتماع جديد' : 'New Meeting'}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>{isAr ? 'عنوان الاجتماع' : 'Meeting Title'}</Label>
-              <Input placeholder={isAr ? 'مثال: اجتماع متابعة أسبوعي' : 'e.g. Weekly Follow-up'} className="bg-slate-800/50 border-slate-700" />
+              <Input placeholder={isAr ? 'مثال: اجتماع متابعة أسبوعي' : 'e.g. Weekly Follow-up'} className="bg-muted border-border" />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>{isAr ? 'التاريخ' : 'Date'}</Label>
-                <Input type="date" className="bg-slate-800/50 border-slate-700" />
+                <Input type="date" className="bg-muted border-border" />
               </div>
               <div className="space-y-2">
                 <Label>{isAr ? 'الوقت' : 'Time'}</Label>
-                <Input type="time" className="bg-slate-800/50 border-slate-700" />
+                <Input type="time" className="bg-muted border-border" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>{isAr ? 'المكان' : 'Location'}</Label>
-                <Input placeholder={isAr ? 'قاعة / Zoom / Teams' : 'Room / Zoom / Teams'} className="bg-slate-800/50 border-slate-700" />
+                <Input placeholder={isAr ? 'قاعة / Zoom / Teams' : 'Room / Zoom / Teams'} className="bg-muted border-border" />
               </div>
               <div className="space-y-2">
                 <Label>{isAr ? 'المدة (دقيقة)' : 'Duration (min)'}</Label>
-                <Input type="number" placeholder="60" className="bg-slate-800/50 border-slate-700" />
+                <Input type="number" placeholder="60" className="bg-muted border-border" />
               </div>
             </div>
             <div className="space-y-2">
               <Label>{isAr ? 'جدول الأعمال' : 'Agenda'}</Label>
-              <Textarea placeholder={isAr ? 'نقاط جدول الأعمال (كل نقطة في سطر)' : 'Agenda items (one per line)'} className="bg-slate-800/50 border-slate-700" rows={3} />
+              <Textarea placeholder={isAr ? 'نقاط جدول الأعمال (كل نقطة في سطر)' : 'Agenda items (one per line)'} className="bg-muted border-border" rows={3} />
             </div>
             <div className="space-y-2">
               <Label>{isAr ? 'الحضور' : 'Attendees'}</Label>
-              <Input placeholder={isAr ? 'أسماء الحضور (مفصولة بفاصلة)' : 'Attendee names (comma separated)'} className="bg-slate-800/50 border-slate-700" />
+              <Input placeholder={isAr ? 'أسماء الحضور (مفصولة بفاصلة)' : 'Attendee names (comma separated)'} className="bg-muted border-border" />
             </div>
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setCreateDialog(false)} className="border-slate-700 text-slate-300">
+            <Button variant="outline" onClick={() => setCreateDialog(false)} className="border-border text-foreground/80">
               {isAr ? 'إلغاء' : 'Cancel'}
             </Button>
-            <Button onClick={() => setCreateDialog(false)} className="bg-indigo-600 hover:bg-indigo-700">
+            <Button onClick={() => setCreateDialog(false)} className="bg-blue-600 hover:bg-blue-700">
               {isAr ? 'إنشاء الاجتماع' : 'Create Meeting'}
             </Button>
           </DialogFooter>
@@ -517,11 +517,11 @@ function CorrespondenceContent() {
       {/* Header */}
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Landmark className="w-7 h-7 text-amber-400" />
             {isAr ? 'المراسلات البلدية' : 'Municipality Correspondence'}
           </h1>
-          <p className="text-slate-400 mt-1">
+          <p className="text-muted-foreground mt-1">
             {isAr ? 'تتبع المراسلات والتصاريح مع البلديات' : 'Track correspondence and permits with municipalities'}
           </p>
         </div>
@@ -534,16 +534,16 @@ function CorrespondenceContent() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {[
-          { label: isAr ? 'الإجمالي' : 'Total', value: stats.total, color: 'text-white' },
+          { label: isAr ? 'الإجمالي' : 'Total', value: stats.total, color: 'text-foreground' },
           { label: isAr ? 'قيد المراجعة' : 'Pending', value: stats.pending, color: 'text-amber-400' },
           { label: isAr ? 'جاري التنفيذ' : 'In Progress', value: stats.inProgress, color: 'text-blue-400' },
           { label: isAr ? 'تمت الموافقة' : 'Approved', value: stats.approved, color: 'text-green-400' },
           { label: isAr ? 'مرفوض' : 'Rejected', value: stats.rejected, color: 'text-red-400' },
         ].map((stat) => (
-          <Card key={stat.label} className="bg-slate-900/50 border-slate-800">
+          <Card key={stat.label} className="bg-card border-border">
             <CardContent className="p-4 text-center">
               <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
-              <p className="text-xs text-slate-400 mt-1">{stat.label}</p>
+              <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
             </CardContent>
           </Card>
         ))}
@@ -552,16 +552,16 @@ function CorrespondenceContent() {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder={isAr ? 'بحث بالرقم أو الموضوع...' : 'Search by reference or subject...'}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="ps-10 bg-slate-800/50 border-slate-700"
+            className="ps-10 bg-muted border-border"
           />
         </div>
         <Select value={filterType} onValueChange={setFilterType}>
-          <SelectTrigger className="w-40 bg-slate-800/50 border-slate-700">
+          <SelectTrigger className="w-40 bg-muted border-border">
             <SelectValue placeholder={isAr ? 'النوع' : 'Type'} />
           </SelectTrigger>
           <SelectContent>
@@ -572,7 +572,7 @@ function CorrespondenceContent() {
           </SelectContent>
         </Select>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-40 bg-slate-800/50 border-slate-700">
+          <SelectTrigger className="w-40 bg-muted border-border">
             <SelectValue placeholder={isAr ? 'الحالة' : 'Status'} />
           </SelectTrigger>
           <SelectContent>
@@ -585,18 +585,18 @@ function CorrespondenceContent() {
       </div>
 
       {/* Table */}
-      <Card className="bg-slate-900/50 border-slate-800">
+      <Card className="bg-card border-border overflow-x-auto">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow className="border-slate-800 hover:bg-slate-800/50">
-                <TableHead className="text-slate-400">{isAr ? 'الرقم المرجعي' : 'Reference'}</TableHead>
-                <TableHead className="text-slate-400">{isAr ? 'الموضوع' : 'Subject'}</TableHead>
-                <TableHead className="text-slate-400">{isAr ? 'النوع' : 'Type'}</TableHead>
-                <TableHead className="text-slate-400">{isAr ? 'البلدية' : 'Municipality'}</TableHead>
-                <TableHead className="text-slate-400">{isAr ? 'التاريخ' : 'Date'}</TableHead>
-                <TableHead className="text-slate-400">{isAr ? 'الحالة' : 'Status'}</TableHead>
-                <TableHead className="text-slate-400 text-end">{isAr ? 'عرض' : 'View'}</TableHead>
+              <TableRow className="border-border hover:bg-muted">
+                <TableHead className="text-muted-foreground">{isAr ? 'الرقم المرجعي' : 'Reference'}</TableHead>
+                <TableHead className="text-muted-foreground">{isAr ? 'الموضوع' : 'Subject'}</TableHead>
+                <TableHead className="text-muted-foreground">{isAr ? 'النوع' : 'Type'}</TableHead>
+                <TableHead className="text-muted-foreground">{isAr ? 'البلدية' : 'Municipality'}</TableHead>
+                <TableHead className="text-muted-foreground">{isAr ? 'التاريخ' : 'Date'}</TableHead>
+                <TableHead className="text-muted-foreground">{isAr ? 'الحالة' : 'Status'}</TableHead>
+                <TableHead className="text-muted-foreground text-end">{isAr ? 'عرض' : 'View'}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -606,14 +606,14 @@ function CorrespondenceContent() {
                 return (
                   <TableRow
                     key={item.id}
-                    className="border-slate-800 hover:bg-slate-800/30 cursor-pointer"
+                    className="border-border hover:bg-muted/50 cursor-pointer"
                     onClick={() => setViewDialog(item)}
                   >
                     <TableCell className="text-blue-400 font-mono text-sm">{item.reference}</TableCell>
-                    <TableCell className="text-white font-medium max-w-[250px] truncate">{item.subject}</TableCell>
-                    <TableCell><Badge variant="outline" className="border-slate-600 text-slate-300">{isAr ? typeInfo.ar : typeInfo.en}</Badge></TableCell>
-                    <TableCell className="text-slate-300 text-sm flex items-center gap-1"><Building className="w-3 h-3" />{item.municipality}</TableCell>
-                    <TableCell className="text-slate-400 text-sm">{item.date}</TableCell>
+                    <TableCell className="text-foreground font-medium max-w-[250px] truncate">{item.subject}</TableCell>
+                    <TableCell><Badge variant="outline" className="border-border text-foreground/80">{isAr ? typeInfo.ar : typeInfo.en}</Badge></TableCell>
+                    <TableCell className="text-foreground/80 text-sm flex items-center gap-1"><Building className="w-3 h-3" />{item.municipality}</TableCell>
+                    <TableCell className="text-muted-foreground text-sm">{item.date}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className={statusInfo.color}>
                         {isAr ? statusInfo.ar : statusInfo.en}
@@ -621,7 +621,7 @@ function CorrespondenceContent() {
                     </TableCell>
                     <TableCell className="text-end">
                       <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setViewDialog(item); }}>
-                        <Eye className="w-4 h-4 text-slate-400" />
+                        <Eye className="w-4 h-4 text-muted-foreground" />
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -629,7 +629,7 @@ function CorrespondenceContent() {
               })}
               {filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-12 text-slate-500">
+                  <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
                     <FileText className="w-10 h-10 mx-auto mb-3 opacity-40" />
                     {isAr ? 'لا توجد نتائج' : 'No results found'}
                   </TableCell>
@@ -642,7 +642,7 @@ function CorrespondenceContent() {
 
       {/* View Dialog */}
       <Dialog open={!!viewDialog} onOpenChange={() => setViewDialog(null)}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-lg">
+        <DialogContent className="bg-card border-border text-foreground max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileText className="w-5 h-5 text-amber-400" />
@@ -653,40 +653,40 @@ function CorrespondenceContent() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-slate-400">{isAr ? 'الموضوع' : 'Subject'}</Label>
-                  <p className="text-white">{viewDialog.subject}</p>
+                  <Label className="text-muted-foreground">{isAr ? 'الموضوع' : 'Subject'}</Label>
+                  <p className="text-foreground">{viewDialog.subject}</p>
                 </div>
                 <div>
-                  <Label className="text-slate-400">{isAr ? 'النوع' : 'Type'}</Label>
-                  <p className="text-white">{isAr ? TYPE_MAP[viewDialog.type]?.ar : TYPE_MAP[viewDialog.type]?.en}</p>
+                  <Label className="text-muted-foreground">{isAr ? 'النوع' : 'Type'}</Label>
+                  <p className="text-foreground">{isAr ? TYPE_MAP[viewDialog.type]?.ar : TYPE_MAP[viewDialog.type]?.en}</p>
                 </div>
                 <div>
-                  <Label className="text-slate-400">{isAr ? 'البلدية' : 'Municipality'}</Label>
-                  <p className="text-white">{viewDialog.municipality}</p>
+                  <Label className="text-muted-foreground">{isAr ? 'البلدية' : 'Municipality'}</Label>
+                  <p className="text-foreground">{viewDialog.municipality}</p>
                 </div>
                 <div>
-                  <Label className="text-slate-400">{isAr ? 'الحالة' : 'Status'}</Label>
+                  <Label className="text-muted-foreground">{isAr ? 'الحالة' : 'Status'}</Label>
                   <Badge variant="outline" className={CORR_STATUS_MAP[viewDialog.status]?.color}>
                     {isAr ? CORR_STATUS_MAP[viewDialog.status]?.ar : CORR_STATUS_MAP[viewDialog.status]?.en}
                   </Badge>
                 </div>
                 <div>
-                  <Label className="text-slate-400">{isAr ? 'تاريخ التقديم' : 'Submit Date'}</Label>
-                  <p className="text-white">{viewDialog.date}</p>
+                  <Label className="text-muted-foreground">{isAr ? 'تاريخ التقديم' : 'Submit Date'}</Label>
+                  <p className="text-foreground">{viewDialog.date}</p>
                 </div>
                 <div>
-                  <Label className="text-slate-400">{isAr ? 'تاريخ الاستحقاق' : 'Due Date'}</Label>
-                  <p className="text-white">{viewDialog.dueDate}</p>
+                  <Label className="text-muted-foreground">{isAr ? 'تاريخ الاستحقاق' : 'Due Date'}</Label>
+                  <p className="text-foreground">{viewDialog.dueDate}</p>
                 </div>
               </div>
               <div>
-                <Label className="text-slate-400">{isAr ? 'ملاحظات' : 'Notes'}</Label>
-                <p className="text-slate-300 bg-slate-800/50 p-3 rounded-lg mt-1">{viewDialog.notes}</p>
+                <Label className="text-muted-foreground">{isAr ? 'ملاحظات' : 'Notes'}</Label>
+                <p className="text-foreground/80 bg-muted p-3 rounded-lg mt-1">{viewDialog.notes}</p>
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setViewDialog(null)} className="border-slate-700 text-slate-300">
+            <Button variant="outline" onClick={() => setViewDialog(null)} className="border-border text-foreground/80">
               {isAr ? 'إغلاق' : 'Close'}
             </Button>
           </DialogFooter>
@@ -695,7 +695,7 @@ function CorrespondenceContent() {
 
       {/* Create Dialog */}
       <Dialog open={createDialog} onOpenChange={setCreateDialog}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-lg">
+        <DialogContent className="bg-card border-border text-foreground max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Plus className="w-5 h-5 text-amber-400" />
@@ -705,12 +705,12 @@ function CorrespondenceContent() {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>{isAr ? 'البلدية' : 'Municipality'}</Label>
-              <Input placeholder={isAr ? 'مثال: بلدية الشارقة' : 'e.g. Sharjah Municipality'} className="bg-slate-800/50 border-slate-700" />
+              <Input placeholder={isAr ? 'مثال: بلدية الشارقة' : 'e.g. Sharjah Municipality'} className="bg-muted border-border" />
             </div>
             <div className="space-y-2">
               <Label>{isAr ? 'نوع المراسلة' : 'Type'}</Label>
               <Select>
-                <SelectTrigger className="bg-slate-800/50 border-slate-700">
+                <SelectTrigger className="bg-muted border-border">
                   <SelectValue placeholder={isAr ? 'اختر النوع...' : 'Select type...'} />
                 </SelectTrigger>
                 <SelectContent>
@@ -722,19 +722,19 @@ function CorrespondenceContent() {
             </div>
             <div className="space-y-2">
               <Label>{isAr ? 'الموضوع' : 'Subject'}</Label>
-              <Input placeholder={isAr ? 'موضوع المراسلة' : 'Correspondence subject'} className="bg-slate-800/50 border-slate-700" />
+              <Input placeholder={isAr ? 'موضوع المراسلة' : 'Correspondence subject'} className="bg-muted border-border" />
             </div>
             <div className="space-y-2">
               <Label>{isAr ? 'تاريخ الاستحقاق' : 'Due Date'}</Label>
-              <Input type="date" className="bg-slate-800/50 border-slate-700" />
+              <Input type="date" className="bg-muted border-border" />
             </div>
             <div className="space-y-2">
               <Label>{isAr ? 'ملاحظات' : 'Notes'}</Label>
-              <Textarea placeholder={isAr ? 'ملاحظات إضافية...' : 'Additional notes...'} className="bg-slate-800/50 border-slate-700" rows={3} />
+              <Textarea placeholder={isAr ? 'ملاحظات إضافية...' : 'Additional notes...'} className="bg-muted border-border" rows={3} />
             </div>
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setCreateDialog(false)} className="border-slate-700 text-slate-300">
+            <Button variant="outline" onClick={() => setCreateDialog(false)} className="border-border text-foreground/80">
               {isAr ? 'إلغاء' : 'Cancel'}
             </Button>
             <Button onClick={() => setCreateDialog(false)} className="bg-blue-600 hover:bg-blue-700">
@@ -758,26 +758,26 @@ export default function SecretarialPage() {
     <div className="space-y-6" dir={isAr ? 'rtl' : 'ltr'}>
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-          <Calendar className="w-7 h-7 text-indigo-400" />
+        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+          <Calendar className="w-7 h-7 text-blue-400" />
           {isAr ? 'السكرتارية' : 'Secretarial'}
         </h1>
-        <p className="text-slate-400 mt-1">
+        <p className="text-muted-foreground mt-1">
           {isAr ? 'إدارة الاجتماعات والمراسلات والتقويم' : 'Manage meetings, correspondence, and calendar'}
         </p>
       </div>
 
       <Tabs defaultValue="meetings" className="space-y-6">
-        <TabsList className="bg-slate-800/50 border border-slate-700">
-          <TabsTrigger value="meetings" className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white">
+        <TabsList className="bg-muted border border-border">
+          <TabsTrigger value="meetings" className="data-[state=active]:bg-blue-600 data-[state=active]:text-foreground">
             <Calendar className="w-4 h-4 me-2" />
             {isAr ? 'الاجتماعات' : 'Meetings'}
           </TabsTrigger>
-          <TabsTrigger value="correspondence" className="data-[state=active]:bg-amber-600 data-[state=active]:text-white">
+          <TabsTrigger value="correspondence" className="data-[state=active]:bg-amber-600 data-[state=active]:text-foreground">
             <Landmark className="w-4 h-4 me-2" />
             {isAr ? 'المراسلات البلدية' : 'Municipality'}
           </TabsTrigger>
-          <TabsTrigger value="calendar" className="data-[state=active]:bg-cyan-600 data-[state=active]:text-white">
+          <TabsTrigger value="calendar" className="data-[state=active]:bg-cyan-600 data-[state=active]:text-foreground">
             <CalendarDays className="w-4 h-4 me-2" />
             {isAr ? 'التقويم' : 'Calendar'}
           </TabsTrigger>

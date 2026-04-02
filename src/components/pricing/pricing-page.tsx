@@ -162,10 +162,10 @@ export function PricingPage({
     <div className={`max-w-7xl mx-auto px-4 py-12 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-white mb-4">
+        <h1 className="text-4xl font-bold text-foreground mb-4">
           {lang === 'ar' ? 'اختر الخطة المناسبة لمكتبك' : 'Choose the Right Plan for Your Office'}
         </h1>
-        <p className="text-xl text-slate-400 mb-8">
+        <p className="text-xl text-muted-foreground mb-8">
           {lang === 'ar' 
             ? 'جميع الخطط تشمل تحديثات مجانية ودعم فني على مدار الساعة' 
             : 'All plans include free updates and 24/7 support'}
@@ -173,7 +173,7 @@ export function PricingPage({
 
         {/* Interval Toggle */}
         <div className="flex items-center justify-center gap-4">
-          <Label htmlFor="interval-toggle" className={`text-sm ${interval === 'month' ? 'text-white' : 'text-slate-400'}`}>
+          <Label htmlFor="interval-toggle" className={`text-sm ${interval === 'month' ? 'text-foreground' : 'text-muted-foreground'}`}>
             {lang === 'ar' ? 'شهري' : 'Monthly'}
           </Label>
           <Switch
@@ -181,7 +181,7 @@ export function PricingPage({
             checked={interval === 'year'}
             onCheckedChange={(checked) => setInterval(checked ? 'year' : 'month')}
           />
-          <Label htmlFor="interval-toggle" className={`text-sm ${interval === 'year' ? 'text-white' : 'text-slate-400'}`}>
+          <Label htmlFor="interval-toggle" className={`text-sm ${interval === 'year' ? 'text-foreground' : 'text-muted-foreground'}`}>
             {lang === 'ar' ? 'سنوي' : 'Yearly'}
           </Label>
           {interval === 'year' && (
@@ -202,16 +202,16 @@ export function PricingPage({
             <Card
               key={plan.id}
               className={`
-                relative bg-slate-900/50 border-slate-800 backdrop-blur-sm
+                relative bg-card border-border backdrop-blur-sm
                 ${plan.isPopular ? 'border-blue-500 ring-2 ring-blue-500/20' : ''}
                 ${isCurrentPlan ? 'border-green-500 ring-2 ring-green-500/20' : ''}
-                hover:border-slate-700 transition-all duration-300
+                hover:border-border transition-all duration-300
               `}
             >
               {/* Popular Badge */}
               {plan.isPopular && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <Badge className="bg-blue-500 text-white px-4 py-1">
+                  <Badge className="bg-blue-500 text-foreground px-4 py-1">
                     {lang === 'ar' ? 'الأكثر شعبية' : 'Most Popular'}
                   </Badge>
                 </div>
@@ -220,7 +220,7 @@ export function PricingPage({
               {/* Current Plan Badge */}
               {isCurrentPlan && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <Badge className="bg-green-500 text-white px-4 py-1">
+                  <Badge className="bg-green-500 text-foreground px-4 py-1">
                     {lang === 'ar' ? 'خطتك الحالية' : 'Your Current Plan'}
                   </Badge>
                 </div>
@@ -230,10 +230,10 @@ export function PricingPage({
                 <div className="mx-auto w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center mb-4">
                   {getPlanIcon(plan.id)}
                 </div>
-                <CardTitle className="text-2xl text-white">
+                <CardTitle className="text-2xl text-foreground">
                   {lang === 'ar' ? plan.nameAr : plan.name}
                 </CardTitle>
-                <CardDescription className="text-slate-400">
+                <CardDescription className="text-muted-foreground">
                   {lang === 'ar' ? plan.descriptionAr : plan.description}
                 </CardDescription>
               </CardHeader>
@@ -242,8 +242,8 @@ export function PricingPage({
                 {/* Price */}
                 <div className="text-center mb-6">
                   <div className="flex items-baseline justify-center gap-1">
-                    <span className="text-4xl font-bold text-white">{plan.displayPrice}</span>
-                    <span className="text-slate-400">
+                    <span className="text-4xl font-bold text-foreground">{plan.displayPrice}</span>
+                    <span className="text-muted-foreground">
                       /{interval === 'month' 
                         ? (lang === 'ar' ? 'شهر' : 'mo') 
                         : (lang === 'ar' ? 'سنة' : 'yr')}
@@ -263,27 +263,27 @@ export function PricingPage({
                   {plan.features.map((feature, index) => (
                     <li key={index} className="flex items-start gap-2">
                       <Check className="w-5 h-5 text-green-400 shrink-0 mt-0.5" />
-                      <span className="text-slate-300 text-sm">{feature}</span>
+                      <span className="text-foreground/80 text-sm">{feature}</span>
                     </li>
                   ))}
                 </ul>
 
                 {/* Limits */}
-                <div className="mt-6 pt-6 border-t border-slate-800">
-                  <h4 className="text-sm font-medium text-slate-400 mb-3">
+                <div className="mt-6 pt-6 border-t border-border">
+                  <h4 className="text-sm font-medium text-muted-foreground mb-3">
                     {lang === 'ar' ? 'الحدود' : 'Limits'}
                   </h4>
                   <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="bg-slate-800/50 rounded px-2 py-1 text-slate-300">
+                    <div className="bg-muted rounded px-2 py-1 text-foreground/80">
                       {formatLimit(plan.limits.projects, lang === 'ar' ? 'مشاريع' : 'projects')}
                     </div>
-                    <div className="bg-slate-800/50 rounded px-2 py-1 text-slate-300">
+                    <div className="bg-muted rounded px-2 py-1 text-foreground/80">
                       {formatLimit(plan.limits.users, lang === 'ar' ? 'مستخدمين' : 'users')}
                     </div>
-                    <div className="bg-slate-800/50 rounded px-2 py-1 text-slate-300">
+                    <div className="bg-muted rounded px-2 py-1 text-foreground/80">
                       {formatLimit(plan.limits.storage, 'GB')}
                     </div>
-                    <div className="bg-slate-800/50 rounded px-2 py-1 text-slate-300">
+                    <div className="bg-muted rounded px-2 py-1 text-foreground/80">
                       {formatLimit(plan.limits.aiCalls, lang === 'ar' ? 'استدعاء AI' : 'AI calls')}
                     </div>
                   </div>
@@ -295,8 +295,8 @@ export function PricingPage({
                   className={`
                     w-full
                     ${plan.isPopular 
-                      ? 'bg-blue-500 hover:bg-blue-600 text-white' 
-                      : 'bg-slate-800 hover:bg-slate-700 text-white'}
+                      ? 'bg-blue-500 hover:bg-blue-600 text-foreground' 
+                      : 'bg-muted hover:bg-secondary text-foreground'}
                     ${isCurrentPlan ? 'bg-green-500 hover:bg-green-600' : ''}
                   `}
                   onClick={() => handleSelectPlan(plan)}
@@ -321,10 +321,10 @@ export function PricingPage({
 
       {/* FAQ Section */}
       <div className="mt-16 text-center">
-        <h2 className="text-2xl font-bold text-white mb-4">
+        <h2 className="text-2xl font-bold text-foreground mb-4">
           {lang === 'ar' ? 'هل لديك أسئلة؟' : 'Have Questions?'}
         </h2>
-        <p className="text-slate-400 mb-4">
+        <p className="text-muted-foreground mb-4">
           {lang === 'ar' 
             ? 'تواصل معنا على support@blueprint.ae أو اتصل على +971 50 000 0000' 
             : 'Contact us at support@blueprint.ae or call +971 50 000 0000'}

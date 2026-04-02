@@ -596,48 +596,48 @@ export function SettingsPage() {
   // Render helper for section header
   const renderSectionHeader = (title: string, description: string) => (
     <div className="mb-6">
-      <h2 className="text-xl font-semibold text-white">{title}</h2>
-      <p className="text-sm text-slate-400 mt-1">{description}</p>
+      <h2 className="text-xl font-semibold text-foreground">{title}</h2>
+      <p className="text-sm text-muted-foreground mt-1">{description}</p>
     </div>
   );
 
   return (
     <div className="max-w-6xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">{t.settings}</h1>
-        <p className="text-slate-400 mt-1">
+        <h1 className="text-2xl font-bold text-foreground">{t.settings}</h1>
+        <p className="text-muted-foreground mt-1">
           {language === 'ar' ? 'إدارة إعدادات حسابك وشركتك' : 'Manage your account and company settings'}
         </p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="bg-slate-900/50 border border-slate-800 p-1 h-auto flex-wrap gap-1">
+        <TabsList className="bg-card border border-border p-1 h-auto flex-wrap gap-1">
           {isAdmin && (
-            <TabsTrigger value="company" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white">
+            <TabsTrigger value="company" className="data-[state=active]:bg-blue-600 data-[state=active]:text-foreground">
               <Building2 className="w-4 h-4 me-2" />
               {texts.companySettings}
             </TabsTrigger>
           )}
-          <TabsTrigger value="appearance" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white">
+          <TabsTrigger value="appearance" className="data-[state=active]:bg-blue-600 data-[state=active]:text-foreground">
             <Palette className="w-4 h-4 me-2" />
             {texts.appearance}
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white">
+          <TabsTrigger value="notifications" className="data-[state=active]:bg-blue-600 data-[state=active]:text-foreground">
             <Bell className="w-4 h-4 me-2" />
             {texts.notifications}
           </TabsTrigger>
-          <TabsTrigger value="security" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white">
+          <TabsTrigger value="security" className="data-[state=active]:bg-blue-600 data-[state=active]:text-foreground">
             <Shield className="w-4 h-4 me-2" />
             {texts.security}
           </TabsTrigger>
           {isManagerOrAdmin && (
-            <TabsTrigger value="billing" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white">
+            <TabsTrigger value="billing" className="data-[state=active]:bg-blue-600 data-[state=active]:text-foreground">
               <CreditCard className="w-4 h-4 me-2" />
               {texts.billing}
             </TabsTrigger>
           )}
           {isAdmin && (
-            <TabsTrigger value="integrations" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white">
+            <TabsTrigger value="integrations" className="data-[state=active]:bg-blue-600 data-[state=active]:text-foreground">
               <Plug className="w-4 h-4 me-2" />
               {texts.integrations}
             </TabsTrigger>
@@ -654,60 +654,60 @@ export function SettingsPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main Info Card */}
-            <Card className="lg:col-span-2 bg-slate-900/50 border-slate-800">
+            <Card className="lg:col-span-2 bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-white">{language === 'ar' ? 'المعلومات الأساسية' : 'Basic Information'}</CardTitle>
+                <CardTitle className="text-foreground">{language === 'ar' ? 'المعلومات الأساسية' : 'Basic Information'}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-slate-300">{texts.companyName}</Label>
+                    <Label className="text-foreground/80">{texts.companyName}</Label>
                     <Input
                       value={companySettings.name}
                       onChange={(e) => setCompanySettings(prev => ({ ...prev, name: e.target.value }))}
-                      className="bg-slate-800/50 border-slate-700 text-white"
+                      className="bg-muted border-border text-foreground"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-slate-300">{texts.email}</Label>
+                    <Label className="text-foreground/80">{texts.email}</Label>
                     <Input
                       type="email"
                       value={companySettings.email}
                       onChange={(e) => setCompanySettings(prev => ({ ...prev, email: e.target.value }))}
-                      className="bg-slate-800/50 border-slate-700 text-white"
+                      className="bg-muted border-border text-foreground"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-slate-300">{texts.phone}</Label>
+                    <Label className="text-foreground/80">{texts.phone}</Label>
                     <Input
                       value={companySettings.phone}
                       onChange={(e) => setCompanySettings(prev => ({ ...prev, phone: e.target.value }))}
-                      className="bg-slate-800/50 border-slate-700 text-white"
+                      className="bg-muted border-border text-foreground"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-slate-300">{texts.website}</Label>
+                    <Label className="text-foreground/80">{texts.website}</Label>
                     <Input
                       value={companySettings.website}
                       onChange={(e) => setCompanySettings(prev => ({ ...prev, website: e.target.value }))}
-                      className="bg-slate-800/50 border-slate-700 text-white"
+                      className="bg-muted border-border text-foreground"
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{texts.address}</Label>
+                  <Label className="text-foreground/80">{texts.address}</Label>
                   <Textarea
                     value={companySettings.address}
                     onChange={(e) => setCompanySettings(prev => ({ ...prev, address: e.target.value }))}
-                    className="bg-slate-800/50 border-slate-700 text-white min-h-[80px]"
+                    className="bg-muted border-border text-foreground min-h-[80px]"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{texts.taxNumber}</Label>
+                  <Label className="text-foreground/80">{texts.taxNumber}</Label>
                   <Input
                     value={companySettings.taxNumber}
                     onChange={(e) => setCompanySettings(prev => ({ ...prev, taxNumber: e.target.value }))}
-                    className="bg-slate-800/50 border-slate-700 text-white"
+                    className="bg-muted border-border text-foreground"
                   />
                 </div>
               </CardContent>
@@ -716,20 +716,20 @@ export function SettingsPage() {
             {/* Logo & Settings Card */}
             <div className="space-y-6">
               {/* Logo Upload */}
-              <Card className="bg-slate-900/50 border-slate-800">
+              <Card className="bg-card border-border">
                 <CardHeader>
-                  <CardTitle className="text-white">{texts.companyLogo}</CardTitle>
+                  <CardTitle className="text-foreground">{texts.companyLogo}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-col items-center gap-4">
-                    <div className="w-32 h-32 rounded-lg bg-slate-800 border-2 border-dashed border-slate-600 flex items-center justify-center relative overflow-hidden">
+                    <div className="w-32 h-32 rounded-lg bg-muted border-2 border-dashed border-border flex items-center justify-center relative overflow-hidden">
                       {companySettings.logo ? (
                         <Image src={companySettings.logo} alt="Logo" fill className="object-cover rounded-lg" />
                       ) : (
-                        <Building2 className="w-12 h-12 text-slate-500" />
+                        <Building2 className="w-12 h-12 text-muted-foreground" />
                       )}
                     </div>
-                    <Button variant="outline" className="bg-slate-800 border-slate-700 hover:bg-slate-700">
+                    <Button variant="outline" className="bg-muted border-border hover:bg-secondary">
                       <Upload className="w-4 h-4 me-2" />
                       {texts.uploadLogo}
                     </Button>
@@ -738,17 +738,17 @@ export function SettingsPage() {
               </Card>
 
               {/* Currency & Timezone */}
-              <Card className="bg-slate-900/50 border-slate-800">
+              <Card className="bg-card border-border">
                 <CardContent className="pt-6 space-y-4">
                   <div className="space-y-2">
-                    <Label className="text-slate-300">{texts.defaultCurrency}</Label>
+                    <Label className="text-foreground/80">{texts.defaultCurrency}</Label>
                     <Select value={currency} onValueChange={setCurrency}>
-                      <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white w-full">
+                      <SelectTrigger className="bg-muted border-border text-foreground w-full">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-slate-800 border-slate-700">
+                      <SelectContent className="bg-muted border-border">
                         {currencyOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value} className="text-white hover:bg-slate-700">
+                          <SelectItem key={option.value} value={option.value} className="text-foreground hover:bg-secondary">
                             {option.label}
                           </SelectItem>
                         ))}
@@ -756,14 +756,14 @@ export function SettingsPage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-slate-300">{texts.timezone}</Label>
+                    <Label className="text-foreground/80">{texts.timezone}</Label>
                     <Select value={companySettings.timezone} onValueChange={(v) => setCompanySettings(prev => ({ ...prev, timezone: v }))}>
-                      <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white w-full">
+                      <SelectTrigger className="bg-muted border-border text-foreground w-full">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-slate-800 border-slate-700">
+                      <SelectContent className="bg-muted border-border">
                         {timezoneOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value} className="text-white hover:bg-slate-700">
+                          <SelectItem key={option.value} value={option.value} className="text-foreground hover:bg-secondary">
                             {option.label}
                           </SelectItem>
                         ))}
@@ -776,13 +776,13 @@ export function SettingsPage() {
           </div>
 
           {/* Working Days & Hours */}
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-white">{texts.workingDays} & {texts.workingHours}</CardTitle>
+              <CardTitle className="text-foreground">{texts.workingDays} & {texts.workingHours}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-3">
-                <Label className="text-slate-300">{texts.workingDays}</Label>
+                <Label className="text-foreground/80">{texts.workingDays}</Label>
                 <div className="flex flex-wrap gap-2">
                   {workingDaysOptions.map((day) => (
                     <Button
@@ -792,7 +792,7 @@ export function SettingsPage() {
                       onClick={() => handleToggleWorkingDay(day.value)}
                       className={companySettings.workingDays.includes(day.value)
                         ? 'bg-blue-600 hover:bg-blue-700'
-                        : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
+                        : 'bg-muted border-border text-foreground/80 hover:bg-secondary'
                       }
                     >
                       {day.label}
@@ -802,7 +802,7 @@ export function SettingsPage() {
               </div>
               <div className="grid grid-cols-2 gap-4 max-w-md">
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{texts.start}</Label>
+                  <Label className="text-foreground/80">{texts.start}</Label>
                   <Input
                     type="time"
                     value={companySettings.workingHours.start}
@@ -810,11 +810,11 @@ export function SettingsPage() {
                       ...prev,
                       workingHours: { ...prev.workingHours, start: e.target.value }
                     }))}
-                    className="bg-slate-800/50 border-slate-700 text-white"
+                    className="bg-muted border-border text-foreground"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{texts.end}</Label>
+                  <Label className="text-foreground/80">{texts.end}</Label>
                   <Input
                     type="time"
                     value={companySettings.workingHours.end}
@@ -822,12 +822,12 @@ export function SettingsPage() {
                       ...prev,
                       workingHours: { ...prev.workingHours, end: e.target.value }
                     }))}
-                    className="bg-slate-800/50 border-slate-700 text-white"
+                    className="bg-muted border-border text-foreground"
                   />
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="flex justify-end border-t border-slate-800 pt-4">
+            <CardFooter className="flex justify-end border-t border-border pt-4">
               <Button onClick={handleSaveCompanySettings} className="bg-blue-600 hover:bg-blue-700">
                 <Check className="w-4 h-4 me-2" />
                 {texts.save}
@@ -846,10 +846,10 @@ export function SettingsPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Theme Selection */}
-            <Card className="bg-slate-900/50 border-slate-800">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-white">{texts.theme}</CardTitle>
-                <CardDescription className="text-slate-400">
+                <CardTitle className="text-foreground">{texts.theme}</CardTitle>
+                <CardDescription className="text-muted-foreground">
                   {language === 'ar' ? 'اختر السمة المفضلة' : 'Choose your preferred theme'}
                 </CardDescription>
               </CardHeader>
@@ -863,12 +863,12 @@ export function SettingsPage() {
                         flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all
                         ${theme === option.value
                           ? 'border-blue-500 bg-blue-500/10'
-                          : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
+                          : 'border-border bg-muted hover:border-border'
                         }
                       `}
                     >
-                      <option.icon className={`w-6 h-6 ${theme === option.value ? 'text-blue-400' : 'text-slate-400'}`} />
-                      <span className={`text-sm ${theme === option.value ? 'text-white' : 'text-slate-400'}`}>
+                      <option.icon className={`w-6 h-6 ${theme === option.value ? 'text-blue-400' : 'text-muted-foreground'}`} />
+                      <span className={`text-sm ${theme === option.value ? 'text-foreground' : 'text-muted-foreground'}`}>
                         {option.label}
                       </span>
                       {theme === option.value && <Check className="w-4 h-4 text-blue-400" />}
@@ -879,35 +879,35 @@ export function SettingsPage() {
             </Card>
 
             {/* Language Selection */}
-            <Card className="bg-slate-900/50 border-slate-800">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-white">{texts.language}</CardTitle>
-                <CardDescription className="text-slate-400">
+                <CardTitle className="text-foreground">{texts.language}</CardTitle>
+                <CardDescription className="text-muted-foreground">
                   {language === 'ar' ? 'اختر لغة الواجهة' : 'Choose the interface language'}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <Select value={language} onValueChange={setLanguage}>
-                  <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white w-full">
+                  <SelectTrigger className="bg-muted border-border text-foreground w-full">
                     <Globe className="w-4 h-4 me-2" />
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-800 border-slate-700">
-                    <SelectItem value="ar" className="text-white hover:bg-slate-700">
+                  <SelectContent className="bg-muted border-border">
+                    <SelectItem value="ar" className="text-foreground hover:bg-secondary">
                       🇸🇦 {texts.arabic}
                     </SelectItem>
-                    <SelectItem value="en" className="text-white hover:bg-slate-700">
+                    <SelectItem value="en" className="text-foreground hover:bg-secondary">
                       🇺🇸 {texts.english}
                     </SelectItem>
                   </SelectContent>
                 </Select>
 
-                <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50 border border-slate-700">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted border border-border">
                   <div>
-                    <p className="text-sm font-medium text-white">{texts.textDirection}</p>
-                    <p className="text-xs text-slate-400">{isRTL ? texts.rtl : texts.ltr}</p>
+                    <p className="text-sm font-medium text-foreground">{texts.textDirection}</p>
+                    <p className="text-xs text-muted-foreground">{isRTL ? texts.rtl : texts.ltr}</p>
                   </div>
-                  <Badge variant="secondary" className="bg-slate-700">
+                  <Badge variant="secondary" className="bg-secondary">
                     {isRTL ? 'RTL' : 'LTR'}
                   </Badge>
                 </div>
@@ -915,10 +915,10 @@ export function SettingsPage() {
             </Card>
 
             {/* Color Scheme Preview */}
-            <Card className="lg:col-span-2 bg-slate-900/50 border-slate-800">
+            <Card className="lg:col-span-2 bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-white">{texts.colorScheme}</CardTitle>
-                <CardDescription className="text-slate-400">
+                <CardTitle className="text-foreground">{texts.colorScheme}</CardTitle>
+                <CardDescription className="text-muted-foreground">
                   {language === 'ar' ? 'معاينة نظام الألوان' : 'Color scheme preview'}
                 </CardDescription>
               </CardHeader>
@@ -930,14 +930,14 @@ export function SettingsPage() {
                     { name: 'Warning', color: 'bg-yellow-500', textColor: 'text-yellow-400' },
                     { name: 'Danger', color: 'bg-red-500', textColor: 'text-red-400' },
                   ].map((scheme) => (
-                    <div key={scheme.name} className="p-4 rounded-lg bg-slate-800/50 border border-slate-700">
+                    <div key={scheme.name} className="p-4 rounded-lg bg-muted border border-border">
                       <div className={`w-full h-12 rounded-lg ${scheme.color} mb-3`} />
                       <p className={`text-sm font-medium ${scheme.textColor}`}>{scheme.name}</p>
                     </div>
                   ))}
                 </div>
               </CardContent>
-              <CardFooter className="flex justify-end border-t border-slate-800 pt-4">
+              <CardFooter className="flex justify-end border-t border-border pt-4">
                 <Button onClick={handleSaveAppearance} className="bg-blue-600 hover:bg-blue-700">
                   <Check className="w-4 h-4 me-2" />
                   {texts.save}
@@ -956,9 +956,9 @@ export function SettingsPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Email Notifications */}
-            <Card className="bg-slate-900/50 border-slate-800">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="text-foreground flex items-center gap-2">
                   <Mail className="w-5 h-5 text-blue-400" />
                   {texts.emailNotifications}
                 </CardTitle>
@@ -971,10 +971,10 @@ export function SettingsPage() {
                   { key: 'reports', label: texts.reports, icon: FileText },
                   { key: 'marketing', label: texts.marketing, icon: Zap },
                 ].map((item) => (
-                  <div key={item.key} className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30 hover:bg-slate-800/50 transition-colors">
+                  <div key={item.key} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
                     <div className="flex items-center gap-3">
-                      <item.icon className="w-4 h-4 text-slate-400" />
-                      <span className="text-slate-300">{item.label}</span>
+                      <item.icon className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-foreground/80">{item.label}</span>
                     </div>
                     <Switch
                       checked={notificationSettings.email[item.key as keyof typeof notificationSettings.email]}
@@ -989,9 +989,9 @@ export function SettingsPage() {
             </Card>
 
             {/* Push Notifications */}
-            <Card className="bg-slate-900/50 border-slate-800">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="text-foreground flex items-center gap-2">
                   <Smartphone className="w-5 h-5 text-cyan-400" />
                   {texts.pushNotifications}
                 </CardTitle>
@@ -1003,10 +1003,10 @@ export function SettingsPage() {
                   { key: 'invoices', label: texts.invoices, icon: FileText },
                   { key: 'reports', label: texts.reports, icon: FileText },
                 ].map((item) => (
-                  <div key={item.key} className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30 hover:bg-slate-800/50 transition-colors">
+                  <div key={item.key} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
                     <div className="flex items-center gap-3">
-                      <item.icon className="w-4 h-4 text-slate-400" />
-                      <span className="text-slate-300">{item.label}</span>
+                      <item.icon className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-foreground/80">{item.label}</span>
                     </div>
                     <Switch
                       checked={notificationSettings.push[item.key as keyof typeof notificationSettings.push]}
@@ -1038,52 +1038,52 @@ export function SettingsPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Change Password */}
-            <Card className="bg-slate-900/50 border-slate-800">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="text-foreground flex items-center gap-2">
                   <Key className="w-5 h-5 text-yellow-400" />
                   {texts.changePassword}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{texts.currentPassword}</Label>
+                  <Label className="text-foreground/80">{texts.currentPassword}</Label>
                   <div className="relative">
                     <Input
                       type={showPassword ? 'text' : 'password'}
                       value={passwordForm.currentPassword}
                       onChange={(e) => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
-                      className="bg-slate-800/50 border-slate-700 text-white pe-10"
+                      className="bg-muted border-border text-foreground pe-10"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                      className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{texts.newPassword}</Label>
+                  <Label className="text-foreground/80">{texts.newPassword}</Label>
                   <Input
                     type={showPassword ? 'text' : 'password'}
                     value={passwordForm.newPassword}
                     onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
-                    className="bg-slate-800/50 border-slate-700 text-white"
+                    className="bg-muted border-border text-foreground"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{texts.confirmPassword}</Label>
+                  <Label className="text-foreground/80">{texts.confirmPassword}</Label>
                   <Input
                     type={showPassword ? 'text' : 'password'}
                     value={passwordForm.confirmPassword}
                     onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                    className="bg-slate-800/50 border-slate-700 text-white"
+                    className="bg-muted border-border text-foreground"
                   />
                 </div>
               </CardContent>
-              <CardFooter className="border-t border-slate-800 pt-4">
+              <CardFooter className="border-t border-border pt-4">
                 <Button onClick={handlePasswordChange} className="bg-blue-600 hover:bg-blue-700">
                   {texts.save}
                 </Button>
@@ -1096,9 +1096,9 @@ export function SettingsPage() {
           </div>
 
           {/* Active Sessions */}
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-foreground flex items-center gap-2">
                 <Smartphone className="w-5 h-5 text-purple-400" />
                 {texts.activeSessions}
               </CardTitle>
@@ -1107,13 +1107,13 @@ export function SettingsPage() {
               <ScrollArea className="max-h-64">
                 <div className="space-y-3">
                   {securitySettings.sessions.map((session) => (
-                    <div key={session.id} className="flex items-center justify-between p-4 rounded-lg bg-slate-800/30 border border-slate-700">
+                    <div key={session.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border border-border">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center">
-                          <Smartphone className="w-5 h-5 text-slate-400" />
+                        <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center">
+                          <Smartphone className="w-5 h-5 text-muted-foreground" />
                         </div>
                         <div>
-                          <p className="text-white font-medium">
+                          <p className="text-foreground font-medium">
                             {session.device}
                             {session.current && (
                               <Badge variant="secondary" className="ms-2 bg-green-500/20 text-green-400">
@@ -1121,14 +1121,14 @@ export function SettingsPage() {
                               </Badge>
                             )}
                           </p>
-                          <p className="text-sm text-slate-400">
+                          <p className="text-sm text-muted-foreground">
                             {session.browser} • {session.location}
                           </p>
                         </div>
                       </div>
                       <div className="text-end">
-                        <p className="text-xs text-slate-400">{texts.lastActive}</p>
-                        <p className="text-sm text-slate-300">
+                        <p className="text-xs text-muted-foreground">{texts.lastActive}</p>
+                        <p className="text-sm text-foreground/80">
                           {new Date(session.lastActive).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US')}
                         </p>
                         {!session.current && (
@@ -1150,9 +1150,9 @@ export function SettingsPage() {
           </Card>
 
           {/* API Keys */}
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-foreground flex items-center gap-2">
                 <Key className="w-5 h-5 text-orange-400" />
                 {texts.apiKeys}
               </CardTitle>
@@ -1163,24 +1163,24 @@ export function SettingsPage() {
                     {texts.createApiKey}
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-slate-900 border-slate-800">
+                <DialogContent className="bg-card border-border">
                   <DialogHeader>
-                    <DialogTitle className="text-white">{texts.createApiKey}</DialogTitle>
-                    <DialogDescription className="text-slate-400">
+                    <DialogTitle className="text-foreground">{texts.createApiKey}</DialogTitle>
+                    <DialogDescription className="text-muted-foreground">
                       {language === 'ar' ? 'أدخل اسماً لمفتاح API الجديد' : 'Enter a name for your new API key'}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="py-4">
-                    <Label className="text-slate-300">{texts.keyName}</Label>
+                    <Label className="text-foreground/80">{texts.keyName}</Label>
                     <Input
                       value={newApiKeyName}
                       onChange={(e) => setNewApiKeyName(e.target.value)}
                       placeholder={language === 'ar' ? 'مثال: مفتاح الإنتاج' : 'e.g., Production Key'}
-                      className="mt-2 bg-slate-800/50 border-slate-700 text-white"
+                      className="mt-2 bg-muted border-border text-foreground"
                     />
                   </div>
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsCreateApiDialogOpen(false)} className="bg-slate-800 border-slate-700">
+                    <Button variant="outline" onClick={() => setIsCreateApiDialogOpen(false)} className="bg-muted border-border">
                       {texts.cancel}
                     </Button>
                     <Button onClick={handleCreateApiKey} className="bg-blue-600 hover:bg-blue-700">
@@ -1194,18 +1194,18 @@ export function SettingsPage() {
               <ScrollArea className="max-h-64">
                 <div className="space-y-3">
                   {securitySettings.apiKeys.map((apiKey) => (
-                    <div key={apiKey.id} className="p-4 rounded-lg bg-slate-800/30 border border-slate-700">
+                    <div key={apiKey.id} className="p-4 rounded-lg bg-muted/50 border border-border">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <p className="text-white font-medium">{apiKey.name}</p>
-                          <Badge variant="secondary" className="bg-slate-700">Active</Badge>
+                          <p className="text-foreground font-medium">{apiKey.name}</p>
+                          <Badge variant="secondary" className="bg-secondary">Active</Badge>
                         </div>
                         <div className="flex items-center gap-2">
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => handleCopyApiKey(apiKey.key)}
-                            className="text-slate-400 hover:text-white"
+                            className="text-muted-foreground hover:text-foreground"
                           >
                             <Copy className="w-4 h-4" />
                           </Button>
@@ -1215,17 +1215,17 @@ export function SettingsPage() {
                                 <Trash2 className="w-4 h-4" />
                               </Button>
                             </AlertDialogTrigger>
-                            <AlertDialogContent className="bg-slate-900 border-slate-800">
+                            <AlertDialogContent className="bg-card border-border">
                               <AlertDialogHeader>
-                                <AlertDialogTitle className="text-white">{t.confirmDelete}</AlertDialogTitle>
-                                <AlertDialogDescription className="text-slate-400">
+                                <AlertDialogTitle className="text-foreground">{t.confirmDelete}</AlertDialogTitle>
+                                <AlertDialogDescription className="text-muted-foreground">
                                   {language === 'ar'
                                     ? 'سيؤدي هذا إلى حذف مفتاح API بشكل دائم. لا يمكن التراجع عن هذا الإجراء.'
                                     : 'This will permanently delete the API key. This action cannot be undone.'}
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel className="bg-slate-800 border-slate-700">{t.cancel}</AlertDialogCancel>
+                                <AlertDialogCancel className="bg-muted border-border">{t.cancel}</AlertDialogCancel>
                                 <AlertDialogAction
                                   onClick={() => handleDeleteApiKey(apiKey.id)}
                                   className="bg-red-600 hover:bg-red-700"
@@ -1238,19 +1238,19 @@ export function SettingsPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 text-sm">
-                        <code className="flex-1 px-2 py-1 rounded bg-slate-900 text-slate-300 font-mono text-xs overflow-hidden">
+                        <code className="flex-1 px-2 py-1 rounded bg-card text-foreground/80 font-mono text-xs overflow-hidden">
                           {showApiKey === apiKey.id ? apiKey.key : '••••••••••••••••••••••••'}
                         </code>
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => setShowApiKey(showApiKey === apiKey.id ? null : apiKey.id)}
-                          className="text-slate-400 hover:text-white"
+                          className="text-muted-foreground hover:text-foreground"
                         >
                           {showApiKey === apiKey.id ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </Button>
                       </div>
-                      <div className="flex items-center gap-4 mt-2 text-xs text-slate-400">
+                      <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                         <span>{texts.created}: {apiKey.createdAt}</span>
                         <span>{texts.lastUsed}: {texts.never}</span>
                       </div>
@@ -1278,9 +1278,9 @@ export function SettingsPage() {
           )}
 
           {/* Connected Services */}
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-foreground flex items-center gap-2">
                 <Link2 className="w-5 h-5 text-green-400" />
                 {texts.connectedServices}
               </CardTitle>
@@ -1288,14 +1288,14 @@ export function SettingsPage() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {integrations.filter(i => i.connected).map((integration) => (
-                  <div key={integration.id} className="flex items-center justify-between p-4 rounded-lg bg-slate-800/30 border border-green-500/20">
+                  <div key={integration.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border border-green-500/20">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-slate-700 flex items-center justify-center text-green-400">
+                      <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center text-green-400">
                         {integration.icon}
                       </div>
                       <div>
-                        <p className="text-white font-medium">{integration.name}</p>
-                        <p className="text-sm text-slate-400">{integration.description}</p>
+                        <p className="text-foreground font-medium">{integration.name}</p>
+                        <p className="text-sm text-muted-foreground">{integration.description}</p>
                       </div>
                     </div>
                     <Button variant="outline" size="sm" className="bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20">
@@ -1308,9 +1308,9 @@ export function SettingsPage() {
           </Card>
 
           {/* Available Integrations */}
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-foreground flex items-center gap-2">
                 <Plug className="w-5 h-5 text-blue-400" />
                 {texts.availableIntegrations}
               </CardTitle>
@@ -1318,23 +1318,23 @@ export function SettingsPage() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {integrations.filter(i => !i.connected).map((integration) => (
-                  <div key={integration.id} className="flex flex-col p-4 rounded-lg bg-slate-800/30 border border-slate-700 hover:border-slate-600 transition-colors">
+                  <div key={integration.id} className="flex flex-col p-4 rounded-lg bg-muted/50 border border-border hover:border-border transition-colors">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-lg bg-slate-700 flex items-center justify-center text-slate-400">
+                      <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground">
                         {integration.icon}
                       </div>
                       <div>
-                        <p className="text-white font-medium">{integration.name}</p>
-                        <Badge variant="secondary" className="bg-slate-700 text-xs">
+                        <p className="text-foreground font-medium">{integration.name}</p>
+                        <Badge variant="secondary" className="bg-secondary text-xs">
                           {integration.category}
                         </Badge>
                       </div>
                     </div>
-                    <p className="text-sm text-slate-400 mb-4">{integration.description}</p>
+                    <p className="text-sm text-muted-foreground mb-4">{integration.description}</p>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="mt-auto bg-slate-800 border-slate-600 hover:bg-slate-700"
+                      className="mt-auto bg-muted border-border hover:bg-secondary"
                       onClick={() => handleToggleIntegration(integration.id)}
                     >
                       {texts.connect}
@@ -1346,9 +1346,9 @@ export function SettingsPage() {
           </Card>
 
           {/* Webhooks */}
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-foreground flex items-center gap-2">
                 <Webhook className="w-5 h-5 text-purple-400" />
                 {texts.webhooks}
               </CardTitle>
@@ -1360,21 +1360,21 @@ export function SettingsPage() {
             <CardContent>
               <div className="space-y-3">
                 {webhooks.map((webhook) => (
-                  <div key={webhook.id} className="flex items-center justify-between p-4 rounded-lg bg-slate-800/30 border border-slate-700">
+                  <div key={webhook.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border border-border">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
                         <Webhook className="w-5 h-5 text-purple-400" />
                       </div>
                       <div>
-                        <p className="text-white font-medium">{webhook.name}</p>
-                        <code className="text-xs text-slate-400">{webhook.url}</code>
+                        <p className="text-foreground font-medium">{webhook.name}</p>
+                        <code className="text-xs text-muted-foreground">{webhook.url}</code>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className={webhook.active ? 'bg-green-500/20 text-green-400' : 'bg-slate-700 text-slate-400'}>
+                      <Badge variant="secondary" className={webhook.active ? 'bg-green-500/20 text-green-400' : 'bg-secondary text-muted-foreground'}>
                         {webhook.active ? (language === 'ar' ? 'نشط' : 'Active') : (language === 'ar' ? 'غير نشط' : 'Inactive')}
                       </Badge>
-                      <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white">
+                      <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>

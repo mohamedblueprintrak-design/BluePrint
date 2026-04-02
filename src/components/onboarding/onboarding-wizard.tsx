@@ -182,12 +182,12 @@ export function OnboardingWizard({ isOpen, onClose }: OnboardingWizardProps) {
             {/* Greeting */}
             <div className="text-center space-y-2">
               <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                <Rocket className="w-8 h-8 text-white" />
+                <Rocket className="w-8 h-8 text-foreground" />
               </div>
-              <h2 className="text-2xl font-bold text-white">
+              <h2 className="text-2xl font-bold text-foreground">
                 {isRTL ? '👋 أهلاً بك في BluePrint!' : '👋 Welcome to BluePrint!'}
               </h2>
-              <p className="text-slate-400 text-base">
+              <p className="text-muted-foreground text-base">
                 {isRTL
                   ? 'إليك كيف تبدأ رحلتك معنا'
                   : "Here's how to get started with your journey"}
@@ -196,7 +196,7 @@ export function OnboardingWizard({ isOpen, onClose }: OnboardingWizardProps) {
 
             {/* Quick Start Options */}
             <div className="space-y-3">
-              <h3 className="text-sm font-medium text-slate-300 text-center">
+              <h3 className="text-sm font-medium text-foreground/80 text-center">
                 {isRTL ? '🚀 إيه رأيك نبدأ؟' : '🚀 What would you like to do?'}
               </h3>
               <div className="grid gap-3">
@@ -204,7 +204,7 @@ export function OnboardingWizard({ isOpen, onClose }: OnboardingWizardProps) {
                   <Card
                     key={option.id}
                     className={cn(
-                      'p-4 bg-slate-800/50 border cursor-pointer transition-all duration-200',
+                      'p-4 bg-muted border cursor-pointer transition-all duration-200',
                       option.borderColor
                     )}
                     onClick={() => handleAction(option.path)}
@@ -214,13 +214,13 @@ export function OnboardingWizard({ isOpen, onClose }: OnboardingWizardProps) {
                         <option.icon className={cn('w-5 h-5', option.color)} />
                       </div>
                       <div className="flex-1">
-                        <p className="font-medium text-white">{option.title}</p>
-                        <p className="text-sm text-slate-400">{option.description}</p>
+                        <p className="font-medium text-foreground">{option.title}</p>
+                        <p className="text-sm text-muted-foreground">{option.description}</p>
                       </div>
                       {isRTL ? (
-                        <ArrowLeft className="w-4 h-4 text-slate-500" />
+                        <ArrowLeft className="w-4 h-4 text-muted-foreground" />
                       ) : (
-                        <ArrowRight className="w-4 h-4 text-slate-500" />
+                        <ArrowRight className="w-4 h-4 text-muted-foreground" />
                       )}
                     </div>
                   </Card>
@@ -229,10 +229,10 @@ export function OnboardingWizard({ isOpen, onClose }: OnboardingWizardProps) {
             </div>
 
             {/* Features Preview */}
-            <div className="p-4 rounded-xl bg-slate-800/30 border border-slate-700/50">
+            <div className="p-4 rounded-xl bg-muted/50 border border-border/50">
               <div className="flex items-center gap-2 mb-3">
                 <Sparkles className="w-4 h-4 text-yellow-400" />
-                <span className="text-sm font-medium text-slate-300">
+                <span className="text-sm font-medium text-foreground/80">
                   {isRTL ? 'ماذا يمكنك أن تفعل؟' : 'What can you do?'}
                 </span>
               </div>
@@ -240,7 +240,7 @@ export function OnboardingWizard({ isOpen, onClose }: OnboardingWizardProps) {
                 {features.map((feature, index) => (
                   <div key={index} className="text-center">
                     <feature.icon className="w-4 h-4 text-green-400 mx-auto mb-1" />
-                    <p className="text-xs text-slate-300">{feature.title}</p>
+                    <p className="text-xs text-foreground/80">{feature.title}</p>
                   </div>
                 ))}
               </div>
@@ -252,11 +252,11 @@ export function OnboardingWizard({ isOpen, onClose }: OnboardingWizardProps) {
                 id="dontShowAgain"
                 checked={dontShowAgain}
                 onCheckedChange={(checked) => setDontShowAgain(checked as boolean)}
-                className="border-slate-600 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                className="border-border data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
               />
               <label
                 htmlFor="dontShowAgain"
-                className="text-sm text-slate-400 cursor-pointer"
+                className="text-sm text-muted-foreground cursor-pointer"
               >
                 {isRTL ? 'لا تظهر هذا مجدداً' : "Don't show this again"}
               </label>
@@ -275,17 +275,17 @@ export function OnboardingWizard({ isOpen, onClose }: OnboardingWizardProps) {
                   <Briefcase className="w-5 h-5 text-green-400" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">
+                  <h3 className="text-base font-bold text-foreground">
                     {isRTL ? 'شركتك' : 'Your Company'}
                   </h3>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-muted-foreground">
                     {isRTL ? 'هذه المعلومات ستساعدنا على تخصيص تجربتك' : 'This helps us personalize your experience'}
                   </p>
                 </div>
               </div>
               <div className="space-y-3">
                 <div>
-                  <Label htmlFor="companyName" className="text-slate-300 text-sm">
+                  <Label htmlFor="companyName" className="text-foreground/80 text-sm">
                     {isRTL ? 'اسم الشركة' : 'Company Name'}
                   </Label>
                   <Input
@@ -293,11 +293,11 @@ export function OnboardingWizard({ isOpen, onClose }: OnboardingWizardProps) {
                     value={formData.companyName}
                     onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
                     placeholder={isRTL ? 'مثال: شركة البناء الحديث' : 'e.g., Modern Construction Co.'}
-                    className="mt-1.5 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500"
+                    className="mt-1.5 bg-muted border-border text-foreground placeholder:text-muted-foreground"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="companyEmail" className="text-slate-300 text-sm">
+                  <Label htmlFor="companyEmail" className="text-foreground/80 text-sm">
                     {isRTL ? 'البريد الإلكتروني للشركة' : 'Company Email'}
                   </Label>
                   <Input
@@ -306,14 +306,14 @@ export function OnboardingWizard({ isOpen, onClose }: OnboardingWizardProps) {
                     value={formData.companyEmail}
                     onChange={(e) => setFormData({ ...formData, companyEmail: e.target.value })}
                     placeholder="info@company.com"
-                    className="mt-1.5 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500"
+                    className="mt-1.5 bg-muted border-border text-foreground placeholder:text-muted-foreground"
                   />
                 </div>
               </div>
             </div>
 
             {/* Divider */}
-            <div className="border-t border-slate-700/50" />
+            <div className="border-t border-border/50" />
 
             {/* Project Section */}
             <div>
@@ -322,17 +322,17 @@ export function OnboardingWizard({ isOpen, onClose }: OnboardingWizardProps) {
                   <Building2 className="w-5 h-5 text-blue-400" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">
+                  <h3 className="text-base font-bold text-foreground">
                     {isRTL ? 'أول مشروع' : 'First Project'}
                   </h3>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-muted-foreground">
                     {isRTL ? 'ابدأ بتتبع مشروعك الأول' : 'Start tracking your first project'}
                   </p>
                 </div>
               </div>
               <div className="space-y-3">
                 <div>
-                  <Label htmlFor="projectName" className="text-slate-300 text-sm">
+                  <Label htmlFor="projectName" className="text-foreground/80 text-sm">
                     {isRTL ? 'اسم المشروع' : 'Project Name'}
                   </Label>
                   <Input
@@ -340,11 +340,11 @@ export function OnboardingWizard({ isOpen, onClose }: OnboardingWizardProps) {
                     value={formData.projectName}
                     onChange={(e) => setFormData({ ...formData, projectName: e.target.value })}
                     placeholder={isRTL ? 'مثال: برج الأعمال' : 'e.g., Business Tower'}
-                    className="mt-1.5 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500"
+                    className="mt-1.5 bg-muted border-border text-foreground placeholder:text-muted-foreground"
                   />
                 </div>
                 <div>
-                  <Label className="text-slate-300 text-sm">
+                  <Label className="text-foreground/80 text-sm">
                     {isRTL ? 'نوع المشروع' : 'Project Type'}
                   </Label>
                   <div className="grid grid-cols-2 gap-2 mt-1.5">
@@ -359,8 +359,8 @@ export function OnboardingWizard({ isOpen, onClose }: OnboardingWizardProps) {
                         className={cn(
                           'p-3 cursor-pointer transition-all duration-200',
                           formData.projectType === type.id
-                            ? 'bg-blue-500/20 border-blue-500 text-white'
-                            : 'bg-slate-800/50 border-slate-700 text-slate-300 hover:border-slate-500'
+                            ? 'bg-blue-500/20 border-blue-500 text-foreground'
+                            : 'bg-muted border-border text-foreground/80 hover:border-border'
                         )}
                         onClick={() => setFormData({ ...formData, projectType: type.id })}
                       >
@@ -385,17 +385,17 @@ export function OnboardingWizard({ isOpen, onClose }: OnboardingWizardProps) {
                   <Users className="w-5 h-5 text-purple-400" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">
+                  <h3 className="text-base font-bold text-foreground">
                     {isRTL ? 'أضف عميل' : 'Add a Client'}
                   </h3>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-muted-foreground">
                     {isRTL ? 'أضف عميل لربطه بالمشروع' : 'Add a client to link with your project'}
                   </p>
                 </div>
               </div>
               <div className="space-y-3">
                 <div>
-                  <Label htmlFor="clientName" className="text-slate-300 text-sm">
+                  <Label htmlFor="clientName" className="text-foreground/80 text-sm">
                     {isRTL ? 'اسم العميل' : 'Client Name'}
                   </Label>
                   <Input
@@ -403,11 +403,11 @@ export function OnboardingWizard({ isOpen, onClose }: OnboardingWizardProps) {
                     value={formData.clientName}
                     onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
                     placeholder={isRTL ? 'مثال: شركة التطوير العقاري' : 'e.g., Real Estate Development Co.'}
-                    className="mt-1.5 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500"
+                    className="mt-1.5 bg-muted border-border text-foreground placeholder:text-muted-foreground"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="clientEmail" className="text-slate-300 text-sm">
+                  <Label htmlFor="clientEmail" className="text-foreground/80 text-sm">
                     {isRTL ? 'البريد الإلكتروني' : 'Client Email'}
                   </Label>
                   <Input
@@ -416,25 +416,25 @@ export function OnboardingWizard({ isOpen, onClose }: OnboardingWizardProps) {
                     value={formData.clientEmail}
                     onChange={(e) => setFormData({ ...formData, clientEmail: e.target.value })}
                     placeholder="client@company.com"
-                    className="mt-1.5 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500"
+                    className="mt-1.5 bg-muted border-border text-foreground placeholder:text-muted-foreground"
                   />
                 </div>
               </div>
             </div>
 
             {/* Divider */}
-            <div className="border-t border-slate-700/50" />
+            <div className="border-t border-border/50" />
 
             {/* You're Ready Section */}
             <div className="text-center space-y-4">
               <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-green-500/20">
-                <CheckCircle2 className="w-8 h-8 text-white" />
+                <CheckCircle2 className="w-8 h-8 text-foreground" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white mb-1">
+                <h2 className="text-xl font-bold text-foreground mb-1">
                   {isRTL ? 'أنت جاهز! 🚀' : "You're All Set! 🚀"}
                 </h2>
-                <p className="text-slate-400 text-sm">
+                <p className="text-muted-foreground text-sm">
                   {isRTL
                     ? 'تم إعداد حسابك بنجاح. لنبدأ العمل!'
                     : 'Your account is set up. Let\'s get to work!'}
@@ -450,10 +450,10 @@ export function OnboardingWizard({ isOpen, onClose }: OnboardingWizardProps) {
                 ].map((item, index) => (
                   <div
                     key={index}
-                    className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/50 text-center"
+                    className="p-3 rounded-xl bg-muted border border-border/50 text-center"
                   >
                     <item.icon className={cn('w-5 h-5 mx-auto mb-1.5', item.color)} />
-                    <p className="text-xs text-slate-300">{item.label}</p>
+                    <p className="text-xs text-foreground/80">{item.label}</p>
                   </div>
                 ))}
               </div>
@@ -468,21 +468,21 @@ export function OnboardingWizard({ isOpen, onClose }: OnboardingWizardProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleSkip(); }}>
-      <DialogContent className="sm:max-w-[500px] bg-slate-900 border-slate-800 text-white max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[500px] bg-card border-border text-foreground max-h-[90vh] overflow-y-auto">
         {/* Progress Bar */}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-slate-400">
+            <span className="text-sm text-muted-foreground">
               {isRTL ? `الخطوة ${currentStep} من ${STEPS.length}` : `Step ${currentStep} of ${STEPS.length}`}
             </span>
             <button
               onClick={handleSkip}
-              className="text-sm text-slate-500 hover:text-slate-300 transition-colors"
+              className="text-sm text-muted-foreground hover:text-foreground/80 transition-colors"
             >
               {isRTL ? 'تخطي' : 'Skip'}
             </button>
           </div>
-          <Progress value={progress} className="h-1 bg-slate-800" />
+          <Progress value={progress} className="h-1 bg-muted" />
         </div>
 
         {/* Step Indicators */}
@@ -496,7 +496,7 @@ export function OnboardingWizard({ isOpen, onClose }: OnboardingWizardProps) {
                   ? 'w-6 bg-blue-500'
                   : currentStep > step.id
                     ? 'bg-green-500'
-                    : 'bg-slate-700'
+                    : 'bg-secondary'
               )}
             />
           ))}
@@ -506,12 +506,12 @@ export function OnboardingWizard({ isOpen, onClose }: OnboardingWizardProps) {
         {renderStepContent()}
 
         {/* Navigation Buttons */}
-        <div className="flex items-center justify-between gap-4 mt-4 pt-4 border-t border-slate-800">
+        <div className="flex items-center justify-between gap-4 mt-4 pt-4 border-t border-border">
           {currentStep > 1 ? (
             <Button
               variant="ghost"
               onClick={handleBack}
-              className="text-slate-400 hover:text-white hover:bg-slate-800"
+              className="text-muted-foreground hover:text-foreground hover:bg-accent"
             >
               {isRTL ? <ArrowRight className="w-4 h-4 me-2" /> : <ArrowLeft className="w-4 h-4 me-2" />}
               {isRTL ? 'السابق' : 'Back'}
@@ -520,7 +520,7 @@ export function OnboardingWizard({ isOpen, onClose }: OnboardingWizardProps) {
             <Button
               variant="ghost"
               onClick={handleSkip}
-              className="text-slate-400 hover:text-white hover:bg-slate-800"
+              className="text-muted-foreground hover:text-foreground hover:bg-accent"
             >
               {isRTL ? 'تخطي والاستكشاف لاحقاً' : 'Skip and explore later'}
             </Button>
@@ -529,7 +529,7 @@ export function OnboardingWizard({ isOpen, onClose }: OnboardingWizardProps) {
           {currentStep < STEPS.length ? (
             <Button
               onClick={handleNext}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-blue-600 hover:bg-blue-700 text-foreground"
             >
               {isRTL ? 'التالي' : 'Next'}
               {isRTL ? <ArrowLeft className="w-4 h-4 ms-2" /> : <ArrowRight className="w-4 h-4 ms-2" />}
@@ -538,7 +538,7 @@ export function OnboardingWizard({ isOpen, onClose }: OnboardingWizardProps) {
             <Button
               onClick={handleComplete}
               disabled={isSubmitting}
-              className="bg-green-600 hover:bg-green-700 text-white"
+              className="bg-green-600 hover:bg-green-700 text-foreground"
             >
               {isSubmitting ? (
                 <Sparkles className="w-4 h-4 me-2 animate-spin" />

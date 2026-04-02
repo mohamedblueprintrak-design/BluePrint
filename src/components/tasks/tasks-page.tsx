@@ -614,7 +614,7 @@ export function TasksPage() {
     return (
       <Card 
         key={task.id}
-        className="bg-slate-800/50 border-slate-700 hover:border-slate-600 transition-all cursor-pointer group"
+        className="bg-muted border-border hover:border-border transition-all cursor-pointer group"
         onClick={() => {
           setSelectedTask(task);
           setShowTaskDetail(true);
@@ -623,7 +623,7 @@ export function TasksPage() {
         <CardContent className="p-4 space-y-3">
           {/* Header with priority, mandatory indicator, and drag handle */}
           <div className="flex items-start gap-2">
-            <GripVertical className="w-4 h-4 text-slate-500 mt-1 cursor-grab opacity-0 group-hover:opacity-100 transition-opacity" role="button" aria-label="Drag to reorder" />
+            <GripVertical className="w-4 h-4 text-muted-foreground mt-1 cursor-grab opacity-0 group-hover:opacity-100 transition-opacity" role="button" aria-label="Drag to reorder" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <div className={`w-2 h-2 rounded-full ${priorityConfig.dotColor}`} />
@@ -633,7 +633,7 @@ export function TasksPage() {
                     <Star className="w-3.5 h-3.5 text-red-400 fill-red-400" />
                   </span>
                 )}
-                <span className="text-white font-medium line-clamp-2 text-sm">
+                <span className="text-foreground font-medium line-clamp-2 text-sm">
                   {task.title}
                 </span>
               </div>
@@ -673,7 +673,7 @@ export function TasksPage() {
           
           {/* Project name */}
           {projectName && (
-            <div className="flex items-center gap-1 text-xs text-slate-400">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Tag className="w-3 h-3" />
               <span className="truncate">{projectName}</span>
             </div>
@@ -682,18 +682,18 @@ export function TasksPage() {
           {/* 1D: Dependency chain */}
           {depInfo && depInfo.depTasks.length > 0 && (
             <div className="flex items-center gap-1 text-xs">
-              <Link2 className="w-3 h-3 text-slate-500 shrink-0" />
+              <Link2 className="w-3 h-3 text-muted-foreground shrink-0" />
               <div className="flex items-center gap-1 overflow-hidden">
                 {depInfo.depTasks.slice(0, 3).map((dep: any, idx: number) => (
                   <span key={dep.id} className="flex items-center gap-1">
-                    {idx > 0 && <ChevronRight className="w-3 h-3 text-slate-600" />}
-                    <span className={`text-[10px] truncate max-w-[80px] ${dep.status === 'done' ? 'text-green-400' : 'text-slate-400'}`}>
+                    {idx > 0 && <ChevronRight className="w-3 h-3 text-muted-foreground" />}
+                    <span className={`text-[10px] truncate max-w-[80px] ${dep.status === 'done' ? 'text-green-400' : 'text-muted-foreground'}`}>
                       {dep.title}
                     </span>
                   </span>
                 ))}
                 {depInfo.total > 3 && (
-                  <span className="text-[10px] text-slate-500">
+                  <span className="text-[10px] text-muted-foreground">
                     +{depInfo.total - 3}
                   </span>
                 )}
@@ -706,7 +706,7 @@ export function TasksPage() {
           
           {/* Due date */}
           {task.dueDate && (
-            <div className={`flex items-center gap-1 text-xs ${overdue ? 'text-red-400' : 'text-slate-400'}`}>
+            <div className={`flex items-center gap-1 text-xs ${overdue ? 'text-red-400' : 'text-muted-foreground'}`}>
               <Calendar className="w-3 h-3" />
               <span>{formatDate(task.dueDate)}</span>
               {overdue && <AlertCircle className="w-3 h-3 ms-1" />}
@@ -716,8 +716,8 @@ export function TasksPage() {
           {/* Progress bar */}
           <div className="space-y-1">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-400">{t.progress}</span>
-              <span className="text-white">{task.progress || 0}%</span>
+              <span className="text-muted-foreground">{t.progress}</span>
+              <span className="text-foreground">{task.progress || 0}%</span>
             </div>
             <Progress value={task.progress || 0} className="h-1.5" />
           </div>
@@ -732,8 +732,8 @@ export function TasksPage() {
                 </AvatarFallback>
               </Avatar>
             ) : (
-              <div className="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center">
-                <User className="w-3 h-3 text-slate-500" />
+              <div className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center">
+                <User className="w-3 h-3 text-muted-foreground" />
               </div>
             )}
             
@@ -742,7 +742,7 @@ export function TasksPage() {
                 variant="ghost" 
                 size="icon" 
                 aria-label="View task"
-                className="h-6 w-6 text-slate-400 hover:text-white"
+                className="h-6 w-6 text-muted-foreground hover:text-foreground"
                 onClick={(e) => {
                   e.stopPropagation();
                   setSelectedTask(task);
@@ -755,7 +755,7 @@ export function TasksPage() {
                 variant="ghost" 
                 size="icon" 
                 aria-label="Delete task"
-                className="h-6 w-6 text-slate-400 hover:text-red-400"
+                className="h-6 w-6 text-muted-foreground hover:text-red-400"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDeleteTask(task.id);
@@ -778,20 +778,20 @@ export function TasksPage() {
     return (
       <div 
         key={status.value}
-        className="flex-shrink-0 w-80 bg-slate-900/50 rounded-lg border border-slate-800"
+        className="flex-shrink-0 w-80 bg-card rounded-lg border border-border"
       >
         {/* Column header */}
-        <div className="p-4 border-b border-slate-800">
+        <div className="p-4 border-b border-border">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className={`p-1.5 rounded ${status.color}/20`}>
                 <StatusIcon className={`w-4 h-4 ${status.color.replace('bg-', 'text-')}`} />
               </div>
-              <h3 className="font-medium text-white">
+              <h3 className="font-medium text-foreground">
                 {language === 'ar' ? status.label : status.labelEn}
               </h3>
             </div>
-            <Badge variant="secondary" className="bg-slate-800 text-slate-300">
+            <Badge variant="secondary" className="bg-muted text-foreground/80">
               {columnTasks.length}
             </Badge>
           </div>
@@ -801,7 +801,7 @@ export function TasksPage() {
         <ScrollArea className="h-[calc(100vh-400px)]">
           <div className="p-3 space-y-3">
             {columnTasks.length === 0 ? (
-              <div className="text-center py-8 text-slate-500 text-sm">
+              <div className="text-center py-8 text-muted-foreground text-sm">
                 {language === 'ar' ? 'لا توجد مهام' : 'No tasks'}
               </div>
             ) : (
@@ -820,71 +820,71 @@ export function TasksPage() {
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-blue-500/20">
                 <CheckSquare className="w-5 h-5 text-blue-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.total}</p>
-                <p className="text-sm text-slate-400">{t.tasks}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.total}</p>
+                <p className="text-sm text-muted-foreground">{t.tasks}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-gray-500/20">
                 <Circle className="w-5 h-5 text-gray-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.todo}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'قيد الانتظار' : 'To Do'}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.todo}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'قيد الانتظار' : 'To Do'}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-blue-500/20">
                 <Loader2 className="w-5 h-5 text-blue-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.inProgress}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'قيد التنفيذ' : 'In Progress'}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.inProgress}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'قيد التنفيذ' : 'In Progress'}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-green-500/20">
                 <CheckCircle2 className="w-5 h-5 text-green-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.completed}</p>
-                <p className="text-sm text-slate-400">{t.completed}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.completed}</p>
+                <p className="text-sm text-muted-foreground">{t.completed}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-red-500/20">
                 <AlertCircle className="w-5 h-5 text-red-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.overdue}</p>
-                <p className="text-sm text-slate-400">{t.overdue}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.overdue}</p>
+                <p className="text-sm text-muted-foreground">{t.overdue}</p>
               </div>
             </div>
           </CardContent>
@@ -896,21 +896,21 @@ export function TasksPage() {
         <div className="flex flex-wrap flex-1 gap-3">
           {/* Search */}
           <div className="relative flex-1 min-w-[200px] max-w-xs">
-            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder={t.search}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="ps-9 bg-slate-800/50 border-slate-700 text-white"
+              className="ps-9 bg-muted border-border text-foreground"
             />
           </div>
           
           {/* Priority Filter */}
           <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="w-[130px] bg-slate-800/50 border-slate-700 text-white">
+            <SelectTrigger className="w-[130px] bg-muted border-border text-foreground">
               <SelectValue placeholder={t.priority} />
             </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-slate-800">
+            <SelectContent className="bg-card border-border">
               <SelectItem value="all">{t.all}</SelectItem>
               {PRIORITIES.map((priority) => (
                 <SelectItem key={priority.value} value={priority.value}>
@@ -925,10 +925,10 @@ export function TasksPage() {
           
           {/* Project Filter */}
           <Select value={projectFilter} onValueChange={setProjectFilter}>
-            <SelectTrigger className="w-[150px] bg-slate-800/50 border-slate-700 text-white">
+            <SelectTrigger className="w-[150px] bg-muted border-border text-foreground">
               <SelectValue placeholder={t.project} />
             </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-slate-800">
+            <SelectContent className="bg-card border-border">
               <SelectItem value="all">{t.all}</SelectItem>
               {projects.map((project: any) => (
                 <SelectItem key={project.id} value={project.id}>
@@ -940,10 +940,10 @@ export function TasksPage() {
           
           {/* Assignee Filter */}
           <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
-            <SelectTrigger className="w-[150px] bg-slate-800/50 border-slate-700 text-white">
+            <SelectTrigger className="w-[150px] bg-muted border-border text-foreground">
               <SelectValue placeholder={t.assignedTo} />
             </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-slate-800">
+            <SelectContent className="bg-card border-border">
               <SelectItem value="all">{t.all}</SelectItem>
               {assigneeUsers.map((user) => (
                 <SelectItem key={user.id} value={user.id}>
@@ -955,10 +955,10 @@ export function TasksPage() {
           
           {/* Date Filter */}
           <Select value={dateFilter} onValueChange={setDateFilter}>
-            <SelectTrigger className="w-[140px] bg-slate-800/50 border-slate-700 text-white">
+            <SelectTrigger className="w-[140px] bg-muted border-border text-foreground">
               <SelectValue placeholder={t.dueDate} />
             </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-slate-800">
+            <SelectContent className="bg-card border-border">
               <SelectItem value="all">{t.all}</SelectItem>
               <SelectItem value="overdue">{t.overdue}</SelectItem>
               <SelectItem value="today">{t.today}</SelectItem>
@@ -973,17 +973,17 @@ export function TasksPage() {
           {/* 1B: Auto-Create Tasks Button */}
           <Dialog open={showAutoCreateDialog} onOpenChange={setShowAutoCreateDialog}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white">
+              <Button variant="outline" className="bg-muted border-border text-foreground/80 hover:bg-accent hover:text-foreground">
                 <Wand2 className="w-4 h-4 me-2" />
                 {language === 'ar' ? 'توليد مهام تلقائية' : 'Auto-Generate'}
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-md">
+            <DialogContent className="bg-card border-border text-foreground max-w-md">
               <DialogHeader>
                 <DialogTitle>
                   {language === 'ar' ? 'توليد مهام تلقائية' : 'Auto-Generate Tasks'}
                 </DialogTitle>
-                <DialogDescription className="text-slate-400">
+                <DialogDescription className="text-muted-foreground">
                   {language === 'ar' 
                     ? 'اختر المشروع ونوع المرحلة لإنشاء مهام تلقائية بناءً على القوالب'
                     : 'Select a project and phase category to auto-generate tasks from templates'}
@@ -992,12 +992,12 @@ export function TasksPage() {
               
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{t.project} *</Label>
+                  <Label className="text-foreground/80">{t.project} *</Label>
                   <Select value={autoCreateProjectId} onValueChange={setAutoCreateProjectId}>
-                    <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                    <SelectTrigger className="bg-muted border-border text-foreground">
                       <SelectValue placeholder={language === 'ar' ? 'اختر المشروع' : 'Select project'} />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-800">
+                    <SelectContent className="bg-card border-border">
                       {projects.map((project: any) => (
                         <SelectItem key={project.id} value={project.id}>
                           {project.name}
@@ -1008,14 +1008,14 @@ export function TasksPage() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label className="text-slate-300">
+                  <Label className="text-foreground/80">
                     {language === 'ar' ? 'فئة المرحلة' : 'Phase Category'} *
                   </Label>
                   <Select value={autoCreatePhaseCategory} onValueChange={setAutoCreatePhaseCategory}>
-                    <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                    <SelectTrigger className="bg-muted border-border text-foreground">
                       <SelectValue placeholder={language === 'ar' ? 'اختر فئة المرحلة' : 'Select phase category'} />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-800">
+                    <SelectContent className="bg-card border-border">
                       {PHASE_CATEGORIES.map((phase) => (
                         <SelectItem key={phase.value} value={phase.value}>
                           {language === 'ar' ? phase.labelAr : phase.labelEn}
@@ -1027,7 +1027,7 @@ export function TasksPage() {
               </div>
               
               <DialogFooter>
-                <Button variant="ghost" onClick={() => setShowAutoCreateDialog(false)} className="text-slate-400">
+                <Button variant="ghost" onClick={() => setShowAutoCreateDialog(false)} className="text-muted-foreground">
                   {t.cancel}
                 </Button>
                 <Button 
@@ -1054,36 +1054,36 @@ export function TasksPage() {
           {/* Add Task Dialog */}
           <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
             <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-foreground">
                 <Plus className="w-4 h-4 me-2" />
                 {t.newTask}
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-lg">
+            <DialogContent className="bg-card border-border text-foreground max-w-lg">
               <DialogHeader>
                 <DialogTitle>{t.newTask}</DialogTitle>
-                <DialogDescription className="text-slate-400">
+                <DialogDescription className="text-muted-foreground">
                   {language === 'ar' ? 'أدخل بيانات المهمة الجديدة' : 'Enter the new task details'}
                 </DialogDescription>
               </DialogHeader>
               
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{t.taskTitle} *</Label>
+                  <Label className="text-foreground/80">{t.taskTitle} *</Label>
                   <Input
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="bg-slate-800/50 border-slate-700 text-white"
+                    className="bg-muted border-border text-foreground"
                     placeholder={language === 'ar' ? 'أدخل عنوان المهمة' : 'Enter task title'}
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{t.description}</Label>
+                  <Label className="text-foreground/80">{t.description}</Label>
                   <Textarea
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="bg-slate-800/50 border-slate-700 text-white"
+                    className="bg-muted border-border text-foreground"
                     rows={3}
                     placeholder={language === 'ar' ? 'وصف المهمة...' : 'Task description...'}
                   />
@@ -1091,15 +1091,15 @@ export function TasksPage() {
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-slate-300">{t.project}</Label>
+                    <Label className="text-foreground/80">{t.project}</Label>
                     <Select 
                       value={formData.projectId} 
                       onValueChange={(v) => setFormData({ ...formData, projectId: v })}
                     >
-                      <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                      <SelectTrigger className="bg-muted border-border text-foreground">
                         <SelectValue placeholder={language === 'ar' ? 'اختر المشروع' : 'Select project'} />
                       </SelectTrigger>
-                      <SelectContent className="bg-slate-900 border-slate-800">
+                      <SelectContent className="bg-card border-border">
                         {projects.map((project: any) => (
                           <SelectItem key={project.id} value={project.id}>
                             {project.name}
@@ -1110,15 +1110,15 @@ export function TasksPage() {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label className="text-slate-300">{t.assignedTo}</Label>
+                    <Label className="text-foreground/80">{t.assignedTo}</Label>
                     <Select 
                       value={formData.assigneeId} 
                       onValueChange={(v) => setFormData({ ...formData, assigneeId: v })}
                     >
-                      <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                      <SelectTrigger className="bg-muted border-border text-foreground">
                         <SelectValue placeholder={language === 'ar' ? 'اختر المسؤول' : 'Select assignee'} />
                       </SelectTrigger>
-                      <SelectContent className="bg-slate-900 border-slate-800">
+                      <SelectContent className="bg-card border-border">
                         {assigneeUsers.map((user) => (
                           <SelectItem key={user.id} value={user.id}>
                             {language === 'ar' ? user.name : user.nameEn}
@@ -1131,15 +1131,15 @@ export function TasksPage() {
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-slate-300">{t.priority}</Label>
+                    <Label className="text-foreground/80">{t.priority}</Label>
                     <Select 
                       value={formData.priority} 
                       onValueChange={(v) => setFormData({ ...formData, priority: v })}
                     >
-                      <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                      <SelectTrigger className="bg-muted border-border text-foreground">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-slate-900 border-slate-800">
+                      <SelectContent className="bg-card border-border">
                         {PRIORITIES.map((priority) => (
                           <SelectItem key={priority.value} value={priority.value}>
                             <div className="flex items-center gap-2">
@@ -1153,26 +1153,26 @@ export function TasksPage() {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label className="text-slate-300">{t.dueDate}</Label>
+                    <Label className="text-foreground/80">{t.dueDate}</Label>
                     <Input
                       type="date"
                       value={formData.dueDate}
                       onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                      className="bg-slate-800/50 border-slate-700 text-white"
+                      className="bg-muted border-border text-foreground"
                     />
                   </div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-slate-300">
+                    <Label className="text-foreground/80">
                       {language === 'ar' ? 'الساعات المقدرة' : 'Estimated Hours'}
                     </Label>
                     <Input
                       type="number"
                       value={formData.estimatedHours}
                       onChange={(e) => setFormData({ ...formData, estimatedHours: e.target.value })}
-                      className="bg-slate-800/50 border-slate-700 text-white"
+                      className="bg-muted border-border text-foreground"
                       placeholder="0"
                       min="0"
                       step="0.5"
@@ -1180,14 +1180,14 @@ export function TasksPage() {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label className="text-slate-300">{t.tags}</Label>
+                    <Label className="text-foreground/80">{t.tags}</Label>
                     <Input
                       value={formData.tags}
                       onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                      className="bg-slate-800/50 border-slate-700 text-white"
+                      className="bg-muted border-border text-foreground"
                       placeholder={language === 'ar' ? 'تصميم, تطوير' : 'design, development'}
                     />
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-muted-foreground">
                       {language === 'ar' ? 'افصل بفاصلة' : 'Separate with commas'}
                     </p>
                   </div>
@@ -1198,7 +1198,7 @@ export function TasksPage() {
                 <Button 
                   variant="ghost" 
                   onClick={() => setShowAddDialog(false)} 
-                  className="text-slate-400"
+                  className="text-muted-foreground"
                 >
                   {t.cancel}
                 </Button>
@@ -1218,7 +1218,7 @@ export function TasksPage() {
       {/* Kanban Board */}
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="text-slate-400">{t.loading}</div>
+          <div className="text-muted-foreground">{t.loading}</div>
         </div>
       ) : (
         <div className="flex gap-4 overflow-x-auto pb-4">
@@ -1228,7 +1228,7 @@ export function TasksPage() {
       
       {/* Task Detail Dialog */}
       <Dialog open={showTaskDetail} onOpenChange={setShowTaskDetail}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-lg max-h-[85vh] overflow-y-auto">
+        <DialogContent className="bg-card border-border text-foreground max-w-lg max-h-[85vh] overflow-y-auto">
           {selectedTask && (
             <>
               <DialogHeader>
@@ -1239,14 +1239,14 @@ export function TasksPage() {
                     {(selectedTask as any).isMandatory && (
                       <Star className="w-4 h-4 text-red-400 fill-red-400" />
                     )}
-                    <DialogTitle className="text-white">
+                    <DialogTitle className="text-foreground">
                       {selectedTask.title}
                     </DialogTitle>
                   </div>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-slate-400 hover:text-red-400"
+                    className="h-8 w-8 text-muted-foreground hover:text-red-400"
                     onClick={() => handleDeleteTask(selectedTask.id)}
                   >
                     <Trash2 className="w-4 h-4" />
@@ -1257,7 +1257,7 @@ export function TasksPage() {
               <div className="space-y-4 py-4">
                 {/* Status selector */}
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{t.status}</Label>
+                  <Label className="text-foreground/80">{t.status}</Label>
                   <div className="flex gap-2 flex-wrap">
                     {TASK_STATUSES.map((status) => {
                       const StatusIcon = status.icon;
@@ -1268,8 +1268,8 @@ export function TasksPage() {
                           variant={isActive ? 'default' : 'outline'}
                           size="sm"
                           className={isActive 
-                            ? `${status.color} text-white` 
-                            : 'border-slate-700 text-slate-400 hover:text-white'
+                            ? `${status.color} text-foreground` 
+                            : 'border-border text-muted-foreground hover:text-foreground'
                           }
                           onClick={() => handleUpdateTaskStatus(selectedTask.id, status.value)}
                         >
@@ -1284,8 +1284,8 @@ export function TasksPage() {
                 {/* Description */}
                 {selectedTask.description && (
                   <div className="space-y-2">
-                    <Label className="text-slate-300">{t.description}</Label>
-                    <p className="text-slate-400 text-sm bg-slate-800/50 p-3 rounded-lg">
+                    <Label className="text-foreground/80">{t.description}</Label>
+                    <p className="text-muted-foreground text-sm bg-muted p-3 rounded-lg">
                       {selectedTask.description}
                     </p>
                   </div>
@@ -1301,7 +1301,7 @@ export function TasksPage() {
                   
                   return (slaStatus || taskType || govEntity || depInfo) ? (
                     <div className="space-y-2">
-                      <Label className="text-slate-300">
+                      <Label className="text-foreground/80">
                         {language === 'ar' ? 'معلومات إضافية' : 'Additional Info'}
                       </Label>
                       <div className="flex flex-wrap gap-2">
@@ -1337,13 +1337,13 @@ export function TasksPage() {
                 <div className="grid grid-cols-2 gap-4">
                   {selectedTask.projectId && (
                     <div className="space-y-1">
-                      <Label className="text-slate-400 text-xs">{t.project}</Label>
-                      <p className="text-white text-sm">{getProjectName(selectedTask.projectId)}</p>
+                      <Label className="text-muted-foreground text-xs">{t.project}</Label>
+                      <p className="text-foreground text-sm">{getProjectName(selectedTask.projectId)}</p>
                     </div>
                   )}
                   
                   <div className="space-y-1">
-                    <Label className="text-slate-400 text-xs">{t.assignedTo}</Label>
+                    <Label className="text-muted-foreground text-xs">{t.assignedTo}</Label>
                     <div className="flex items-center gap-2">
                       {getAssignee(selectedTask.assignedToId) ? (
                         <>
@@ -1355,7 +1355,7 @@ export function TasksPage() {
                               }
                             </AvatarFallback>
                           </Avatar>
-                          <span className="text-white text-sm">
+                          <span className="text-foreground text-sm">
                             {language === 'ar' 
                               ? getAssignee(selectedTask.assignedToId)?.name 
                               : getAssignee(selectedTask.assignedToId)?.nameEn
@@ -1363,7 +1363,7 @@ export function TasksPage() {
                           </span>
                         </>
                       ) : (
-                        <span className="text-slate-500 text-sm">
+                        <span className="text-muted-foreground text-sm">
                           {language === 'ar' ? 'غير معين' : 'Unassigned'}
                         </span>
                       )}
@@ -1372,10 +1372,10 @@ export function TasksPage() {
                   
                   {selectedTask.dueDate && (
                     <div className="space-y-1">
-                      <Label className="text-slate-400 text-xs">{t.dueDate}</Label>
+                      <Label className="text-muted-foreground text-xs">{t.dueDate}</Label>
                       <div className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4 text-slate-400" />
-                        <span className={`text-sm ${isTaskOverdue(selectedTask) ? 'text-red-400' : 'text-white'}`}>
+                        <Calendar className="w-4 h-4 text-muted-foreground" />
+                        <span className={`text-sm ${isTaskOverdue(selectedTask) ? 'text-red-400' : 'text-foreground'}`}>
                           {formatDate(selectedTask.dueDate)}
                         </span>
                         {isTaskOverdue(selectedTask) && (
@@ -1389,12 +1389,12 @@ export function TasksPage() {
                   
                   {selectedTask.estimatedHours && (
                     <div className="space-y-1">
-                      <Label className="text-slate-400 text-xs">
+                      <Label className="text-muted-foreground text-xs">
                         {language === 'ar' ? 'الساعات المقدرة' : 'Estimated Hours'}
                       </Label>
                       <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4 text-slate-400" />
-                        <span className="text-white text-sm">{selectedTask.estimatedHours}h</span>
+                        <Clock className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-foreground text-sm">{selectedTask.estimatedHours}h</span>
                       </div>
                     </div>
                   )}
@@ -1403,10 +1403,10 @@ export function TasksPage() {
                 {/* Tags */}
                 {selectedTask.tags && selectedTask.tags.length > 0 && (
                   <div className="space-y-2">
-                    <Label className="text-slate-300">{t.tags}</Label>
+                    <Label className="text-foreground/80">{t.tags}</Label>
                     <div className="flex flex-wrap gap-2">
                       {selectedTask.tags.map((tag, index) => (
-                        <Badge key={index} variant="secondary" className="bg-slate-800 text-slate-300">
+                        <Badge key={index} variant="secondary" className="bg-muted text-foreground/80">
                           {tag}
                         </Badge>
                       ))}
@@ -1417,8 +1417,8 @@ export function TasksPage() {
                 {/* Progress */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label className="text-slate-300">{t.progress}</Label>
-                    <span className="text-white text-sm">{selectedTask.progress || 0}%</span>
+                    <Label className="text-foreground/80">{t.progress}</Label>
+                    <span className="text-foreground text-sm">{selectedTask.progress || 0}%</span>
                   </div>
                   <Progress value={selectedTask.progress || 0} className="h-2" />
                 </div>
@@ -1427,12 +1427,12 @@ export function TasksPage() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <ListChecks className="w-4 h-4 text-slate-400" />
-                      <Label className="text-slate-300">
+                      <ListChecks className="w-4 h-4 text-muted-foreground" />
+                      <Label className="text-foreground/80">
                         {language === 'ar' ? 'المهام الفرعية' : 'Subtasks'}
                       </Label>
                       {subtasks.length > 0 && (
-                        <Badge variant="secondary" className="bg-slate-800 text-slate-400 text-xs">
+                        <Badge variant="secondary" className="bg-muted text-muted-foreground text-xs">
                           {completedSubtasksCount}/{subtasks.length}
                         </Badge>
                       )}
@@ -1442,14 +1442,14 @@ export function TasksPage() {
                   {/* Subtask list */}
                   {isLoadingSubtasks ? (
                     <div className="flex items-center justify-center py-3">
-                      <Loader2 className="w-4 h-4 text-slate-400 animate-spin" />
+                      <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
                     </div>
                   ) : (
                     <div className="space-y-1.5 max-h-48 overflow-y-auto">
                       {subtasks.map((subtask) => (
                         <div 
                           key={subtask.id}
-                          className="flex items-center gap-2 p-2 rounded-lg bg-slate-800/30 hover:bg-slate-800/50 transition-colors group/sub"
+                          className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors group/sub"
                         >
                           <button
                             onClick={() => handleToggleSubtask(subtask.id, subtask.completed)}
@@ -1458,10 +1458,10 @@ export function TasksPage() {
                             {subtask.completed ? (
                               <CheckCircle2 className="w-4 h-4 text-green-400" />
                             ) : (
-                              <Circle className="w-4 h-4 text-slate-500 hover:text-slate-300" />
+                              <Circle className="w-4 h-4 text-muted-foreground hover:text-foreground/80" />
                             )}
                           </button>
-                          <span className={`text-sm flex-1 ${subtask.completed ? 'line-through text-slate-500' : 'text-slate-300'}`}>
+                          <span className={`text-sm flex-1 ${subtask.completed ? 'line-through text-muted-foreground' : 'text-foreground/80'}`}>
                             {subtask.title}
                           </span>
                           <Badge 
@@ -1469,7 +1469,7 @@ export function TasksPage() {
                             className={`text-[10px] px-1.5 py-0 h-4 border ${
                               subtask.completed 
                                 ? 'bg-green-500/10 text-green-400 border-green-500/20' 
-                                : 'bg-slate-700/50 text-slate-400 border-slate-600/30'
+                                : 'bg-secondary/50 text-muted-foreground border-border/30'
                             }`}
                           >
                             {subtask.status === 'done' 
@@ -1494,12 +1494,12 @@ export function TasksPage() {
                         }
                       }}
                       placeholder={language === 'ar' ? 'إضافة مهمة فرعية...' : 'Add subtask...'}
-                      className="bg-slate-800/50 border-slate-700 text-white text-sm h-8"
+                      className="bg-muted border-border text-foreground text-sm h-8"
                     />
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-8 px-2 text-slate-400 hover:text-white"
+                      className="h-8 px-2 text-muted-foreground hover:text-foreground"
                       onClick={handleAddSubtask}
                       disabled={!newSubtaskTitle.trim()}
                     >
@@ -1508,10 +1508,10 @@ export function TasksPage() {
                   </div>
                 </div>
                 
-                <Separator className="bg-slate-800" />
+                <Separator className="bg-muted" />
                 
                 {/* Dates */}
-                <div className="flex items-center justify-between text-xs text-slate-500">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>{language === 'ar' ? 'تاريخ الإنشاء' : 'Created'}: {formatDate(selectedTask.createdAt)}</span>
                   {selectedTask.completedAt && (
                     <span>{language === 'ar' ? 'تاريخ الإكمال' : 'Completed'}: {formatDate(selectedTask.completedAt)}</span>
@@ -1523,7 +1523,7 @@ export function TasksPage() {
                 <Button 
                   variant="ghost" 
                   onClick={() => setShowTaskDetail(false)} 
-                  className="text-slate-400"
+                  className="text-muted-foreground"
                 >
                   {t.close}
                 </Button>

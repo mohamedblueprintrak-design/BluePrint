@@ -302,11 +302,11 @@ export function ActivitiesPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Activity className="w-7 h-7 text-cyan-400" />
             {language === 'ar' ? 'سجل النشاطات' : 'Activity Log'}
           </h1>
-          <p className="text-slate-400 mt-1">
+          <p className="text-muted-foreground mt-1">
             {language === 'ar' ? 'تتبع جميع النشاطات والأحداث في النظام' : 'Track all activities and events in the system'}
           </p>
         </div>
@@ -315,12 +315,12 @@ export function ActivitiesPage() {
             variant="outline"
             size="sm"
             onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-            className="border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700 hover:text-white"
+            className="border-border bg-muted text-foreground/80 hover:bg-secondary hover:text-foreground"
           >
             <Filter className="w-4 h-4 me-2" />
             {language === 'ar' ? 'فلاتر متقدمة' : 'Advanced Filters'}
             {activeFilterCount > 0 && (
-              <Badge className="ms-2 bg-cyan-500 text-white text-xs px-1.5 py-0.5 min-w-5 text-center">
+              <Badge className="ms-2 bg-cyan-500 text-foreground text-xs px-1.5 py-0.5 min-w-5 text-center">
                 {activeFilterCount}
               </Badge>
             )}
@@ -329,7 +329,7 @@ export function ActivitiesPage() {
             variant="outline"
             size="sm"
             onClick={() => setExportDialogOpen(true)}
-            className="border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-emerald-500/20 hover:border-emerald-500 hover:text-emerald-400"
+            className="border-border bg-muted text-foreground/80 hover:bg-emerald-500/20 hover:border-emerald-500 hover:text-emerald-400"
           >
             <FileDown className="w-4 h-4 me-2" />
             {language === 'ar' ? 'تصدير CSV' : 'Export CSV'}
@@ -339,41 +339,41 @@ export function ActivitiesPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-cyan-500/20">
                 <Activity className="w-5 h-5 text-cyan-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.total}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'إجمالي النشاطات' : 'Total Activities'}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.total}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'إجمالي النشاطات' : 'Total Activities'}</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-green-500/20">
                 <Clock className="w-5 h-5 text-green-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.today}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'اليوم' : 'Today'}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.today}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'اليوم' : 'Today'}</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-purple-500/20">
                 <Calendar className="w-5 h-5 text-purple-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.thisWeek}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'هذا الأسبوع' : 'This Week'}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.thisWeek}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'هذا الأسبوع' : 'This Week'}</p>
               </div>
             </div>
           </CardContent>
@@ -381,27 +381,27 @@ export function ActivitiesPage() {
       </div>
 
       {/* Filters */}
-      <Card className="bg-slate-900/50 border-slate-800">
+      <Card className="bg-card border-border">
         <CardContent className="p-4">
           <div className="flex flex-col gap-4">
             {/* Main filter row */}
             <div className="flex flex-col md:flex-row gap-3">
               <div className="relative flex-1">
-                <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   placeholder={t.search}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="ps-9 bg-slate-800/50 border-slate-700 text-white"
+                  className="ps-9 bg-muted border-border text-foreground"
                 />
               </div>
 
               <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-[160px] bg-slate-800/50 border-slate-700 text-white">
-                  <Filter className="w-4 h-4 me-2 text-slate-400" />
+                <SelectTrigger className="w-[160px] bg-muted border-border text-foreground">
+                  <Filter className="w-4 h-4 me-2 text-muted-foreground" />
                   <SelectValue placeholder={t.type} />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800">
+                <SelectContent className="bg-card border-border">
                   <SelectItem value="all">{t.all}</SelectItem>
                   {ACTIVITY_TYPES.map((type) => (
                     <SelectItem key={type.value} value={type.value}>
@@ -412,10 +412,10 @@ export function ActivitiesPage() {
               </Select>
 
               <Select value={actionFilter} onValueChange={setActionFilter}>
-                <SelectTrigger className="w-[160px] bg-slate-800/50 border-slate-700 text-white">
+                <SelectTrigger className="w-[160px] bg-muted border-border text-foreground">
                   <SelectValue placeholder={language === 'ar' ? 'الإجراء' : 'Action'} />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800">
+                <SelectContent className="bg-card border-border">
                   <SelectItem value="all">{t.all}</SelectItem>
                   {ACTION_TYPES.map((action) => (
                     <SelectItem key={action.value} value={action.value}>
@@ -428,38 +428,38 @@ export function ActivitiesPage() {
 
             {/* Advanced filters */}
             {showAdvancedFilters && (
-              <div className="flex flex-col md:flex-row gap-3 pt-2 border-t border-slate-800">
+              <div className="flex flex-col md:flex-row gap-3 pt-2 border-t border-border">
                 <div className="flex-1">
-                  <Label className="text-xs text-slate-400 mb-1.5 block">
+                  <Label className="text-xs text-muted-foreground mb-1.5 block">
                     {language === 'ar' ? 'من تاريخ' : 'Start Date'}
                   </Label>
                   <Input
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="bg-slate-800/50 border-slate-700 text-white"
+                    className="bg-muted border-border text-foreground"
                   />
                 </div>
                 <div className="flex-1">
-                  <Label className="text-xs text-slate-400 mb-1.5 block">
+                  <Label className="text-xs text-muted-foreground mb-1.5 block">
                     {language === 'ar' ? 'إلى تاريخ' : 'End Date'}
                   </Label>
                   <Input
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="bg-slate-800/50 border-slate-700 text-white"
+                    className="bg-muted border-border text-foreground"
                   />
                 </div>
                 <div className="flex-1">
-                  <Label className="text-xs text-slate-400 mb-1.5 block">
+                  <Label className="text-xs text-muted-foreground mb-1.5 block">
                     {language === 'ar' ? 'المستخدم' : 'User'}
                   </Label>
                   <Select value={userFilter} onValueChange={setUserFilter}>
-                    <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                    <SelectTrigger className="bg-muted border-border text-foreground">
                       <SelectValue placeholder={language === 'ar' ? 'جميع المستخدمين' : 'All Users'} />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-800">
+                    <SelectContent className="bg-card border-border">
                       <SelectItem value="all">{language === 'ar' ? 'جميع المستخدمين' : 'All Users'}</SelectItem>
                       {teamMembers.map((member) => (
                         <SelectItem key={member.id} value={member.id}>
@@ -489,11 +489,11 @@ export function ActivitiesPage() {
       </Card>
 
       {/* Activity Timeline */}
-      <Card className="bg-slate-900/50 border-slate-800">
+      <Card className="bg-card border-border">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-white">{language === 'ar' ? 'النشاطات الأخيرة' : 'Recent Activities'}</CardTitle>
-            <p className="text-sm text-slate-400 mt-1">
+            <CardTitle className="text-foreground">{language === 'ar' ? 'النشاطات الأخيرة' : 'Recent Activities'}</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
               {language === 'ar'
                 ? `عرض ${filteredActivities.length} من ${pagination.total} نشاط`
                 : `Showing ${filteredActivities.length} of ${pagination.total} activities`}
@@ -506,7 +506,7 @@ export function ActivitiesPage() {
               <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
             </div>
           ) : filteredActivities.length === 0 ? (
-            <div className="text-center py-12 text-slate-400">
+            <div className="text-center py-12 text-muted-foreground">
               <Activity className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p>{language === 'ar' ? 'لا توجد نشاطات' : 'No activities found'}</p>
             </div>
@@ -514,7 +514,7 @@ export function ActivitiesPage() {
             <>
               <ScrollArea className="h-[500px]">
                 <div className="relative">
-                  <div className="absolute start-8 top-0 bottom-0 w-px bg-slate-800" />
+                  <div className="absolute start-8 top-0 bottom-0 w-px bg-muted" />
                   <div className="space-y-6">
                     {filteredActivities.map((activity) => {
                       const typeInfo = getActivityTypeInfo(activity.entityType);
@@ -523,30 +523,30 @@ export function ActivitiesPage() {
 
                       return (
                         <div key={activity.id} className="relative flex gap-4 ps-2 group">
-                          <div className={`relative z-10 w-12 h-12 rounded-full ${typeInfo.color}/20 border-2 border-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                            <TypeIcon className="w-5 h-5 text-white" />
+                          <div className={`relative z-10 w-12 h-12 rounded-full ${typeInfo.color}/20 border-2 border-border flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                            <TypeIcon className="w-5 h-5 text-foreground" />
                           </div>
                           <div className="flex-1 pb-6">
                             <div className="flex items-start justify-between">
                               <div>
                                 <div className="flex items-center gap-2 mb-1">
-                                  <Badge variant="outline" className={`border-slate-700 ${actionInfo.color}`}>
+                                  <Badge variant="outline" className={`border-border ${actionInfo.color}`}>
                                     {language === 'ar' ? actionInfo.label : actionInfo.labelEn}
                                   </Badge>
-                                  <Badge variant="secondary" className="bg-slate-800 text-slate-300">
+                                  <Badge variant="secondary" className="bg-muted text-foreground/80">
                                     {language === 'ar' ? typeInfo.label : typeInfo.labelEn}
                                   </Badge>
                                 </div>
-                                <h3 className="text-white font-medium">{activity.description}</h3>
+                                <h3 className="text-foreground font-medium">{activity.description}</h3>
                               </div>
-                              <span className="text-xs text-slate-500 whitespace-nowrap">
+                              <span className="text-xs text-muted-foreground whitespace-nowrap">
                                 {getTimeAgo(activity.createdAt)}
                               </span>
                             </div>
-                            <div className="flex items-center gap-4 mt-3 text-xs text-slate-500">
+                            <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
                               <div className="flex items-center gap-1">
                                 <Avatar className="w-5 h-5">
-                                  <AvatarFallback className="bg-blue-600 text-white text-[8px]">
+                                  <AvatarFallback className="bg-blue-600 text-foreground text-[8px]">
                                     {activity.userName?.[0] || 'U'}
                                   </AvatarFallback>
                                 </Avatar>
@@ -563,8 +563,8 @@ export function ActivitiesPage() {
 
               {/* Pagination */}
               {pagination.totalPages > 1 && (
-                <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-800">
-                  <p className="text-sm text-slate-400">
+                <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
+                  <p className="text-sm text-muted-foreground">
                     {language === 'ar'
                       ? `صفحة ${pagination.page} من ${pagination.totalPages}`
                       : `Page ${pagination.page} of ${pagination.totalPages}`}
@@ -575,7 +575,7 @@ export function ActivitiesPage() {
                       size="sm"
                       onClick={() => goToPage(pagination.page - 1)}
                       disabled={pagination.page <= 1}
-                      className="border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700 disabled:opacity-50"
+                      className="border-border bg-muted text-foreground/80 hover:bg-secondary disabled:opacity-50"
                     >
                       {(language as string) === 'rtl' ? (
                         <ChevronRight className="w-4 h-4" />
@@ -585,7 +585,7 @@ export function ActivitiesPage() {
                     </Button>
                     {getPageNumbers().map((pageNum, idx) =>
                       typeof pageNum === 'string' ? (
-                        <span key={`dots-${idx}`} className="px-2 text-slate-500">...</span>
+                        <span key={`dots-${idx}`} className="px-2 text-muted-foreground">...</span>
                       ) : (
                         <Button
                           key={pageNum}
@@ -594,8 +594,8 @@ export function ActivitiesPage() {
                           onClick={() => goToPage(pageNum)}
                           className={
                             pageNum === pagination.page
-                              ? 'bg-cyan-500 text-white hover:bg-cyan-600'
-                              : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700'
+                              ? 'bg-cyan-500 text-foreground hover:bg-cyan-600'
+                              : 'border-border bg-muted text-foreground/80 hover:bg-secondary'
                           }
                         >
                           {pageNum}
@@ -607,7 +607,7 @@ export function ActivitiesPage() {
                       size="sm"
                       onClick={() => goToPage(pagination.page + 1)}
                       disabled={pagination.page >= pagination.totalPages}
-                      className="border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700 disabled:opacity-50"
+                      className="border-border bg-muted text-foreground/80 hover:bg-secondary disabled:opacity-50"
                     >
                       {(language as string) === 'rtl' ? (
                         <ChevronLeft className="w-4 h-4" />
@@ -625,13 +625,13 @@ export function ActivitiesPage() {
 
       {/* CSV Export Dialog */}
       <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-md">
+        <DialogContent className="bg-card border-border text-foreground max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileDown className="w-5 h-5 text-emerald-400" />
               {language === 'ar' ? 'تصدير سجل النشاطات' : 'Export Activity Log'}
             </DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-muted-foreground">
               {language === 'ar'
                 ? 'اختر الفلاتر المطلوبة لتصدير البيانات كملف CSV'
                 : 'Choose filters to export data as a CSV file'}
@@ -639,36 +639,36 @@ export function ActivitiesPage() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label className="text-sm text-slate-300">
+              <Label className="text-sm text-foreground/80">
                 {language === 'ar' ? 'من تاريخ' : 'Start Date'}
               </Label>
               <Input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="bg-slate-800/50 border-slate-700 text-white"
+                className="bg-muted border-border text-foreground"
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-sm text-slate-300">
+              <Label className="text-sm text-foreground/80">
                 {language === 'ar' ? 'إلى تاريخ' : 'End Date'}
               </Label>
               <Input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="bg-slate-800/50 border-slate-700 text-white"
+                className="bg-muted border-border text-foreground"
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-sm text-slate-300">
+              <Label className="text-sm text-foreground/80">
                 {language === 'ar' ? 'نوع الكيان' : 'Entity Type'}
               </Label>
               <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                <SelectTrigger className="bg-muted border-border text-foreground">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800">
+                <SelectContent className="bg-card border-border">
                   <SelectItem value="all">{t.all}</SelectItem>
                   {ACTIVITY_TYPES.map((type) => (
                     <SelectItem key={type.value} value={type.value}>
@@ -679,14 +679,14 @@ export function ActivitiesPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label className="text-sm text-slate-300">
+              <Label className="text-sm text-foreground/80">
                 {language === 'ar' ? 'المستخدم' : 'User'}
               </Label>
               <Select value={userFilter} onValueChange={setUserFilter}>
-                <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                <SelectTrigger className="bg-muted border-border text-foreground">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800">
+                <SelectContent className="bg-card border-border">
                   <SelectItem value="all">{language === 'ar' ? 'جميع المستخدمين' : 'All Users'}</SelectItem>
                   {teamMembers.map((member) => (
                     <SelectItem key={member.id} value={member.id}>
@@ -701,14 +701,14 @@ export function ActivitiesPage() {
             <Button
               variant="outline"
               onClick={() => setExportDialogOpen(false)}
-              className="border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700"
+              className="border-border bg-muted text-foreground/80 hover:bg-secondary"
             >
               {t.cancel}
             </Button>
             <Button
               onClick={handleExportCSV}
               disabled={exportLoading}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="bg-emerald-600 hover:bg-emerald-700 text-foreground"
             >
               {exportLoading ? (
                 <Loader2 className="w-4 h-4 me-2 animate-spin" />

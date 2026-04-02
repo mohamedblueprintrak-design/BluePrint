@@ -54,22 +54,22 @@ export default function OverviewTab({
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Project Details Card */}
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base text-white">
+            <CardTitle className="text-base text-foreground">
               {isAr ? 'تفاصيل المشروع' : 'Project Details'}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-slate-500 text-xs mb-1">{t.type}</p>
-                <p className="text-white">
+                <p className="text-muted-foreground text-xs mb-1">{t.type}</p>
+                <p className="text-foreground">
                   {isAr ? tc.labelAr : tc.labelEn}
                 </p>
               </div>
               <div>
-                <p className="text-slate-500 text-xs mb-1">
+                <p className="text-muted-foreground text-xs mb-1">
                   {t.projectStatus}
                 </p>
                 <Badge
@@ -80,45 +80,45 @@ export default function OverviewTab({
                 </Badge>
               </div>
               <div>
-                <p className="text-slate-500 text-xs mb-1">
+                <p className="text-muted-foreground text-xs mb-1">
                   {t.startDate}
                 </p>
-                <p className="text-white">
+                <p className="text-foreground">
                   {formatDate(project.startDate)}
                 </p>
               </div>
               <div>
-                <p className="text-slate-500 text-xs mb-1">
+                <p className="text-muted-foreground text-xs mb-1">
                   {t.endDate}
                 </p>
-                <p className="text-white">
+                <p className="text-foreground">
                   {project.endDate
                     ? formatDate(project.endDate)
                     : '—'}
                 </p>
               </div>
               <div>
-                <p className="text-slate-500 text-xs mb-1">
+                <p className="text-muted-foreground text-xs mb-1">
                   {isAr ? 'المدير' : 'Manager'}
                 </p>
-                <p className="text-white">
+                <p className="text-foreground">
                   {project.manager?.name || '—'}
                 </p>
               </div>
               <div>
-                <p className="text-slate-500 text-xs mb-1">
+                <p className="text-muted-foreground text-xs mb-1">
                   {t.client}
                 </p>
-                <p className="text-white">
+                <p className="text-foreground">
                   {project.client?.name || '—'}
                 </p>
               </div>
               {project.location && (
                 <div className="col-span-2">
-                  <p className="text-slate-500 text-xs mb-1">
+                  <p className="text-muted-foreground text-xs mb-1">
                     {t.projectLocation}
                   </p>
-                  <p className="text-white">{project.location}</p>
+                  <p className="text-foreground">{project.location}</p>
                 </div>
               )}
             </div>
@@ -126,9 +126,9 @@ export default function OverviewTab({
         </Card>
 
         {/* Engineering Status Card */}
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base text-white">
+            <CardTitle className="text-base text-foreground">
               {isAr
                 ? 'حالة المراحل الهندسية'
                 : 'Engineering Phase Status'}
@@ -150,7 +150,7 @@ export default function OverviewTab({
               />
             ))}
             {totalPhases === 0 && (
-              <p className="text-slate-500 text-sm text-center py-4">
+              <p className="text-muted-foreground text-sm text-center py-4">
                 {t.noData}
               </p>
             )}
@@ -158,40 +158,40 @@ export default function OverviewTab({
         </Card>
 
         {/* Financial Summary Card */}
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base text-white">
+            <CardTitle className="text-base text-foreground">
               {isAr ? 'الملخص المالي' : 'Financial Summary'}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="bg-slate-800/50 rounded-lg p-3">
-                <p className="text-slate-500 text-xs">
+              <div className="bg-muted rounded-lg p-3">
+                <p className="text-muted-foreground text-xs">
                   {isAr ? 'قيمة العقد' : 'Contract Value'}
                 </p>
-                <p className="text-lg font-bold text-white mt-1">
+                <p className="text-lg font-bold text-foreground mt-1">
                   {formatCurrency(project.budget)}
                 </p>
               </div>
-              <div className="bg-slate-800/50 rounded-lg p-3">
-                <p className="text-slate-500 text-xs">
+              <div className="bg-muted rounded-lg p-3">
+                <p className="text-muted-foreground text-xs">
                   {isAr ? 'المدفوع' : 'Paid'}
                 </p>
                 <p className="text-lg font-bold text-emerald-400 mt-1">
                   {formatCurrency(totalPaid)}
                 </p>
               </div>
-              <div className="bg-slate-800/50 rounded-lg p-3">
-                <p className="text-slate-500 text-xs">
+              <div className="bg-muted rounded-lg p-3">
+                <p className="text-muted-foreground text-xs">
                   {isAr ? 'الفواتير' : 'Invoiced'}
                 </p>
                 <p className="text-lg font-bold text-blue-400 mt-1">
                   {formatCurrency(totalInvoiced)}
                 </p>
               </div>
-              <div className="bg-slate-800/50 rounded-lg p-3">
-                <p className="text-slate-500 text-xs">
+              <div className="bg-muted rounded-lg p-3">
+                <p className="text-muted-foreground text-xs">
                   {isAr ? 'المتبقي' : 'Remaining'}
                 </p>
                 <p className="text-lg font-bold text-amber-400 mt-1">
@@ -205,19 +205,19 @@ export default function OverviewTab({
         </Card>
 
         {/* Task Summary Card */}
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base text-white">
+            <CardTitle className="text-base text-foreground">
               {isAr ? 'ملخص المهام' : 'Task Summary'}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-3">
-              <div className="text-center bg-slate-800/50 rounded-lg p-3">
-                <p className="text-2xl font-bold text-white">
+              <div className="text-center bg-muted rounded-lg p-3">
+                <p className="text-2xl font-bold text-foreground">
                   {taskStats.total}
                 </p>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   {isAr ? 'الكل' : 'Total'}
                 </p>
               </div>
@@ -225,7 +225,7 @@ export default function OverviewTab({
                 <p className="text-2xl font-bold text-blue-400">
                   {taskStats.inProgress}
                 </p>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   {isAr ? 'قيد التنفيذ' : 'In Progress'}
                 </p>
               </div>
@@ -233,7 +233,7 @@ export default function OverviewTab({
                 <p className="text-2xl font-bold text-emerald-400">
                   {taskStats.done}
                 </p>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   {t.completed}
                 </p>
               </div>

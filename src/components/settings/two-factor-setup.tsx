@@ -285,7 +285,7 @@ export function TwoFactorSetup({ onStatusChange }: TwoFactorSetupProps) {
 
   if (isLoading) {
     return (
-      <Card className="bg-slate-900/50 border-slate-800">
+      <Card className="bg-card border-border">
         <CardContent className="flex items-center justify-center py-8">
           <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
         </CardContent>
@@ -296,13 +296,13 @@ export function TwoFactorSetup({ onStatusChange }: TwoFactorSetupProps) {
   // Backup codes dialog
   if (showBackupCodes) {
     return (
-      <Card className="bg-slate-900/50 border-slate-800">
+      <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+          <CardTitle className="text-foreground flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-green-500" />
             {texts.backupCodesTitle}
           </CardTitle>
-          <CardDescription className="text-slate-400">
+          <CardDescription className="text-muted-foreground">
             {texts.backupCodesDesc}
           </CardDescription>
         </CardHeader>
@@ -311,9 +311,9 @@ export function TwoFactorSetup({ onStatusChange }: TwoFactorSetupProps) {
             {backupCodes.map((code, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between bg-slate-800/50 px-3 py-2 rounded-lg border border-slate-700"
+                className="flex items-center justify-between bg-muted px-3 py-2 rounded-lg border border-border"
               >
-                <code className="text-sm font-mono text-slate-300">{code}</code>
+                <code className="text-sm font-mono text-foreground/80">{code}</code>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -351,9 +351,9 @@ export function TwoFactorSetup({ onStatusChange }: TwoFactorSetupProps) {
   // Setup flow
   if (setupData) {
     return (
-      <Card className="bg-slate-900/50 border-slate-800">
+      <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+          <CardTitle className="text-foreground flex items-center gap-2">
             <Key className="w-5 h-5 text-blue-400" />
             {texts.setupTitle}
           </CardTitle>
@@ -361,8 +361,8 @@ export function TwoFactorSetup({ onStatusChange }: TwoFactorSetupProps) {
         <CardContent className="space-y-6">
           {/* QR Code */}
           <div className="space-y-3">
-            <Label className="text-slate-300">{texts.step1}</Label>
-            <p className="text-sm text-slate-400">{texts.step1Desc}</p>
+            <Label className="text-foreground/80">{texts.step1}</Label>
+            <p className="text-sm text-muted-foreground">{texts.step1Desc}</p>
             <div className="flex justify-center p-4 bg-white rounded-lg">
               {/* QR Code placeholder - in production use actual QR library */}
               <div className="w-48 h-48 bg-slate-100 flex items-center justify-center">
@@ -372,8 +372,8 @@ export function TwoFactorSetup({ onStatusChange }: TwoFactorSetupProps) {
               </div>
             </div>
             <div className="text-center">
-              <p className="text-sm text-slate-400">{texts.manualEntry}</p>
-              <code className="text-sm bg-slate-800 px-3 py-1 rounded text-blue-400">
+              <p className="text-sm text-muted-foreground">{texts.manualEntry}</p>
+              <code className="text-sm bg-muted px-3 py-1 rounded text-blue-400">
                 {setupData.manualEntryKey}
               </code>
             </div>
@@ -381,15 +381,15 @@ export function TwoFactorSetup({ onStatusChange }: TwoFactorSetupProps) {
 
           {/* Verification Code */}
           <div className="space-y-3">
-            <Label className="text-slate-300">{texts.step2}</Label>
-            <p className="text-sm text-slate-400">{texts.step2Desc}</p>
+            <Label className="text-foreground/80">{texts.step2}</Label>
+            <p className="text-sm text-muted-foreground">{texts.step2Desc}</p>
             <Input
               type="text"
               maxLength={6}
               placeholder="000000"
               value={verificationCode}
               onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              className="bg-slate-800/50 border-slate-700 text-white text-center text-2xl tracking-widest"
+              className="bg-muted border-border text-foreground text-center text-2xl tracking-widest"
             />
           </div>
         </CardContent>
@@ -423,29 +423,29 @@ export function TwoFactorSetup({ onStatusChange }: TwoFactorSetupProps) {
   // Status display
   return (
     <>
-      <Card className="bg-slate-900/50 border-slate-800">
+      <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+          <CardTitle className="text-foreground flex items-center gap-2">
             <Shield className="w-5 h-5 text-blue-400" />
             {texts.title}
           </CardTitle>
-          <CardDescription className="text-slate-400">
+          <CardDescription className="text-muted-foreground">
             {texts.description}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between p-4 rounded-lg bg-slate-800/30 border border-slate-700">
+          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border border-border">
             <div className="flex items-center gap-3">
               {status.enabled ? (
                 <ShieldCheck className="w-8 h-8 text-green-500" />
               ) : (
-                <ShieldOff className="w-8 h-8 text-slate-500" />
+                <ShieldOff className="w-8 h-8 text-muted-foreground" />
               )}
               <div>
-                <p className="text-white font-medium">
+                <p className="text-foreground font-medium">
                   {status.enabled ? texts.enabled : texts.disabled}
                 </p>
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-muted-foreground">
                   {status.enabled
                     ? (language === 'ar' ? 'حسابك محمي بطبقة إضافية' : 'Your account has extra protection')
                     : (language === 'ar' ? 'حسابك غير محمي بطبقة إضافية' : 'Your account lacks extra protection')}
@@ -478,13 +478,13 @@ export function TwoFactorSetup({ onStatusChange }: TwoFactorSetupProps) {
 
       {/* Disable Dialog */}
       <Dialog open={showDisableDialog} onOpenChange={setShowDisableDialog}>
-        <DialogContent className="bg-slate-900 border-slate-800">
+        <DialogContent className="bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-white flex items-center gap-2">
+            <DialogTitle className="text-foreground flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-amber-500" />
               {texts.disableTitle}
             </DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-muted-foreground">
               {texts.disableDesc}
             </DialogDescription>
           </DialogHeader>
@@ -496,12 +496,12 @@ export function TwoFactorSetup({ onStatusChange }: TwoFactorSetupProps) {
               </AlertDescription>
             </Alert>
             <div className="space-y-2">
-              <Label className="text-slate-300">{texts.password}</Label>
+              <Label className="text-foreground/80">{texts.password}</Label>
               <Input
                 type="password"
                 value={disablePassword}
                 onChange={(e) => setDisablePassword(e.target.value)}
-                className="bg-slate-800/50 border-slate-700 text-white"
+                className="bg-muted border-border text-foreground"
               />
             </div>
           </div>

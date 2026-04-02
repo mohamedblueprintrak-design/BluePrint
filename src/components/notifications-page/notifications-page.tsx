@@ -149,14 +149,14 @@ export default function NotificationsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">
+          <h1 className="text-2xl font-bold text-foreground">
             {isArabic ? 'الإشعارات' : 'Notifications'}
           </h1>
-          <p className="text-slate-400 mt-1">
+          <p className="text-muted-foreground mt-1">
             {isArabic ? `لديك ${unreadCount} إشعار غير مقروء` : `You have ${unreadCount} unread notifications`}
           </p>
         </div>
-        <Button variant="outline" onClick={markAllAsRead} disabled={unreadCount === 0} className="bg-slate-800/50 border-slate-700 hover:bg-slate-800 text-slate-300 hover:text-white">
+        <Button variant="outline" onClick={markAllAsRead} disabled={unreadCount === 0} className="bg-muted border-border hover:bg-accent text-foreground/80 hover:text-foreground">
           <Check className={`w-4 h-4 ${isRTL ? 'me-2' : 'ms-2'}`} />
           {isArabic ? 'تحديد الكل كمقروء' : 'Mark all as read'}
         </Button>
@@ -178,7 +178,7 @@ export default function NotificationsPage() {
             variant={filter === key ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilter(key)}
-            className={filter !== key ? 'bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white' : ''}
+            className={filter !== key ? 'bg-muted border-border text-foreground/80 hover:bg-accent hover:text-foreground' : ''}
           >
             {label}
             {count !== undefined && (
@@ -197,9 +197,9 @@ export default function NotificationsPage() {
           return (
             <Card
               key={notification.id}
-              className={`bg-slate-900/50 border-slate-800 ${
+              className={`bg-card border-border ${
                 !notification.isRead ? (isRTL ? 'border-r-4 border-blue-500' : 'border-l-4 border-blue-500') : ''
-              } hover:border-slate-700 transition-colors`}
+              } hover:border-border transition-colors`}
             >
               <CardContent className="p-4">
                 <div className="flex items-start gap-4">
@@ -212,7 +212,7 @@ export default function NotificationsPage() {
                     <div className="flex items-center gap-2 mb-1">
                       <h3
                         className={`font-semibold ${
-                          !notification.isRead ? 'text-white' : 'text-slate-300'
+                          !notification.isRead ? 'text-foreground' : 'text-foreground/80'
                         }`}
                       >
                         {notification.title}
@@ -224,9 +224,9 @@ export default function NotificationsPage() {
                       )}
                     </div>
                     {notification.message && (
-                      <p className="text-slate-400 text-sm">{notification.message}</p>
+                      <p className="text-muted-foreground text-sm">{notification.message}</p>
                     )}
-                    <p className="text-slate-500 text-xs mt-2">
+                    <p className="text-muted-foreground text-xs mt-2">
                       {new Date(notification.createdAt).toLocaleString(isArabic ? 'ar-SA' : 'en-US')}
                     </p>
                   </div>
@@ -236,7 +236,7 @@ export default function NotificationsPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => markAsRead(notification.id)}
-                        className="text-slate-400 hover:text-white hover:bg-slate-800"
+                        className="text-muted-foreground hover:text-foreground hover:bg-accent"
                       >
                         <Check className="w-4 h-4" />
                       </Button>
@@ -245,7 +245,7 @@ export default function NotificationsPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => deleteNotification(notification.id)}
-                      className="text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+                      className="text-muted-foreground hover:text-red-400 hover:bg-red-500/10"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -258,10 +258,10 @@ export default function NotificationsPage() {
       </div>
 
       {filteredNotifications.length === 0 && (
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-8 text-center">
-            <Bell className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-            <p className="text-slate-400">{isArabic ? 'لا توجد إشعارات' : 'No notifications'}</p>
+            <Bell className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">{isArabic ? 'لا توجد إشعارات' : 'No notifications'}</p>
           </CardContent>
         </Card>
       )}

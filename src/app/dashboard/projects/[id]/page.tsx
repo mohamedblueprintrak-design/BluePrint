@@ -24,10 +24,10 @@ function ProjectWorkspaceContent() {
 
 function ProjectWorkspaceFallback() {
   return (
-    <div className="flex items-center justify-center h-screen bg-slate-950">
+    <div className="flex items-center justify-center h-screen bg-background">
       <div className="flex flex-col items-center gap-3">
         <Loader2 className="h-10 w-10 animate-spin text-blue-500" />
-        <p className="text-slate-400 text-sm">Loading project workspace...</p>
+        <p className="text-muted-foreground text-sm">Loading project workspace...</p>
       </div>
     </div>
   );

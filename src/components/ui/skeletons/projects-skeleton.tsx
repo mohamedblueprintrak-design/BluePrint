@@ -4,7 +4,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { StatSkeleton, GridSkeleton } from '@/components/ui/page-skeleton';
 import { cn } from '@/lib/utils';
 
-const SK = 'bg-slate-800 animate-pulse rounded-md';
+const SK = 'bg-muted animate-pulse rounded-md';
 
 /**
  * ProjectsSkeleton

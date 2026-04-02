@@ -41,11 +41,11 @@ export default function MatrixTab({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <LayoutGrid className="h-5 w-5 text-blue-400" />
-          <h2 className="text-lg font-semibold text-white">
+          <h2 className="text-lg font-semibold text-foreground">
             {isAr ? 'نظرة شاملة على كل الأقسام' : 'All Departments Overview'}
           </h2>
         </div>
-        <span className="text-xs text-slate-500">
+        <span className="text-xs text-muted-foreground">
           {isAr ? 'مثل شيت الإكسل - كل الأقسام في صف واحد' : 'Like Excel - all departments in one view'}
         </span>
       </div>
@@ -62,12 +62,12 @@ export default function MatrixTab({
           const pct = Math.round((completed / total) * 100);
 
           return (
-            <Card key={catKey} className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-colors">
+            <Card key={catKey} className="bg-card border-border hover:border-border transition-colors">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     {catInfo.icon}
-                    <CardTitle className="text-sm font-semibold text-white">{catInfo.ar}</CardTitle>
+                    <CardTitle className="text-sm font-semibold text-foreground">{catInfo.ar}</CardTitle>
                   </div>
                   <div className="flex items-center gap-2 text-xs">
                     {rejected > 0 && (
@@ -75,19 +75,19 @@ export default function MatrixTab({
                         {rejected} {isAr ? 'رفض' : 'rej'}
                       </Badge>
                     )}
-                    <span className="text-slate-400">{completed}/{total}</span>
+                    <span className="text-muted-foreground">{completed}/{total}</span>
                   </div>
                 </div>
                 {/* Progress Bar */}
                 <div className="mt-2">
-                  <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full transition-all duration-500 ${pct === 100 ? 'bg-emerald-500' : pct > 0 ? 'bg-blue-500' : 'bg-slate-700'}`}
+                      className={`h-full rounded-full transition-all duration-500 ${pct === 100 ? 'bg-emerald-500' : pct > 0 ? 'bg-blue-500' : 'bg-secondary'}`}
                       style={{ width: `${pct}%` }}
                     />
                   </div>
                   <div className="flex justify-between mt-1">
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-muted-foreground">
                       {pct}% {isAr ? 'مكتمل' : 'done'}
                     </span>
                     {inProgress > 0 && (
@@ -104,7 +104,7 @@ export default function MatrixTab({
                     const label = phaseTypeLabels[phase.phaseType] || { ar: phase.phaseType, en: phase.phaseType };
                     const isBlocked = phaseDependencyMap[phase.id]?.blocked;
                     return (
-                      <div key={phase.id} className="flex items-center justify-between py-1 px-2 rounded hover:bg-slate-800/50 group">
+                      <div key={phase.id} className="flex items-center justify-between py-1 px-2 rounded hover:bg-muted group">
                         <div className="flex items-center gap-2 min-w-0 flex-1">
                           {phase.status === 'COMPLETED' ? (
                             <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
@@ -113,13 +113,13 @@ export default function MatrixTab({
                           ) : phase.status === 'REJECTED' ? (
                             <XCircle className="h-3.5 w-3.5 text-red-400 shrink-0" />
                           ) : (
-                            <Circle className="h-3.5 w-3.5 text-slate-600 shrink-0" />
+                            <Circle className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                           )}
-                          <span className={`text-xs truncate ${phase.status === 'COMPLETED' ? 'text-slate-500 line-through' : 'text-slate-300'}`}>
+                          <span className={`text-xs truncate ${phase.status === 'COMPLETED' ? 'text-muted-foreground line-through' : 'text-foreground/80'}`}>
                             {isAr ? label.ar : label.en}
                           </span>
                           {isBlocked && (
-                            <Lock className="h-3 w-3 text-slate-600 shrink-0" />
+                            <Lock className="h-3 w-3 text-muted-foreground shrink-0" />
                           )}
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
@@ -150,7 +150,7 @@ export default function MatrixTab({
                             </div>
                           )}
                           {isBlocked && (
-                            <span className="text-xs text-slate-600" title={phaseDependencyMap[phase.id]?.blockedBy.join(', ')}>
+                            <span className="text-xs text-muted-foreground" title={phaseDependencyMap[phase.id]?.blockedBy.join(', ')}>
                               {isAr ? 'مقفل' : 'Locked'}
                             </span>
                           )}

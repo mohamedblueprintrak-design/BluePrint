@@ -14,23 +14,23 @@ export default function SiteManagementPage() {
   return (
     <div className="p-6 space-y-4">
       <div>
-        <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+        <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
           <ClipboardList className="w-7 h-7 text-blue-400" />
           {isRTL ? 'إدارة الموقع' : 'Site Management'}
         </h1>
-        <p className="text-slate-400 mt-1">{isRTL ? 'تقارير الموقع والعيوب والمخالفات' : 'Site diary, defects and snag tracking'}</p>
+        <p className="text-muted-foreground mt-1">{isRTL ? 'تقارير الموقع والعيوب والمخالفات' : 'Site diary, defects and snag tracking'}</p>
       </div>
       <Tabs defaultValue="diary" dir={isRTL ? 'rtl' : 'ltr'}>
-        <TabsList className="bg-slate-800 w-full sm:w-auto">
-          <TabsTrigger value="diary" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white gap-2">
+        <TabsList className="bg-muted w-full sm:w-auto">
+          <TabsTrigger value="diary" className="data-[state=active]:bg-blue-600 data-[state=active]:text-foreground gap-2">
             <ClipboardList className="w-4 h-4" />
             {isRTL ? 'يومية الموقع' : 'Site Diary'}
           </TabsTrigger>
-          <TabsTrigger value="defects" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white gap-2">
+          <TabsTrigger value="defects" className="data-[state=active]:bg-blue-600 data-[state=active]:text-foreground gap-2">
             <AlertTriangle className="w-4 h-4" />
             {isRTL ? 'العيوب' : 'Defects'}
           </TabsTrigger>
-          <TabsTrigger value="visit-reports" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white gap-2">
+          <TabsTrigger value="visit-reports" className="data-[state=active]:bg-blue-600 data-[state=active]:text-foreground gap-2">
             <FileText className="w-4 h-4" />
             {isRTL ? 'تقارير الزيارة' : 'Site Visit Reports'}
           </TabsTrigger>

@@ -29,18 +29,18 @@ export default function SiteTab({
   return (
     <div className="space-y-6">
       {/* Site Reports */}
-      <Card className="bg-slate-900/50 border-slate-800">
+      <Card className="bg-card border-border">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
             <ClipboardList className="h-5 w-5 text-blue-400" />
-            <CardTitle className="text-base text-white">
+            <CardTitle className="text-base text-foreground">
               {isAr ? 'يوميات الموقع' : 'Site Daily Logs'}
             </CardTitle>
           </div>
         </CardHeader>
         <CardContent>
           {siteReports.length === 0 ? (
-            <p className="text-slate-500 text-sm text-center py-8">
+            <p className="text-muted-foreground text-sm text-center py-8">
               {t.noData}
             </p>
           ) : (
@@ -48,10 +48,10 @@ export default function SiteTab({
               {siteReports.map((report) => (
                 <div
                   key={report.id}
-                  className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/30"
+                  className="bg-muted rounded-lg p-4 border border-border/30"
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-white">
+                    <span className="text-sm font-medium text-foreground">
                       {formatDate(report.date)}
                     </span>
                     {report.weatherConditions && (
@@ -64,15 +64,15 @@ export default function SiteTab({
                     )}
                   </div>
                   {report.workCompleted && (
-                    <p className="text-xs text-slate-400 mb-1">
-                      <span className="text-slate-500">
+                    <p className="text-xs text-muted-foreground mb-1">
+                      <span className="text-muted-foreground">
                         {isAr ? 'المنجز: ' : 'Completed: '}
                       </span>
                       {report.workCompleted}
                     </p>
                   )}
                   <div className="flex items-center gap-3 mt-2">
-                    <span className="text-[10px] text-slate-500">
+                    <span className="text-[10px] text-muted-foreground">
                       <Users className="h-3 w-3 inline me-1" />
                       {report.workforceCount}{' '}
                       {isAr ? 'عامل' : 'workers'}
@@ -86,11 +86,11 @@ export default function SiteTab({
       </Card>
 
       {/* Defects */}
-      <Card className="bg-slate-900/50 border-slate-800">
+      <Card className="bg-card border-border">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-red-400" />
-            <CardTitle className="text-base text-white">
+            <CardTitle className="text-base text-foreground">
               {isAr ? 'العيوب' : 'Defects'}
             </CardTitle>
             {defects.filter((d) => d.status === 'OPEN').length >
@@ -107,24 +107,24 @@ export default function SiteTab({
         </CardHeader>
         <CardContent>
           {defects.length === 0 ? (
-            <p className="text-slate-500 text-sm text-center py-8">
+            <p className="text-muted-foreground text-sm text-center py-8">
               {t.noData}
             </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-700/50">
-                    <th className="text-start p-3 text-slate-400 font-medium">
+                  <tr className="border-b border-border/50">
+                    <th className="text-start p-3 text-muted-foreground font-medium">
                       {isAr ? 'العنوان' : 'Title'}
                     </th>
-                    <th className="text-start p-3 text-slate-400 font-medium">
+                    <th className="text-start p-3 text-muted-foreground font-medium">
                       {isAr ? 'الخطورة' : 'Severity'}
                     </th>
-                    <th className="text-start p-3 text-slate-400 font-medium">
+                    <th className="text-start p-3 text-muted-foreground font-medium">
                       {t.status}
                     </th>
-                    <th className="text-start p-3 text-slate-400 font-medium">
+                    <th className="text-start p-3 text-muted-foreground font-medium">
                       {t.date}
                     </th>
                   </tr>
@@ -140,14 +140,14 @@ export default function SiteTab({
                     return (
                       <tr
                         key={defect.id}
-                        className="border-b border-slate-700/30 hover:bg-slate-800/40"
+                        className="border-b border-border/30 hover:bg-accent/40"
                       >
                         <td className="p-3">
-                          <p className="text-white text-sm">
+                          <p className="text-foreground text-sm">
                             {defect.title}
                           </p>
                           {defect.location && (
-                            <p className="text-slate-500 text-xs mt-0.5">
+                            <p className="text-muted-foreground text-xs mt-0.5">
                               {defect.location}
                             </p>
                           )}
@@ -168,7 +168,7 @@ export default function SiteTab({
                             {isAr ? dst.labelAr : dst.labelEn}
                           </Badge>
                         </td>
-                        <td className="p-3 text-slate-400 text-xs">
+                        <td className="p-3 text-muted-foreground text-xs">
                           {formatDate(defect.createdAt)}
                         </td>
                       </tr>

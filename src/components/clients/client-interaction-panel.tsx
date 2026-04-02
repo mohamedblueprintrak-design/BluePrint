@@ -416,15 +416,15 @@ export default function ClientInteractionPanel({
     <div className="space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Stats Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-slate-800/50 rounded-lg p-3 text-center">
-          <p className="text-2xl font-bold text-white">{stats.total}</p>
-          <p className="text-xs text-slate-500">
+        <div className="bg-muted rounded-lg p-3 text-center">
+          <p className="text-2xl font-bold text-foreground">{stats.total}</p>
+          <p className="text-xs text-muted-foreground">
             {isAr ? 'إجمالي التفاعلات' : 'Total'}
           </p>
         </div>
         <div className="bg-blue-500/10 rounded-lg p-3 text-center">
           <p className="text-2xl font-bold text-blue-400">{stats.pending}</p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted-foreground">
             {isAr ? 'بانتظار الرد' : 'Pending'}
           </p>
         </div>
@@ -432,7 +432,7 @@ export default function ClientInteractionPanel({
           <p className="text-2xl font-bold text-emerald-400">
             {stats.approvals}
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted-foreground">
             {isAr ? 'موافقات' : 'Approved'}
           </p>
         </div>
@@ -440,7 +440,7 @@ export default function ClientInteractionPanel({
           <p className="text-2xl font-bold text-red-400">
             {stats.rejections}
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted-foreground">
             {isAr ? 'رفوض' : 'Rejected'}
           </p>
         </div>
@@ -448,16 +448,16 @@ export default function ClientInteractionPanel({
 
       {/* Filter */}
       <div className="flex items-center gap-2">
-        <Filter className="h-4 w-4 text-slate-400" />
+        <Filter className="h-4 w-4 text-muted-foreground" />
         <Select
           value={interactionFilter}
           onValueChange={setInteractionFilter}
         >
-          <SelectTrigger className="h-8 w-auto border-slate-700 bg-slate-800 text-xs text-slate-300 px-2">
+          <SelectTrigger className="h-8 w-auto border-border bg-muted text-xs text-foreground/80 px-2">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-slate-800 border-slate-700">
-            <SelectItem value="ALL" className="text-slate-300">
+          <SelectContent className="bg-muted border-border">
+            <SelectItem value="ALL" className="text-foreground/80">
               {isAr ? 'الكل' : 'All'}
             </SelectItem>
             <SelectItem value="COMMENT" className="text-blue-400">
@@ -479,7 +479,7 @@ export default function ClientInteractionPanel({
         </Select>
         <Badge
           variant="secondary"
-          className="bg-slate-700 text-slate-400 text-[10px]"
+          className="bg-secondary text-muted-foreground text-[10px]"
         >
           {filteredInteractions.length}
         </Badge>
@@ -491,11 +491,11 @@ export default function ClientInteractionPanel({
         <div
           className={`absolute top-0 bottom-0 w-0.5 ${
             isRTL ? 'right-[15px]' : 'left-[15px]'
-          } bg-slate-700/50`}
+          } bg-secondary/50`}
         />
 
         {filteredInteractions.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-slate-500">
+          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
             <MessageSquare className="h-12 w-12 mb-3 opacity-50" />
             <p className="text-sm">{isAr ? 'لا توجد تفاعلات' : 'No interactions'}</p>
           </div>
@@ -537,7 +537,7 @@ export default function ClientInteractionPanel({
 
                 {/* Content card */}
                 <Card
-                  className={`flex-1 bg-slate-900/50 ${itype.border} min-w-0`}
+                  className={`flex-1 bg-card ${itype.border} min-w-0`}
                 >
                   <CardContent className="p-4">
                     {/* Header */}
@@ -552,7 +552,7 @@ export default function ClientInteractionPanel({
                       {ptl && (
                         <Badge
                           variant="secondary"
-                          className="bg-slate-700 text-slate-400 text-[10px] gap-1"
+                          className="bg-secondary text-muted-foreground text-[10px] gap-1"
                         >
                           <Layers className="h-3 w-3" />
                           {isAr ? ptl.ar : ptl.en}
@@ -567,36 +567,36 @@ export default function ClientInteractionPanel({
                           {isAr ? 'بانتظار الرد' : 'Pending'}
                         </Badge>
                       )}
-                      <span className="text-[10px] text-slate-500 ms-auto">
+                      <span className="text-[10px] text-muted-foreground ms-auto">
                         {formatDateTime(interaction.createdAt)}
                       </span>
                     </div>
 
                     {/* Content */}
-                    <p className="text-sm text-slate-200 mb-3">
+                    <p className="text-sm text-foreground mb-3">
                       {interaction.content}
                     </p>
 
                     {/* Response */}
                     {interaction.responseContent && (
-                      <div className="bg-slate-800/60 border border-slate-700/30 rounded-lg p-3 mb-3">
+                      <div className="bg-muted/60 border border-border/30 rounded-lg p-3 mb-3">
                         <div className="flex items-center gap-1.5 mb-1">
                           <Send className="h-3 w-3 text-blue-400" />
                           <span className="text-xs text-blue-400 font-medium">
                             {isAr ? 'الرد' : 'Response'}
                           </span>
                           {responderName && (
-                            <span className="text-[10px] text-slate-500 ms-1">
+                            <span className="text-[10px] text-muted-foreground ms-1">
                               — {responderName}
                             </span>
                           )}
                           {interaction.responseDate && (
-                            <span className="text-[10px] text-slate-600 ms-1">
+                            <span className="text-[10px] text-muted-foreground ms-1">
                               {formatDateTime(interaction.responseDate)}
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-slate-300">
+                        <p className="text-sm text-foreground/80">
                           {interaction.responseContent}
                         </p>
                       </div>
@@ -617,7 +617,7 @@ export default function ClientInteractionPanel({
                                   ? 'اكتب ردك هنا...'
                                   : 'Type your response...'
                               }
-                              className="flex-1 h-8 bg-slate-800 border-slate-600 text-white text-xs placeholder:text-slate-500"
+                              className="flex-1 h-8 bg-muted border-border text-foreground text-xs placeholder:text-muted-foreground"
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
                                   e.preventDefault();
@@ -632,7 +632,7 @@ export default function ClientInteractionPanel({
                             />
                             <Button
                               size="sm"
-                              className="h-8 px-2 bg-blue-600 hover:bg-blue-700 text-white"
+                              className="h-8 px-2 bg-blue-600 hover:bg-blue-700 text-foreground"
                               onClick={() =>
                                 handleSubmitResponse(interaction)
                               }
@@ -650,7 +650,7 @@ export default function ClientInteractionPanel({
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-8 px-2 text-slate-400"
+                              className="h-8 px-2 text-muted-foreground"
                               onClick={() => {
                                 setQuickResponse('');
                                 setQuickResponseTarget(null);
@@ -678,7 +678,7 @@ export default function ClientInteractionPanel({
 
                     {/* Action buttons for pending interactions */}
                     {isPending && quickResponseTarget?.id !== interaction.id && (
-                      <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-700/30">
+                      <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-border/30">
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
@@ -692,7 +692,7 @@ export default function ClientInteractionPanel({
                               {isAr ? 'موافقة' : 'Approve'}
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent className="bg-slate-800 border-slate-700 text-xs">
+                          <TooltipContent className="bg-muted border-border text-xs">
                             {isAr ? 'الموافقة على هذا التفاعل' : 'Approve this interaction'}
                           </TooltipContent>
                         </Tooltip>
@@ -709,7 +709,7 @@ export default function ClientInteractionPanel({
                               {isAr ? 'رفض' : 'Reject'}
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent className="bg-slate-800 border-slate-700 text-xs">
+                          <TooltipContent className="bg-muted border-border text-xs">
                             {isAr ? 'رفض مع ذكر السبب' : 'Reject with reason'}
                           </TooltipContent>
                         </Tooltip>
@@ -728,7 +728,7 @@ export default function ClientInteractionPanel({
                               {isAr ? 'طلب تعديل' : 'Change'}
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent className="bg-slate-800 border-slate-700 text-xs">
+                          <TooltipContent className="bg-muted border-border text-xs">
                             {isAr ? 'طلب تعديل' : 'Request Change'}
                           </TooltipContent>
                         </Tooltip>
@@ -737,7 +737,7 @@ export default function ClientInteractionPanel({
 
                     {/* Responded status indicators */}
                     {!isPending && (
-                      <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-700/30">
+                      <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-border/30">
                         {interaction.interactionType === 'APPROVAL' && (
                           <div className="flex items-center gap-1 text-emerald-400 text-xs">
                             <CheckCircle2 className="h-3.5 w-3.5" />
@@ -770,15 +770,15 @@ export default function ClientInteractionPanel({
 
       {/* Rejection Dialog */}
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-        <DialogContent className="bg-slate-900 border-slate-700 max-w-md">
+        <DialogContent className="bg-card border-border max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-white text-lg flex items-center gap-2">
+            <DialogTitle className="text-foreground text-lg flex items-center gap-2">
               <Ban className="h-5 w-5 text-red-400" />
               {isAr ? 'سبب الرفض' : 'Rejection Reason'}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-muted-foreground">
               {isAr
                 ? 'يرجى إدخال سبب الرفض. سيتم إرساله للعميل.'
                 : 'Please enter the reason for rejection. It will be sent to the client.'}
@@ -790,21 +790,21 @@ export default function ClientInteractionPanel({
                 isAr ? 'أدخل سبب الرفض...' : 'Enter rejection reason...'
               }
               rows={4}
-              className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 resize-none"
+              className="bg-muted border-border text-foreground placeholder:text-muted-foreground resize-none"
             />
           </div>
           <DialogFooter className="gap-2">
             <Button
               variant="outline"
               onClick={() => setRejectDialogOpen(false)}
-              className="border-slate-600 text-slate-300"
+              className="border-border text-foreground/80"
             >
               {t.cancel}
             </Button>
             <Button
               onClick={handleSubmitRejection}
               disabled={!rejectReason.trim() || submittingAction}
-              className="bg-red-600 hover:bg-red-700 text-white"
+              className="bg-red-600 hover:bg-red-700 text-foreground"
             >
               {submittingAction && (
                 <Loader2 className="h-4 w-4 animate-spin me-2" />

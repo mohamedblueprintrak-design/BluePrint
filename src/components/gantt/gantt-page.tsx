@@ -116,10 +116,10 @@ export function GanttPage({ projectId, lang = 'ar' }: GanttPageProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">
+          <h1 className="text-3xl font-bold text-foreground">
             {lang === 'ar' ? 'مخطط جانت' : 'Gantt Chart'}
           </h1>
-          <p className="text-slate-400 mt-1">
+          <p className="text-muted-foreground mt-1">
             {lang === 'ar' 
               ? 'إدارة جدول المهام والمشاريع' 
               : 'Manage project schedules and tasks'}
@@ -136,65 +136,65 @@ export function GanttPage({ projectId, lang = 'ar' }: GanttPageProps) {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center">
                 <BarChart3 className="w-6 h-6 text-blue-400" />
               </div>
               <div>
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-muted-foreground">
                   {lang === 'ar' ? 'إجمالي المهام' : 'Total Tasks'}
                 </p>
-                <p className="text-2xl font-bold text-white">{stats.total}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.total}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center">
                 <CheckCircle className="w-6 h-6 text-green-400" />
               </div>
               <div>
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-muted-foreground">
                   {lang === 'ar' ? 'مكتملة' : 'Completed'}
                 </p>
-                <p className="text-2xl font-bold text-white">{stats.completed}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.completed}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-lg bg-amber-500/20 flex items-center justify-center">
                 <Clock className="w-6 h-6 text-amber-400" />
               </div>
               <div>
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-muted-foreground">
                   {lang === 'ar' ? 'قيد التنفيذ' : 'In Progress'}
                 </p>
-                <p className="text-2xl font-bold text-white">{stats.inProgress}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.inProgress}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-lg bg-red-500/20 flex items-center justify-center">
                 <AlertTriangle className="w-6 h-6 text-red-400" />
               </div>
               <div>
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-muted-foreground">
                   {lang === 'ar' ? 'متأخرة' : 'Overdue'}
                 </p>
-                <p className="text-2xl font-bold text-white">{stats.overdue}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.overdue}</p>
               </div>
             </div>
           </CardContent>
@@ -212,9 +212,9 @@ export function GanttPage({ projectId, lang = 'ar' }: GanttPageProps) {
       />
 
       {/* Legend */}
-      <Card className="bg-slate-900/50 border-slate-800">
+      <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-white text-sm">
+          <CardTitle className="text-foreground text-sm">
             {lang === 'ar' ? 'دليل الألوان' : 'Color Legend'}
           </CardTitle>
         </CardHeader>
@@ -222,31 +222,31 @@ export function GanttPage({ projectId, lang = 'ar' }: GanttPageProps) {
           <div className="flex flex-wrap gap-4">
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded bg-green-500" />
-              <span className="text-sm text-slate-400">
+              <span className="text-sm text-muted-foreground">
                 {lang === 'ar' ? 'أولوية منخفضة' : 'Low Priority'}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded bg-amber-500" />
-              <span className="text-sm text-slate-400">
+              <span className="text-sm text-muted-foreground">
                 {lang === 'ar' ? 'أولوية متوسطة' : 'Medium Priority'}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded bg-red-500" />
-              <span className="text-sm text-slate-400">
+              <span className="text-sm text-muted-foreground">
                 {lang === 'ar' ? 'أولوية عالية' : 'High Priority'}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded bg-red-700" />
-              <span className="text-sm text-slate-400">
+              <span className="text-sm text-muted-foreground">
                 {lang === 'ar' ? 'أولوية حرجة' : 'Critical Priority'}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rotate-45 bg-amber-400" />
-              <span className="text-sm text-slate-400">
+              <span className="text-sm text-muted-foreground">
                 {lang === 'ar' ? 'معلم رئيسي' : 'Milestone'}
               </span>
             </div>

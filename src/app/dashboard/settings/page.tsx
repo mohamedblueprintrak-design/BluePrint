@@ -58,10 +58,10 @@ function SettingsTabs() {
 
   return (
     <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-      <TabsList className="bg-slate-900/50 border border-slate-800 p-1 h-auto">
+      <TabsList className="bg-card border border-border p-1 h-auto">
         <TabsTrigger
           value="settings"
-          className="data-[state=active]:bg-slate-800 data-[state=active]:text-white"
+          className="data-[state=active]:bg-muted data-[state=active]:text-foreground"
         >
           <Settings className="w-4 h-4 me-2" />
           الإعدادات
@@ -69,7 +69,7 @@ function SettingsTabs() {
         {isManagerOrAdmin && (
           <TabsTrigger
             value="automations"
-            className="data-[state=active]:bg-slate-800 data-[state=active]:text-white"
+            className="data-[state=active]:bg-muted data-[state=active]:text-foreground"
           >
             <Zap className="w-4 h-4 me-2" />
             الأتمتة

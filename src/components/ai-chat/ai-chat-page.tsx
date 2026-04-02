@@ -233,22 +233,22 @@ function CodeBlock({ code, language }: { code: string; language?: string }) {
   };
   
   return (
-    <div className="relative my-3 rounded-lg bg-slate-900 border border-slate-700 overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-2 bg-slate-800/50 border-b border-slate-700">
-        <span className="text-xs text-slate-400 font-mono">
+    <div className="relative my-3 rounded-lg bg-card border border-border overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-2 bg-muted border-b border-border">
+        <span className="text-xs text-muted-foreground font-mono">
           {language || 'code'}
         </span>
         <Button
           variant="ghost"
           size="sm"
-          className="h-6 px-2 text-slate-400 hover:text-white"
+          className="h-6 px-2 text-muted-foreground hover:text-foreground"
           onClick={handleCopy}
         >
           {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
         </Button>
       </div>
       <pre className="p-4 overflow-x-auto text-sm">
-        <code className="text-slate-300 font-mono whitespace-pre-wrap">{code}</code>
+        <code className="text-foreground/80 font-mono whitespace-pre-wrap">{code}</code>
       </pre>
     </div>
   );
@@ -272,7 +272,7 @@ function MessageContent({ content, imageData }: { content: string; imageData?: s
     // Check for base64 image data
     if (imageData) {
       parts.push(
-        <div key={keyIndex++} className="my-3 rounded-lg overflow-hidden border border-slate-700">
+        <div key={keyIndex++} className="my-3 rounded-lg overflow-hidden border border-border">
           <img 
             src={`data:image/png;base64,${imageData}`} 
             alt="AI Generated" 
@@ -287,7 +287,7 @@ function MessageContent({ content, imageData }: { content: string; imageData?: s
     const base64Match = base64ImageRegex.exec(remaining);
     if (base64Match && !imageData) {
       parts.push(
-        <div key={keyIndex++} className="my-3 rounded-lg overflow-hidden border border-slate-700">
+        <div key={keyIndex++} className="my-3 rounded-lg overflow-hidden border border-border">
           <img 
             src={base64Match[0].match(/data:image\/[^)]+/)?.[0] || ''} 
             alt="AI Generated" 
@@ -338,7 +338,7 @@ function MessageContent({ content, imageData }: { content: string; imageData?: s
     // Italic text
     text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
     // Inline code
-    text = text.replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 bg-slate-800 rounded text-cyan-400 font-mono text-sm">$1</code>');
+    text = text.replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 bg-muted rounded text-cyan-400 font-mono text-sm">$1</code>');
     // Line breaks
     text = text.replace(/\n/g, '<br/>');
     
@@ -659,16 +659,16 @@ export function AIChatPage() {
     <div className="flex h-[calc(100vh-8rem)] gap-4">
       {/* Chat History Sidebar */}
       {sidebarOpen && (
-        <Card className="w-72 bg-slate-900/50 border-slate-800 flex flex-col shrink-0">
+        <Card className="w-72 bg-card border-border flex flex-col shrink-0">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-white text-lg">
+              <CardTitle className="text-foreground text-lg">
                 {language === 'ar' ? 'المحادثات' : 'Chats'}
               </CardTitle>
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 text-slate-400 hover:text-white"
+                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
                 onClick={() => setSidebarOpen(false)}
               >
                 <X className="w-4 h-4" />
@@ -676,7 +676,7 @@ export function AIChatPage() {
             </div>
             <Button
               variant="outline"
-              className="w-full mt-2 bg-slate-800/50 border-slate-700 hover:bg-slate-800 hover:border-blue-500"
+              className="w-full mt-2 bg-muted border-border hover:bg-accent hover:border-blue-500"
               onClick={handleNewChat}
             >
               <Plus className="w-4 h-4 me-2" />
@@ -687,12 +687,12 @@ export function AIChatPage() {
             {/* Search */}
             <div className="px-4 pb-3">
               <div className="relative">
-                <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   placeholder={t.search}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="ps-9 pe-3 bg-slate-800/50 border-slate-700"
+                  className="ps-9 pe-3 bg-muted border-border"
                 />
               </div>
             </div>
@@ -712,14 +712,14 @@ export function AIChatPage() {
                         "w-full p-3 rounded-lg text-start transition-colors",
                         currentSessionId === session.id
                           ? "bg-blue-500/20 border border-blue-500/30"
-                          : "bg-slate-800/50 hover:bg-slate-800 border border-transparent"
+                          : "bg-muted hover:bg-accent border border-transparent"
                       )}
                     >
                       <div className="flex items-start gap-2">
-                        <MessageSquare className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
+                        <MessageSquare className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-white truncate">{session.title}</p>
-                          <p className="text-xs text-slate-400 mt-1">
+                          <p className="text-sm text-foreground truncate">{session.title}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
                             {formatDateTime(session.updatedAt)}
                           </p>
                         </div>
@@ -727,7 +727,7 @@ export function AIChatPage() {
                     </button>
                   ))
                 ) : (
-                  <div className="text-center py-8 text-slate-400">
+                  <div className="text-center py-8 text-muted-foreground">
                     <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
                     <p className="text-sm">
                       {language === 'ar' ? 'لا توجد محادثات سابقة' : 'No previous chats'}
@@ -741,16 +741,16 @@ export function AIChatPage() {
       )}
       
       {/* Main Chat Area */}
-      <Card className="flex-1 bg-slate-900/50 border-slate-800 flex flex-col min-w-0">
+      <Card className="flex-1 bg-card border-border flex flex-col min-w-0">
         {/* Chat Header */}
-        <CardHeader className="pb-3 border-b border-slate-800">
+        <CardHeader className="pb-3 border-b border-border">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {!sidebarOpen && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 text-slate-400 hover:text-white"
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
                   onClick={() => setSidebarOpen(true)}
                 >
                   <PanelLeft className="w-4 h-4" />
@@ -759,10 +759,10 @@ export function AIChatPage() {
               <div className="flex items-center gap-2">
                 <Bot className="w-6 h-6 text-blue-400" />
                 <div>
-                  <CardTitle className="text-white text-lg">
+                  <CardTitle className="text-foreground text-lg">
                     {language === 'ar' ? 'المساعد بلو' : 'Blu Assistant'}
                   </CardTitle>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-muted-foreground">
                     {language === 'ar' ? 'مساعدك الذكي للهندسة' : 'Your AI Engineering Assistant'}
                   </p>
                 </div>
@@ -772,27 +772,27 @@ export function AIChatPage() {
             <div className="flex items-center gap-2">
               {/* Model Selector */}
               <Select value={selectedModel} onValueChange={setSelectedModel}>
-                <SelectTrigger className="w-[200px] bg-slate-800/50 border-slate-700">
+                <SelectTrigger className="w-[200px] bg-muted border-border">
                   <SelectValue placeholder={t.selectModel} />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-700 max-h-80">
+                <SelectContent className="bg-card border-border max-h-80">
                   {/* Group by provider */}
                   {['Google', 'OpenAI', 'DeepSeek', 'Mistral', 'Meta', 'xAI', 'Anthropic'].map(provider => {
                     const models = AVAILABLE_MODELS.filter(m => m.provider === provider);
                     if (models.length === 0) return null;
                     return (
                       <SelectGroup key={provider}>
-                        <SelectLabel className="text-slate-400">{provider}</SelectLabel>
+                        <SelectLabel className="text-muted-foreground">{provider}</SelectLabel>
                         {models.map(model => (
                           <SelectItem 
                             key={model.id} 
                             value={model.id}
-                            className="text-white focus:bg-slate-800"
+                            className="text-foreground focus:bg-muted"
                           >
                             <div className="flex items-center gap-2">
                               <span className={cn("w-2 h-2 rounded-full", PROVIDER_COLORS[model.provider] || 'bg-slate-500')} />
                               <span>{model.name}</span>
-                              <Badge variant="outline" className="text-xs border-slate-600 text-slate-400">
+                              <Badge variant="outline" className="text-xs border-border text-muted-foreground">
                                 {COST_TIER_LABELS[model.costTier] || model.costTier}
                               </Badge>
                             </div>
@@ -811,7 +811,7 @@ export function AIChatPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-9 w-9 p-0 text-slate-400 hover:text-red-400"
+                      className="h-9 w-9 p-0 text-muted-foreground hover:text-red-400"
                       onClick={handleClearChat}
                     >
                       <Trash2 className="w-4 h-4" />
@@ -826,21 +826,21 @@ export function AIChatPage() {
               {/* More Options */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-9 w-9 p-0 text-slate-400 hover:text-white">
+                  <Button variant="ghost" size="sm" className="h-9 w-9 p-0 text-muted-foreground hover:text-foreground">
                     <MoreVertical className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align={isRTL ? "start" : "end"} className="bg-slate-900 border-slate-700">
-                  <DropdownMenuItem className="text-slate-300 focus:bg-slate-800">
+                <DropdownMenuContent align={isRTL ? "start" : "end"} className="bg-card border-border">
+                  <DropdownMenuItem className="text-foreground/80 focus:bg-muted">
                     <RefreshCw className="w-4 h-4 me-2" />
                     {language === 'ar' ? 'إعادة تحميل' : 'Refresh'}
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="text-slate-300 focus:bg-slate-800">
+                  <DropdownMenuItem className="text-foreground/80 focus:bg-muted">
                     <FileText className="w-4 h-4 me-2" />
                     {language === 'ar' ? 'تصدير المحادثة' : 'Export Chat'}
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-slate-700" />
-                  <DropdownMenuItem className="text-slate-300 focus:bg-slate-800">
+                  <DropdownMenuSeparator className="bg-secondary" />
+                  <DropdownMenuItem className="text-foreground/80 focus:bg-muted">
                     <Settings className="w-4 h-4 me-2" />
                     {language === 'ar' ? 'الإعدادات' : 'Settings'}
                   </DropdownMenuItem>
@@ -851,31 +851,31 @@ export function AIChatPage() {
           
           {/* Current Model Badge */}
           <div className="flex items-center gap-2 mt-3">
-            <Badge variant="outline" className={cn("gap-1.5 border-slate-700", (PROVIDER_COLORS[currentModel.provider] || 'bg-slate-500').replace('bg-', 'text-').replace('-500', '-400'))}>
+            <Badge variant="outline" className={cn("gap-1.5 border-border", (PROVIDER_COLORS[currentModel.provider] || 'bg-slate-500').replace('bg-', 'text-').replace('-500', '-400'))}>
               <span className={cn("w-2 h-2 rounded-full", PROVIDER_COLORS[currentModel.provider] || 'bg-slate-500')} />
               {currentModel.name}
             </Badge>
-            <Badge variant="outline" className="border-slate-700 text-slate-400">
+            <Badge variant="outline" className="border-border text-muted-foreground">
               {currentModel.provider}
             </Badge>
-            <Badge variant="outline" className="border-slate-700 text-slate-400">
+            <Badge variant="outline" className="border-border text-muted-foreground">
               {COST_TIER_LABELS[currentModel.costTier] || currentModel.costTier}
             </Badge>
           </div>
           
           {/* Skills Bar */}
           <div className="flex items-center gap-2 mt-3 flex-wrap">
-            <span className="text-xs text-slate-400">{language === 'ar' ? 'المهارات:' : 'Skills:'}</span>
+            <span className="text-xs text-muted-foreground">{language === 'ar' ? 'المهارات:' : 'Skills:'}</span>
             {AI_SKILLS.map((skill) => (
               <Button
                 key={skill.id}
                 variant="outline"
                 size="sm"
                 className={cn(
-                  "h-7 text-xs gap-1.5 border-slate-700",
+                  "h-7 text-xs gap-1.5 border-border",
                   activeSkill === skill.id 
                     ? "bg-blue-500/20 border-blue-500 text-blue-400" 
-                    : "bg-slate-800/50 hover:bg-slate-800 text-slate-300"
+                    : "bg-muted hover:bg-accent text-foreground/80"
                 )}
                 onClick={() => handleSkillSelect(skill.id)}
               >
@@ -892,12 +892,12 @@ export function AIChatPage() {
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center">
                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center mb-4">
-                  <Sparkles className="w-8 h-8 text-white" />
+                  <Sparkles className="w-8 h-8 text-foreground" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">
+                <h3 className="text-xl font-semibold text-foreground mb-2">
                   {language === 'ar' ? 'مرحباً! أنا المساعد بلو' : "Hello! I'm Blu Assistant"}
                 </h3>
-                <p className="text-slate-400 max-w-md mb-6">
+                <p className="text-muted-foreground max-w-md mb-6">
                   {language === 'ar' 
                     ? 'يمكنني مساعدتك في الحسابات الهندسية، أكواد البناء الإماراتية، واستفسارات الأسعار.'
                     : 'I can help you with engineering calculations, UAE building codes, and price inquiries.'}
@@ -909,11 +909,11 @@ export function AIChatPage() {
                     <Button
                       key={prompt.id}
                       variant="outline"
-                      className="h-auto py-3 px-4 bg-slate-800/50 border-slate-700 hover:bg-slate-800 hover:border-slate-600 justify-start"
+                      className="h-auto py-3 px-4 bg-muted border-border hover:bg-accent hover:border-border justify-start"
                       onClick={() => handleQuickPrompt(prompt.id)}
                     >
                       <prompt.icon className={cn("w-4 h-4 shrink-0 me-2", prompt.color)} />
-                      <span className="text-sm text-slate-300">
+                      <span className="text-sm text-foreground/80">
                         {language === 'ar' ? prompt.labelAr : prompt.labelEn}
                       </span>
                     </Button>
@@ -921,8 +921,8 @@ export function AIChatPage() {
                 </div>
                 
                 {/* Engineering Quick Prompts */}
-                <div className="mt-6 pt-4 border-t border-slate-800 w-full max-w-lg">
-                  <p className="text-sm text-slate-400 mb-3">
+                <div className="mt-6 pt-4 border-t border-border w-full max-w-lg">
+                  <p className="text-sm text-muted-foreground mb-3">
                     {language === 'ar' ? '🏗️ أدوات هندسية سريعة:' : '🏗️ Engineering Quick Tools:'}
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -930,11 +930,11 @@ export function AIChatPage() {
                       <Button
                         key={prompt.id}
                         variant="outline"
-                        className="h-auto py-3 px-4 bg-slate-800/50 border-slate-700 hover:bg-slate-800 hover:border-blue-500/50 justify-start"
+                        className="h-auto py-3 px-4 bg-muted border-border hover:bg-accent hover:border-blue-500/50 justify-start"
                         onClick={() => handleQuickPrompt(prompt.id)}
                       >
                         <prompt.icon className={cn("w-4 h-4 shrink-0 me-2", prompt.color)} />
-                        <span className="text-sm text-slate-300">
+                        <span className="text-sm text-foreground/80">
                           {language === 'ar' ? prompt.labelAr : prompt.labelEn}
                         </span>
                       </Button>
@@ -943,18 +943,18 @@ export function AIChatPage() {
                 </div>
                 
                 {/* Skills Info */}
-                <div className="mt-8 pt-6 border-t border-slate-800 w-full max-w-lg">
-                  <p className="text-sm text-slate-400 mb-3">
+                <div className="mt-8 pt-6 border-t border-border w-full max-w-lg">
+                  <p className="text-sm text-muted-foreground mb-3">
                     {language === 'ar' ? '✨ مهارات متاحة:' : '✨ Available Skills:'}
                   </p>
                   <div className="grid grid-cols-2 gap-2">
                     {AI_SKILLS.map((skill) => (
                       <div 
                         key={skill.id}
-                        className="flex items-center gap-2 p-2 rounded-lg bg-slate-800/30 text-xs"
+                        className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 text-xs"
                       >
                         <skill.icon className={cn("w-4 h-4", skill.color)} />
-                        <span className="text-slate-300">{language === 'ar' ? skill.nameAr : skill.nameEn}</span>
+                        <span className="text-foreground/80">{language === 'ar' ? skill.nameAr : skill.nameEn}</span>
                       </div>
                     ))}
                   </div>
@@ -973,13 +973,13 @@ export function AIChatPage() {
                     {/* Avatar */}
                     <Avatar className={cn(
                       "w-8 h-8 shrink-0",
-                      message.role === 'user' ? "bg-blue-500" : "bg-slate-700"
+                      message.role === 'user' ? "bg-blue-500" : "bg-secondary"
                     )}>
                       <AvatarFallback className={cn(
-                        message.role === 'user' ? "bg-blue-500" : "bg-slate-700"
+                        message.role === 'user' ? "bg-blue-500" : "bg-secondary"
                       )}>
                         {message.role === 'user' ? (
-                          <User className="w-4 h-4 text-white" />
+                          <User className="w-4 h-4 text-foreground" />
                         ) : (
                           <Bot className="w-4 h-4 text-blue-400" />
                         )}
@@ -994,8 +994,8 @@ export function AIChatPage() {
                       <div className={cn(
                         "rounded-2xl px-4 py-3",
                         message.role === 'user'
-                          ? "bg-blue-500 text-white rounded-tr-md"
-                          : "bg-slate-800 text-slate-200 rounded-tl-md"
+                          ? "bg-blue-500 text-foreground rounded-tr-md"
+                          : "bg-muted text-foreground rounded-tl-md"
                       )}>
                         {message.isLoading ? (
                           <TypingIndicator />
@@ -1006,7 +1006,7 @@ export function AIChatPage() {
                       
                       {/* Message Meta */}
                       <div className={cn(
-                        "flex items-center gap-2 mt-1 text-xs text-slate-500",
+                        "flex items-center gap-2 mt-1 text-xs text-muted-foreground",
                         message.role === 'user' ? "flex-row-reverse" : "flex-row"
                       )}>
                         <Clock className="w-3 h-3" />
@@ -1015,7 +1015,7 @@ export function AIChatPage() {
                         {message.model && (
                           <>
                             <span>•</span>
-                            <Badge variant="outline" className="text-xs border-slate-700 text-slate-400 py-0 px-1.5">
+                            <Badge variant="outline" className="text-xs border-border text-muted-foreground py-0 px-1.5">
                               {AVAILABLE_MODELS.find(m => m.id === message.model)?.name || message.model}
                             </Badge>
                           </>
@@ -1065,7 +1065,7 @@ export function AIChatPage() {
         </CardContent>
         
         {/* Input Area */}
-        <div className="border-t border-slate-800 p-4">
+        <div className="border-t border-border p-4">
           {/* Active Skill Indicator */}
           {activeSkill && (
             <div className="flex items-center gap-2 mb-2 px-2 py-1.5 bg-blue-500/10 rounded-lg border border-blue-500/30">
@@ -1077,7 +1077,7 @@ export function AIChatPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-5 w-5 p-0 ms-auto text-slate-400 hover:text-white"
+                className="h-5 w-5 p-0 ms-auto text-muted-foreground hover:text-foreground"
                 onClick={() => setActiveSkill(null)}
               >
                 <X className="w-3 h-3" />
@@ -1093,7 +1093,7 @@ export function AIChatPage() {
                   key={prompt.id}
                   variant="outline"
                   size="sm"
-                  className="shrink-0 bg-slate-800/50 border-slate-700 hover:bg-slate-800 hover:border-slate-600"
+                  className="shrink-0 bg-muted border-border hover:bg-accent hover:border-border"
                   onClick={() => handleQuickPrompt(prompt.id)}
                 >
                   <prompt.icon className={cn("w-3 h-3 me-1.5", prompt.color)} />
@@ -1119,7 +1119,7 @@ export function AIChatPage() {
                       : `Enter ${AI_SKILLS.find(s => s.id === activeSkill)?.descriptionEn || 'input'}...`)
                   : t.askBlu
                 }
-                className="min-h-[44px] max-h-32 resize-none bg-slate-800/50 border-slate-700 focus:border-blue-500 pe-12"
+                className="min-h-[44px] max-h-32 resize-none bg-muted border-border focus:border-blue-500 pe-12"
                 rows={1}
                 disabled={isTyping}
               />
@@ -1139,7 +1139,7 @@ export function AIChatPage() {
           </div>
           
           {/* Input Footer */}
-          <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
+          <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
             <span>
               {language === 'ar' 
                 ? 'اضغط Enter للإرسال أو Shift+Enter لسطر جديد'

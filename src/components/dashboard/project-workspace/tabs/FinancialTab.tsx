@@ -40,19 +40,19 @@ export default function FinancialTab({
     <div className="space-y-6">
       {/* Contract Value Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               {isAr ? 'قيمة العقد' : 'Contract Value'}
             </p>
-            <p className="text-xl font-bold text-white mt-1">
+            <p className="text-xl font-bold text-foreground mt-1">
               {formatCurrency(project.budget)}
             </p>
           </CardContent>
         </Card>
-        <Card className="bg-slate-900/50 border-emerald-500/20">
+        <Card className="bg-card border-emerald-500/20">
           <CardContent className="p-4">
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               {isAr ? 'إجمالي المدفوع' : 'Total Paid'}
             </p>
             <p className="text-xl font-bold text-emerald-400 mt-1">
@@ -60,9 +60,9 @@ export default function FinancialTab({
             </p>
           </CardContent>
         </Card>
-        <Card className="bg-slate-900/50 border-red-500/20">
+        <Card className="bg-card border-red-500/20">
           <CardContent className="p-4">
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               {isAr ? 'المبلغ المتبقي' : 'Outstanding'}
             </p>
             <p className="text-xl font-bold text-red-400 mt-1">
@@ -72,9 +72,9 @@ export default function FinancialTab({
             </p>
           </CardContent>
         </Card>
-        <Card className="bg-slate-900/50 border-blue-500/20">
+        <Card className="bg-card border-blue-500/20">
           <CardContent className="p-4">
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               {isAr ? 'نسبة التحصيل' : 'Collection Rate'}
             </p>
             <p className="text-xl font-bold text-blue-400 mt-1">
@@ -92,7 +92,7 @@ export default function FinancialTab({
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
             <FileSpreadsheet className="h-5 w-5 text-blue-400" />
-            <CardTitle className="text-base text-white">
+            <CardTitle className="text-base text-foreground">
               {isAr
                 ? 'نظرة مالية للمهندس'
                 : 'Financial Overview for Engineer'}
@@ -101,16 +101,16 @@ export default function FinancialTab({
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/30">
-              <p className="text-xs text-slate-500">
+            <div className="bg-muted rounded-lg p-3 border border-border/30">
+              <p className="text-xs text-muted-foreground">
                 {isAr ? 'قيمة العقد' : 'Contract Value'}
               </p>
-              <p className="text-lg font-bold text-white mt-1">
+              <p className="text-lg font-bold text-foreground mt-1">
                 {formatCurrency(project.budget)}
               </p>
             </div>
-            <div className="bg-slate-800/50 rounded-lg p-3 border border-emerald-500/20">
-              <p className="text-xs text-slate-500">
+            <div className="bg-muted rounded-lg p-3 border border-emerald-500/20">
+              <p className="text-xs text-muted-foreground">
                 {isAr
                   ? 'المدفوعات المستلمة'
                   : 'Payments Received'}
@@ -121,8 +121,8 @@ export default function FinancialTab({
                 )}
               </p>
             </div>
-            <div className="bg-slate-800/50 rounded-lg p-3 border border-amber-500/20">
-              <p className="text-xs text-slate-500">
+            <div className="bg-muted rounded-lg p-3 border border-amber-500/20">
+              <p className="text-xs text-muted-foreground">
                 {isAr ? 'الرصيد المتبقي' : 'Remaining Balance'}
               </p>
               <p className="text-lg font-bold text-amber-400 mt-1">
@@ -137,14 +137,14 @@ export default function FinancialTab({
               </p>
             </div>
             {boqItems.length > 0 && (
-              <div className="bg-slate-800/50 rounded-lg p-3 border border-violet-500/20">
-                <p className="text-xs text-slate-500">
+              <div className="bg-muted rounded-lg p-3 border border-violet-500/20">
+                <p className="text-xs text-muted-foreground">
                   {isAr ? 'بنود قائمة الكميات' : 'BOQ Items'}
                 </p>
                 <p className="text-lg font-bold text-violet-400 mt-1">
                   {boqItems.length}
                 </p>
-                <p className="text-[10px] text-slate-500 mt-0.5">
+                <p className="text-[10px] text-muted-foreground mt-0.5">
                   {isAr ? 'إجمالي: ' : 'Total: '}
                   {formatCurrency(totalBOQ)}
                 </p>
@@ -153,7 +153,7 @@ export default function FinancialTab({
           </div>
           {boqItems.length > 0 && (
             <div className="mt-4">
-              <p className="text-xs text-slate-400 font-medium mb-2">
+              <p className="text-xs text-muted-foreground font-medium mb-2">
                 {isAr
                   ? 'ملخص بنود قائمة الكميات (BOQ)'
                   : 'BOQ Items Summary'}
@@ -162,19 +162,19 @@ export default function FinancialTab({
                 {boqItems.slice(0, 10).map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between bg-slate-800/40 rounded px-3 py-1.5 text-xs"
+                    className="flex items-center justify-between bg-muted rounded px-3 py-1.5 text-xs"
                   >
-                    <span className="text-slate-300 truncate me-3">
+                    <span className="text-foreground/80 truncate me-3">
                       {item.code || item.itemNumber || '—'} -{' '}
                       {item.description}
                     </span>
-                    <span className="text-slate-400 shrink-0">
+                    <span className="text-muted-foreground shrink-0">
                       {formatCurrency(item.totalPrice)}
                     </span>
                   </div>
                 ))}
                 {boqItems.length > 10 && (
-                  <p className="text-xs text-slate-500 text-center pt-1">
+                  <p className="text-xs text-muted-foreground text-center pt-1">
                     {isAr
                       ? `+ ${boqItems.length - 10} بنود أخرى`
                       : `+ ${boqItems.length - 10} more items`}
@@ -187,38 +187,38 @@ export default function FinancialTab({
       </Card>
 
       {/* Payments Table */}
-      <Card className="bg-slate-900/50 border-slate-800">
+      <Card className="bg-card border-border">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
             <Receipt className="h-5 w-5 text-emerald-400" />
-            <CardTitle className="text-base text-white">
+            <CardTitle className="text-base text-foreground">
               {isAr ? 'الفواتير والمدفوعات' : 'Invoices & Payments'}
             </CardTitle>
           </div>
         </CardHeader>
         <CardContent>
           {invoices.length === 0 ? (
-            <p className="text-slate-500 text-sm text-center py-8">
+            <p className="text-muted-foreground text-sm text-center py-8">
               {t.noData}
             </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-700/50">
-                    <th className="text-start p-3 text-slate-400 font-medium">
+                  <tr className="border-b border-border/50">
+                    <th className="text-start p-3 text-muted-foreground font-medium">
                       {t.invoiceNumber}
                     </th>
-                    <th className="text-start p-3 text-slate-400 font-medium">
+                    <th className="text-start p-3 text-muted-foreground font-medium">
                       {t.date}
                     </th>
-                    <th className="text-start p-3 text-slate-400 font-medium">
+                    <th className="text-start p-3 text-muted-foreground font-medium">
                       {isAr ? 'الإجمالي' : 'Total'}
                     </th>
-                    <th className="text-start p-3 text-slate-400 font-medium">
+                    <th className="text-start p-3 text-muted-foreground font-medium">
                       {t.paid}
                     </th>
-                    <th className="text-start p-3 text-slate-400 font-medium">
+                    <th className="text-start p-3 text-muted-foreground font-medium">
                       {t.status}
                     </th>
                   </tr>
@@ -231,15 +231,15 @@ export default function FinancialTab({
                     return (
                       <tr
                         key={inv.id}
-                        className="border-b border-slate-700/30 hover:bg-slate-800/40"
+                        className="border-b border-border/30 hover:bg-accent/40"
                       >
-                        <td className="p-3 text-white font-mono text-xs">
+                        <td className="p-3 text-foreground font-mono text-xs">
                           {inv.number}
                         </td>
-                        <td className="p-3 text-slate-400 text-xs">
+                        <td className="p-3 text-muted-foreground text-xs">
                           {formatDate(inv.issueDate)}
                         </td>
-                        <td className="p-3 text-white font-medium">
+                        <td className="p-3 text-foreground font-medium">
                           {formatCurrency(inv.total)}
                         </td>
                         <td className="p-3 text-emerald-400">

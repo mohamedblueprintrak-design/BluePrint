@@ -263,11 +263,11 @@ export function RiskRegister({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
             <AlertTriangle className="w-8 h-8 text-amber-500" />
             {lang === 'ar' ? 'سجل المخاطر' : 'Risk Register'}
           </h1>
-          <p className="text-slate-400 mt-1">
+          <p className="text-muted-foreground mt-1">
             {lang === 'ar' 
               ? 'تتبع وإدارة مخاطر المشاريع' 
               : 'Track and manage project risks'}
@@ -282,55 +282,55 @@ export function RiskRegister({
 
       {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-3xl font-bold text-white">{stats.total}</p>
-              <p className="text-sm text-slate-400">
+              <p className="text-3xl font-bold text-foreground">{stats.total}</p>
+              <p className="text-sm text-muted-foreground">
                 {lang === 'ar' ? 'إجمالي المخاطر' : 'Total Risks'}
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="pt-6">
             <div className="text-center">
               <p className="text-3xl font-bold text-red-400">{stats.open}</p>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-muted-foreground">
                 {lang === 'ar' ? 'مفتوحة' : 'Open'}
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="pt-6">
             <div className="text-center">
               <p className="text-3xl font-bold text-amber-400">{stats.mitigated}</p>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-muted-foreground">
                 {lang === 'ar' ? 'تم التخفيف' : 'Mitigated'}
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="pt-6">
             <div className="text-center">
               <p className="text-3xl font-bold text-green-400">{stats.closed}</p>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-muted-foreground">
                 {lang === 'ar' ? 'مغلقة' : 'Closed'}
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-3xl font-bold text-white">{stats.avgScore}</p>
-              <p className="text-sm text-slate-400">
+              <p className="text-3xl font-bold text-foreground">{stats.avgScore}</p>
+              <p className="text-sm text-muted-foreground">
                 {lang === 'ar' ? 'متوسط الدرجة' : 'Avg Score'}
               </p>
             </div>
@@ -341,11 +341,11 @@ export function RiskRegister({
       {/* View Toggle and Filters */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="flex items-center bg-slate-800 rounded-lg p-1">
+          <div className="flex items-center bg-muted rounded-lg p-1">
             <button
               onClick={() => setViewMode('table')}
               className={`px-3 py-1 rounded text-sm transition-colors ${
-                viewMode === 'table' ? 'bg-blue-500 text-white' : 'text-slate-400 hover:text-white'
+                viewMode === 'table' ? 'bg-blue-500 text-foreground' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               {lang === 'ar' ? 'جدول' : 'Table'}
@@ -353,7 +353,7 @@ export function RiskRegister({
             <button
               onClick={() => setViewMode('matrix')}
               className={`px-3 py-1 rounded text-sm transition-colors ${
-                viewMode === 'matrix' ? 'bg-blue-500 text-white' : 'text-slate-400 hover:text-white'
+                viewMode === 'matrix' ? 'bg-blue-500 text-foreground' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               {lang === 'ar' ? 'مصفوفة' : 'Matrix'}
@@ -363,7 +363,7 @@ export function RiskRegister({
 
         <div className="flex items-center gap-2">
           <Select value={filterCategory} onValueChange={setFilterCategory}>
-            <SelectTrigger className="w-40 bg-slate-800 border-slate-700">
+            <SelectTrigger className="w-40 bg-muted border-border">
               <SelectValue placeholder={lang === 'ar' ? 'الفئة' : 'Category'} />
             </SelectTrigger>
             <SelectContent>
@@ -375,7 +375,7 @@ export function RiskRegister({
           </Select>
 
           <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-40 bg-slate-800 border-slate-700">
+            <SelectTrigger className="w-40 bg-muted border-border">
               <SelectValue placeholder={lang === 'ar' ? 'الحالة' : 'Status'} />
             </SelectTrigger>
             <SelectContent>
@@ -390,29 +390,29 @@ export function RiskRegister({
 
       {/* Table View */}
       {viewMode === 'table' && (
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-0">
             <Table>
               <TableHeader>
-                <TableRow className="border-slate-800 hover:bg-slate-800/50">
-                  <TableHead className="text-slate-400">
+                <TableRow className="border-border hover:bg-muted">
+                  <TableHead className="text-muted-foreground">
                     {lang === 'ar' ? 'المخاطر' : 'Risk'}
                   </TableHead>
-                  <TableHead className="text-slate-400">
+                  <TableHead className="text-muted-foreground">
                     {lang === 'ar' ? 'الفئة' : 'Category'}
                   </TableHead>
-                  <TableHead className="text-slate-400 text-center">P</TableHead>
-                  <TableHead className="text-slate-400 text-center">I</TableHead>
-                  <TableHead className="text-slate-400 text-center">
+                  <TableHead className="text-muted-foreground text-center">P</TableHead>
+                  <TableHead className="text-muted-foreground text-center">I</TableHead>
+                  <TableHead className="text-muted-foreground text-center">
                     {lang === 'ar' ? 'الدرجة' : 'Score'}
                   </TableHead>
-                  <TableHead className="text-slate-400">
+                  <TableHead className="text-muted-foreground">
                     {lang === 'ar' ? 'الحالة' : 'Status'}
                   </TableHead>
-                  <TableHead className="text-slate-400">
+                  <TableHead className="text-muted-foreground">
                     {lang === 'ar' ? 'الاستراتيجية' : 'Strategy'}
                   </TableHead>
-                  <TableHead className="text-slate-400 text-right">
+                  <TableHead className="text-muted-foreground text-right">
                     {lang === 'ar' ? 'إجراءات' : 'Actions'}
                   </TableHead>
                 </TableRow>
@@ -421,7 +421,7 @@ export function RiskRegister({
                 {filteredRisks.map((risk) => (
                   <TableRow 
                     key={risk.id} 
-                    className="border-slate-800 hover:bg-slate-800/30 cursor-pointer"
+                    className="border-border hover:bg-muted/50 cursor-pointer"
                     onClick={() => {
                       setSelectedRisk(risk);
                       setIsEditDialogOpen(true);
@@ -429,9 +429,9 @@ export function RiskRegister({
                   >
                     <TableCell>
                       <div>
-                        <p className="text-white font-medium">{risk.title}</p>
+                        <p className="text-foreground font-medium">{risk.title}</p>
                         {risk.description && (
-                          <p className="text-slate-400 text-sm truncate max-w-xs">
+                          <p className="text-muted-foreground text-sm truncate max-w-xs">
                             {risk.description}
                           </p>
                         )}
@@ -444,22 +444,22 @@ export function RiskRegister({
                         {RISK_CATEGORIES[risk.category]?.[lang]}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-center text-white">{risk.probability}</TableCell>
-                    <TableCell className="text-center text-white">{risk.impact}</TableCell>
+                    <TableCell className="text-center text-foreground">{risk.probability}</TableCell>
+                    <TableCell className="text-center text-foreground">{risk.impact}</TableCell>
                     <TableCell className="text-center">
                       <span 
-                        className="inline-flex items-center justify-center w-8 h-8 rounded-full text-white font-bold text-sm"
+                        className="inline-flex items-center justify-center w-8 h-8 rounded-full text-foreground font-bold text-sm"
                         style={{ backgroundColor: getRiskScoreColor(risk.riskScore) }}
                       >
                         {risk.riskScore}
                       </span>
                     </TableCell>
                     <TableCell>
-                      <Badge className={RISK_STATUS[risk.status]?.color + ' text-white'}>
+                      <Badge className={RISK_STATUS[risk.status]?.color + ' text-foreground'}>
                         {RISK_STATUS[risk.status]?.[lang]}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-slate-300">
+                    <TableCell className="text-foreground/80">
                       {risk.responseStrategy ? RESPONSE_STRATEGIES[risk.responseStrategy]?.[lang] : '-'}
                     </TableCell>
                     <TableCell className="text-right">
@@ -484,9 +484,9 @@ export function RiskRegister({
 
       {/* Matrix View */}
       {viewMode === 'matrix' && (
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle className="text-white">
+            <CardTitle className="text-foreground">
               {lang === 'ar' ? 'مصفوفة المخاطر' : 'Risk Matrix'}
             </CardTitle>
           </CardHeader>
@@ -496,7 +496,7 @@ export function RiskRegister({
                 {/* Matrix Header */}
                 <div className="flex items-center mb-2">
                   <div className="w-20" />
-                  <div className="flex-1 grid grid-cols-5 text-center text-sm text-slate-400">
+                  <div className="flex-1 grid grid-cols-5 text-center text-sm text-muted-foreground">
                     <div>1</div>
                     <div>2</div>
                     <div>3</div>
@@ -504,14 +504,14 @@ export function RiskRegister({
                     <div>5</div>
                   </div>
                 </div>
-                <div className="text-center text-slate-400 mb-2 text-sm">
+                <div className="text-center text-muted-foreground mb-2 text-sm">
                   {lang === 'ar' ? 'التأثير →' : 'Impact →'}
                 </div>
 
                 {/* Matrix Grid */}
                 {[5, 4, 3, 2, 1].map((probability) => (
                   <div key={probability} className="flex items-center mb-1">
-                    <div className="w-20 text-center text-slate-400 text-sm">
+                    <div className="w-20 text-center text-muted-foreground text-sm">
                       {probability} {lang === 'ar' ? 'الاحتمال' : 'Prob'}
                     </div>
                     <div className="flex-1 grid grid-cols-5 gap-1">
@@ -522,12 +522,12 @@ export function RiskRegister({
                         return (
                           <div
                             key={impact}
-                            className="h-16 rounded border border-slate-700 flex items-center justify-center relative cursor-pointer hover:ring-2 hover:ring-blue-500"
+                            className="h-16 rounded border border-border flex items-center justify-center relative cursor-pointer hover:ring-2 hover:ring-blue-500"
                             style={{ backgroundColor: getRiskScoreColor(score) + '30' }}
                           >
                             {cellRisks.length > 0 && (
                               <span 
-                                className="text-white font-bold"
+                                className="text-foreground font-bold"
                                 style={{ color: getRiskScoreColor(score) }}
                               >
                                 {cellRisks.length}
@@ -543,28 +543,28 @@ export function RiskRegister({
             </div>
 
             {/* Legend */}
-            <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-slate-800">
+            <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-border">
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded" style={{ backgroundColor: '#10b981' }} />
-                <span className="text-sm text-slate-400">
+                <span className="text-sm text-muted-foreground">
                   {lang === 'ar' ? 'منخفض (1-4)' : 'Low (1-4)'}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded" style={{ backgroundColor: '#3b82f6' }} />
-                <span className="text-sm text-slate-400">
+                <span className="text-sm text-muted-foreground">
                   {lang === 'ar' ? 'متوسط (5-9)' : 'Medium (5-9)'}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded" style={{ backgroundColor: '#f59e0b' }} />
-                <span className="text-sm text-slate-400">
+                <span className="text-sm text-muted-foreground">
                   {lang === 'ar' ? 'عالي (10-14)' : 'High (10-14)'}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded" style={{ backgroundColor: '#dc2626' }} />
-                <span className="text-sm text-slate-400">
+                <span className="text-sm text-muted-foreground">
                   {lang === 'ar' ? 'حرج (15-25)' : 'Critical (15-25)'}
                 </span>
               </div>
@@ -728,7 +728,7 @@ function RiskForm({
               onChange={(e) => setProbability(Math.min(5, Math.max(1, parseInt(e.target.value) || 1)))}
             />
             <div className="flex-1">
-              <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+              <div className="h-2 bg-secondary rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-blue-500 transition-all"
                   style={{ width: `${(probability / 5) * 100}%` }}
@@ -749,7 +749,7 @@ function RiskForm({
               onChange={(e) => setImpact(Math.min(5, Math.max(1, parseInt(e.target.value) || 1)))}
             />
             <div className="flex-1">
-              <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+              <div className="h-2 bg-secondary rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-amber-500 transition-all"
                   style={{ width: `${(impact / 5) * 100}%` }}
@@ -761,8 +761,8 @@ function RiskForm({
       </div>
 
       {/* Risk Score Display */}
-      <div className="p-4 rounded-lg bg-slate-800 flex items-center justify-between">
-        <span className="text-slate-400">
+      <div className="p-4 rounded-lg bg-muted flex items-center justify-between">
+        <span className="text-muted-foreground">
           {lang === 'ar' ? 'درجة الخطر' : 'Risk Score'}
         </span>
         <span 

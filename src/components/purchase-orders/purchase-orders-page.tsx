@@ -87,7 +87,7 @@ export function PurchaseOrdersPage() {
   const getStatusBadge = (status: string) => {
     const config = PO_STATUSES.find(s => s.value === status) || PO_STATUSES[0];
     return (
-      <Badge className={`${config.color} text-white`}>
+      <Badge className={`${config.color} text-foreground`}>
         {language === 'ar' ? config.label : config.labelEn}
       </Badge>
     );
@@ -186,71 +186,71 @@ export function PurchaseOrdersPage() {
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-blue-500/20">
                 <ShoppingCart className="w-5 h-5 text-blue-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.total}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'إجمالي الأوامر' : 'Total Orders'}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.total}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'إجمالي الأوامر' : 'Total Orders'}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-yellow-500/20">
                 <Clock className="w-5 h-5 text-yellow-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.pending}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'قيد المراجعة' : 'Pending'}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.pending}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'قيد المراجعة' : 'Pending'}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-purple-500/20">
                 <Truck className="w-5 h-5 text-purple-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.approved}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'معتمد' : 'Approved'}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.approved}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'معتمد' : 'Approved'}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-green-500/20">
                 <CheckCircle className="w-5 h-5 text-green-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.received}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'تم الاستلام' : 'Received'}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.received}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'تم الاستلام' : 'Received'}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-cyan-500/20">
                 <DollarSign className="w-5 h-5 text-cyan-400" />
               </div>
               <div>
-                <p className="text-lg font-bold text-white">{formatCurrency(stats.totalValue)}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'إجمالي القيمة' : 'Total Value'}</p>
+                <p className="text-lg font-bold text-foreground">{formatCurrency(stats.totalValue)}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'إجمالي القيمة' : 'Total Value'}</p>
               </div>
             </div>
           </CardContent>
@@ -261,20 +261,20 @@ export function PurchaseOrdersPage() {
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div className="flex flex-1 gap-3 w-full md:w-auto">
           <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder={t.search}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="ps-9 bg-slate-800/50 border-slate-700 text-white"
+              className="ps-9 bg-muted border-border text-foreground"
             />
           </div>
           
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[150px] bg-slate-800/50 border-slate-700 text-white">
+            <SelectTrigger className="w-[150px] bg-muted border-border text-foreground">
               <SelectValue placeholder={t.status} />
             </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-slate-800">
+            <SelectContent className="bg-card border-border">
               <SelectItem value="all">{t.all}</SelectItem>
               {PO_STATUSES.map((status) => (
                 <SelectItem key={status.value} value={status.value}>
@@ -287,15 +287,15 @@ export function PurchaseOrdersPage() {
         
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
           <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-foreground">
               <Plus className="w-4 h-4 me-2" />
               {language === 'ar' ? 'أمر شراء جديد' : 'New PO'}
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="bg-card border-border text-foreground max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{language === 'ar' ? 'إنشاء أمر شراء' : 'Create Purchase Order'}</DialogTitle>
-              <DialogDescription className="text-slate-400">
+              <DialogDescription className="text-muted-foreground">
                 {language === 'ar' ? 'أدخل تفاصيل أمر الشراء' : 'Enter purchase order details'}
               </DialogDescription>
             </DialogHeader>
@@ -303,12 +303,12 @@ export function PurchaseOrdersPage() {
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{language === 'ar' ? 'المورد' : 'Supplier'} *</Label>
+                  <Label className="text-foreground/80">{language === 'ar' ? 'المورد' : 'Supplier'} *</Label>
                   <Select value={formData.supplierId} onValueChange={(v) => setFormData({ ...formData, supplierId: v })}>
-                    <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                    <SelectTrigger className="bg-muted border-border text-foreground">
                       <SelectValue placeholder={language === 'ar' ? 'اختر المورد' : 'Select supplier'} />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-800">
+                    <SelectContent className="bg-card border-border">
                       {suppliers.map((supplier: any) => (
                         <SelectItem key={supplier.id} value={supplier.id}>{supplier.name}</SelectItem>
                       ))}
@@ -316,12 +316,12 @@ export function PurchaseOrdersPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{t.project}</Label>
+                  <Label className="text-foreground/80">{t.project}</Label>
                   <Select value={formData.projectId} onValueChange={(v) => setFormData({ ...formData, projectId: v })}>
-                    <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                    <SelectTrigger className="bg-muted border-border text-foreground">
                       <SelectValue placeholder={language === 'ar' ? 'اختر المشروع' : 'Select project'} />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-800">
+                    <SelectContent className="bg-card border-border">
                       {projects.map((project: any) => (
                         <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
                       ))}
@@ -332,21 +332,21 @@ export function PurchaseOrdersPage() {
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{language === 'ar' ? 'تاريخ الطلب' : 'Order Date'}</Label>
+                  <Label className="text-foreground/80">{language === 'ar' ? 'تاريخ الطلب' : 'Order Date'}</Label>
                   <Input
                     type="date"
                     value={formData.orderDate}
                     onChange={(e) => setFormData({ ...formData, orderDate: e.target.value })}
-                    className="bg-slate-800/50 border-slate-700 text-white"
+                    className="bg-muted border-border text-foreground"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{language === 'ar' ? 'تاريخ التسليم المتوقع' : 'Expected Date'}</Label>
+                  <Label className="text-foreground/80">{language === 'ar' ? 'تاريخ التسليم المتوقع' : 'Expected Date'}</Label>
                   <Input
                     type="date"
                     value={formData.expectedDate}
                     onChange={(e) => setFormData({ ...formData, expectedDate: e.target.value })}
-                    className="bg-slate-800/50 border-slate-700 text-white"
+                    className="bg-muted border-border text-foreground"
                   />
                 </div>
               </div>
@@ -354,39 +354,39 @@ export function PurchaseOrdersPage() {
               {/* Items */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <Label className="text-slate-300">{language === 'ar' ? 'البنود' : 'Items'}</Label>
-                  <Button variant="outline" size="sm" onClick={handleAddItem} className="border-slate-700">
+                  <Label className="text-foreground/80">{language === 'ar' ? 'البنود' : 'Items'}</Label>
+                  <Button variant="outline" size="sm" onClick={handleAddItem} className="border-border">
                     <Plus className="w-4 h-4 me-1" />
                     {language === 'ar' ? 'إضافة بند' : 'Add Item'}
                   </Button>
                 </div>
                 
                 {formData.items.map((item, index) => (
-                  <div key={index} className="grid grid-cols-12 gap-2 items-end p-3 bg-slate-800/30 rounded-lg">
+                  <div key={index} className="grid grid-cols-12 gap-2 items-end p-3 bg-muted/50 rounded-lg">
                     <div className="col-span-5 space-y-1">
-                      <Label className="text-xs text-slate-400">{language === 'ar' ? 'الوصف' : 'Description'}</Label>
+                      <Label className="text-xs text-muted-foreground">{language === 'ar' ? 'الوصف' : 'Description'}</Label>
                       <Input
                         value={item.description}
                         onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                        className="bg-slate-700/50 border-slate-600 text-white h-9"
+                        className="bg-secondary/50 border-border text-foreground h-9"
                       />
                     </div>
                     <div className="col-span-2 space-y-1">
-                      <Label className="text-xs text-slate-400">{language === 'ar' ? 'الكمية' : 'Qty'}</Label>
+                      <Label className="text-xs text-muted-foreground">{language === 'ar' ? 'الكمية' : 'Qty'}</Label>
                       <Input
                         type="number"
                         value={item.quantity}
                         onChange={(e) => handleItemChange(index, 'quantity', parseFloat(e.target.value) || 0)}
-                        className="bg-slate-700/50 border-slate-600 text-white h-9"
+                        className="bg-secondary/50 border-border text-foreground h-9"
                       />
                     </div>
                     <div className="col-span-3 space-y-1">
-                      <Label className="text-xs text-slate-400">{language === 'ar' ? 'السعر' : 'Price'}</Label>
+                      <Label className="text-xs text-muted-foreground">{language === 'ar' ? 'السعر' : 'Price'}</Label>
                       <Input
                         type="number"
                         value={item.unitPrice}
                         onChange={(e) => handleItemChange(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                        className="bg-slate-700/50 border-slate-600 text-white h-9"
+                        className="bg-secondary/50 border-border text-foreground h-9"
                       />
                     </div>
                     <div className="col-span-1 flex items-center justify-center h-9 text-cyan-400 font-medium">
@@ -406,9 +406,9 @@ export function PurchaseOrdersPage() {
                 
                 {/* Total */}
                 <div className="flex justify-end">
-                  <div className="w-48 p-3 bg-slate-800/50 rounded-lg">
+                  <div className="w-48 p-3 bg-muted rounded-lg">
                     <div className="flex justify-between text-lg font-bold">
-                      <span className="text-white">{language === 'ar' ? 'الإجمالي' : 'Total'}</span>
+                      <span className="text-foreground">{language === 'ar' ? 'الإجمالي' : 'Total'}</span>
                       <span className="text-cyan-400">{formatCurrency(calculateTotal())}</span>
                     </div>
                   </div>
@@ -417,7 +417,7 @@ export function PurchaseOrdersPage() {
             </div>
             
             <DialogFooter>
-              <Button variant="ghost" onClick={() => setShowAddDialog(false)} className="text-slate-400">
+              <Button variant="ghost" onClick={() => setShowAddDialog(false)} className="text-muted-foreground">
                 {t.cancel}
               </Button>
               <Button onClick={handleCreatePO} className="bg-blue-600 hover:bg-blue-700">
@@ -431,7 +431,7 @@ export function PurchaseOrdersPage() {
       {/* PO List */}
       <div className="space-y-4">
         {filteredPOs.map((po: any) => (
-          <Card key={po.id} className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-colors">
+          <Card key={po.id} className="bg-card border-border hover:border-border transition-colors">
             <CardContent className="p-4">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-start gap-4">
@@ -440,11 +440,11 @@ export function PurchaseOrdersPage() {
                   </div>
                   <div>
                     <div className="flex items-center gap-3 mb-1">
-                      <h3 className="text-white font-medium">{po.poNumber}</h3>
+                      <h3 className="text-foreground font-medium">{po.poNumber}</h3>
                       {getStatusBadge(po.status)}
                     </div>
-                    <p className="text-slate-400 text-sm">{po.supplierName || (language === 'ar' ? 'غير محدد' : 'Not specified')}</p>
-                    <div className="flex flex-wrap gap-4 mt-2 text-xs text-slate-500">
+                    <p className="text-muted-foreground text-sm">{po.supplierName || (language === 'ar' ? 'غير محدد' : 'Not specified')}</p>
+                    <div className="flex flex-wrap gap-4 mt-2 text-xs text-muted-foreground">
                       {po.projectName && (
                         <div className="flex items-center gap-1">
                           <Building2 className="w-3 h-3" />
@@ -467,16 +467,16 @@ export function PurchaseOrdersPage() {
                   <div className="text-end">
                     <p className="text-xl font-bold text-cyan-400">{formatCurrency(po.totalAmount || 0)}</p>
                     {po.expectedDate && (
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-muted-foreground">
                         {language === 'ar' ? 'تسليم متوقع:' : 'Expected:'} {formatDate(po.expectedDate)}
                       </p>
                     )}
                   </div>
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                       <Eye className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                       <Edit className="w-4 h-4" />
                     </Button>
                     {po.status === 'draft' && (
@@ -493,8 +493,8 @@ export function PurchaseOrdersPage() {
         
         {filteredPOs.length === 0 && (
           <div className="text-center py-12">
-            <ShoppingCart className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-            <p className="text-slate-400">{language === 'ar' ? 'لا توجد أوامر شراء' : 'No purchase orders found'}</p>
+            <ShoppingCart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">{language === 'ar' ? 'لا توجد أوامر شراء' : 'No purchase orders found'}</p>
           </div>
         )}
       </div>

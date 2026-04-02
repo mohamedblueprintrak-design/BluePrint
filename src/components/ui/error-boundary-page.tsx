@@ -96,7 +96,7 @@ function PageErrorContent({
   }, [lang]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 px-4 py-12">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-lg space-y-8 text-center">
         {/* Icon */}
         <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-red-500/10 ring-1 ring-red-500/20">
@@ -105,20 +105,20 @@ function PageErrorContent({
 
         {/* Title & subtitle */}
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-white">{msgs.title}</h1>
-          <p className="text-sm text-slate-400">{msgs.subtitle}</p>
+          <h1 className="text-2xl font-bold text-foreground">{msgs.title}</h1>
+          <p className="text-sm text-muted-foreground">{msgs.subtitle}</p>
         </div>
 
         {/* Error code card */}
-        <div className="mx-auto w-fit rounded-xl border border-slate-800 bg-slate-900 px-6 py-4">
-          <p className="text-xs uppercase tracking-wider text-slate-500 mb-1">{msgs.errorCode}</p>
-          <p className="font-mono text-lg font-semibold text-white">{errorCode}</p>
-          <p className="mt-1 text-xs text-slate-500">{msgs.forSupport}</p>
+        <div className="mx-auto w-fit rounded-xl border border-border bg-card px-6 py-4">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">{msgs.errorCode}</p>
+          <p className="font-mono text-lg font-semibold text-foreground">{errorCode}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{msgs.forSupport}</p>
           <Button
             variant="ghost"
             size="sm"
             onClick={handleCopyCode}
-            className="mt-3 gap-2 text-slate-400 hover:text-white"
+            className="mt-3 gap-2 text-muted-foreground hover:text-foreground"
           >
             <Copy className="h-3.5 w-3.5" />
             {msgs.copyCode}
@@ -129,7 +129,7 @@ function PageErrorContent({
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Button
             onClick={onReset}
-            className="gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+            className="gap-2 bg-blue-600 hover:bg-blue-700 text-foreground"
           >
             <RefreshCw className="h-4 w-4" />
             {msgs.retry}
@@ -137,7 +137,7 @@ function PageErrorContent({
           <Button
             variant="outline"
             onClick={handleReportError}
-            className="gap-2 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
+            className="gap-2 border-border text-foreground/80 hover:bg-muted hover:text-foreground"
           >
             <CheckCircle2 className="h-4 w-4" />
             {lang === 'ar' ? 'إبلاغ عن الخطأ' : 'Report Error'}
@@ -145,7 +145,7 @@ function PageErrorContent({
           <Button
             variant="outline"
             onClick={handleGoDashboard}
-            className="gap-2 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
+            className="gap-2 border-border text-foreground/80 hover:bg-muted hover:text-foreground"
           >
             <Home className="h-4 w-4" />
             {msgs.goDashboard}
@@ -155,14 +155,14 @@ function PageErrorContent({
         {/* Dev-only: full stack trace */}
         {isDev && error && (
           <div className="mx-auto max-w-2xl text-left">
-            <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-2">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
               {msgs.devStackTrace}
             </p>
-            <pre className="rounded-lg border border-red-500/20 bg-slate-900 p-4 text-xs text-red-400/90 overflow-auto max-h-48 whitespace-pre-wrap break-words font-mono">
+            <pre className="rounded-lg border border-red-500/20 bg-card p-4 text-xs text-red-400/90 overflow-auto max-h-48 whitespace-pre-wrap break-words font-mono">
               {error.stack}
             </pre>
             {errorInfo?.componentStack && (
-              <pre className="mt-2 rounded-lg border border-amber-500/20 bg-slate-900 p-4 text-xs text-amber-400/90 overflow-auto max-h-32 whitespace-pre-wrap break-words font-mono">
+              <pre className="mt-2 rounded-lg border border-amber-500/20 bg-card p-4 text-xs text-amber-400/90 overflow-auto max-h-32 whitespace-pre-wrap break-words font-mono">
                 {errorInfo.componentStack}
               </pre>
             )}

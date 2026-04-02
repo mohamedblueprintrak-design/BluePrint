@@ -4,7 +4,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
 // ── Shared skeleton fill class for dark theme ──
-const SK = 'bg-slate-800 animate-pulse rounded-md';
+const SK = 'bg-muted animate-pulse rounded-md';
 
 // ── PageSkeleton ──
 // Full page skeleton with a header bar and a content area.
@@ -61,7 +61,7 @@ export function StatSkeleton({ className }: StatSkeletonProps) {
   return (
     <div
       className={cn(
-        'bg-slate-900/50 border border-slate-800 rounded-xl p-6',
+        'bg-card border border-border rounded-xl p-6',
         className,
       )}
     >
@@ -95,7 +95,7 @@ export function CardSkeleton({
   return (
     <div
       className={cn(
-        'bg-slate-900/50 border border-slate-800 rounded-xl p-4',
+        'bg-card border border-border rounded-xl p-4',
         className,
       )}
     >
@@ -135,9 +135,9 @@ export function TableSkeleton({
   className,
 }: TableSkeletonProps) {
   return (
-    <div className={cn('bg-slate-900/50 border border-slate-800 rounded-xl overflow-hidden', className)}>
+    <div className={cn('bg-card border border-border rounded-xl overflow-hidden', className)}>
       {/* Header */}
-      <div className="grid gap-4 border-b border-slate-700 px-4 py-3" style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}>
+      <div className="grid gap-4 border-b border-border px-4 py-3" style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}>
         {Array.from({ length: columns }).map((_, i) => (
           <Skeleton key={i} className={cn('h-4 w-full', SK)} />
         ))}
@@ -147,7 +147,7 @@ export function TableSkeleton({
       {Array.from({ length: rows }).map((_, r) => (
         <div
           key={r}
-          className="grid gap-4 border-b border-slate-700/50 last:border-b-0 px-4 py-3"
+          className="grid gap-4 border-b border-border/50 last:border-b-0 px-4 py-3"
           style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}
         >
           {Array.from({ length: columns }).map((_, c) => (
@@ -219,7 +219,7 @@ export function ChartSkeleton({ height = 300, className }: ChartSkeletonProps) {
   return (
     <div
       className={cn(
-        'bg-slate-900/50 border border-slate-800 rounded-xl p-6 space-y-4',
+        'bg-card border border-border rounded-xl p-6 space-y-4',
         className,
       )}
     >
@@ -268,7 +268,7 @@ export function GridSkeleton({
   return (
     <div className={cn('grid grid-cols-1 gap-6', columns, className)}>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 space-y-4">
+        <div key={i} className="bg-card border border-border rounded-xl p-6 space-y-4">
           {/* Header row */}
           <div className="flex items-start justify-between">
             <div className="space-y-2 flex-1">

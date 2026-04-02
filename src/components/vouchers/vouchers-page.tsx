@@ -202,7 +202,7 @@ export function VouchersPage() {
       <div className="flex items-center justify-center h-64">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-          <p className="text-slate-400">{language === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>
+          <p className="text-muted-foreground">{language === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>
         </div>
       </div>
     );
@@ -215,8 +215,8 @@ export function VouchersPage() {
         <div className="flex flex-col items-center gap-4 text-center">
           <AlertCircle className="w-12 h-12 text-red-400" />
           <div>
-            <h3 className="text-lg font-medium text-white">{language === 'ar' ? 'خطأ في التحميل' : 'Error Loading'}</h3>
-            <p className="text-slate-400">{language === 'ar' ? 'فشل في تحميل السندات' : 'Failed to load vouchers'}</p>
+            <h3 className="text-lg font-medium text-foreground">{language === 'ar' ? 'خطأ في التحميل' : 'Error Loading'}</h3>
+            <p className="text-muted-foreground">{language === 'ar' ? 'فشل في تحميل السندات' : 'Failed to load vouchers'}</p>
           </div>
         </div>
       </div>
@@ -227,49 +227,49 @@ export function VouchersPage() {
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-green-500/20">
                 <ArrowDownToLine className="w-5 h-5 text-green-400" />
               </div>
               <div>
-                <p className="text-lg font-bold text-white">{formatCurrency(stats.totalReceipts)}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'إجمالي القبض' : 'Total Receipts'}</p>
+                <p className="text-lg font-bold text-foreground">{formatCurrency(stats.totalReceipts)}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'إجمالي القبض' : 'Total Receipts'}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-red-500/20">
                 <ArrowUpFromLine className="w-5 h-5 text-red-400" />
               </div>
               <div>
-                <p className="text-lg font-bold text-white">{formatCurrency(stats.totalPayments)}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'إجمالي الصرف' : 'Total Payments'}</p>
+                <p className="text-lg font-bold text-foreground">{formatCurrency(stats.totalPayments)}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'إجمالي الصرف' : 'Total Payments'}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-yellow-500/20">
                 <Receipt className="w-5 h-5 text-yellow-400" />
               </div>
               <div>
-                <p className="text-lg font-bold text-white">{formatCurrency(stats.pendingPayments)}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'معلق' : 'Pending'}</p>
+                <p className="text-lg font-bold text-foreground">{formatCurrency(stats.pendingPayments)}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'معلق' : 'Pending'}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className={`p-2 rounded-lg ${stats.netCash >= 0 ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
@@ -279,7 +279,7 @@ export function VouchersPage() {
                 <p className={`text-lg font-bold ${stats.netCash >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                   {formatCurrency(stats.netCash)}
                 </p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'صافي النقد' : 'Net Cash'}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'صافي النقد' : 'Net Cash'}</p>
               </div>
             </div>
           </CardContent>
@@ -289,15 +289,15 @@ export function VouchersPage() {
       {/* Tabs */}
       <Tabs defaultValue="all" className="space-y-4" value={typeFilter} onValueChange={setTypeFilter}>
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-          <TabsList className="bg-slate-900/50 border border-slate-800 p-1">
-            <TabsTrigger value="all" className="data-[state=active]:bg-slate-800">
+          <TabsList className="bg-card border border-border p-1">
+            <TabsTrigger value="all" className="data-[state=active]:bg-muted">
               {language === 'ar' ? 'الكل' : 'All'}
             </TabsTrigger>
-            <TabsTrigger value="receipt" className="data-[state=active]:bg-slate-800">
+            <TabsTrigger value="receipt" className="data-[state=active]:bg-muted">
               <ArrowDownToLine className="w-4 h-4 me-2 text-green-400" />
               {language === 'ar' ? 'سندات القبض' : 'Receipts'}
             </TabsTrigger>
-            <TabsTrigger value="payment" className="data-[state=active]:bg-slate-800">
+            <TabsTrigger value="payment" className="data-[state=active]:bg-muted">
               <ArrowUpFromLine className="w-4 h-4 me-2 text-red-400" />
               {language === 'ar' ? 'سندات الصرف' : 'Payments'}
             </TabsTrigger>
@@ -305,26 +305,26 @@ export function VouchersPage() {
           
           <div className="flex gap-3">
             <div className="relative min-w-[200px]">
-              <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder={t.search}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="ps-9 bg-slate-800/50 border-slate-700 text-white"
+                className="ps-9 bg-muted border-border text-foreground"
               />
             </div>
             
             <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
               <DialogTrigger asChild>
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-foreground">
                   <Plus className="w-4 h-4 me-2" />
                   {language === 'ar' ? 'سند جديد' : 'New Voucher'}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-lg">
+              <DialogContent className="bg-card border-border text-foreground max-w-lg">
                 <DialogHeader>
                   <DialogTitle>{language === 'ar' ? 'إنشاء سند جديد' : 'Create New Voucher'}</DialogTitle>
-                  <DialogDescription className="text-slate-400">
+                  <DialogDescription className="text-muted-foreground">
                     {language === 'ar' ? 'اختر نوع السند وأدخل التفاصيل' : 'Select voucher type and enter details'}
                   </DialogDescription>
                 </DialogHeader>
@@ -338,7 +338,7 @@ export function VouchersPage() {
                         <Button
                           key={type.value}
                           variant={voucherType === type.value ? 'default' : 'outline'}
-                          className={`h-16 flex flex-col gap-1 ${voucherType === type.value ? 'bg-blue-600' : 'border-slate-700'}`}
+                          className={`h-16 flex flex-col gap-1 ${voucherType === type.value ? 'bg-blue-600' : 'border-border'}`}
                           onClick={() => setVoucherType(type.value as 'receipt' | 'payment')}
                         >
                           <Icon className={`w-5 h-5 ${type.color}`} />
@@ -350,33 +350,33 @@ export function VouchersPage() {
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-slate-300">{language === 'ar' ? 'المبلغ' : 'Amount'} *</Label>
+                      <Label className="text-foreground/80">{language === 'ar' ? 'المبلغ' : 'Amount'} *</Label>
                       <Input
                         type="number"
                         value={formData.amount || ''}
                         onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
-                        className="bg-slate-800/50 border-slate-700 text-white"
+                        className="bg-muted border-border text-foreground"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-slate-300">{language === 'ar' ? 'التاريخ' : 'Date'}</Label>
+                      <Label className="text-foreground/80">{language === 'ar' ? 'التاريخ' : 'Date'}</Label>
                       <Input
                         type="date"
                         value={formData.date}
                         onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                        className="bg-slate-800/50 border-slate-700 text-white"
+                        className="bg-muted border-border text-foreground"
                       />
                     </div>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-slate-300">{t.project}</Label>
+                      <Label className="text-foreground/80">{t.project}</Label>
                       <Select value={formData.projectId} onValueChange={(v) => setFormData({ ...formData, projectId: v })}>
-                        <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                        <SelectTrigger className="bg-muted border-border text-foreground">
                           <SelectValue placeholder={language === 'ar' ? 'اختر المشروع' : 'Select project'} />
                         </SelectTrigger>
-                        <SelectContent className="bg-slate-900 border-slate-800">
+                        <SelectContent className="bg-card border-border">
                           {projects.map((project: any) => (
                             <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
                           ))}
@@ -384,15 +384,15 @@ export function VouchersPage() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-slate-300">
+                      <Label className="text-foreground/80">
                         {voucherType === 'receipt' ? t.clientName : language === 'ar' ? 'المورد' : 'Supplier'}
                       </Label>
                       {voucherType === 'receipt' ? (
                         <Select value={formData.clientId} onValueChange={(v) => setFormData({ ...formData, clientId: v })}>
-                          <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                          <SelectTrigger className="bg-muted border-border text-foreground">
                             <SelectValue placeholder={language === 'ar' ? 'اختر العميل' : 'Select client'} />
                           </SelectTrigger>
-                          <SelectContent className="bg-slate-900 border-slate-800">
+                          <SelectContent className="bg-card border-border">
                             {clients.map((client: any) => (
                               <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
                             ))}
@@ -400,10 +400,10 @@ export function VouchersPage() {
                         </Select>
                       ) : (
                         <Select value={formData.supplierId} onValueChange={(v) => setFormData({ ...formData, supplierId: v })}>
-                          <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                          <SelectTrigger className="bg-muted border-border text-foreground">
                             <SelectValue placeholder={language === 'ar' ? 'اختر المورد' : 'Select supplier'} />
                           </SelectTrigger>
-                          <SelectContent className="bg-slate-900 border-slate-800">
+                          <SelectContent className="bg-card border-border">
                             {suppliers.map((supplier: any) => (
                               <SelectItem key={supplier.id} value={supplier.id}>{supplier.name}</SelectItem>
                             ))}
@@ -415,12 +415,12 @@ export function VouchersPage() {
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-slate-300">{language === 'ar' ? 'طريقة الدفع' : 'Payment Method'}</Label>
+                      <Label className="text-foreground/80">{language === 'ar' ? 'طريقة الدفع' : 'Payment Method'}</Label>
                       <Select value={formData.paymentMethod} onValueChange={(v) => setFormData({ ...formData, paymentMethod: v })}>
-                        <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                        <SelectTrigger className="bg-muted border-border text-foreground">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="bg-slate-900 border-slate-800">
+                        <SelectContent className="bg-card border-border">
                           {PAYMENT_METHODS.map((method) => (
                             <SelectItem key={method.value} value={method.value}>
                               {language === 'ar' ? method.label : method.labelEn}
@@ -430,28 +430,28 @@ export function VouchersPage() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-slate-300">{language === 'ar' ? 'رقم المرجع' : 'Reference No.'}</Label>
+                      <Label className="text-foreground/80">{language === 'ar' ? 'رقم المرجع' : 'Reference No.'}</Label>
                       <Input
                         value={formData.referenceNumber}
                         onChange={(e) => setFormData({ ...formData, referenceNumber: e.target.value })}
-                        className="bg-slate-800/50 border-slate-700 text-white"
+                        className="bg-muted border-border text-foreground"
                       />
                     </div>
                   </div>
                   
                   <div className="space-y-2">
-                    <Label className="text-slate-300">{language === 'ar' ? 'الوصف' : 'Description'} *</Label>
+                    <Label className="text-foreground/80">{language === 'ar' ? 'الوصف' : 'Description'} *</Label>
                     <Textarea
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      className="bg-slate-800/50 border-slate-700 text-white"
+                      className="bg-muted border-border text-foreground"
                       rows={2}
                     />
                   </div>
                 </div>
                 
                 <DialogFooter>
-                  <Button variant="ghost" onClick={() => setShowAddDialog(false)} className="text-slate-400">
+                  <Button variant="ghost" onClick={() => setShowAddDialog(false)} className="text-muted-foreground">
                     {t.cancel}
                   </Button>
                   <Button 
@@ -471,11 +471,11 @@ export function VouchersPage() {
         {/* Empty state */}
         {filteredVouchers.length === 0 && (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <Receipt className="w-16 h-16 text-slate-600 mb-4" />
-            <h3 className="text-lg font-medium text-white mb-2">
+            <Receipt className="w-16 h-16 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">
               {language === 'ar' ? 'لا توجد سندات' : 'No Vouchers'}
             </h3>
-            <p className="text-slate-400 mb-4">
+            <p className="text-muted-foreground mb-4">
               {searchQuery 
                 ? (language === 'ar' ? 'لم يتم العثور على نتائج مطابقة' : 'No matching results found')
                 : (language === 'ar' ? 'ابدأ بإنشاء سند جديد' : 'Start by creating a new voucher')
@@ -493,7 +493,7 @@ export function VouchersPage() {
         {/* Voucher Lists */}
         <TabsContent value="all" className="space-y-4">
           {filteredVouchers.map((voucher: Voucher) => (
-            <Card key={voucher.id} className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-colors">
+            <Card key={voucher.id} className="bg-card border-border hover:border-border transition-colors">
               <CardContent className="p-4">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex items-start gap-4">
@@ -506,16 +506,16 @@ export function VouchersPage() {
                     </div>
                     <div>
                       <div className="flex items-center gap-3 mb-1">
-                        <h3 className="text-white font-medium">{voucher.voucherNumber}</h3>
+                        <h3 className="text-foreground font-medium">{voucher.voucherNumber}</h3>
                         <Badge variant="outline" className={voucher.voucherType === 'receipt' ? 'border-green-500 text-green-400' : 'border-red-500 text-red-400'}>
                           {voucher.voucherType === 'receipt' ? (language === 'ar' ? 'قبض' : 'Receipt') : (language === 'ar' ? 'صرف' : 'Payment')}
                         </Badge>
                         {voucher.status === 'pending' && (
-                          <Badge className="bg-yellow-500 text-white">{language === 'ar' ? 'معلق' : 'Pending'}</Badge>
+                          <Badge className="bg-yellow-500 text-foreground">{language === 'ar' ? 'معلق' : 'Pending'}</Badge>
                         )}
                       </div>
-                      <p className="text-slate-400 text-sm">{voucher.description}</p>
-                      <div className="flex flex-wrap gap-4 mt-2 text-xs text-slate-500">
+                      <p className="text-muted-foreground text-sm">{voucher.description}</p>
+                      <div className="flex flex-wrap gap-4 mt-2 text-xs text-muted-foreground">
                         {voucher.projectName && (
                           <div className="flex items-center gap-1">
                             <Building2 className="w-3 h-3" />
@@ -548,7 +548,7 @@ export function VouchersPage() {
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="h-8 w-8 text-slate-400 hover:text-white"
+                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
                         onClick={() => handleViewVoucher(voucher)}
                       >
                         <Eye className="w-4 h-4" />
@@ -556,7 +556,7 @@ export function VouchersPage() {
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="h-8 w-8 text-slate-400 hover:text-white"
+                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
                         onClick={() => window.print()}
                       >
                         <Printer className="w-4 h-4" />
@@ -564,7 +564,7 @@ export function VouchersPage() {
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="h-8 w-8 text-slate-400 hover:text-red-400"
+                        className="h-8 w-8 text-muted-foreground hover:text-red-400"
                         onClick={() => handleDeleteVoucher(voucher.id)}
                         disabled={deleteVoucher.isPending}
                       >
@@ -580,7 +580,7 @@ export function VouchersPage() {
 
         <TabsContent value="receipt" className="space-y-4">
           {filteredVouchers.filter((v: Voucher) => v.voucherType === 'receipt').map((voucher: Voucher) => (
-            <Card key={voucher.id} className="bg-slate-900/50 border-slate-800">
+            <Card key={voucher.id} className="bg-card border-border">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -588,8 +588,8 @@ export function VouchersPage() {
                       <ArrowDownToLine className="w-6 h-6 text-green-400" />
                     </div>
                     <div>
-                      <h3 className="text-white font-medium">{voucher.voucherNumber}</h3>
-                      <p className="text-slate-400 text-sm">{voucher.description}</p>
+                      <h3 className="text-foreground font-medium">{voucher.voucherNumber}</h3>
+                      <p className="text-muted-foreground text-sm">{voucher.description}</p>
                     </div>
                   </div>
                   <p className="text-xl font-bold text-green-400">+{formatCurrency(voucher.amount)}</p>
@@ -601,7 +601,7 @@ export function VouchersPage() {
 
         <TabsContent value="payment" className="space-y-4">
           {filteredVouchers.filter((v: Voucher) => v.voucherType === 'payment').map((voucher: Voucher) => (
-            <Card key={voucher.id} className="bg-slate-900/50 border-slate-800">
+            <Card key={voucher.id} className="bg-card border-border">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -609,8 +609,8 @@ export function VouchersPage() {
                       <ArrowUpFromLine className="w-6 h-6 text-red-400" />
                     </div>
                     <div>
-                      <h3 className="text-white font-medium">{voucher.voucherNumber}</h3>
-                      <p className="text-slate-400 text-sm">{voucher.description}</p>
+                      <h3 className="text-foreground font-medium">{voucher.voucherNumber}</h3>
+                      <p className="text-muted-foreground text-sm">{voucher.description}</p>
                     </div>
                   </div>
                   <p className="text-xl font-bold text-red-400">-{formatCurrency(voucher.amount)}</p>
@@ -623,7 +623,7 @@ export function VouchersPage() {
 
       {/* View Voucher Dialog */}
       <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-lg">
+        <DialogContent className="bg-card border-border text-foreground max-w-lg">
           <DialogHeader>
             <DialogTitle>
               {language === 'ar' ? 'تفاصيل السند' : 'Voucher Details'}
@@ -632,9 +632,9 @@ export function VouchersPage() {
           
           {selectedVoucher && (
             <div className="space-y-4 py-4">
-              <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
                 <div>
-                  <h3 className="text-xl font-bold text-white">{selectedVoucher.voucherNumber}</h3>
+                  <h3 className="text-xl font-bold text-foreground">{selectedVoucher.voucherNumber}</h3>
                   <Badge variant="outline" className={selectedVoucher.voucherType === 'receipt' ? 'border-green-500 text-green-400 mt-2' : 'border-red-500 text-red-400 mt-2'}>
                     {selectedVoucher.voucherType === 'receipt' 
                       ? (language === 'ar' ? 'سند قبض' : 'Receipt Voucher') 
@@ -649,38 +649,38 @@ export function VouchersPage() {
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-slate-400">{language === 'ar' ? 'التاريخ' : 'Date'}</p>
-                  <p className="text-white">{formatDate(selectedVoucher.date)}</p>
+                  <p className="text-sm text-muted-foreground">{language === 'ar' ? 'التاريخ' : 'Date'}</p>
+                  <p className="text-foreground">{formatDate(selectedVoucher.date)}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-slate-400">{language === 'ar' ? 'طريقة الدفع' : 'Payment Method'}</p>
-                  <p className="text-white">{getPaymentMethodLabel(selectedVoucher.paymentMethod)}</p>
+                  <p className="text-sm text-muted-foreground">{language === 'ar' ? 'طريقة الدفع' : 'Payment Method'}</p>
+                  <p className="text-foreground">{getPaymentMethodLabel(selectedVoucher.paymentMethod)}</p>
                 </div>
                 {selectedVoucher.projectName && (
                   <div>
-                    <p className="text-sm text-slate-400">{language === 'ar' ? 'المشروع' : 'Project'}</p>
-                    <p className="text-white">{selectedVoucher.projectName}</p>
+                    <p className="text-sm text-muted-foreground">{language === 'ar' ? 'المشروع' : 'Project'}</p>
+                    <p className="text-foreground">{selectedVoucher.projectName}</p>
                   </div>
                 )}
                 {(selectedVoucher.clientName || selectedVoucher.supplierName) && (
                   <div>
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-muted-foreground">
                       {selectedVoucher.voucherType === 'receipt' 
                         ? (language === 'ar' ? 'العميل' : 'Client') 
                         : (language === 'ar' ? 'المورد' : 'Supplier')
                       }
                     </p>
-                    <p className="text-white">{selectedVoucher.clientName || selectedVoucher.supplierName}</p>
+                    <p className="text-foreground">{selectedVoucher.clientName || selectedVoucher.supplierName}</p>
                   </div>
                 )}
                 {selectedVoucher.referenceNumber && (
                   <div>
-                    <p className="text-sm text-slate-400">{language === 'ar' ? 'رقم المرجع' : 'Reference No.'}</p>
-                    <p className="text-white">{selectedVoucher.referenceNumber}</p>
+                    <p className="text-sm text-muted-foreground">{language === 'ar' ? 'رقم المرجع' : 'Reference No.'}</p>
+                    <p className="text-foreground">{selectedVoucher.referenceNumber}</p>
                   </div>
                 )}
                 <div>
-                  <p className="text-sm text-slate-400">{language === 'ar' ? 'الحالة' : 'Status'}</p>
+                  <p className="text-sm text-muted-foreground">{language === 'ar' ? 'الحالة' : 'Status'}</p>
                   <Badge className={selectedVoucher.status === 'completed' ? 'bg-green-500' : selectedVoucher.status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'}>
                     {selectedVoucher.status === 'completed' 
                       ? (language === 'ar' ? 'مكتمل' : 'Completed')
@@ -694,15 +694,15 @@ export function VouchersPage() {
               
               {selectedVoucher.description && (
                 <div>
-                  <p className="text-sm text-slate-400 mb-1">{language === 'ar' ? 'الوصف' : 'Description'}</p>
-                  <p className="text-white bg-slate-800/50 p-3 rounded-lg">{selectedVoucher.description}</p>
+                  <p className="text-sm text-muted-foreground mb-1">{language === 'ar' ? 'الوصف' : 'Description'}</p>
+                  <p className="text-foreground bg-muted p-3 rounded-lg">{selectedVoucher.description}</p>
                 </div>
               )}
             </div>
           )}
           
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setShowViewDialog(false)} className="text-slate-400">
+            <Button variant="ghost" onClick={() => setShowViewDialog(false)} className="text-muted-foreground">
               {language === 'ar' ? 'إغلاق' : 'Close'}
             </Button>
             <Button onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-700">

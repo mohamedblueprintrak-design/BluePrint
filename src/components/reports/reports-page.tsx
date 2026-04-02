@@ -249,7 +249,7 @@ function MetricCard({ title, value, change, trend, icon: Icon, color, bgColor, s
   subtitle?: string;
 }) {
   return (
-    <Card className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-colors">
+    <Card className="bg-card border-border hover:border-border transition-colors">
       <CardContent className="p-6">
         <div className="flex items-start justify-between">
           <div className={`p-2.5 rounded-lg ${bgColor}`}>
@@ -267,11 +267,11 @@ function MetricCard({ title, value, change, trend, icon: Icon, color, bgColor, s
           )}
         </div>
         <div className="mt-4">
-          <p className="text-2xl font-bold text-white">{value}</p>
+          <p className="text-2xl font-bold text-foreground">{value}</p>
           {subtitle && (
-            <p className="text-sm text-slate-400 mt-0.5">{subtitle}</p>
+            <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>
           )}
-          <p className="text-sm text-slate-400 mt-1">{title}</p>
+          <p className="text-sm text-muted-foreground mt-1">{title}</p>
         </div>
       </CardContent>
     </Card>
@@ -298,16 +298,16 @@ function CustomPieChart({ data, height = 300 }: { data: { name: string; value: n
         </Pie>
         <Tooltip
           contentStyle={{
-            backgroundColor: '#1e293b',
-            border: '1px solid #334155',
+            backgroundColor: 'var(--color-popover, #0f172a)',
+            border: '1px solid var(--color-border, #334155)',
             borderRadius: '8px',
-            color: '#fff',
+            color: 'var(--color-popover-foreground, #f8fafc)',
           }}
         />
         <Legend
           verticalAlign="bottom"
           height={36}
-          formatter={(value) => <span className="text-slate-300 text-sm">{value}</span>}
+          formatter={(value) => <span className="text-foreground/80 text-sm">{value}</span>}
         />
       </PieChart>
     </ResponsiveContainer>
@@ -563,8 +563,8 @@ export function ReportsPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">{t.reports}</h1>
-          <p className="text-slate-400 mt-1">
+          <h1 className="text-2xl font-bold text-foreground">{t.reports}</h1>
+          <p className="text-muted-foreground mt-1">
             {language === 'ar' ? 'تحليلات وتقارير شاملة' : 'Comprehensive analytics and reports'}
           </p>
         </div>
@@ -572,11 +572,11 @@ export function ReportsPage() {
         <div className="flex flex-wrap items-center gap-3">
           {/* Report Type Selector */}
           <Select value={selectedReportType} onValueChange={(value) => setSelectedReportType(value as ReportType)}>
-            <SelectTrigger className="w-[160px] bg-slate-800/50 border-slate-700 text-white">
-              <FileBarChart className="w-4 h-4 me-2 text-slate-400" />
+            <SelectTrigger className="w-[160px] bg-muted border-border text-foreground">
+              <FileBarChart className="w-4 h-4 me-2 text-muted-foreground" />
               <SelectValue placeholder={language === 'ar' ? 'نوع التقرير' : 'Report Type'} />
             </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-slate-800">
+            <SelectContent className="bg-card border-border">
               <SelectItem value="financial">{language === 'ar' ? 'التقرير المالي' : 'Financial Report'}</SelectItem>
               <SelectItem value="projects">{language === 'ar' ? 'تقرير المشاريع' : 'Projects Report'}</SelectItem>
               <SelectItem value="tasks">{language === 'ar' ? 'تقرير المهام' : 'Tasks Report'}</SelectItem>
@@ -592,11 +592,11 @@ export function ReportsPage() {
               setShowCustomDatePicker(true);
             }
           }}>
-            <SelectTrigger className="w-[160px] bg-slate-800/50 border-slate-700 text-white">
-              <Calendar className="w-4 h-4 me-2 text-slate-400" />
+            <SelectTrigger className="w-[160px] bg-muted border-border text-foreground">
+              <Calendar className="w-4 h-4 me-2 text-muted-foreground" />
               <SelectValue placeholder={language === 'ar' ? 'الفترة' : 'Period'} />
             </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-slate-800">
+            <SelectContent className="bg-card border-border">
               {dateRangeOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
@@ -609,7 +609,7 @@ export function ReportsPage() {
           {showCustomDatePicker && (
             <Popover open={showCustomDatePicker} onOpenChange={setShowCustomDatePicker}>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="bg-slate-800/50 border-slate-700 text-white">
+                <Button variant="outline" className="bg-muted border-border text-foreground">
                   <CalendarDays className="w-4 h-4 me-2" />
                   {customDateFrom && customDateTo 
                     ? `${formatDate(customDateFrom)} - ${formatDate(customDateTo)}`
@@ -617,28 +617,28 @@ export function ReportsPage() {
                   }
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 bg-slate-900 border-slate-800" align="start">
+              <PopoverContent className="w-auto p-0 bg-card border-border" align="start">
                 <div className="p-4 space-y-4">
                   <div className="space-y-2">
-                    <label className="text-sm text-slate-400">
+                    <label className="text-sm text-muted-foreground">
                       {language === 'ar' ? 'من' : 'From'}
                     </label>
                     <CalendarComponent
                       mode="single"
                       selected={customDateFrom}
                       onSelect={setCustomDateFrom}
-                      className="bg-slate-800 border-slate-700"
+                      className="bg-muted border-border"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm text-slate-400">
+                    <label className="text-sm text-muted-foreground">
                       {language === 'ar' ? 'إلى' : 'To'}
                     </label>
                     <CalendarComponent
                       mode="single"
                       selected={customDateTo}
                       onSelect={setCustomDateTo}
-                      className="bg-slate-800 border-slate-700"
+                      className="bg-muted border-border"
                     />
                   </div>
                   <Button 
@@ -655,7 +655,7 @@ export function ReportsPage() {
           {/* Generate Report Button */}
           <Button 
             variant="outline" 
-            className="bg-slate-800/50 border-slate-700 text-white hover:bg-slate-800"
+            className="bg-muted border-border text-foreground hover:bg-accent"
             onClick={() => window.location.reload()}
           >
             <RefreshCw className="w-4 h-4 me-2" />
@@ -665,7 +665,7 @@ export function ReportsPage() {
           {/* Print Button */}
           <Button 
             variant="outline" 
-            className="bg-slate-800/50 border-slate-700 text-white hover:bg-slate-800"
+            className="bg-muted border-border text-foreground hover:bg-accent"
             onClick={handlePrint}
           >
             <Printer className="w-4 h-4 me-2" />
@@ -675,7 +675,7 @@ export function ReportsPage() {
           {/* Export Excel Button */}
           <Button 
             variant="outline" 
-            className="bg-slate-800/50 border-slate-700 text-white hover:bg-slate-800"
+            className="bg-muted border-border text-foreground hover:bg-accent"
             onClick={handleExportExcel}
             disabled={isExporting}
           >
@@ -685,7 +685,7 @@ export function ReportsPage() {
           
           {/* Export PDF Button */}
           <Button 
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-blue-600 hover:bg-blue-700 text-foreground"
             onClick={handleExportPDF}
             disabled={isExporting}
           >
@@ -697,50 +697,50 @@ export function ReportsPage() {
 
       {/* Tabs */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="bg-slate-900/50 border border-slate-800 p-1 h-auto flex-wrap gap-1">
+        <TabsList className="bg-card border border-border p-1 h-auto flex-wrap gap-1">
           <TabsTrigger 
             value="overview" 
-            className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-slate-400 px-4 py-2"
+            className="data-[state=active]:bg-blue-600 data-[state=active]:text-foreground text-muted-foreground px-4 py-2"
           >
             <BarChart3 className="w-4 h-4 me-2" />
             {language === 'ar' ? 'نظرة عامة' : 'Overview'}
           </TabsTrigger>
           <TabsTrigger 
             value="financial" 
-            className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-slate-400 px-4 py-2"
+            className="data-[state=active]:bg-blue-600 data-[state=active]:text-foreground text-muted-foreground px-4 py-2"
           >
             <DollarSign className="w-4 h-4 me-2" />
             {language === 'ar' ? 'التقارير المالية' : 'Financial Reports'}
           </TabsTrigger>
           <TabsTrigger 
             value="projects" 
-            className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-slate-400 px-4 py-2"
+            className="data-[state=active]:bg-blue-600 data-[state=active]:text-foreground text-muted-foreground px-4 py-2"
           >
             <Building2 className="w-4 h-4 me-2" />
             {language === 'ar' ? 'تقارير المشاريع' : 'Project Reports'}
           </TabsTrigger>
           <TabsTrigger 
             value="hr" 
-            className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-slate-400 px-4 py-2"
+            className="data-[state=active]:bg-blue-600 data-[state=active]:text-foreground text-muted-foreground px-4 py-2"
           >
             <Users className="w-4 h-4 me-2" />
             {language === 'ar' ? 'تقارير الموارد البشرية' : 'HR Reports'}
           </TabsTrigger>
           <TabsTrigger 
             value="custom" 
-            className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-slate-400 px-4 py-2"
+            className="data-[state=active]:bg-blue-600 data-[state=active]:text-foreground text-muted-foreground px-4 py-2"
           >
             <FileBarChart className="w-4 h-4 me-2" />
             {language === 'ar' ? 'تقارير مخصصة' : 'Custom Reports'}
           </TabsTrigger>
-          <button
-            type="button"
+          <TabsTrigger
+            value="meetings"
             onClick={() => router.push('/dashboard/reports?tab=meetings')}
-            className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-slate-400 px-4 py-2 rounded-md text-sm font-medium inline-flex items-center transition-colors hover:text-white cursor-pointer border-0 bg-transparent"
+            className="data-[state=active]:bg-blue-600 data-[state=active]:text-foreground text-muted-foreground px-4 py-2"
           >
             <CalendarDays className="w-4 h-4 me-2" />
             {language === 'ar' ? 'الاجتماعات والسكرتارية' : 'Meetings & Secretarial'}
-          </button>
+          </TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -755,13 +755,13 @@ export function ReportsPage() {
           {/* Charts Row 1: Revenue Bar Chart & Project Status Pie Chart */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Revenue Bar Chart */}
-            <Card className="bg-slate-900/50 border-slate-800">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="text-foreground flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 text-green-400" />
                   {language === 'ar' ? 'الإيرادات الشهرية' : 'Monthly Revenue'}
                 </CardTitle>
-                <CardDescription className="text-slate-400">
+                <CardDescription className="text-muted-foreground">
                   {language === 'ar' ? 'الإيرادات حسب الشهر' : 'Revenue by month'}
                 </CardDescription>
               </CardHeader>
@@ -779,13 +779,13 @@ export function ReportsPage() {
             </Card>
 
             {/* Project Status Distribution Pie Chart */}
-            <Card className="bg-slate-900/50 border-slate-800">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="text-foreground flex items-center gap-2">
                   <PieChartIcon className="w-5 h-5 text-cyan-400" />
                   {language === 'ar' ? 'توزيع حالة المشاريع' : 'Project Status Distribution'}
                 </CardTitle>
-                <CardDescription className="text-slate-400">
+                <CardDescription className="text-muted-foreground">
                   {language === 'ar' ? 'توزيع المشاريع حسب الحالة' : 'Projects distribution by status'}
                 </CardDescription>
               </CardHeader>
@@ -798,13 +798,13 @@ export function ReportsPage() {
           {/* Charts Row 2: Task Completion Line Chart & Invoice Status */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Task Completion Line Chart */}
-            <Card className="bg-slate-900/50 border-slate-800">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="text-foreground flex items-center gap-2">
                   <Activity className="w-5 h-5 text-orange-400" />
                   {language === 'ar' ? 'اتجاه إكمال المهام' : 'Task Completion Trend'}
                 </CardTitle>
-                <CardDescription className="text-slate-400">
+                <CardDescription className="text-muted-foreground">
                   {language === 'ar' ? 'المهام المكتملة والمعلقة شهرياً' : 'Completed and pending tasks monthly'}
                 </CardDescription>
               </CardHeader>
@@ -825,13 +825,13 @@ export function ReportsPage() {
             </Card>
 
             {/* Invoice Status Breakdown */}
-            <Card className="bg-slate-900/50 border-slate-800">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="text-foreground flex items-center gap-2">
                   <FileText className="w-5 h-5 text-blue-400" />
                   {language === 'ar' ? 'توزيع حالة الفواتير' : 'Invoice Status Breakdown'}
                 </CardTitle>
-                <CardDescription className="text-slate-400">
+                <CardDescription className="text-muted-foreground">
                   {language === 'ar' ? 'توزيع الفواتير حسب الحالة' : 'Invoice distribution by status'}
                 </CardDescription>
               </CardHeader>
@@ -842,13 +842,13 @@ export function ReportsPage() {
           </div>
 
           {/* Monthly Trends */}
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-foreground flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-purple-400" />
                 {language === 'ar' ? 'الاتجاهات الشهرية' : 'Monthly Trends'}
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-muted-foreground">
                 {language === 'ar' ? 'الإيرادات والمصروفات والأرباح' : 'Revenue, expenses, and profit trends'}
               </CardDescription>
             </CardHeader>
@@ -879,13 +879,13 @@ export function ReportsPage() {
           </div>
 
           {/* Revenue vs Expenses Chart */}
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-foreground flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-green-400" />
                 {language === 'ar' ? 'الإيرادات مقابل المصروفات' : 'Revenue vs Expenses'}
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-muted-foreground">
                 {language === 'ar' ? 'مقارنة الإيرادات والمصروفات الشهرية' : 'Monthly revenue and expenses comparison'}
               </CardDescription>
             </CardHeader>
@@ -906,13 +906,13 @@ export function ReportsPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Invoice Status Breakdown */}
-            <Card className="bg-slate-900/50 border-slate-800">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="text-foreground flex items-center gap-2">
                   <FileText className="w-5 h-5 text-blue-400" />
                   {language === 'ar' ? 'توزيع حالة الفواتير' : 'Invoice Status Breakdown'}
                 </CardTitle>
-                <CardDescription className="text-slate-400">
+                <CardDescription className="text-muted-foreground">
                   {language === 'ar' ? 'توزيع الفواتير حسب الحالة' : 'Invoice distribution by status'}
                 </CardDescription>
               </CardHeader>
@@ -922,13 +922,13 @@ export function ReportsPage() {
             </Card>
 
             {/* Payment Collection Rate */}
-            <Card className="bg-slate-900/50 border-slate-800">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="text-foreground flex items-center gap-2">
                   <DollarSign className="w-5 h-5 text-cyan-400" />
                   {language === 'ar' ? 'معدل تحصيل المدفوعات' : 'Payment Collection Rate'}
                 </CardTitle>
-                <CardDescription className="text-slate-400">
+                <CardDescription className="text-muted-foreground">
                   {language === 'ar' ? 'نسبة التحصيل الشهرية' : 'Monthly collection percentage'}
                 </CardDescription>
               </CardHeader>
@@ -943,9 +943,9 @@ export function ReportsPage() {
                     { month: language === 'ar' ? 'يونيو' : 'June', rate: 94 },
                   ].map((item, index) => (
                     <div key={index} className="flex items-center gap-4">
-                      <span className="text-sm text-slate-400 w-20">{item.month}</span>
+                      <span className="text-sm text-muted-foreground w-20">{item.month}</span>
                       <Progress value={item.rate} className="flex-1 h-2" />
-                      <span className="text-sm text-white font-medium">{item.rate}%</span>
+                      <span className="text-sm text-foreground font-medium">{item.rate}%</span>
                     </div>
                   ))}
                 </div>
@@ -954,26 +954,26 @@ export function ReportsPage() {
           </div>
 
           {/* Top Clients by Revenue */}
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-foreground flex items-center gap-2">
                 <Users className="w-5 h-5 text-purple-400" />
                 {language === 'ar' ? 'أفضل العملاء حسب الإيرادات' : 'Top Clients by Revenue'}
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-muted-foreground">
                 {language === 'ar' ? 'العملاء الأعلى إيرادات' : 'Highest revenue generating clients'}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {topClientsData.map((client, index) => (
-                  <div key={index} className="flex items-center gap-4 p-3 rounded-lg bg-slate-800/50">
+                  <div key={index} className="flex items-center gap-4 p-3 rounded-lg bg-muted">
                     <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 font-bold">
                       {index + 1}
                     </div>
                     <div className="flex-1">
-                      <p className="text-white font-medium">{client.name}</p>
-                      <p className="text-sm text-slate-400">
+                      <p className="text-foreground font-medium">{client.name}</p>
+                      <p className="text-sm text-muted-foreground">
                         {client.projects} {language === 'ar' ? 'مشاريع' : 'projects'}
                       </p>
                     </div>
@@ -987,13 +987,13 @@ export function ReportsPage() {
           </Card>
 
           {/* Overdue Invoices List */}
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-foreground flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-red-400" />
                 {language === 'ar' ? 'الفواتير المتأخرة' : 'Overdue Invoices'}
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-muted-foreground">
                 {language === 'ar' ? 'فواتير تجاوزت تاريخ الاستحقاق' : 'Invoices past due date'}
               </CardDescription>
             </CardHeader>
@@ -1001,16 +1001,16 @@ export function ReportsPage() {
               <ScrollArea className="h-72">
                 <div className="space-y-3">
                   {overdueInvoicesData.map((invoice, index) => (
-                    <div key={index} className="flex items-center gap-4 p-3 rounded-lg bg-slate-800/50 border border-red-500/20">
+                    <div key={index} className="flex items-center gap-4 p-3 rounded-lg bg-muted border border-red-500/20">
                       <div className="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center">
                         <FileText className="w-5 h-5 text-red-400" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-white font-medium">{invoice.id}</p>
-                        <p className="text-sm text-slate-400">{invoice.client}</p>
+                        <p className="text-foreground font-medium">{invoice.id}</p>
+                        <p className="text-sm text-muted-foreground">{invoice.client}</p>
                       </div>
                       <div className="text-end">
-                        <p className="text-white font-bold">{formatCurrency(invoice.amount)}</p>
+                        <p className="text-foreground font-bold">{formatCurrency(invoice.amount)}</p>
                         <Badge variant="destructive" className="mt-1">
                           {invoice.daysOverdue} {language === 'ar' ? 'يوم' : 'days'}
                         </Badge>
@@ -1033,13 +1033,13 @@ export function ReportsPage() {
           </div>
 
           {/* Project Progress Overview */}
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-foreground flex items-center gap-2">
                 <Activity className="w-5 h-5 text-blue-400" />
                 {language === 'ar' ? 'نظرة عامة على تقدم المشاريع' : 'Project Progress Overview'}
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-muted-foreground">
                 {language === 'ar' ? 'تقدم المشاريع النشطة' : 'Active projects progress'}
               </CardDescription>
             </CardHeader>
@@ -1054,7 +1054,7 @@ export function ReportsPage() {
                 ].map((project, index) => (
                   <div key={index} className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-white font-medium">{project.name}</span>
+                      <span className="text-foreground font-medium">{project.name}</span>
                       <span className={`text-sm ${
                         project.status === 'completed' ? 'text-green-400' :
                         project.status === 'delayed' ? 'text-red-400' : 'text-blue-400'
@@ -1076,9 +1076,9 @@ export function ReportsPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Status Distribution */}
-            <Card className="bg-slate-900/50 border-slate-800">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="text-foreground flex items-center gap-2">
                   <PieChartIcon className="w-5 h-5 text-cyan-400" />
                   {language === 'ar' ? 'توزيع الحالة' : 'Status Distribution'}
                 </CardTitle>
@@ -1089,9 +1089,9 @@ export function ReportsPage() {
             </Card>
 
             {/* Resource Utilization */}
-            <Card className="bg-slate-900/50 border-slate-800">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="text-foreground flex items-center gap-2">
                   <Users className="w-5 h-5 text-purple-400" />
                   {language === 'ar' ? 'استغلال الموارد' : 'Resource Utilization'}
                 </CardTitle>
@@ -1121,13 +1121,13 @@ export function ReportsPage() {
           </div>
 
           {/* Budget vs Actual */}
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-foreground flex items-center gap-2">
                 <DollarSign className="w-5 h-5 text-green-400" />
                 {language === 'ar' ? 'الميزانية مقابل الفعلي' : 'Budget vs Actual'}
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-muted-foreground">
                 {language === 'ar' ? 'مقارنة الميزانية والصرف الفعلي' : 'Budget and actual spending comparison'}
               </CardDescription>
             </CardHeader>
@@ -1147,13 +1147,13 @@ export function ReportsPage() {
           </Card>
 
           {/* Timeline Analysis */}
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-foreground flex items-center gap-2">
                 <Clock className="w-5 h-5 text-orange-400" />
                 {language === 'ar' ? 'تحليل الجدول الزمني' : 'Timeline Analysis'}
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-muted-foreground">
                 {language === 'ar' ? 'تتبع المشاريع حسب الموعد النهائي' : 'Track projects by deadline'}
               </CardDescription>
             </CardHeader>
@@ -1161,15 +1161,15 @@ export function ReportsPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
                   <p className="text-3xl font-bold text-green-400">8</p>
-                  <p className="text-sm text-slate-400">{language === 'ar' ? 'في الموعد' : 'On Schedule'}</p>
+                  <p className="text-sm text-muted-foreground">{language === 'ar' ? 'في الموعد' : 'On Schedule'}</p>
                 </div>
                 <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
                   <p className="text-3xl font-bold text-yellow-400">3</p>
-                  <p className="text-sm text-slate-400">{language === 'ar' ? 'معرض للتأخير' : 'At Risk'}</p>
+                  <p className="text-sm text-muted-foreground">{language === 'ar' ? 'معرض للتأخير' : 'At Risk'}</p>
                 </div>
                 <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
                   <p className="text-3xl font-bold text-red-400">2</p>
-                  <p className="text-sm text-slate-400">{language === 'ar' ? 'متأخر' : 'Delayed'}</p>
+                  <p className="text-sm text-muted-foreground">{language === 'ar' ? 'متأخر' : 'Delayed'}</p>
                 </div>
               </div>
             </CardContent>
@@ -1186,13 +1186,13 @@ export function ReportsPage() {
           </div>
 
           {/* Attendance Summary */}
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-foreground flex items-center gap-2">
                 <UserCheck className="w-5 h-5 text-green-400" />
                 {language === 'ar' ? 'ملخص الحضور' : 'Attendance Summary'}
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-muted-foreground">
                 {language === 'ar' ? 'إحصائيات الحضور الشهرية' : 'Monthly attendance statistics'}
               </CardDescription>
             </CardHeader>
@@ -1214,13 +1214,13 @@ export function ReportsPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Leave Balance Overview */}
-            <Card className="bg-slate-900/50 border-slate-800">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="text-foreground flex items-center gap-2">
                   <UserX className="w-5 h-5 text-yellow-400" />
                   {language === 'ar' ? 'رصيد الإجازات' : 'Leave Balance Overview'}
                 </CardTitle>
-                <CardDescription className="text-slate-400">
+                <CardDescription className="text-muted-foreground">
                   {language === 'ar' ? 'توزيع أرصدة الإجازات' : 'Leave balances distribution'}
                 </CardDescription>
               </CardHeader>
@@ -1234,12 +1234,12 @@ export function ReportsPage() {
                   ].map((leave, index) => (
                     <div key={index} className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-white">{leave.type}</span>
-                        <span className="text-slate-400">
+                        <span className="text-foreground">{leave.type}</span>
+                        <span className="text-muted-foreground">
                           {leave.used} / {leave.balance} {language === 'ar' ? 'يوم' : 'days'}
                         </span>
                       </div>
-                      <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
                         <div 
                           className="h-full rounded-full transition-all"
                           style={{ 
@@ -1255,9 +1255,9 @@ export function ReportsPage() {
             </Card>
 
             {/* Department Distribution */}
-            <Card className="bg-slate-900/50 border-slate-800">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="text-foreground flex items-center gap-2">
                   <Briefcase className="w-5 h-5 text-blue-400" />
                   {language === 'ar' ? 'توزيع الأقسام' : 'Department Distribution'}
                 </CardTitle>
@@ -1269,13 +1269,13 @@ export function ReportsPage() {
           </div>
 
           {/* Salary Distribution */}
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-foreground flex items-center gap-2">
                 <Wallet className="w-5 h-5 text-purple-400" />
                 {language === 'ar' ? 'توزيع الرواتب' : 'Salary Distribution'}
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-muted-foreground">
                 {language === 'ar' ? 'توزيع الموظفين حسب نطاق الراتب' : 'Employee distribution by salary range'}
               </CardDescription>
             </CardHeader>
@@ -1298,14 +1298,14 @@ export function ReportsPage() {
           {/* Custom Reports Header */}
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold text-white">
+              <h2 className="text-xl font-semibold text-foreground">
                 {language === 'ar' ? 'التقارير المخصصة' : 'Custom Reports'}
               </h2>
-              <p className="text-slate-400 mt-1">
+              <p className="text-muted-foreground mt-1">
                 {language === 'ar' ? 'إنشاء وإدارة التقارير المخصصة' : 'Create and manage custom reports'}
               </p>
             </div>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-foreground">
               <FileBarChart className="w-4 h-4 me-2" />
               {language === 'ar' ? 'إنشاء تقرير جديد' : 'Create New Report'}
             </Button>
@@ -1314,33 +1314,33 @@ export function ReportsPage() {
           {/* Report Templates */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {customReportTemplates.map((template) => (
-              <Card key={template.id} className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-colors cursor-pointer">
+              <Card key={template.id} className="bg-card border-border hover:border-border transition-colors cursor-pointer">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="p-2 rounded-lg bg-blue-500/10">
                       <FileBarChart className="w-5 h-5 text-blue-400" />
                     </div>
-                    <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white">
+                    <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
                       <Settings className="w-4 h-4" />
                     </Button>
                   </div>
-                  <CardTitle className="text-white text-lg mt-4">{template.name}</CardTitle>
-                  <CardDescription className="text-slate-400">
+                  <CardTitle className="text-foreground text-lg mt-4">{template.name}</CardTitle>
+                  <CardDescription className="text-muted-foreground">
                     {language === 'ar' ? 'الفئة:' : 'Category:'} {template.category}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-400">
+                    <span className="text-muted-foreground">
                       {language === 'ar' ? 'آخر استخدام:' : 'Last used:'}
                     </span>
-                    <span className="text-white">{formatDate(template.lastUsed)}</span>
+                    <span className="text-foreground">{formatDate(template.lastUsed)}</span>
                   </div>
                   <div className="flex gap-2 mt-4">
-                    <Button variant="outline" size="sm" className="flex-1 bg-slate-800/50 border-slate-700 text-white hover:bg-slate-800">
+                    <Button variant="outline" size="sm" className="flex-1 bg-muted border-border text-foreground hover:bg-accent">
                       {language === 'ar' ? 'تشغيل' : 'Run'}
                     </Button>
-                    <Button variant="outline" size="sm" className="bg-slate-800/50 border-slate-700 text-white hover:bg-slate-800">
+                    <Button variant="outline" size="sm" className="bg-muted border-border text-foreground hover:bg-accent">
                       <Download className="w-4 h-4" />
                     </Button>
                   </div>
@@ -1350,13 +1350,13 @@ export function ReportsPage() {
           </div>
 
           {/* Quick Report Builder */}
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-foreground flex items-center gap-2">
                 <Settings className="w-5 h-5 text-cyan-400" />
                 {language === 'ar' ? 'منشئ التقارير السريع' : 'Quick Report Builder'}
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-muted-foreground">
                 {language === 'ar' ? 'إنشاء تقرير مخصص بسرعة' : 'Create a custom report quickly'}
               </CardDescription>
             </CardHeader>
@@ -1364,14 +1364,14 @@ export function ReportsPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Report Type Selection */}
                 <div className="space-y-2">
-                  <label className="text-sm text-slate-400">
+                  <label className="text-sm text-muted-foreground">
                     {language === 'ar' ? 'نوع التقرير' : 'Report Type'}
                   </label>
                   <Select>
-                    <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                    <SelectTrigger className="bg-muted border-border text-foreground">
                       <SelectValue placeholder={language === 'ar' ? 'اختر النوع' : 'Select type'} />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-800">
+                    <SelectContent className="bg-card border-border">
                       <SelectItem value="financial">{language === 'ar' ? 'مالي' : 'Financial'}</SelectItem>
                       <SelectItem value="project">{language === 'ar' ? 'مشروع' : 'Project'}</SelectItem>
                       <SelectItem value="hr">{language === 'ar' ? 'موارد بشرية' : 'HR'}</SelectItem>
@@ -1382,14 +1382,14 @@ export function ReportsPage() {
 
                 {/* Date Range Selection */}
                 <div className="space-y-2">
-                  <label className="text-sm text-slate-400">
+                  <label className="text-sm text-muted-foreground">
                     {language === 'ar' ? 'الفترة الزمنية' : 'Date Range'}
                   </label>
                   <Select defaultValue="thisMonth">
-                    <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                    <SelectTrigger className="bg-muted border-border text-foreground">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-800">
+                    <SelectContent className="bg-card border-border">
                       <SelectItem value="last7days">{language === 'ar' ? 'آخر 7 أيام' : 'Last 7 days'}</SelectItem>
                       <SelectItem value="last30days">{language === 'ar' ? 'آخر 30 يوم' : 'Last 30 days'}</SelectItem>
                       <SelectItem value="last90days">{language === 'ar' ? 'آخر 90 يوم' : 'Last 90 days'}</SelectItem>
@@ -1401,14 +1401,14 @@ export function ReportsPage() {
 
                 {/* Format Selection */}
                 <div className="space-y-2">
-                  <label className="text-sm text-slate-400">
+                  <label className="text-sm text-muted-foreground">
                     {language === 'ar' ? 'تنسيق الإخراج' : 'Output Format'}
                   </label>
                   <Select defaultValue="pdf">
-                    <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                    <SelectTrigger className="bg-muted border-border text-foreground">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-800">
+                    <SelectContent className="bg-card border-border">
                       <SelectItem value="pdf">PDF</SelectItem>
                       <SelectItem value="excel">Excel</SelectItem>
                       <SelectItem value="word">Word</SelectItem>
@@ -1418,10 +1418,10 @@ export function ReportsPage() {
               </div>
 
               <div className="flex gap-3 mt-6">
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-foreground">
                   {language === 'ar' ? 'إنشاء التقرير' : 'Generate Report'}
                 </Button>
-                <Button variant="outline" className="bg-slate-800/50 border-slate-700 text-white hover:bg-slate-800">
+                <Button variant="outline" className="bg-muted border-border text-foreground hover:bg-accent">
                   {language === 'ar' ? 'حفظ كقالب' : 'Save as Template'}
                 </Button>
               </div>
@@ -1429,9 +1429,9 @@ export function ReportsPage() {
           </Card>
 
           {/* Recent Custom Reports */}
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-foreground flex items-center gap-2">
                 <Clock className="w-5 h-5 text-orange-400" />
                 {language === 'ar' ? 'التقارير الأخيرة' : 'Recent Reports'}
               </CardTitle>
@@ -1446,18 +1446,18 @@ export function ReportsPage() {
                     { name: 'Client Revenue Analysis', date: '2024-01-10', type: 'Financial', format: 'Excel' },
                     { name: 'Monthly Attendance Report', date: '2024-01-08', type: 'HR', format: 'PDF' },
                   ].map((report, index) => (
-                    <div key={index} className="flex items-center gap-4 p-3 rounded-lg bg-slate-800/50 hover:bg-slate-800 transition-colors">
+                    <div key={index} className="flex items-center gap-4 p-3 rounded-lg bg-muted hover:bg-accent transition-colors">
                       <div className="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center">
                         <FileText className="w-5 h-5 text-orange-400" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-white font-medium truncate">{report.name}</p>
-                        <p className="text-sm text-slate-400">
+                        <p className="text-foreground font-medium truncate">{report.name}</p>
+                        <p className="text-sm text-muted-foreground">
                           {report.type} • {report.format}
                         </p>
                       </div>
                       <div className="text-end">
-                        <p className="text-sm text-slate-400">{formatDate(report.date)}</p>
+                        <p className="text-sm text-muted-foreground">{formatDate(report.date)}</p>
                         <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
                           <Download className="w-4 h-4" />
                         </Button>

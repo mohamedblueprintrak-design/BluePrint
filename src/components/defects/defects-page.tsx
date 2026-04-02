@@ -127,7 +127,7 @@ export function DefectsPage() {
   const getSeverityBadge = (severity: string) => {
     const config = SEVERITY_LEVELS.find(s => s.value === severity) || SEVERITY_LEVELS[0];
     return (
-      <Badge className={`${config.color} text-white text-xs`}>
+      <Badge className={`${config.color} text-foreground text-xs`}>
         {language === 'ar' ? config.label : config.labelEn}
       </Badge>
     );
@@ -136,7 +136,7 @@ export function DefectsPage() {
   const getStatusBadge = (status: string) => {
     const config = STATUS_OPTIONS.find(s => s.value === status) || STATUS_OPTIONS[0];
     return (
-      <Badge variant="secondary" className={`${config.color} text-white`}>
+      <Badge variant="secondary" className={`${config.color} text-foreground`}>
         {language === 'ar' ? config.label : config.labelEn}
       </Badge>
     );
@@ -300,71 +300,71 @@ export function DefectsPage() {
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-slate-500/20">
-                <AlertTriangle className="w-5 h-5 text-slate-400" />
+                <AlertTriangle className="w-5 h-5 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.total}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'الإجمالي' : 'Total'}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.total}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'الإجمالي' : 'Total'}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-red-500/20">
                 <AlertCircle className="w-5 h-5 text-red-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.open}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'مفتوح' : 'Open'}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.open}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'مفتوح' : 'Open'}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-blue-500/20">
                 <Clock className="w-5 h-5 text-blue-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.inProgress}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'قيد المعالجة' : 'In Progress'}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.inProgress}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'قيد المعالجة' : 'In Progress'}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-orange-500/20">
                 <AlertTriangle className="w-5 h-5 text-orange-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.critical}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'حرجة' : 'Critical'}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.critical}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'حرجة' : 'Critical'}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-green-500/20">
                 <CheckCircle className="w-5 h-5 text-green-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.resolved}</p>
-                <p className="text-sm text-slate-400">{language === 'ar' ? 'تم الحل' : 'Resolved'}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.resolved}</p>
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'تم الحل' : 'Resolved'}</p>
               </div>
             </div>
           </CardContent>
@@ -375,20 +375,20 @@ export function DefectsPage() {
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div className="flex flex-1 gap-3 w-full md:w-auto">
           <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder={t.search}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="ps-9 bg-slate-800/50 border-slate-700 text-white"
+              className="ps-9 bg-muted border-border text-foreground"
             />
           </div>
           
           <Select value={severityFilter} onValueChange={setSeverityFilter}>
-            <SelectTrigger className="w-[130px] bg-slate-800/50 border-slate-700 text-white">
+            <SelectTrigger className="w-[130px] bg-muted border-border text-foreground">
               <SelectValue placeholder={language === 'ar' ? 'الخطورة' : 'Severity'} />
             </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-slate-800">
+            <SelectContent className="bg-card border-border">
               <SelectItem value="all">{t.all}</SelectItem>
               {SEVERITY_LEVELS.map((level) => (
                 <SelectItem key={level.value} value={level.value}>
@@ -399,10 +399,10 @@ export function DefectsPage() {
           </Select>
           
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[130px] bg-slate-800/50 border-slate-700 text-white">
+            <SelectTrigger className="w-[130px] bg-muted border-border text-foreground">
               <SelectValue placeholder={t.status} />
             </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-slate-800">
+            <SelectContent className="bg-card border-border">
               <SelectItem value="all">{t.all}</SelectItem>
               {STATUS_OPTIONS.map((status) => (
                 <SelectItem key={status.value} value={status.value}>
@@ -415,37 +415,37 @@ export function DefectsPage() {
         
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
           <DialogTrigger asChild>
-            <Button className="bg-red-600 hover:bg-red-700 text-white">
+            <Button className="bg-red-600 hover:bg-red-700 text-foreground">
               <Plus className="w-4 h-4 me-2" />
               {language === 'ar' ? 'إضافة عيب' : 'Add Defect'}
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-lg">
+          <DialogContent className="bg-card border-border text-foreground max-w-lg">
             <DialogHeader>
               <DialogTitle>{language === 'ar' ? 'إضافة عيب جديد' : 'Add New Defect'}</DialogTitle>
-              <DialogDescription className="text-slate-400">
+              <DialogDescription className="text-muted-foreground">
                 {language === 'ar' ? 'أدخل تفاصيل العيب أو المخالفة' : 'Enter defect details'}
               </DialogDescription>
             </DialogHeader>
             
             <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
               <div className="space-y-2">
-                <Label className="text-slate-300">{language === 'ar' ? 'العنوان' : 'Title'} *</Label>
+                <Label className="text-foreground/80">{language === 'ar' ? 'العنوان' : 'Title'} *</Label>
                 <Input
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="bg-slate-800/50 border-slate-700 text-white"
+                  className="bg-muted border-border text-foreground"
                 />
               </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{language === 'ar' ? 'المشروع' : 'Project'} *</Label>
+                  <Label className="text-foreground/80">{language === 'ar' ? 'المشروع' : 'Project'} *</Label>
                   <Select value={formData.projectId} onValueChange={(v) => setFormData({ ...formData, projectId: v })}>
-                    <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                    <SelectTrigger className="bg-muted border-border text-foreground">
                       <SelectValue placeholder={language === 'ar' ? 'اختر المشروع' : 'Select project'} />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-800">
+                    <SelectContent className="bg-card border-border">
                       {projects.map((project: any) => (
                         <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
                       ))}
@@ -453,12 +453,12 @@ export function DefectsPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{language === 'ar' ? 'مستوى الخطورة' : 'Severity'}</Label>
+                  <Label className="text-foreground/80">{language === 'ar' ? 'مستوى الخطورة' : 'Severity'}</Label>
                   <Select value={formData.severity} onValueChange={(v: any) => setFormData({ ...formData, severity: v })}>
-                    <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                    <SelectTrigger className="bg-muted border-border text-foreground">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-800">
+                    <SelectContent className="bg-card border-border">
                       {SEVERITY_LEVELS.map((level) => (
                         <SelectItem key={level.value} value={level.value}>
                           {language === 'ar' ? level.label : level.labelEn}
@@ -471,30 +471,30 @@ export function DefectsPage() {
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{language === 'ar' ? 'الموقع' : 'Location'}</Label>
+                  <Label className="text-foreground/80">{language === 'ar' ? 'الموقع' : 'Location'}</Label>
                   <Input
                     value={formData.location}
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    className="bg-slate-800/50 border-slate-700 text-white"
+                    className="bg-muted border-border text-foreground"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{language === 'ar' ? 'المسؤول' : 'Assigned To'}</Label>
+                  <Label className="text-foreground/80">{language === 'ar' ? 'المسؤول' : 'Assigned To'}</Label>
                   <Input
                     value={formData.assignedTo}
                     onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
-                    className="bg-slate-800/50 border-slate-700 text-white"
+                    className="bg-muted border-border text-foreground"
                   />
                 </div>
               </div>
               
               <div className="space-y-2">
-                <Label className="text-slate-300">{language === 'ar' ? 'الحالة' : 'Status'}</Label>
+                <Label className="text-foreground/80">{language === 'ar' ? 'الحالة' : 'Status'}</Label>
                 <Select value={formData.status} onValueChange={(v: any) => setFormData({ ...formData, status: v })}>
-                  <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                  <SelectTrigger className="bg-muted border-border text-foreground">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-900 border-slate-800">
+                  <SelectContent className="bg-card border-border">
                     {STATUS_OPTIONS.map((status) => (
                       <SelectItem key={status.value} value={status.value}>
                         {language === 'ar' ? status.label : status.labelEn}
@@ -505,23 +505,23 @@ export function DefectsPage() {
               </div>
               
               <div className="space-y-2">
-                <Label className="text-slate-300">{language === 'ar' ? 'الوصف' : 'Description'}</Label>
+                <Label className="text-foreground/80">{language === 'ar' ? 'الوصف' : 'Description'}</Label>
                 <Textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="bg-slate-800/50 border-slate-700 text-white"
+                  className="bg-muted border-border text-foreground"
                   rows={3}
                 />
               </div>
               
               <div className="space-y-2">
-                <Label className="text-slate-300">{language === 'ar' ? 'صورة' : 'Photo'}</Label>
+                <Label className="text-foreground/80">{language === 'ar' ? 'صورة' : 'Photo'}</Label>
                 <div className="flex gap-2">
                   <Input
                     type="file"
                     accept="image/*"
                     onChange={handleFileChange}
-                    className="bg-slate-800/50 border-slate-700 text-white"
+                    className="bg-muted border-border text-foreground"
                   />
                   {selectedFile && (
                     <Button variant="ghost" size="icon" onClick={clearFile}>
@@ -538,7 +538,7 @@ export function DefectsPage() {
             </div>
             
             <DialogFooter>
-              <Button variant="ghost" onClick={closeDialog} className="text-slate-400">
+              <Button variant="ghost" onClick={closeDialog} className="text-muted-foreground">
                 {t.cancel}
               </Button>
               <Button onClick={handleAddDefect} className="bg-red-600 hover:bg-red-700" disabled={createDefect.isPending || uploadFile.isPending}>
@@ -553,7 +553,7 @@ export function DefectsPage() {
       {/* Defects Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredDefects.map((defect: Defect) => (
-          <Card key={defect.id} className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-colors">
+          <Card key={defect.id} className="bg-card border-border hover:border-border transition-colors">
             <CardContent className="p-4">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2">
@@ -564,7 +564,7 @@ export function DefectsPage() {
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="h-8 w-8 text-slate-400 hover:text-white"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
                     onClick={() => setViewingDefect(defect)}
                   >
                     <Eye className="w-4 h-4" />
@@ -572,7 +572,7 @@ export function DefectsPage() {
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="h-8 w-8 text-slate-400 hover:text-white"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
                     onClick={() => openEditDialog(defect)}
                   >
                     <Edit className="w-4 h-4" />
@@ -580,7 +580,7 @@ export function DefectsPage() {
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="h-8 w-8 text-slate-400 hover:text-red-400"
+                    className="h-8 w-8 text-muted-foreground hover:text-red-400"
                     onClick={() => handleDeleteDefect(defect.id)}
                     disabled={deleteDefect.isPending}
                   >
@@ -589,10 +589,10 @@ export function DefectsPage() {
                 </div>
               </div>
               
-              <h3 className="text-white font-medium mb-2">{defect.title}</h3>
-              <p className="text-sm text-slate-400 mb-3 line-clamp-2">{defect.description}</p>
+              <h3 className="text-foreground font-medium mb-2">{defect.title}</h3>
+              <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{defect.description}</p>
               
-              <div className="flex flex-wrap gap-3 text-xs text-slate-500">
+              <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <Building2 className="w-3 h-3" />
                   <span>{defect.projectName || language === 'ar' ? 'غير محدد' : 'Not specified'}</span>
@@ -633,39 +633,39 @@ export function DefectsPage() {
 
       {filteredDefects.length === 0 && (
         <div className="text-center py-12">
-          <AlertTriangle className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-          <p className="text-slate-400">{language === 'ar' ? 'لا توجد عيوب' : 'No defects found'}</p>
+          <AlertTriangle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+          <p className="text-muted-foreground">{language === 'ar' ? 'لا توجد عيوب' : 'No defects found'}</p>
         </div>
       )}
 
       {/* Edit Dialog */}
       <Dialog open={!!editingDefect} onOpenChange={() => setEditingDefect(null)}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-lg">
+        <DialogContent className="bg-card border-border text-foreground max-w-lg">
           <DialogHeader>
             <DialogTitle>{language === 'ar' ? 'تعديل العيب' : 'Edit Defect'}</DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-muted-foreground">
               {language === 'ar' ? 'تعديل تفاصيل العيب' : 'Edit defect details'}
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
             <div className="space-y-2">
-              <Label className="text-slate-300">{language === 'ar' ? 'العنوان' : 'Title'} *</Label>
+              <Label className="text-foreground/80">{language === 'ar' ? 'العنوان' : 'Title'} *</Label>
               <Input
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="bg-slate-800/50 border-slate-700 text-white"
+                className="bg-muted border-border text-foreground"
               />
             </div>
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-slate-300">{language === 'ar' ? 'المشروع' : 'Project'}</Label>
+                <Label className="text-foreground/80">{language === 'ar' ? 'المشروع' : 'Project'}</Label>
                 <Select value={formData.projectId} onValueChange={(v) => setFormData({ ...formData, projectId: v })}>
-                  <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                  <SelectTrigger className="bg-muted border-border text-foreground">
                     <SelectValue placeholder={language === 'ar' ? 'اختر المشروع' : 'Select project'} />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-900 border-slate-800">
+                  <SelectContent className="bg-card border-border">
                     {projects.map((project: any) => (
                       <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
                     ))}
@@ -673,12 +673,12 @@ export function DefectsPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label className="text-slate-300">{language === 'ar' ? 'مستوى الخطورة' : 'Severity'}</Label>
+                <Label className="text-foreground/80">{language === 'ar' ? 'مستوى الخطورة' : 'Severity'}</Label>
                 <Select value={formData.severity} onValueChange={(v: any) => setFormData({ ...formData, severity: v })}>
-                  <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                  <SelectTrigger className="bg-muted border-border text-foreground">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-900 border-slate-800">
+                  <SelectContent className="bg-card border-border">
                     {SEVERITY_LEVELS.map((level) => (
                       <SelectItem key={level.value} value={level.value}>
                         {language === 'ar' ? level.label : level.labelEn}
@@ -691,30 +691,30 @@ export function DefectsPage() {
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-slate-300">{language === 'ar' ? 'الموقع' : 'Location'}</Label>
+                <Label className="text-foreground/80">{language === 'ar' ? 'الموقع' : 'Location'}</Label>
                 <Input
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  className="bg-slate-800/50 border-slate-700 text-white"
+                  className="bg-muted border-border text-foreground"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-slate-300">{language === 'ar' ? 'المسؤول' : 'Assigned To'}</Label>
+                <Label className="text-foreground/80">{language === 'ar' ? 'المسؤول' : 'Assigned To'}</Label>
                 <Input
                   value={formData.assignedTo}
                   onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
-                  className="bg-slate-800/50 border-slate-700 text-white"
+                  className="bg-muted border-border text-foreground"
                 />
               </div>
             </div>
             
             <div className="space-y-2">
-              <Label className="text-slate-300">{language === 'ar' ? 'الحالة' : 'Status'}</Label>
+              <Label className="text-foreground/80">{language === 'ar' ? 'الحالة' : 'Status'}</Label>
               <Select value={formData.status} onValueChange={(v: any) => setFormData({ ...formData, status: v })}>
-                <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                <SelectTrigger className="bg-muted border-border text-foreground">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800">
+                <SelectContent className="bg-card border-border">
                   {STATUS_OPTIONS.map((status) => (
                     <SelectItem key={status.value} value={status.value}>
                       {language === 'ar' ? status.label : status.labelEn}
@@ -725,28 +725,28 @@ export function DefectsPage() {
             </div>
             
             <div className="space-y-2">
-              <Label className="text-slate-300">{language === 'ar' ? 'الوصف' : 'Description'}</Label>
+              <Label className="text-foreground/80">{language === 'ar' ? 'الوصف' : 'Description'}</Label>
               <Textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="bg-slate-800/50 border-slate-700 text-white"
+                className="bg-muted border-border text-foreground"
                 rows={3}
               />
             </div>
             
             <div className="space-y-2">
-              <Label className="text-slate-300">{language === 'ar' ? 'ملاحظات الحل' : 'Resolution Notes'}</Label>
+              <Label className="text-foreground/80">{language === 'ar' ? 'ملاحظات الحل' : 'Resolution Notes'}</Label>
               <Textarea
                 value={formData.resolutionNotes}
                 onChange={(e) => setFormData({ ...formData, resolutionNotes: e.target.value })}
-                className="bg-slate-800/50 border-slate-700 text-white"
+                className="bg-muted border-border text-foreground"
                 rows={2}
               />
             </div>
           </div>
           
           <DialogFooter>
-            <Button variant="ghost" onClick={closeDialog} className="text-slate-400">
+            <Button variant="ghost" onClick={closeDialog} className="text-muted-foreground">
               {t.cancel}
             </Button>
             <Button onClick={handleUpdateDefect} className="bg-red-600 hover:bg-red-700" disabled={updateDefect.isPending}>
@@ -759,7 +759,7 @@ export function DefectsPage() {
 
       {/* View Dialog */}
       <Dialog open={!!viewingDefect} onOpenChange={() => setViewingDefect(null)}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-lg">
+        <DialogContent className="bg-card border-border text-foreground max-w-lg">
           <DialogHeader>
             <DialogTitle>{viewingDefect?.title}</DialogTitle>
             <div className="flex items-center gap-2 mt-2">
@@ -773,7 +773,7 @@ export function DefectsPage() {
               <img src={viewingDefect.imageId} alt="Defect" className="w-full rounded max-h-48 object-cover" />
             )}
             
-            <div className="flex flex-wrap gap-3 text-sm text-slate-400">
+            <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
                 <Building2 className="w-4 h-4" />
                 <span>{viewingDefect?.projectName}</span>
@@ -800,8 +800,8 @@ export function DefectsPage() {
             
             {viewingDefect?.description && (
               <div>
-                <Label className="text-slate-300">{language === 'ar' ? 'الوصف' : 'Description'}</Label>
-                <p className="text-slate-400 mt-1">{viewingDefect.description}</p>
+                <Label className="text-foreground/80">{language === 'ar' ? 'الوصف' : 'Description'}</Label>
+                <p className="text-muted-foreground mt-1">{viewingDefect.description}</p>
               </div>
             )}
             
@@ -814,7 +814,7 @@ export function DefectsPage() {
           </div>
           
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setViewingDefect(null)} className="text-slate-400">
+            <Button variant="ghost" onClick={() => setViewingDefect(null)} className="text-muted-foreground">
               {language === 'ar' ? 'إغلاق' : 'Close'}
             </Button>
           </DialogFooter>

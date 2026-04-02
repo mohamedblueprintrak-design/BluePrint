@@ -308,15 +308,15 @@ export function InvoicesPage() {
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-cyan-500/20">
                 <FileText className="w-5 h-5 text-cyan-400" />
               </div>
               <div>
-                <p className="text-xl font-bold text-white">{formatCurrency(stats.totalInvoiced)}</p>
-                <p className="text-sm text-slate-400">
+                <p className="text-xl font-bold text-foreground">{formatCurrency(stats.totalInvoiced)}</p>
+                <p className="text-sm text-muted-foreground">
                   {language === 'ar' ? 'إجمالي الفواتير' : 'Total Invoiced'}
                 </p>
               </div>
@@ -324,43 +324,43 @@ export function InvoicesPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-green-500/20">
                 <CheckCircle className="w-5 h-5 text-green-400" />
               </div>
               <div>
-                <p className="text-xl font-bold text-white">{formatCurrency(stats.totalPaid)}</p>
-                <p className="text-sm text-slate-400">{t.paid}</p>
+                <p className="text-xl font-bold text-foreground">{formatCurrency(stats.totalPaid)}</p>
+                <p className="text-sm text-muted-foreground">{t.paid}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-amber-500/20">
                 <Clock className="w-5 h-5 text-amber-400" />
               </div>
               <div>
-                <p className="text-xl font-bold text-white">{formatCurrency(stats.pending)}</p>
-                <p className="text-sm text-slate-400">{t.pending}</p>
+                <p className="text-xl font-bold text-foreground">{formatCurrency(stats.pending)}</p>
+                <p className="text-sm text-muted-foreground">{t.pending}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-red-500/20">
                 <AlertCircle className="w-5 h-5 text-red-400" />
               </div>
               <div>
-                <p className="text-xl font-bold text-white">{formatCurrency(stats.overdue)}</p>
-                <p className="text-sm text-slate-400">{t.overdue}</p>
+                <p className="text-xl font-bold text-foreground">{formatCurrency(stats.overdue)}</p>
+                <p className="text-sm text-muted-foreground">{t.overdue}</p>
               </div>
             </div>
           </CardContent>
@@ -371,20 +371,20 @@ export function InvoicesPage() {
       <div className="flex flex-col gap-4">
         <div className="flex flex-col md:flex-row gap-3">
           <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder={language === 'ar' ? 'بحث في الفواتير...' : 'Search invoices...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="ps-9 bg-slate-800/50 border-slate-700 text-white"
+              className="ps-9 bg-muted border-border text-foreground"
             />
           </div>
 
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[160px] bg-slate-800/50 border-slate-700 text-white">
+            <SelectTrigger className="w-[160px] bg-muted border-border text-foreground">
               <SelectValue placeholder={t.status} />
             </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-slate-800">
+            <SelectContent className="bg-card border-border">
               <SelectItem value="all">{t.all}</SelectItem>
               {INVOICE_STATUSES.map((status) => (
                 <SelectItem key={status.value} value={status.value}>
@@ -395,10 +395,10 @@ export function InvoicesPage() {
           </Select>
 
           <Select value={clientFilter} onValueChange={setClientFilter}>
-            <SelectTrigger className="w-[180px] bg-slate-800/50 border-slate-700 text-white">
+            <SelectTrigger className="w-[180px] bg-muted border-border text-foreground">
               <SelectValue placeholder={t.clientName} />
             </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-slate-800">
+            <SelectContent className="bg-card border-border">
               <SelectItem value="all">{t.all}</SelectItem>
               {clients.map((client: any) => (
                 <SelectItem key={client.id} value={client.id}>
@@ -413,14 +413,14 @@ export function InvoicesPage() {
               type="date"
               value={dateFromFilter}
               onChange={(e) => setDateFromFilter(e.target.value)}
-              className="w-[150px] bg-slate-800/50 border-slate-700 text-white"
+              className="w-[150px] bg-muted border-border text-foreground"
               placeholder={language === 'ar' ? 'من تاريخ' : 'From'}
             />
             <Input
               type="date"
               value={dateToFilter}
               onChange={(e) => setDateToFilter(e.target.value)}
-              className="w-[150px] bg-slate-800/50 border-slate-700 text-white"
+              className="w-[150px] bg-muted border-border text-foreground"
               placeholder={language === 'ar' ? 'إلى تاريخ' : 'To'}
             />
           </div>
@@ -429,15 +429,15 @@ export function InvoicesPage() {
         <div className="flex justify-end">
           <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
             <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-foreground">
                 <Plus className="w-4 h-4 me-2" />
                 {t.newInvoice}
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="bg-card border-border text-foreground max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{t.newInvoice}</DialogTitle>
-                <DialogDescription className="text-slate-400">
+                <DialogDescription className="text-muted-foreground">
                   {language === 'ar' ? 'أدخل بيانات الفاتورة الجديدة' : 'Enter the new invoice details'}
                 </DialogDescription>
               </DialogHeader>
@@ -446,15 +446,15 @@ export function InvoicesPage() {
                 {/* Client & Project Selection */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-slate-300">{t.clientName} *</Label>
+                    <Label className="text-foreground/80">{t.clientName} *</Label>
                     <Select 
                       value={formData.clientId} 
                       onValueChange={(v) => setFormData({ ...formData, clientId: v })}
                     >
-                      <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                      <SelectTrigger className="bg-muted border-border text-foreground">
                         <SelectValue placeholder={language === 'ar' ? 'اختر العميل' : 'Select client'} />
                       </SelectTrigger>
-                      <SelectContent className="bg-slate-900 border-slate-800">
+                      <SelectContent className="bg-card border-border">
                         {clients.map((client: any) => (
                           <SelectItem key={client.id} value={client.id}>
                             {client.name}
@@ -465,15 +465,15 @@ export function InvoicesPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-slate-300">{t.project}</Label>
+                    <Label className="text-foreground/80">{t.project}</Label>
                     <Select 
                       value={formData.projectId} 
                       onValueChange={(v) => setFormData({ ...formData, projectId: v })}
                     >
-                      <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
+                      <SelectTrigger className="bg-muted border-border text-foreground">
                         <SelectValue placeholder={language === 'ar' ? 'اختر المشروع' : 'Select project'} />
                       </SelectTrigger>
-                      <SelectContent className="bg-slate-900 border-slate-800">
+                      <SelectContent className="bg-card border-border">
                         {projects.map((project: any) => (
                           <SelectItem key={project.id} value={project.id}>
                             {project.name}
@@ -487,32 +487,32 @@ export function InvoicesPage() {
                 {/* Dates */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-slate-300">{t.issueDate} *</Label>
+                    <Label className="text-foreground/80">{t.issueDate} *</Label>
                     <Input
                       type="date"
                       value={formData.issueDate}
                       onChange={(e) => setFormData({ ...formData, issueDate: e.target.value })}
-                      className="bg-slate-800/50 border-slate-700 text-white"
+                      className="bg-muted border-border text-foreground"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-slate-300">{t.dueDate} *</Label>
+                    <Label className="text-foreground/80">{t.dueDate} *</Label>
                     <Input
                       type="date"
                       value={formData.dueDate}
                       onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                      className="bg-slate-800/50 border-slate-700 text-white"
+                      className="bg-muted border-border text-foreground"
                     />
                   </div>
                 </div>
 
-                <Separator className="bg-slate-700" />
+                <Separator className="bg-secondary" />
 
                 {/* Invoice Items */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <Label className="text-slate-300 text-lg">
+                    <Label className="text-foreground/80 text-lg">
                       {language === 'ar' ? 'بنود الفاتورة' : 'Invoice Items'}
                     </Label>
                     <Button 
@@ -520,7 +520,7 @@ export function InvoicesPage() {
                       variant="outline" 
                       size="sm" 
                       onClick={addInvoiceItem}
-                      className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                      className="border-border text-foreground/80 hover:bg-accent"
                     >
                       <Plus className="w-4 h-4 me-1" />
                       {language === 'ar' ? 'إضافة بند' : 'Add Item'}
@@ -530,62 +530,62 @@ export function InvoicesPage() {
                   <ScrollArea className="max-h-[300px]">
                     <div className="space-y-3 pe-2">
                       {invoiceItems.map((item, _index) => (
-                        <div key={item.id} className="grid grid-cols-12 gap-2 items-start p-3 bg-slate-800/30 rounded-lg">
+                        <div key={item.id} className="grid grid-cols-12 gap-2 items-start p-3 bg-muted/50 rounded-lg">
                           <div className="col-span-4">
-                            <Label className="text-xs text-slate-400 mb-1 block">
+                            <Label className="text-xs text-muted-foreground mb-1 block">
                               {language === 'ar' ? 'الوصف' : 'Description'}
                             </Label>
                             <Input
                               value={item.description}
                               onChange={(e) => updateInvoiceItem(item.id, 'description', e.target.value)}
-                              className="bg-slate-700/50 border-slate-600 text-white h-9"
+                              className="bg-secondary/50 border-border text-foreground h-9"
                               placeholder={language === 'ar' ? 'وصف البند' : 'Item description'}
                             />
                           </div>
 
                           <div className="col-span-2">
-                            <Label className="text-xs text-slate-400 mb-1 block">
+                            <Label className="text-xs text-muted-foreground mb-1 block">
                               {language === 'ar' ? 'الكمية' : 'Qty'}
                             </Label>
                             <Input
                               type="number"
                               value={item.quantity}
                               onChange={(e) => updateInvoiceItem(item.id, 'quantity', parseFloat(e.target.value) || 0)}
-                              className="bg-slate-700/50 border-slate-600 text-white h-9"
+                              className="bg-secondary/50 border-border text-foreground h-9"
                               min="0"
                             />
                           </div>
 
                           <div className="col-span-2">
-                            <Label className="text-xs text-slate-400 mb-1 block">
+                            <Label className="text-xs text-muted-foreground mb-1 block">
                               {language === 'ar' ? 'سعر الوحدة' : 'Unit Price'}
                             </Label>
                             <Input
                               type="number"
                               value={item.unitPrice}
                               onChange={(e) => updateInvoiceItem(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
-                              className="bg-slate-700/50 border-slate-600 text-white h-9"
+                              className="bg-secondary/50 border-border text-foreground h-9"
                               min="0"
                             />
                           </div>
 
                           <div className="col-span-1">
-                            <Label className="text-xs text-slate-400 mb-1 block">
+                            <Label className="text-xs text-muted-foreground mb-1 block">
                               {language === 'ar' ? 'الوحدة' : 'Unit'}
                             </Label>
                             <Input
                               value={item.unit}
                               onChange={(e) => updateInvoiceItem(item.id, 'unit', e.target.value)}
-                              className="bg-slate-700/50 border-slate-600 text-white h-9"
+                              className="bg-secondary/50 border-border text-foreground h-9"
                               placeholder="m²"
                             />
                           </div>
 
                           <div className="col-span-2">
-                            <Label className="text-xs text-slate-400 mb-1 block">
+                            <Label className="text-xs text-muted-foreground mb-1 block">
                               {language === 'ar' ? 'الإجمالي' : 'Total'}
                             </Label>
-                            <div className="bg-slate-700/30 border border-slate-600 rounded-md px-3 py-1.5 text-cyan-400 font-medium h-9 flex items-center">
+                            <div className="bg-secondary/30 border border-border rounded-md px-3 py-1.5 text-cyan-400 font-medium h-9 flex items-center">
                               {formatCurrency(item.total)}
                             </div>
                           </div>
@@ -609,43 +609,43 @@ export function InvoicesPage() {
                   </ScrollArea>
                 </div>
 
-                <Separator className="bg-slate-700" />
+                <Separator className="bg-secondary" />
 
                 {/* Totals */}
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label className="text-slate-300">{language === 'ar' ? 'نسبة الضريبة (%)' : 'Tax Rate (%)'}</Label>
+                        <Label className="text-foreground/80">{language === 'ar' ? 'نسبة الضريبة (%)' : 'Tax Rate (%)'}</Label>
                         <Input
                           type="number"
                           value={formData.taxRate}
                           onChange={(e) => setFormData({ ...formData, taxRate: parseFloat(e.target.value) || 0 })}
-                          className="bg-slate-800/50 border-slate-700 text-white"
+                          className="bg-muted border-border text-foreground"
                           min="0"
                           max="100"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-slate-300">{t.discount}</Label>
+                        <Label className="text-foreground/80">{t.discount}</Label>
                         <Input
                           type="number"
                           value={formData.discountAmount}
                           onChange={(e) => setFormData({ ...formData, discountAmount: parseFloat(e.target.value) || 0 })}
-                          className="bg-slate-800/50 border-slate-700 text-white"
+                          className="bg-muted border-border text-foreground"
                           min="0"
                         />
                       </div>
                     </div>
                   </div>
 
-                  <div className="space-y-2 bg-slate-800/30 p-4 rounded-lg">
-                    <div className="flex justify-between text-slate-300">
+                  <div className="space-y-2 bg-muted/50 p-4 rounded-lg">
+                    <div className="flex justify-between text-foreground/80">
                       <span>{t.subtotal}</span>
                       <span>{formatCurrency(calculations.subtotal)}</span>
                     </div>
-                    <div className="flex justify-between text-slate-300">
+                    <div className="flex justify-between text-foreground/80">
                       <span>{t.vat}</span>
                       <span>{formatCurrency(calculations.taxAmount)}</span>
                     </div>
@@ -656,36 +656,36 @@ export function InvoicesPage() {
                       </div>
                     )}
                     <Separator className="bg-slate-600" />
-                    <div className="flex justify-between text-white font-bold text-lg">
+                    <div className="flex justify-between text-foreground font-bold text-lg">
                       <span>{t.grandTotal}</span>
                       <span className="text-cyan-400">{formatCurrency(calculations.grandTotal)}</span>
                     </div>
                   </div>
                 </div>
 
-                <Separator className="bg-slate-700" />
+                <Separator className="bg-secondary" />
 
                 {/* Notes & Terms */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-slate-300">{t.notes}</Label>
+                    <Label className="text-foreground/80">{t.notes}</Label>
                     <Textarea
                       value={formData.notes}
                       onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                      className="bg-slate-800/50 border-slate-700 text-white"
+                      className="bg-muted border-border text-foreground"
                       rows={3}
                       placeholder={language === 'ar' ? 'ملاحظات إضافية...' : 'Additional notes...'}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-slate-300">
+                    <Label className="text-foreground/80">
                       {language === 'ar' ? 'الشروط والأحكام' : 'Terms & Conditions'}
                     </Label>
                     <Textarea
                       value={formData.terms}
                       onChange={(e) => setFormData({ ...formData, terms: e.target.value })}
-                      className="bg-slate-800/50 border-slate-700 text-white"
+                      className="bg-muted border-border text-foreground"
                       rows={3}
                       placeholder={language === 'ar' ? 'شروط الدفع...' : 'Payment terms...'}
                     />
@@ -700,7 +700,7 @@ export function InvoicesPage() {
                     setShowAddDialog(false);
                     resetForm();
                   }} 
-                  className="text-slate-400"
+                  className="text-muted-foreground"
                 >
                   {t.cancel}
                 </Button>
@@ -720,7 +720,7 @@ export function InvoicesPage() {
       {/* Invoices Table */}
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="text-slate-400">{t.loading}</div>
+          <div className="text-muted-foreground">{t.loading}</div>
         </div>
       ) : isError ? (
         <div className="flex flex-col items-center justify-center py-12 text-red-400">
@@ -731,7 +731,7 @@ export function InvoicesPage() {
           </Button>
         </div>
       ) : filteredInvoices.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
           <FileText className="w-16 h-16 mb-4 opacity-50" />
           <p className="text-lg">{t.noData}</p>
           <Button variant="outline" className="mt-4" onClick={() => setShowAddDialog(true)}>
@@ -740,37 +740,37 @@ export function InvoicesPage() {
           </Button>
         </div>
       ) : (
-        <Card className="bg-slate-900/50 border-slate-800">
+        <Card className="bg-card border-border overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="border-slate-700 hover:bg-slate-800/50">
-                <TableHead className="text-slate-400">{t.invoiceNumber}</TableHead>
-                <TableHead className="text-slate-400">{t.clientName}</TableHead>
-                <TableHead className="text-slate-400">{t.project}</TableHead>
-                <TableHead className="text-slate-400">{t.issueDate}</TableHead>
-                <TableHead className="text-slate-400">{t.dueDate}</TableHead>
-                <TableHead className="text-slate-400">{t.total}</TableHead>
-                <TableHead className="text-slate-400">{t.amountPaid}</TableHead>
-                <TableHead className="text-slate-400">{t.status}</TableHead>
-                <TableHead className="text-slate-400">{t.actions}</TableHead>
+              <TableRow className="border-border hover:bg-muted">
+                <TableHead className="text-muted-foreground">{t.invoiceNumber}</TableHead>
+                <TableHead className="text-muted-foreground">{t.clientName}</TableHead>
+                <TableHead className="text-muted-foreground">{t.project}</TableHead>
+                <TableHead className="text-muted-foreground">{t.issueDate}</TableHead>
+                <TableHead className="text-muted-foreground">{t.dueDate}</TableHead>
+                <TableHead className="text-muted-foreground">{t.total}</TableHead>
+                <TableHead className="text-muted-foreground">{t.amountPaid}</TableHead>
+                <TableHead className="text-muted-foreground">{t.status}</TableHead>
+                <TableHead className="text-muted-foreground">{t.actions}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredInvoices.map((invoice: any) => (
-                <TableRow key={invoice.id} className="border-slate-700 hover:bg-slate-800/50">
-                  <TableCell className="font-medium text-white">
+                <TableRow key={invoice.id} className="border-border hover:bg-muted">
+                  <TableCell className="font-medium text-foreground">
                     {invoice.invoiceNumber}
                   </TableCell>
-                  <TableCell className="text-slate-300">
+                  <TableCell className="text-foreground/80">
                     {invoice.client?.name || '-'}
                   </TableCell>
-                  <TableCell className="text-slate-300">
+                  <TableCell className="text-foreground/80">
                     {invoice.project?.name || '-'}
                   </TableCell>
-                  <TableCell className="text-slate-300">
+                  <TableCell className="text-foreground/80">
                     {formatDate(invoice.issueDate)}
                   </TableCell>
-                  <TableCell className="text-slate-300">
+                  <TableCell className="text-foreground/80">
                     {formatDate(invoice.dueDate)}
                   </TableCell>
                   <TableCell className="text-cyan-400 font-medium">
@@ -788,19 +788,19 @@ export function InvoicesPage() {
                         variant="ghost" 
                         size="icon" 
                         aria-label="View invoice"
-                        className="h-8 w-8 text-slate-400 hover:text-white"
+                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
                         onClick={() => handleViewInvoice(invoice)}
                       >
                         <Eye className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" aria-label="Edit invoice" className="h-8 w-8 text-slate-400 hover:text-white">
+                      <Button variant="ghost" size="icon" aria-label="Edit invoice" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                         <Edit className="w-4 h-4" />
                       </Button>
                       <Button 
                         variant="ghost" 
                         size="icon" 
                         aria-label="Download invoice"
-                        className="h-8 w-8 text-slate-400 hover:text-cyan-400"
+                        className="h-8 w-8 text-muted-foreground hover:text-cyan-400"
                         onClick={() => {
                           downloadInvoicePDF({
                             invoiceNumber: invoice.invoiceNumber,
@@ -834,7 +834,7 @@ export function InvoicesPage() {
                         variant="ghost" 
                         size="icon" 
                         aria-label="Delete invoice"
-                        className="h-8 w-8 text-slate-400 hover:text-red-400"
+                        className="h-8 w-8 text-muted-foreground hover:text-red-400"
                         onClick={() => handleDeleteInvoice(invoice.id)}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -850,13 +850,13 @@ export function InvoicesPage() {
 
       {/* View Invoice Dialog */}
       <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-2xl">
+        <DialogContent className="bg-card border-border text-foreground max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileText className="w-5 h-5 text-cyan-400" />
               {selectedInvoice?.invoiceNumber}
             </DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-muted-foreground">
               {language === 'ar' ? 'تفاصيل الفاتورة' : 'Invoice Details'}
             </DialogDescription>
           </DialogHeader>
@@ -867,57 +867,57 @@ export function InvoicesPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-3">
                   <div>
-                    <Label className="text-slate-400 text-xs">{t.clientName}</Label>
-                    <p className="text-white font-medium">{selectedInvoice.client?.name || '-'}</p>
+                    <Label className="text-muted-foreground text-xs">{t.clientName}</Label>
+                    <p className="text-foreground font-medium">{selectedInvoice.client?.name || '-'}</p>
                   </div>
                   <div>
-                    <Label className="text-slate-400 text-xs">{t.project}</Label>
-                    <p className="text-white">{selectedInvoice.project?.name || '-'}</p>
+                    <Label className="text-muted-foreground text-xs">{t.project}</Label>
+                    <p className="text-foreground">{selectedInvoice.project?.name || '-'}</p>
                   </div>
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-slate-400" />
+                    <Calendar className="w-4 h-4 text-muted-foreground" />
                     <div>
-                      <Label className="text-slate-400 text-xs">{t.issueDate}</Label>
-                      <p className="text-white">{formatDate(selectedInvoice.issueDate)}</p>
+                      <Label className="text-muted-foreground text-xs">{t.issueDate}</Label>
+                      <p className="text-foreground">{formatDate(selectedInvoice.issueDate)}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-slate-400" />
+                    <Calendar className="w-4 h-4 text-muted-foreground" />
                     <div>
-                      <Label className="text-slate-400 text-xs">{t.dueDate}</Label>
-                      <p className="text-white">{formatDate(selectedInvoice.dueDate)}</p>
+                      <Label className="text-muted-foreground text-xs">{t.dueDate}</Label>
+                      <p className="text-foreground">{formatDate(selectedInvoice.dueDate)}</p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <Separator className="bg-slate-700" />
+              <Separator className="bg-secondary" />
 
               {/* Invoice Items */}
               <div>
-                <Label className="text-slate-300 text-sm mb-3 block">
+                <Label className="text-foreground/80 text-sm mb-3 block">
                   {language === 'ar' ? 'بنود الفاتورة' : 'Invoice Items'}
                 </Label>
-                <div className="bg-slate-800/30 rounded-lg p-3">
+                <div className="bg-muted/50 rounded-lg p-3 overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow className="border-slate-700">
-                        <TableHead className="text-slate-400">{language === 'ar' ? 'الوصف' : 'Description'}</TableHead>
-                        <TableHead className="text-slate-400 text-center">{language === 'ar' ? 'الكمية' : 'Qty'}</TableHead>
-                        <TableHead className="text-slate-400 text-end">{language === 'ar' ? 'السعر' : 'Price'}</TableHead>
-                        <TableHead className="text-slate-400 text-end">{language === 'ar' ? 'الإجمالي' : 'Total'}</TableHead>
+                      <TableRow className="border-border">
+                        <TableHead className="text-muted-foreground">{language === 'ar' ? 'الوصف' : 'Description'}</TableHead>
+                        <TableHead className="text-muted-foreground text-center">{language === 'ar' ? 'الكمية' : 'Qty'}</TableHead>
+                        <TableHead className="text-muted-foreground text-end">{language === 'ar' ? 'السعر' : 'Price'}</TableHead>
+                        <TableHead className="text-muted-foreground text-end">{language === 'ar' ? 'الإجمالي' : 'Total'}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {selectedInvoice.items?.map((item: any, index: number) => (
-                        <TableRow key={item.id || index} className="border-slate-700">
-                          <TableCell className="text-slate-300">{item.description}</TableCell>
-                          <TableCell className="text-slate-300 text-center">
+                        <TableRow key={item.id || index} className="border-border">
+                          <TableCell className="text-foreground/80">{item.description}</TableCell>
+                          <TableCell className="text-foreground/80 text-center">
                             {item.quantity} {item.unit || ''}
                           </TableCell>
-                          <TableCell className="text-slate-300 text-end">
+                          <TableCell className="text-foreground/80 text-end">
                             {formatCurrency(item.unitPrice)}
                           </TableCell>
                           <TableCell className="text-cyan-400 text-end">
@@ -930,15 +930,15 @@ export function InvoicesPage() {
                 </div>
               </div>
 
-              <Separator className="bg-slate-700" />
+              <Separator className="bg-secondary" />
 
               {/* Totals */}
               <div className="space-y-2">
-                <div className="flex justify-between text-slate-300">
+                <div className="flex justify-between text-foreground/80">
                   <span>{t.subtotal}</span>
                   <span>{formatCurrency(selectedInvoice.subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-slate-300">
+                <div className="flex justify-between text-foreground/80">
                   <span>{t.vat}</span>
                   <span>{formatCurrency(selectedInvoice.taxAmount)}</span>
                 </div>
@@ -949,7 +949,7 @@ export function InvoicesPage() {
                   </div>
                 )}
                 <Separator className="bg-slate-600" />
-                <div className="flex justify-between text-white font-bold text-lg">
+                <div className="flex justify-between text-foreground font-bold text-lg">
                   <span>{t.grandTotal}</span>
                   <span className="text-cyan-400">{formatCurrency(selectedInvoice.total)}</span>
                 </div>
@@ -965,25 +965,25 @@ export function InvoicesPage() {
 
               {/* Status */}
               <div className="flex items-center justify-between">
-                <span className="text-slate-400">{t.status}</span>
+                <span className="text-muted-foreground">{t.status}</span>
                 {getStatusBadge(selectedInvoice.status)}
               </div>
 
               {/* Notes */}
               {selectedInvoice.notes && (
                 <div>
-                  <Label className="text-slate-400 text-xs">{t.notes}</Label>
-                  <p className="text-slate-300 mt-1">{selectedInvoice.notes}</p>
+                  <Label className="text-muted-foreground text-xs">{t.notes}</Label>
+                  <p className="text-foreground/80 mt-1">{selectedInvoice.notes}</p>
                 </div>
               )}
 
               {/* Terms */}
               {selectedInvoice.terms && (
                 <div>
-                  <Label className="text-slate-400 text-xs">
+                  <Label className="text-muted-foreground text-xs">
                     {language === 'ar' ? 'الشروط والأحكام' : 'Terms & Conditions'}
                   </Label>
-                  <p className="text-slate-300 mt-1 text-sm">{selectedInvoice.terms}</p>
+                  <p className="text-foreground/80 mt-1 text-sm">{selectedInvoice.terms}</p>
                 </div>
               )}
             </div>
@@ -993,7 +993,7 @@ export function InvoicesPage() {
             <Button 
               variant="ghost" 
               onClick={() => setShowViewDialog(false)} 
-              className="text-slate-400"
+              className="text-muted-foreground"
             >
               {t.close}
             </Button>

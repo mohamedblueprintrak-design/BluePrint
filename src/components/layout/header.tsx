@@ -107,7 +107,7 @@ export function Header({ title, actions }: HeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-slate-950/80 backdrop-blur-sm border-b border-slate-800 px-4 md:px-6 py-3 md:py-4 mt-14 md:mt-0">
+    <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-sm border-b border-border px-4 md:px-6 py-3 md:py-4 mt-14 md:mt-0">
       <div className="flex items-center justify-between gap-2">
         {/* Breadcrumbs & Title */}
         <div className="flex flex-col gap-1">
@@ -119,7 +119,7 @@ export function Header({ title, actions }: HeaderProps) {
                   {index < breadcrumbs.length - 1 ? (
                     <>
                       <BreadcrumbLink asChild>
-                        <Link href={crumb.href} className="text-slate-400 hover:text-white transition-colors">
+                        <Link href={crumb.href} className="text-muted-foreground hover:text-foreground transition-colors">
                           {index === 0 ? (
                             <Home className="w-4 h-4" />
                           ) : (
@@ -127,10 +127,10 @@ export function Header({ title, actions }: HeaderProps) {
                           )}
                         </Link>
                       </BreadcrumbLink>
-                      <BreadcrumbSeparator className="text-slate-600" />
+                      <BreadcrumbSeparator className="text-muted-foreground" />
                     </>
                   ) : (
-                    <BreadcrumbPage className="text-slate-300 font-medium">
+                    <BreadcrumbPage className="text-foreground/80 font-medium">
                       {crumb.label}
                     </BreadcrumbPage>
                   )}
@@ -141,10 +141,10 @@ export function Header({ title, actions }: HeaderProps) {
           
           {/* Title */}
           <div className="flex items-center gap-2 md:gap-4">
-            <h1 className="text-xl md:text-2xl font-bold text-white truncate">
+            <h1 className="text-xl md:text-2xl font-bold text-foreground truncate">
               {getPageTitle()}
             </h1>
-            <div className="hidden md:flex items-center gap-2 text-sm text-slate-400">
+            <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
               <Calendar className="w-4 h-4" />
               <span>{formatDate(new Date())}</span>
             </div>
@@ -158,7 +158,7 @@ export function Header({ title, actions }: HeaderProps) {
             variant="ghost"
             size="icon"
             onClick={() => setCommandPaletteOpen(true)}
-            className="md:hidden text-slate-400 hover:text-white hover:bg-slate-800"
+            className="md:hidden text-muted-foreground hover:text-foreground hover:bg-accent"
           >
             <Search className="w-5 h-5" />
           </Button>
@@ -166,37 +166,37 @@ export function Header({ title, actions }: HeaderProps) {
           {/* Quick Add - Desktop */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button className="hidden md:flex bg-blue-600 hover:bg-blue-700 text-white">
+              <Button className="hidden md:flex bg-blue-600 hover:bg-blue-700 text-foreground">
                 <Plus className="w-4 h-4 me-2" />
                 {t.add}
                 <ChevronDown className="w-4 h-4 ms-2" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align={isRTL ? 'start' : 'end'} className="bg-slate-900 border-slate-800">
-              <DropdownMenuLabel className="text-slate-300">
+            <DropdownMenuContent align={isRTL ? 'start' : 'end'} className="bg-card border-border">
+              <DropdownMenuLabel className="text-foreground/80">
                 {language === 'ar' ? 'إضافة جديد' : 'Add New'}
               </DropdownMenuLabel>
-              <DropdownMenuSeparator className="bg-slate-800" />
+              <DropdownMenuSeparator className="bg-muted" />
               <DropdownMenuItem 
-                className="text-slate-300 focus:bg-slate-800 cursor-pointer"
+                className="text-foreground/80 focus:bg-muted cursor-pointer"
                 onClick={() => handleQuickAdd('project')}
               >
                 {t.newProject}
               </DropdownMenuItem>
               <DropdownMenuItem 
-                className="text-slate-300 focus:bg-slate-800 cursor-pointer"
+                className="text-foreground/80 focus:bg-muted cursor-pointer"
                 onClick={() => handleQuickAdd('client')}
               >
                 {t.newClient}
               </DropdownMenuItem>
               <DropdownMenuItem 
-                className="text-slate-300 focus:bg-slate-800 cursor-pointer"
+                className="text-foreground/80 focus:bg-muted cursor-pointer"
                 onClick={() => handleQuickAdd('invoice')}
               >
                 {t.newInvoice}
               </DropdownMenuItem>
               <DropdownMenuItem 
-                className="text-slate-300 focus:bg-slate-800 cursor-pointer"
+                className="text-foreground/80 focus:bg-muted cursor-pointer"
                 onClick={() => handleQuickAdd('task')}
               >
                 {t.newTask}
@@ -208,7 +208,7 @@ export function Header({ title, actions }: HeaderProps) {
           <Button
             variant="default"
             size="icon"
-            className="md:hidden bg-blue-600 hover:bg-blue-700 text-white"
+            className="md:hidden bg-blue-600 hover:bg-blue-700 text-foreground"
             onClick={() => openQuickAddDialog('project')}
           >
             <Plus className="w-5 h-5" />
@@ -216,12 +216,12 @@ export function Header({ title, actions }: HeaderProps) {
 
           {/* Currency Selector - Desktop */}
           <Select value={currency} onValueChange={setCurrency}>
-            <SelectTrigger className="hidden md:flex w-20 bg-slate-800 border-slate-700 text-white">
+            <SelectTrigger className="hidden md:flex w-20 bg-muted border-border text-foreground">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-slate-800">
+            <SelectContent className="bg-card border-border">
               {CURRENCIES.map((c) => (
-                <SelectItem key={c} value={c} className="text-slate-300 focus:bg-slate-800">
+                <SelectItem key={c} value={c} className="text-foreground/80 focus:bg-muted">
                   {c}
                 </SelectItem>
               ))}
@@ -233,7 +233,7 @@ export function Header({ title, actions }: HeaderProps) {
             variant="ghost"
             size="icon"
             onClick={() => setTheme(isDark ? 'light' : 'dark')}
-            className="hidden md:flex text-slate-400 hover:text-white hover:bg-slate-800"
+            className="hidden md:flex text-muted-foreground hover:text-foreground hover:bg-accent"
           >
             {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </Button>

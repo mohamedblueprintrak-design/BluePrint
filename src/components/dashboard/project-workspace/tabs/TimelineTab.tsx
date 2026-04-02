@@ -44,11 +44,11 @@ export default function TimelineTab({
   t,
 }: TimelineTabProps) {
   return (
-    <Card className="bg-slate-900/50 border-slate-800">
+    <Card className="bg-card border-border">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
           <Timer className="h-5 w-5 text-blue-400" />
-          <CardTitle className="text-base text-white">
+          <CardTitle className="text-base text-foreground">
             {isAr
               ? 'الجدول الزمني للمراحل'
               : 'Phase Timeline'}
@@ -57,7 +57,7 @@ export default function TimelineTab({
       </CardHeader>
       <CardContent>
         {phases.length === 0 ? (
-          <p className="text-slate-500 text-sm text-center py-8">
+          <p className="text-muted-foreground text-sm text-center py-8">
             {t.noData}
           </p>
         ) : (
@@ -67,7 +67,7 @@ export default function TimelineTab({
               <div
                 className={`absolute top-0 bottom-0 w-0.5 ${
                   isRTL ? 'right-[19px]' : 'left-[19px]'
-                } bg-slate-700`}
+                } bg-secondary`}
               />
 
               <div className="space-y-6">
@@ -82,7 +82,7 @@ export default function TimelineTab({
                           {catConf?.icon || (
                             <Layers className="h-4 w-4" />
                           )}
-                          <span className="text-sm font-semibold text-white">
+                          <span className="text-sm font-semibold text-foreground">
                             {catConf
                               ? isAr
                                 ? catConf.ar
@@ -124,7 +124,7 @@ export default function TimelineTab({
                                     isRTL
                                       ? 'right-[18px]'
                                       : 'left-[18px]'
-                                  } w-0.5 h-6 bg-slate-700`}
+                                  } w-0.5 h-6 bg-secondary`}
                                 />
                               )}
 
@@ -140,7 +140,7 @@ export default function TimelineTab({
                                     : phase.status === 'DELAYED' ||
                                       phase.status === 'REJECTED'
                                     ? 'bg-red-500/20 border-2 border-red-500'
-                                    : 'bg-slate-800 border-2 border-slate-600'
+                                    : 'bg-muted border-2 border-border'
                                 }`}
                               >
                                 {isBlocked ? (
@@ -153,14 +153,14 @@ export default function TimelineTab({
                                   phase.status === 'REJECTED' ? (
                                   <AlertTriangle className="h-4 w-4 text-red-400" />
                                 ) : (
-                                  <CircleDot className="h-3 w-3 text-slate-500" />
+                                  <CircleDot className="h-3 w-3 text-muted-foreground" />
                                 )}
                               </div>
 
                               {/* Content */}
-                              <div className="flex-1 bg-slate-800/40 rounded-lg p-3 border border-slate-700/30 hover:border-slate-600/50 transition-colors min-w-0">
+                              <div className="flex-1 bg-muted rounded-lg p-3 border border-border/30 hover:border-border/50 transition-colors min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="text-sm font-medium text-white">
+                                  <span className="text-sm font-medium text-foreground">
                                     {isAr ? ptl.ar : ptl.en}
                                   </span>
                                   <Badge
@@ -188,7 +188,7 @@ export default function TimelineTab({
                                     </Badge>
                                   )}
                                 </div>
-                                <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-500">
+                                <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
                                   {phase.assignedTo && (
                                     <span className="flex items-center gap-1">
                                       <Users className="h-3 w-3" />
@@ -221,7 +221,7 @@ export default function TimelineTab({
                                     </div>
                                   )}
                                 {phase.notes && (
-                                  <p className="text-xs text-slate-500 mt-2 line-clamp-2">
+                                  <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
                                     {phase.notes}
                                   </p>
                                 )}

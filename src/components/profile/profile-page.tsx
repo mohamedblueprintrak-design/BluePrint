@@ -301,7 +301,7 @@ export function ProfilePage() {
     };
     const roleConfig = roles[role] || roles.viewer;
     return (
-      <Badge className={`${roleConfig.color} text-white`}>
+      <Badge className={`${roleConfig.color} text-foreground`}>
         {roleConfig.label}
       </Badge>
     );
@@ -315,24 +315,24 @@ export function ProfilePage() {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">{t.profile}</h1>
-          <p className="text-slate-400 mt-1">
+          <h1 className="text-2xl font-bold text-foreground">{t.profile}</h1>
+          <p className="text-muted-foreground mt-1">
             {language === 'ar' ? 'إدارة معلومات حسابك' : 'Manage your account information'}
           </p>
         </div>
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="bg-slate-900/50 border border-slate-800 p-1">
-          <TabsTrigger value="profile" className="data-[state=active]:bg-slate-800">
+        <TabsList className="bg-card border border-border p-1">
+          <TabsTrigger value="profile" className="data-[state=active]:bg-muted">
             <User className="w-4 h-4 me-2" />
             {language === 'ar' ? 'المعلومات الشخصية' : 'Personal Info'}
           </TabsTrigger>
-          <TabsTrigger value="security" className="data-[state=active]:bg-slate-800">
+          <TabsTrigger value="security" className="data-[state=active]:bg-muted">
             <Shield className="w-4 h-4 me-2" />
             {language === 'ar' ? 'الأمان' : 'Security'}
           </TabsTrigger>
-          <TabsTrigger value="preferences" className="data-[state=active]:bg-slate-800">
+          <TabsTrigger value="preferences" className="data-[state=active]:bg-muted">
             <Globe className="w-4 h-4 me-2" />
             {language === 'ar' ? 'التفضيلات' : 'Preferences'}
           </TabsTrigger>
@@ -341,13 +341,13 @@ export function ProfilePage() {
         {/* Profile Tab */}
         <TabsContent value="profile" className="space-y-6">
           {/* Avatar Card */}
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardContent className="pt-6">
               <div className="flex flex-col md:flex-row items-center gap-6">
                 <div className="relative">
-                  <Avatar className="w-24 h-24 border-4 border-slate-700">
+                  <Avatar className="w-24 h-24 border-4 border-border">
                     <AvatarImage src={profileUser?.avatar} />
-                    <AvatarFallback className="bg-blue-600 text-white text-2xl">
+                    <AvatarFallback className="bg-blue-600 text-foreground text-2xl">
                       {profileUser?.fullName?.[0] || profileUser?.username?.[0]?.toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
@@ -372,8 +372,8 @@ export function ProfilePage() {
                   />
                 </div>
                 <div className="text-center md:text-start flex-1">
-                  <h2 className="text-xl font-bold text-white">{profileUser?.fullName || profileUser?.username}</h2>
-                  <p className="text-slate-400">{profileUser?.email}</p>
+                  <h2 className="text-xl font-bold text-foreground">{profileUser?.fullName || profileUser?.username}</h2>
+                  <p className="text-muted-foreground">{profileUser?.email}</p>
                   <div className="flex items-center justify-center md:justify-start gap-2 mt-2">
                     {getRoleBadge(profileUser?.role || 'viewer')}
                     {profileUser?.isActive && (
@@ -397,7 +397,7 @@ export function ProfilePage() {
                   )}
                   <Button
                     variant="outline"
-                    className="border-slate-700"
+                    className="border-border"
                     onClick={() => setIsEditing(!isEditing)}
                   >
                     {isEditing ? (language === 'ar' ? 'إلغاء' : 'Cancel') : (language === 'ar' ? 'تعديل' : 'Edit')}
@@ -408,73 +408,73 @@ export function ProfilePage() {
           </Card>
 
           {/* Personal Info */}
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-white">{language === 'ar' ? 'المعلومات الشخصية' : 'Personal Information'}</CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardTitle className="text-foreground">{language === 'ar' ? 'المعلومات الشخصية' : 'Personal Information'}</CardTitle>
+              <CardDescription className="text-muted-foreground">
                 {language === 'ar' ? 'تحديث معلوماتك الشخصية' : 'Update your personal information'}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{t.username}</Label>
+                  <Label className="text-foreground/80">{t.username}</Label>
                   <Input
                     value={profileUser?.username}
                     disabled
-                    className="bg-slate-800/30 border-slate-700 text-slate-400"
+                    className="bg-muted/50 border-border text-muted-foreground"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{t.fullName}</Label>
+                  <Label className="text-foreground/80">{t.fullName}</Label>
                   <Input
                     value={profileForm.fullName}
                     onChange={(e) => setProfileForm({ ...profileForm, fullName: e.target.value })}
                     disabled={!isEditing}
-                    className="bg-slate-800/50 border-slate-700 text-white disabled:opacity-50"
+                    className="bg-muted border-border text-foreground disabled:opacity-50"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{t.email}</Label>
+                  <Label className="text-foreground/80">{t.email}</Label>
                   <Input
                     type="email"
                     value={profileForm.email}
                     onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
                     disabled={!isEditing}
-                    className="bg-slate-800/50 border-slate-700 text-white disabled:opacity-50"
+                    className="bg-muted border-border text-foreground disabled:opacity-50"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{t.phone}</Label>
+                  <Label className="text-foreground/80">{t.phone}</Label>
                   <Input
                     value={profileForm.phone}
                     onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
                     disabled={!isEditing}
-                    className="bg-slate-800/50 border-slate-700 text-white disabled:opacity-50"
+                    className="bg-muted border-border text-foreground disabled:opacity-50"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{language === 'ar' ? 'المسمى الوظيفي' : 'Job Title'}</Label>
+                  <Label className="text-foreground/80">{language === 'ar' ? 'المسمى الوظيفي' : 'Job Title'}</Label>
                   <Input
                     value={profileForm.jobTitle}
                     onChange={(e) => setProfileForm({ ...profileForm, jobTitle: e.target.value })}
                     disabled={!isEditing}
-                    className="bg-slate-800/50 border-slate-700 text-white disabled:opacity-50"
+                    className="bg-muted border-border text-foreground disabled:opacity-50"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{language === 'ar' ? 'القسم' : 'Department'}</Label>
+                  <Label className="text-foreground/80">{language === 'ar' ? 'القسم' : 'Department'}</Label>
                   <Input
                     value={profileForm.department}
                     onChange={(e) => setProfileForm({ ...profileForm, department: e.target.value })}
                     disabled={!isEditing}
-                    className="bg-slate-800/50 border-slate-700 text-white disabled:opacity-50"
+                    className="bg-muted border-border text-foreground disabled:opacity-50"
                   />
                 </div>
               </div>
             </CardContent>
             {isEditing && (
-              <CardFooter className="border-t border-slate-800 pt-4">
+              <CardFooter className="border-t border-border pt-4">
                 <Button 
                   onClick={handleSaveProfile} 
                   className="bg-blue-600 hover:bg-blue-700"
@@ -492,31 +492,31 @@ export function ProfilePage() {
           </Card>
 
           {/* Work Info */}
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-white">{language === 'ar' ? 'معلومات العمل' : 'Work Information'}</CardTitle>
+              <CardTitle className="text-foreground">{language === 'ar' ? 'معلومات العمل' : 'Work Information'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="flex items-center gap-3 p-3 bg-slate-800/30 rounded-lg">
+                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
                   <Building2 className="w-5 h-5 text-blue-400" />
                   <div>
-                    <p className="text-sm text-slate-400">{language === 'ar' ? 'المنظمة' : 'Organization'}</p>
-                    <p className="text-white font-medium">{profileUser?.organization?.name || '-'}</p>
+                    <p className="text-sm text-muted-foreground">{language === 'ar' ? 'المنظمة' : 'Organization'}</p>
+                    <p className="text-foreground font-medium">{profileUser?.organization?.name || '-'}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 p-3 bg-slate-800/30 rounded-lg">
+                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
                   <Calendar className="w-5 h-5 text-green-400" />
                   <div>
-                    <p className="text-sm text-slate-400">{language === 'ar' ? 'تاريخ الانضمام' : 'Join Date'}</p>
-                    <p className="text-white font-medium">{profileUser?.hireDate ? formatDate(profileUser.hireDate) : '-'}</p>
+                    <p className="text-sm text-muted-foreground">{language === 'ar' ? 'تاريخ الانضمام' : 'Join Date'}</p>
+                    <p className="text-foreground font-medium">{profileUser?.hireDate ? formatDate(profileUser.hireDate) : '-'}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 p-3 bg-slate-800/30 rounded-lg">
+                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
                   <Calendar className="w-5 h-5 text-purple-400" />
                   <div>
-                    <p className="text-sm text-slate-400">{language === 'ar' ? 'رصيد الإجازات' : 'Leave Balance'}</p>
-                    <p className="text-white font-medium">{profileUser?.leaveBalance || 0} {language === 'ar' ? 'يوم' : 'days'}</p>
+                    <p className="text-sm text-muted-foreground">{language === 'ar' ? 'رصيد الإجازات' : 'Leave Balance'}</p>
+                    <p className="text-foreground font-medium">{profileUser?.leaveBalance || 0} {language === 'ar' ? 'يوم' : 'days'}</p>
                   </div>
                 </div>
               </div>
@@ -526,27 +526,27 @@ export function ProfilePage() {
 
         {/* Security Tab */}
         <TabsContent value="security" className="space-y-6">
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-white">{language === 'ar' ? 'تغيير كلمة المرور' : 'Change Password'}</CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardTitle className="text-foreground">{language === 'ar' ? 'تغيير كلمة المرور' : 'Change Password'}</CardTitle>
+              <CardDescription className="text-muted-foreground">
                 {language === 'ar' ? 'تحديث كلمة المرور الخاصة بك' : 'Update your password'}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-slate-300">{language === 'ar' ? 'كلمة المرور الحالية' : 'Current Password'}</Label>
+                <Label className="text-foreground/80">{language === 'ar' ? 'كلمة المرور الحالية' : 'Current Password'}</Label>
                 <div className="relative">
                   <Input
                     type={showCurrentPassword ? 'text' : 'password'}
                     value={passwordForm.currentPassword}
                     onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
-                    className="bg-slate-800/50 border-slate-700 text-white pe-10"
+                    className="bg-muted border-border text-foreground pe-10"
                   />
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="absolute end-0 top-0 h-full text-slate-400"
+                    className="absolute end-0 top-0 h-full text-muted-foreground"
                     onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                   >
                     {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -555,18 +555,18 @@ export function ProfilePage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{language === 'ar' ? 'كلمة المرور الجديدة' : 'New Password'}</Label>
+                  <Label className="text-foreground/80">{language === 'ar' ? 'كلمة المرور الجديدة' : 'New Password'}</Label>
                   <div className="relative">
                     <Input
                       type={showNewPassword ? 'text' : 'password'}
                       value={passwordForm.newPassword}
                       onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                      className="bg-slate-800/50 border-slate-700 text-white pe-10"
+                      className="bg-muted border-border text-foreground pe-10"
                     />
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="absolute end-0 top-0 h-full text-slate-400"
+                      className="absolute end-0 top-0 h-full text-muted-foreground"
                       onClick={() => setShowNewPassword(!showNewPassword)}
                     >
                       {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -574,22 +574,22 @@ export function ProfilePage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-300">{language === 'ar' ? 'تأكيد كلمة المرور' : 'Confirm Password'}</Label>
+                  <Label className="text-foreground/80">{language === 'ar' ? 'تأكيد كلمة المرور' : 'Confirm Password'}</Label>
                   <Input
                     type="password"
                     value={passwordForm.confirmPassword}
                     onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                    className="bg-slate-800/50 border-slate-700 text-white"
+                    className="bg-muted border-border text-foreground"
                   />
                 </div>
               </div>
-              <p className="text-xs text-slate-500 mt-2">
+              <p className="text-xs text-muted-foreground mt-2">
                 {language === 'ar' 
                   ? 'يجب أن تكون كلمة المرور 6 أحرف على الأقل وتحتوي على حرف ورقم'
                   : 'Password must be at least 6 characters with at least one letter and one number'}
               </p>
             </CardContent>
-            <CardFooter className="border-t border-slate-800 pt-4">
+            <CardFooter className="border-t border-border pt-4">
               <Button 
                 onClick={handleChangePassword} 
                 className="bg-blue-600 hover:bg-blue-700"
@@ -610,17 +610,17 @@ export function ProfilePage() {
 
         {/* Preferences Tab */}
         <TabsContent value="preferences" className="space-y-6">
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-white">{language === 'ar' ? 'التفضيلات' : 'Preferences'}</CardTitle>
+              <CardTitle className="text-foreground">{language === 'ar' ? 'التفضيلات' : 'Preferences'}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center justify-between p-4 bg-slate-800/30 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                 <div className="flex items-center gap-3">
                   <Globe className="w-5 h-5 text-blue-400" />
                   <div>
-                    <p className="text-white font-medium">{t.language}</p>
-                    <p className="text-sm text-slate-400">{language === 'ar' ? 'اختر لغة الواجهة' : 'Choose interface language'}</p>
+                    <p className="text-foreground font-medium">{t.language}</p>
+                    <p className="text-sm text-muted-foreground">{language === 'ar' ? 'اختر لغة الواجهة' : 'Choose interface language'}</p>
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -628,7 +628,7 @@ export function ProfilePage() {
                     variant={language === 'ar' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => handleLanguageChange('ar')}
-                    className={language === 'ar' ? 'bg-blue-600' : 'border-slate-700'}
+                    className={language === 'ar' ? 'bg-blue-600' : 'border-border'}
                   >
                     العربية
                   </Button>
@@ -636,19 +636,19 @@ export function ProfilePage() {
                     variant={language === 'en' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => handleLanguageChange('en')}
-                    className={language === 'en' ? 'bg-blue-600' : 'border-slate-700'}
+                    className={language === 'en' ? 'bg-blue-600' : 'border-border'}
                   >
                     English
                   </Button>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-slate-800/30 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                 <div className="flex items-center gap-3">
                   {theme === 'dark' ? <Moon className="w-5 h-5 text-purple-400" /> : <Sun className="w-5 h-5 text-yellow-400" />}
                   <div>
-                    <p className="text-white font-medium">{t.theme}</p>
-                    <p className="text-sm text-slate-400">{language === 'ar' ? 'اختر مظهر التطبيق' : 'Choose app appearance'}</p>
+                    <p className="text-foreground font-medium">{t.theme}</p>
+                    <p className="text-sm text-muted-foreground">{language === 'ar' ? 'اختر مظهر التطبيق' : 'Choose app appearance'}</p>
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -656,7 +656,7 @@ export function ProfilePage() {
                     variant={theme === 'light' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => handleThemeChange('light')}
-                    className={theme === 'light' ? 'bg-blue-600' : 'border-slate-700'}
+                    className={theme === 'light' ? 'bg-blue-600' : 'border-border'}
                   >
                     <Sun className="w-4 h-4 me-1" />
                     {language === 'ar' ? 'فاتح' : 'Light'}
@@ -665,7 +665,7 @@ export function ProfilePage() {
                     variant={theme === 'dark' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => handleThemeChange('dark')}
-                    className={theme === 'dark' ? 'bg-blue-600' : 'border-slate-700'}
+                    className={theme === 'dark' ? 'bg-blue-600' : 'border-border'}
                   >
                     <Moon className="w-4 h-4 me-1" />
                     {language === 'ar' ? 'داكن' : 'Dark'}

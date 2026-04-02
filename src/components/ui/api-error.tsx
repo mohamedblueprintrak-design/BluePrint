@@ -15,7 +15,7 @@ export function ApiError({ message, onRetry }: ApiErrorProps) {
       <CardContent className="p-6">
         <div className="flex flex-col items-center text-center">
           <AlertTriangle className="h-10 w-10 text-yellow-500 mb-3" />
-          <p className="text-slate-300 mb-3">
+          <p className="text-foreground/80 mb-3">
             {message || 'حدث خطأ في تحميل البيانات'}
           </p>
           {onRetry && (
