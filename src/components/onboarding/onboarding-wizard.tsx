@@ -139,14 +139,14 @@ export function OnboardingWizard({ isOpen, onClose }: OnboardingWizardProps) {
       return [
         { id: 'tasks', icon: ListTodo, title: isRTL ? 'عرض مهامي' : 'View My Tasks', description: isRTL ? 'شاهد المهام المسندة إليك وابدأ العمل' : 'See tasks assigned to you and start working', path: '/dashboard/tasks', color: 'text-blue-400', bgColor: 'bg-blue-500/20', borderColor: 'border-blue-500/30 hover:border-blue-500' },
         { id: 'projects', icon: LayoutDashboard, title: isRTL ? 'تصفح المشاريع' : 'Browse Projects', description: isRTL ? 'استكشف المشاريع النشطة والمخطط لها' : 'Explore active and planned projects', path: '/dashboard/projects', color: 'text-green-400', bgColor: 'bg-green-500/20', borderColor: 'border-green-500/30 hover:border-green-500' },
-        { id: 'boq', icon: ClipboardList, title: isRTL ? 'عرض BOQ' : 'View BOQ', description: isRTL ? 'راجع قوائم الكميات للمشاريع' : 'Review bills of quantities for projects', path: '/dashboard/financials', color: 'text-orange-400', bgColor: 'bg-orange-500/20', borderColor: 'border-orange-500/30 hover:border-orange-500' },
+        { id: 'boq', icon: ClipboardList, title: isRTL ? 'عرض BOQ' : 'View BOQ', description: isRTL ? 'راجع قوائم الكميات للمشاريع' : 'Review bills of quantities for projects', path: '/dashboard/finance', color: 'text-orange-400', bgColor: 'bg-orange-500/20', borderColor: 'border-orange-500/30 hover:border-orange-500' },
       ];
     }
 
     if (role === 'ACCOUNTANT') {
       return [
         { id: 'invoice', icon: FileText, title: isRTL ? 'إنشاء فاتورة' : 'Create Invoice', description: isRTL ? 'أنشئ فاتورتك الأولى وأرسلها للعملاء' : 'Create your first invoice and send it to clients', path: '/dashboard/finance', color: 'text-blue-400', bgColor: 'bg-blue-500/20', borderColor: 'border-blue-500/30 hover:border-blue-500' },
-        { id: 'budgets', icon: DollarSign, title: isRTL ? 'عرض الميزانيات' : 'View Budgets', description: isRTL ? 'تابع ميزانيات المشاريع والنفقات' : 'Track project budgets and expenses', path: '/dashboard/financials', color: 'text-green-400', bgColor: 'bg-green-500/20', borderColor: 'border-green-500/30 hover:border-green-500' },
+        { id: 'budgets', icon: DollarSign, title: isRTL ? 'عرض الميزانيات' : 'View Budgets', description: isRTL ? 'تابع ميزانيات المشاريع والنفقات' : 'Track project budgets and expenses', path: '/dashboard/finance', color: 'text-green-400', bgColor: 'bg-green-500/20', borderColor: 'border-green-500/30 hover:border-green-500' },
         { id: 'reports', icon: BarChart3, title: isRTL ? 'التقارير المالية' : 'Financial Reports', description: isRTL ? 'عرض التقارير المالية والتحليلات' : 'View financial reports and analytics', path: '/dashboard/reports', color: 'text-purple-400', bgColor: 'bg-purple-500/20', borderColor: 'border-purple-500/30 hover:border-purple-500' },
       ];
     }

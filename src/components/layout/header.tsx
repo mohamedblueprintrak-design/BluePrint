@@ -159,6 +159,7 @@ export function Header({ title, actions }: HeaderProps) {
             size="icon"
             onClick={() => setCommandPaletteOpen(true)}
             className="md:hidden text-muted-foreground hover:text-foreground hover:bg-accent"
+            aria-label={language === 'ar' ? 'بحث' : 'Search'}
           >
             <Search className="w-5 h-5" />
           </Button>
@@ -210,6 +211,7 @@ export function Header({ title, actions }: HeaderProps) {
             size="icon"
             className="md:hidden bg-blue-600 hover:bg-blue-700 text-foreground"
             onClick={() => openQuickAddDialog('project')}
+            aria-label={language === 'ar' ? 'إضافة جديد' : 'Add new'}
           >
             <Plus className="w-5 h-5" />
           </Button>
@@ -234,6 +236,7 @@ export function Header({ title, actions }: HeaderProps) {
             size="icon"
             onClick={() => setTheme(isDark ? 'light' : 'dark')}
             className="hidden md:flex text-muted-foreground hover:text-foreground hover:bg-accent"
+            aria-label={isDark ? (language === 'ar' ? 'تبديل للوضع الفاتح' : 'Switch to light mode') : (language === 'ar' ? 'تبديل للوضع الداكن' : 'Switch to dark mode')}
           >
             {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </Button>

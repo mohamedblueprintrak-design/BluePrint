@@ -204,10 +204,10 @@ const getRoutes = (_language: 'ar' | 'en'): Record<string, string> => ({
   'pricing': '/dashboard/settings?tab=billing',
   'activities': '/dashboard/admin?tab=activities',
   // Legacy redirect routes (kept for backward compatibility)
-  'operations': '/dashboard/operations',
-  'financials': '/dashboard/financials',
-  'procurement': '/dashboard/procurement',
-  'siteVisitReports': '/dashboard/site-visit-reports',
+  'operations': '/dashboard',
+  'financials': '/dashboard/finance',
+  'procurement': '/dashboard/assets',
+  'siteVisitReports': '/dashboard/site-management?tab=visits',
   'correspondence': '/dashboard/reports?tab=meetings',
   'knowledge': '/dashboard/ai-chat',
   'help': '/dashboard/ai-chat',
@@ -230,7 +230,7 @@ function SidebarContent({
   const { user, logout } = useAuth();
   const { 
     theme, setTheme, language, setLanguage, isDark, isRTL,
-    sidebarCollapsed, setSidebarCollapsed: _setSidebarCollapsed, currentPage, setCurrentPage,
+    sidebarCollapsed, currentPage, setCurrentPage,
     setCommandPaletteOpen
   } = useApp();
   const { t } = useTranslation(language);

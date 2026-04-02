@@ -69,8 +69,12 @@ import {
   Link2,
   Webhook,
   Cloud,
+  Loader2,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useChangePassword, useUpdateProfile } from '@/hooks/api';
+import { useMutation } from '@tanstack/react-query';
+import { directApiRequest } from '@/lib/api/fetch-client';
 import { TwoFactorSetup } from './two-factor-setup';
 import { BillingPage } from './billing-page';
 
@@ -159,7 +163,7 @@ interface Integration {
 
 export function SettingsPage() {
   const { language, isRTL, theme, setTheme, setLanguage, currency, setCurrency } = useApp();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { t } = useTranslation(language);
   const { toast } = useToast();
 
@@ -383,6 +387,14 @@ export function SettingsPage() {
     { value: 'saturday', label: language === 'ar' ? 'السبت' : 'Saturday' },
   ];
 
+  // API mutations
+  const changePassword = useChangePassword();
+  const updateProfile = useUpdateProfile();
+  const saveNotificationSettings = useMutation({
+    mutationFn: (data: Record<string, boolean>) =>
+      directApiRequest('PUT', '/api/notifications/settings', data, token),
+  });
+
   // Handlers
   const handleSaveCompanySettings = () => {
     toast({
@@ -392,16 +404,53 @@ export function SettingsPage() {
   };
 
   const handleSaveAppearance = () => {
-    toast({
-      title: t.successSave,
-      description: language === 'ar' ? 'تم حفظ إعدادات المظهر' : 'Appearance settings saved successfully',
-    });
+    updateProfile.mutate(
+      {
+        language,
+        ...(theme !== 'system' ? { theme: theme as 'light' | 'dark' } : {}),
+      },
+      {
+        onSuccess: () => {
+          toast({
+            title: t.successSave,
+            description: language === 'ar' ? 'تم حفظ إعدادات المظهر' : 'Appearance settings saved successfully',
+          });
+        },
+        onError: () => {
+          toast({
+            title: t.error,
+            description: language === 'ar' ? 'فشل حفظ الإعدادات' : 'Failed to save appearance settings',
+            variant: 'destructive',
+          });
+        },
+      },
+    );
   };
 
   const handleSaveNotifications = () => {
-    toast({
-      title: t.successSave,
-      description: language === 'ar' ? 'تم حفظ إعدادات الإشعارات' : 'Notification settings saved successfully',
+    const payload: Record<string, boolean> = {
+      emailProjects: notificationSettings.email.projects,
+      emailTasks: notificationSettings.email.tasks,
+      emailInvoices: notificationSettings.email.invoices,
+      pushEnabled: Object.values(notificationSettings.push).some(Boolean),
+      pushProjects: notificationSettings.push.projects,
+      pushTasks: notificationSettings.push.tasks,
+    };
+
+    saveNotificationSettings.mutate(payload, {
+      onSuccess: () => {
+        toast({
+          title: t.successSave,
+          description: language === 'ar' ? 'تم حفظ إعدادات الإشعارات' : 'Notification settings saved successfully',
+        });
+      },
+      onError: () => {
+        toast({
+          title: t.error,
+          description: language === 'ar' ? 'فشل حفظ إعدادات الإشعارات' : 'Failed to save notification settings',
+          variant: 'destructive',
+        });
+      },
     });
   };
 
@@ -422,11 +471,29 @@ export function SettingsPage() {
       });
       return;
     }
-    toast({
-      title: t.successSave,
-      description: language === 'ar' ? 'تم تغيير كلمة المرور بنجاح' : 'Password changed successfully',
-    });
-    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    changePassword.mutate(
+      {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+        confirmPassword: passwordForm.confirmPassword,
+      },
+      {
+        onSuccess: () => {
+          toast({
+            title: t.successSave,
+            description: language === 'ar' ? 'تم تغيير كلمة المرور بنجاح' : 'Password changed successfully',
+          });
+          setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        },
+        onError: () => {
+          toast({
+            title: t.error,
+            description: language === 'ar' ? 'فشل تغيير كلمة المرور. تحقق من كلمة المرور الحالية' : 'Failed to change password. Verify your current password',
+            variant: 'destructive',
+          });
+        },
+      },
+    );
   };
 
   const _handleToggleTwoFactor = () => {
@@ -938,8 +1005,9 @@ export function SettingsPage() {
                 </div>
               </CardContent>
               <CardFooter className="flex justify-end border-t border-border pt-4">
-                <Button onClick={handleSaveAppearance} className="bg-blue-600 hover:bg-blue-700">
-                  <Check className="w-4 h-4 me-2" />
+                <Button onClick={handleSaveAppearance} disabled={updateProfile.isPending} className="bg-blue-600 hover:bg-blue-700">
+                  {updateProfile.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
+                  <Check className={`w-4 h-4 me-2 ${updateProfile.isPending ? 'hidden' : ''}`} />
                   {texts.save}
                 </Button>
               </CardFooter>
@@ -1022,8 +1090,9 @@ export function SettingsPage() {
           </div>
 
           <div className="flex justify-end">
-            <Button onClick={handleSaveNotifications} className="bg-blue-600 hover:bg-blue-700">
-              <Check className="w-4 h-4 me-2" />
+            <Button onClick={handleSaveNotifications} disabled={saveNotificationSettings.isPending} className="bg-blue-600 hover:bg-blue-700">
+              {saveNotificationSettings.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
+              <Check className={`w-4 h-4 me-2 ${saveNotificationSettings.isPending ? 'hidden' : ''}`} />
               {texts.save}
             </Button>
           </div>
@@ -1084,7 +1153,8 @@ export function SettingsPage() {
                 </div>
               </CardContent>
               <CardFooter className="border-t border-border pt-4">
-                <Button onClick={handlePasswordChange} className="bg-blue-600 hover:bg-blue-700">
+                <Button onClick={handlePasswordChange} disabled={changePassword.isPending} className="bg-blue-600 hover:bg-blue-700">
+                  {changePassword.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
                   {texts.save}
                 </Button>
               </CardFooter>

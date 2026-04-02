@@ -127,6 +127,10 @@ export {
   useDeletePurchaseOrder,
 } from './purchase-orders';
 
+// Meetings
+export { useMeetings, useCreateMeeting, useUpdateMeeting, useDeleteMeeting } from './meetings';
+export type { Meeting } from './meetings';
+
 // Knowledge Base
 export {
   useKnowledgeArticles,
@@ -136,3 +140,19 @@ export {
   useDeleteKnowledgeArticle,
   useMarkArticleHelpful,
 } from './knowledge';
+
+// Municipality Correspondence
+export {
+  useCorrespondence,
+  useCreateCorrespondence,
+  useUpdateCorrespondence,
+  useDeleteCorrespondence,
+} from './correspondence';
+export type {
+  CorrespondenceRecord,
+  CorrespondenceParams,
+  CorrespondenceType,
+  CorrespondenceStatus,
+  CreateCorrespondenceData,
+  UpdateCorrespondenceData,
+} from './correspondence';

@@ -463,6 +463,7 @@ model Organization {
   users            User[]
   subscriptions    Subscription[]
   plan             Plan?     @relation(fields: [planId], references: [id])
+  meetings         Meeting[]
 
   @@index([deletedAt])
 }
@@ -566,6 +567,7 @@ model User {
   DraftAssignee  WorkflowPhase[]  @relation("DraftAssignee")
   respondedInteractions ClientInteraction[] @relation("InteractionResponder")
   municipalityCorrespondence MunicipalityCorrespondence[]
+  createdMeetings Meeting[] @relation("MeetingCreator")
 
   @@index([organizationId])
   @@index([email])
@@ -705,6 +707,7 @@ model Project {
   clientInteractions  ClientInteraction[]
   municipalityCorrespondence MunicipalityCorrespondence[]
   siteVisitReports    SiteVisitReport[]
+  meetings             Meeting[]
 
   client              Client?   @relation(fields: [clientId], references: [id])
   manager             User?     @relation("ProjectManager", fields: [managerId], references: [id])
@@ -1791,4 +1794,36 @@ model SiteVisitReport {
   @@index([projectId])
   @@index([municipality])
   @@index([status])
+}
+
+// ============================================
+// الاجتماعات (Meetings)
+// ============================================
+
+model Meeting {
+  id             String   @id @default(cuid())
+  title          String
+  date           DateTime @db.Date
+  time           String
+  duration       Int             // minutes
+  location       String
+  type           String   @default("ONLINE")    // ONSITE, ONLINE
+  status         String   @default("PENDING")   // PENDING, CONFIRMED, COMPLETED, CANCELLED
+  attendees      String?                           // JSON string array
+  agenda         String?
+  notes          String?
+  projectId      String?
+  createdById    String?
+  organizationId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  project        Project?      @relation(fields: [projectId], references: [id])
+  createdBy      User?         @relation("MeetingCreator", fields: [createdById], references: [id])
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+  @@index([projectId])
+  @@index([status])
+  @@index([date])
 }

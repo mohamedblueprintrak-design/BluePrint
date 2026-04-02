@@ -69,16 +69,25 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
 // Dashboard shell — uses useApp() so must be INSIDE Providers
 function DashboardShell({ children }: { children: React.ReactNode }) {
-  const { sidebarCollapsed, isRTL, commandPaletteOpen, setCommandPaletteOpen } = useApp();
+  const { sidebarCollapsed, isRTL, commandPaletteOpen, setCommandPaletteOpen, language } = useApp();
 
   return (
     <AuthGuard>
       <div className="min-h-screen bg-background">
+        {/* Skip to content link for accessibility */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:outline-none"
+        >
+          {language === 'ar' ? 'انتقل إلى المحتوى الرئيسي' : 'Skip to main content'}
+        </a>
+        
         {/* Sidebar */}
         <Sidebar />
         
         {/* Main Content Area */}
         <main 
+          id="main-content"
           className={cn(
             "transition-all duration-300 min-h-screen flex flex-col",
             sidebarCollapsed 

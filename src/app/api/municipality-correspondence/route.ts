@@ -44,10 +44,6 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
 
-    if (!projectId) {
-      return errorResponse('projectId is required / projectId مطلوب');
-    }
-
     // Build where clause
     const where: Record<string, unknown> = {
       project: { organizationId: user.organizationId },
@@ -68,6 +64,9 @@ export async function GET(request: NextRequest) {
       include: {
         createdBy: {
           select: { id: true, fullName: true, avatar: true, email: true },
+        },
+        project: {
+          select: { id: true, name: true },
         },
       },
       orderBy: { submissionDate: 'desc' },
@@ -151,6 +150,9 @@ export async function POST(request: NextRequest) {
       include: {
         createdBy: {
           select: { id: true, fullName: true, avatar: true, email: true },
+        },
+        project: {
+          select: { id: true, name: true },
         },
       },
     });
@@ -257,6 +259,9 @@ export async function PUT(request: NextRequest) {
       include: {
         createdBy: {
           select: { id: true, fullName: true, avatar: true, email: true },
+        },
+        project: {
+          select: { id: true, name: true },
         },
       },
     });

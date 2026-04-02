@@ -378,6 +378,13 @@ export const DEMO_DATA = {
     { id: 'demo-defect-002', title: 'تسرب مياه في السقف', description: 'تسرب من مواسير الصرف', status: 'Open', severity: 'critical', projectId: 'demo-project-001' },
     { id: 'demo-defect-003', title: 'عيب في الطلاء', description: 'تقشر في الطلاء', status: 'Closed', severity: 'low', projectId: 'demo-project-002' }
   ],
+  meetings: [
+    { id: 'demo-meeting-001', title: 'اجتماع متابعة مشروع الواحة', date: '2026-03-31', time: '10:00', duration: 60, location: 'قاعة الاجتماعات الرئيسية', type: 'ONSITE', status: 'CONFIRMED', attendees: '["أحمد المدير", "خالد الإنشائي", "محمد الكهربائي"]', agenda: 'مراجعة تقدم الأعمال - مناقشة التعديلات المعمارية - متابعة المخالفات', notes: '', projectId: 'demo-project-001', projectName: 'برج الأعمال التجاري', createdAt: new Date('2026-03-25') },
+    { id: 'demo-meeting-002', title: 'متابعة المراسلات البلدية', date: '2026-04-01', time: '09:00', duration: 30, location: 'Zoom', type: 'ONLINE', status: 'CONFIRMED', attendees: '["أحمد المدير", "نورا السكرتيرة"]', agenda: 'متابعة طلبات التصاريح - الرد على ملاحظات البلدية', notes: '', createdAt: new Date('2026-03-26') },
+    { id: 'demo-meeting-003', title: 'اجتماع مع العميل - مراجعة المخططات', date: '2026-04-02', time: '14:00', duration: 90, location: 'مكتب العميل - دبي', type: 'ONSITE', status: 'PENDING', attendees: '["أحمد المدير", "المهندس المعماري", "العميل خالد"]', agenda: 'عرض المخططات النهائية - أخذ موافقة العميل على التعديلات', notes: 'مطلوب تجهيز نسخة طباعة من المخططات', projectId: 'demo-project-002', projectName: 'مجمع الفلل السكني', createdAt: new Date('2026-03-27') },
+    { id: 'demo-meeting-004', title: 'اجتماع الفريق الأسبوعي', date: '2026-04-03', time: '08:30', duration: 45, location: 'Teams', type: 'ONLINE', status: 'CONFIRMED', attendees: '["أحمد المدير", "المهندس المعماري", "خالد الإنشائي", "محمد الكهربائي", "نورا السكرتيرة"]', agenda: 'متابعة المهام الأسبوعية - توزيع مهام جديدة - مناقشة المعوقات', notes: '', createdAt: new Date('2026-03-28') },
+    { id: 'demo-meeting-005', title: 'فحص الموقع - مشروع برج', date: '2026-04-05', time: '07:00', duration: 120, location: 'الموقع - منطقة الشارقة', type: 'ONSITE', status: 'PENDING', attendees: '["مهندس الموقع", "خالد الإنشائي", "أحمد المدير"]', agenda: 'فحص أعمال الصب - مراجعة حديد التسليح - متابعة المقاول', notes: 'يجب ارتداء خوذة الأمان', projectId: 'demo-project-001', projectName: 'برج الأعمال التجاري', createdAt: new Date('2026-03-29') }
+  ],
   dashboard: {
     projects: { total: 3, active: 2, completed: 1, pending: 0 },
     clients: { total: 3 },

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useApp } from '@/context/app-context';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
   SelectContent,
@@ -22,97 +23,21 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CalendarPage from '@/components/calendar/calendar-page';
+import {
+  useMeetings, useCreateMeeting, useUpdateMeeting, useProjects,
+  useCorrespondence, useCreateCorrespondence,
+  type Meeting, type CorrespondenceRecord, type CorrespondenceType,
+} from '@/hooks/api';
+import { useToast } from '@/hooks/use-toast';
 import {
   Calendar, Plus, Clock, MapPin, Users, Video,
   CheckCircle, Landmark, Search, Send, Eye,
-  XCircle, AlertTriangle, FileText, Building,
-  CalendarDays
+  XCircle, AlertTriangle, FileText,
+  CalendarDays, Loader2
 } from 'lucide-react';
 
-// ─── Meetings Data ───────────────────────────────────────────────
-
-const MOCK_MEETINGS = [
-  {
-    id: '1',
-    title: 'اجتماع متابعة مشروع الواحة',
-    date: '2026-03-31',
-    time: '10:00',
-    duration: 60,
-    location: 'قاعة الاجتماعات الرئيسية',
-    type: 'onsite',
-    status: 'confirmed',
-    attendees: ['أحمد المدير', 'خالد الإنشائي', 'محمد الكهربائي'],
-    project: 'مشروع الواحة السكني',
-    agenda: 'مراجعة تقدم الأعمال - مناقشة التعديلات المعمارية - متابعة المخالفات',
-    notes: '',
-  },
-  {
-    id: '2',
-    title: 'متابعة المراسلات البلدية',
-    date: '2026-04-01',
-    time: '09:00',
-    duration: 30,
-    location: 'Zoom',
-    type: 'online',
-    status: 'confirmed',
-    attendees: ['أحمد المدير', 'نورا السكرتيرة'],
-    project: '',
-    agenda: 'متابعة طلبات التصاريح - الرد على ملاحظات البلدية',
-    notes: '',
-  },
-  {
-    id: '3',
-    title: 'اجتماع مع العميل - مراجعة المخططات',
-    date: '2026-04-02',
-    time: '14:00',
-    duration: 90,
-    location: 'مكتب العميل - دبي',
-    type: 'onsite',
-    status: 'pending',
-    attendees: ['أحمد المدير', 'المهندس المعماري', 'العميل خالد'],
-    project: 'مشروع فيلا النخيل',
-    agenda: 'عرض المخططات النهائية - أخذ موافقة العميل على التعديلات',
-    notes: 'مطلوب تجهيز نسخة طباعة من المخططات',
-  },
-  {
-    id: '4',
-    title: 'اجتماع الفريق الأسبوعي',
-    date: '2026-04-03',
-    time: '08:30',
-    duration: 45,
-    location: 'Teams',
-    type: 'online',
-    status: 'confirmed',
-    attendees: ['أحمد المدير', 'المهندس المعماري', 'خالد الإنشائي', 'محمد الكهربائي', 'نورا السكرتيرة'],
-    project: '',
-    agenda: 'متابعة المهام الأسبوعية - توزيع مهام جديدة - مناقشة المعوقات',
-    notes: '',
-  },
-  {
-    id: '5',
-    title: 'فحص الموقع - مشروع البرج',
-    date: '2026-04-05',
-    time: '07:00',
-    duration: 120,
-    location: 'الموقع - منطقة الشارقة',
-    type: 'onsite',
-    status: 'pending',
-    attendees: ['مهندس الموقع', 'خالد الإنشائي', 'أحمد المدير'],
-    project: 'مشروع برج الأعمال',
-    agenda: 'فحص أعمال الصب - مراجعة حديد التسليح - متابعة المقاول',
-    notes: 'يجب ارتداء خوذة الأمان',
-  },
-];
+// ─── Status / Type Maps ─────────────────────────────────────────
 
 const MEETINGS_STATUS_MAP: Record<string, { ar: string; en: string; color: string }> = {
   confirmed: { ar: 'مؤكد', en: 'Confirmed', color: 'bg-green-500/20 text-green-400 border-green-500/30' },
@@ -121,101 +46,129 @@ const MEETINGS_STATUS_MAP: Record<string, { ar: string; en: string; color: strin
   completed: { ar: 'مكتمل', en: 'Completed', color: 'bg-muted text-muted-foreground border-border' },
 };
 
-// ─── Correspondence Data ────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────
 
-const MOCK_CORRESPONDENCE = [
-  {
-    id: '1',
-    reference: 'MC-2026-001',
-    subject: 'طلب رخصة بناء فيلا - المنطقة الأولى',
-    type: 'permit_request',
-    municipality: 'بلدية الشارقة',
-    status: 'pending',
-    date: '2026-03-15',
-    dueDate: '2026-04-15',
-    notes: 'تم تقديم المخططات ومستندات الملكية',
-  },
-  {
-    id: '2',
-    reference: 'MC-2026-002',
-    subject: 'مخالصة كهرباء - مشروع الواحة',
-    type: 'clearance',
-    municipality: 'بلدية دبي',
-    status: 'approved',
-    date: '2026-02-20',
-    dueDate: '2026-03-20',
-    notes: 'تمت الموافقة بعد التعديلات المطلوبة',
-  },
-  {
-    id: '3',
-    reference: 'MC-2026-003',
-    subject: 'اعتراض على غرامة تأخير',
-    type: 'objection',
-    municipality: 'بلدية أبوظبي',
-    status: 'rejected',
-    date: '2026-01-10',
-    dueDate: '2026-02-10',
-    notes: 'تم رفض الاعتراض - الغرامة سارية',
-  },
-  {
-    id: '4',
-    reference: 'MC-2026-004',
-    subject: 'تجديد رخصة البناء - برج النخيل',
-    type: 'renewal',
-    municipality: 'بلدية عجمان',
-    status: 'in_progress',
-    date: '2026-03-25',
-    dueDate: '2026-06-25',
-    notes: 'قيد المراجعة - مطلوب مخططات محدثة',
-  },
-  {
-    id: '5',
-    reference: 'MC-2026-005',
-    subject: 'طلب فحص سلامة المبنى',
-    type: 'inspection',
-    municipality: 'بلدية الشارقة',
-    status: 'pending',
-    date: '2026-03-28',
-    dueDate: '2026-04-28',
-    notes: 'حجز موعد الفحص الأسبوع القادم',
-  },
-];
+/** Normalize API status (CONFIRMED) → UI status (confirmed) */
+function normalizeStatus(status: string): string {
+  return (status || 'pending').toLowerCase();
+}
 
-const TYPE_MAP: Record<string, { ar: string; en: string }> = {
-  permit_request: { ar: 'طلب تصريح', en: 'Permit Request' },
-  clearance: { ar: 'مخالصة', en: 'Clearance' },
-  objection: { ar: 'اعتراض', en: 'Objection' },
-  renewal: { ar: 'تجديد', en: 'Renewal' },
-  inspection: { ar: 'فحص', en: 'Inspection' },
-  amendment: { ar: 'تعديل', en: 'Amendment' },
-  complaint: { ar: 'شكوى', en: 'Complaint' },
+/** Convert API date to YYYY-MM-DD string */
+function toDateStr(date: string | Date): string {
+  if (!date) return '';
+  if (typeof date === 'string') {
+    // Already ISO string – extract date portion
+    return date.split('T')[0];
+  }
+  return date.toISOString().split('T')[0];
+}
+
+/** Parse attendees JSON string → string[] */
+function parseAttendees(attendees: string | null | undefined): string[] {
+  if (!attendees) return [];
+  try {
+    return JSON.parse(attendees);
+  } catch {
+    return [];
+  }
+}
+
+// ─── Correspondence Type & Status Maps (API-aligned) ────────
+
+const CORR_TYPE_MAP: Record<string, { ar: string; en: string }> = {
+  SUBMISSION: { ar: 'تقديم', en: 'Submission' },
+  RESPONSE:   { ar: 'رد', en: 'Response' },
+  REJECTION:  { ar: 'رفض', en: 'Rejection' },
+  APPROVAL:   { ar: 'موافقة', en: 'Approval' },
+  INQUIRY:    { ar: 'استفسار', en: 'Inquiry' },
+  AMENDMENT:  { ar: 'تعديل', en: 'Amendment' },
 };
 
 const CORR_STATUS_MAP: Record<string, { ar: string; en: string; color: string; icon: React.ElementType }> = {
-  pending: { ar: 'قيد المراجعة', en: 'Pending', color: 'bg-amber-500/20 text-amber-400 border-amber-500/30', icon: Clock },
-  in_progress: { ar: 'جاري التنفيذ', en: 'In Progress', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30', icon: Send },
-  approved: { ar: 'تمت الموافقة', en: 'Approved', color: 'bg-green-500/20 text-green-400 border-green-500/30', icon: CheckCircle },
-  rejected: { ar: 'مرفوض', en: 'Rejected', color: 'bg-red-500/20 text-red-400 border-red-500/30', icon: XCircle },
-  overdue: { ar: 'متأخر', en: 'Overdue', color: 'bg-red-500/20 text-red-400 border-red-500/30', icon: AlertTriangle },
+  pending:            { ar: 'قيد الانتظار', en: 'Pending', color: 'bg-amber-500/20 text-amber-400 border-amber-500/30', icon: Clock },
+  under_review:       { ar: 'قيد المراجعة', en: 'Under Review', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30', icon: Send },
+  approved:           { ar: 'تمت الموافقة', en: 'Approved', color: 'bg-green-500/20 text-green-400 border-green-500/30', icon: CheckCircle },
+  rejected:           { ar: 'مرفوض', en: 'Rejected', color: 'bg-red-500/20 text-red-400 border-red-500/30', icon: XCircle },
+  amendment_required: { ar: 'يتطلب تعديل', en: 'Amendment Required', color: 'bg-orange-500/20 text-orange-400 border-orange-500/30', icon: AlertTriangle },
 };
+
+/** Helper: safely look up type label, falling back to the raw key */
+function getTypeLabel(type: string, isAr: boolean) {
+  const info = CORR_TYPE_MAP[type];
+  return info ? (isAr ? info.ar : info.en) : type;
+}
+
+/** Helper: safely look up status info, falling back to defaults */
+function getStatusInfo(status: string) {
+  return CORR_STATUS_MAP[status] ?? { ar: status, en: status, color: 'bg-muted text-muted-foreground border-border', icon: Clock };
+}
 
 // ─── Meetings Content (Tab 1) ──────────────────────────────────
 
 function MeetingsContent() {
   const { language } = useApp();
   const isAr = language === 'ar';
+  const { toast } = useToast();
+
   const [createDialog, setCreateDialog] = useState(false);
-  const [viewMeeting, setViewMeeting] = useState<any>(null);
+  const [viewMeeting, setViewMeeting] = useState<Meeting | null>(null);
   const [filterStatus, setFilterStatus] = useState('all');
 
-  const filtered = filterStatus === 'all'
-    ? MOCK_MEETINGS
-    : MOCK_MEETINGS.filter(m => m.status === filterStatus);
+  // Create form state
+  const [formTitle, setFormTitle] = useState('');
+  const [formDate, setFormDate] = useState('');
+  const [formTime, setFormTime] = useState('');
+  const [formDuration, setFormDuration] = useState('60');
+  const [formLocation, setFormLocation] = useState('');
+  const [formAgenda, setFormAgenda] = useState('');
+  const [formAttendees, setFormAttendees] = useState('');
+  const [formType, setFormType] = useState('ONLINE');
 
-  const upcoming = MOCK_MEETINGS.filter(m => m.status !== 'cancelled' && m.status !== 'completed');
+  // API hooks
+  const { data: meetingsData, isLoading } = useMeetings();
+  const createMutation = useCreateMeeting();
+  const updateMutation = useUpdateMeeting();
+
+  // Normalize API data to UI format
+  const meetings: Array<{
+    id: string;
+    title: string;
+    date: string;
+    time: string;
+    duration: number;
+    location: string;
+    type: 'onsite' | 'online';
+    status: string;
+    attendees: string[];
+    project: string;
+    agenda: string;
+    notes: string;
+  }> = useMemo(() => {
+    if (!meetingsData?.data) return [];
+    return (meetingsData.data as Meeting[]).map((m) => ({
+      id: m.id,
+      title: m.title,
+      date: toDateStr(m.date),
+      time: m.time,
+      duration: m.duration,
+      location: m.location,
+      type: (m.type || 'online').toLowerCase() as 'onsite' | 'online',
+      status: normalizeStatus(m.status),
+      attendees: parseAttendees(m.attendees),
+      project: (m as any).projectName || '',
+      agenda: m.agenda || '',
+      notes: m.notes || '',
+    }));
+  }, [meetingsData]);
+
+  const filtered = filterStatus === 'all'
+    ? meetings
+    : meetings.filter(m => m.status === filterStatus);
+
+  const upcoming = meetings.filter(m => m.status !== 'cancelled' && m.status !== 'completed');
 
   // Group by date
-  const grouped = filtered.reduce((acc: Record<string, typeof MOCK_MEETINGS>, meeting) => {
+  const grouped = filtered.reduce<Record<string, typeof meetings>>((acc, meeting) => {
     if (!acc[meeting.date]) acc[meeting.date] = [];
     acc[meeting.date].push(meeting);
     return acc;
@@ -231,6 +184,122 @@ function MeetingsContent() {
       : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     return `${days[date.getDay()]} ${date.getDate()} ${months[date.getMonth()]}`;
   };
+
+  // Reset form
+  const resetForm = () => {
+    setFormTitle('');
+    setFormDate('');
+    setFormTime('');
+    setFormDuration('60');
+    setFormLocation('');
+    setFormAgenda('');
+    setFormAttendees('');
+    setFormType('ONLINE');
+  };
+
+  // Create handler
+  const handleCreate = () => {
+    if (!formTitle.trim()) {
+      toast({ title: isAr ? 'عنوان الاجتماع مطلوب' : 'Meeting title is required', variant: 'destructive' });
+      return;
+    }
+    if (!formDate) {
+      toast({ title: isAr ? 'التاريخ مطلوب' : 'Date is required', variant: 'destructive' });
+      return;
+    }
+    if (!formTime) {
+      toast({ title: isAr ? 'الوقت مطلوب' : 'Time is required', variant: 'destructive' });
+      return;
+    }
+
+    const attendeesStr = formAttendees
+      ? JSON.stringify(formAttendees.split(',').map(s => s.trim()).filter(Boolean))
+      : undefined;
+
+    createMutation.mutate(
+      {
+        title: formTitle.trim(),
+        date: formDate,
+        time: formTime,
+        duration: Number(formDuration) || 60,
+        location: formLocation.trim(),
+        type: formType,
+        agenda: formAgenda.trim() || undefined,
+        attendees: attendeesStr,
+      },
+      {
+        onSuccess: () => {
+          toast({ title: isAr ? 'تم إنشاء الاجتماع بنجاح' : 'Meeting created successfully' });
+          resetForm();
+          setCreateDialog(false);
+        },
+        onError: () => {
+          toast({ title: isAr ? 'فشل إنشاء الاجتماع' : 'Failed to create meeting', variant: 'destructive' });
+        },
+      }
+    );
+  };
+
+  // Status change handler
+  const handleStatusChange = (meeting: Meeting, newStatus: string) => {
+    updateMutation.mutate(
+      { id: meeting.id, status: newStatus.toUpperCase() },
+      {
+        onSuccess: () => {
+          toast({
+            title: isAr ? 'تم تحديث حالة الاجتماع' : 'Meeting status updated',
+          });
+          setViewMeeting(null);
+        },
+        onError: () => {
+          toast({
+            title: isAr ? 'فشل تحديث الحالة' : 'Failed to update status',
+            variant: 'destructive',
+          });
+        },
+      }
+    );
+  };
+
+  // ─── Loading skeleton ────────────────────────────────────────
+  if (isLoading) {
+    return (
+      <div className="space-y-6" dir={isAr ? 'rtl' : 'ltr'}>
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-8 w-8 rounded" />
+          <Skeleton className="h-8 w-40" />
+          <Skeleton className="h-4 w-32 ms-auto" />
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} className="bg-card border-border">
+              <CardContent className="p-4 text-center">
+                <Skeleton className="h-8 w-12 mx-auto mb-2" />
+                <Skeleton className="h-3 w-20 mx-auto" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="space-y-2">
+            <Skeleton className="h-5 w-40" />
+            <Card className="bg-card border-border">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-4">
+                  <Skeleton className="h-12 w-16" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-5 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                    <Skeleton className="h-3 w-2/3" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6" dir={isAr ? 'rtl' : 'ltr'}>
@@ -268,8 +337,8 @@ function MeetingsContent() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { label: isAr ? 'القادمة' : 'Upcoming', value: upcoming.length, color: 'text-blue-400' },
-          { label: isAr ? 'مؤكدة' : 'Confirmed', value: MOCK_MEETINGS.filter(m => m.status === 'confirmed').length, color: 'text-green-400' },
-          { label: isAr ? 'قيد التأكيد' : 'Pending', value: MOCK_MEETINGS.filter(m => m.status === 'pending').length, color: 'text-amber-400' },
+          { label: isAr ? 'مؤكدة' : 'Confirmed', value: meetings.filter(m => m.status === 'confirmed').length, color: 'text-green-400' },
+          { label: isAr ? 'قيد التأكيد' : 'Pending', value: meetings.filter(m => m.status === 'pending').length, color: 'text-amber-400' },
           { label: isAr ? 'هذا الأسبوع' : 'This Week', value: upcoming.filter(m => { const d = new Date(m.date); const now = new Date(); const week = 7 * 24 * 60 * 60 * 1000; return d.getTime() - now.getTime() <= week && d.getTime() >= now.getTime(); }).length, color: 'text-cyan-400' },
         ].map((stat) => (
           <Card key={stat.label} className="bg-card border-border">
@@ -282,7 +351,7 @@ function MeetingsContent() {
       </div>
 
       {/* Meetings Timeline */}
-      {Object.entries(grouped).map(([date, meetings]) => (
+      {Object.entries(grouped).map(([date, dateMeetings]) => (
         <div key={date} className="space-y-3">
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-muted-foreground" />
@@ -290,13 +359,13 @@ function MeetingsContent() {
             <div className="flex-1 h-px bg-muted" />
           </div>
           <div className="space-y-2">
-            {meetings.map((meeting) => {
+            {dateMeetings.map((meeting) => {
               const statusInfo = MEETINGS_STATUS_MAP[meeting.status];
               return (
                 <Card
                   key={meeting.id}
                   className="bg-card border-border hover:border-border transition-all cursor-pointer"
-                  onClick={() => setViewMeeting(meeting)}
+                  onClick={() => setViewMeeting(meetingsData?.data?.find((m: any) => m.id === meeting.id) || null)}
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start gap-4">
@@ -339,7 +408,7 @@ function MeetingsContent() {
         </div>
       ))}
 
-      {filtered.length === 0 && (
+      {filtered.length === 0 && !isLoading && (
         <Card className="bg-card border-border">
           <CardContent className="py-16 text-center text-muted-foreground">
             <Calendar className="w-12 h-12 mx-auto mb-4 opacity-40" />
@@ -368,7 +437,9 @@ function MeetingsContent() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {viewMeeting.type === 'online' ? <Video className="w-4 h-4 text-blue-400" /> : <MapPin className="w-4 h-4 text-amber-400" />}
+                  {(viewMeeting.type || 'online').toUpperCase() === 'ONLINE'
+                    ? <Video className="w-4 h-4 text-blue-400" />
+                    : <MapPin className="w-4 h-4 text-amber-400" />}
                   <div>
                     <p className="text-xs text-muted-foreground">{isAr ? 'المكان' : 'Location'}</p>
                     <p className="text-foreground">{viewMeeting.location}</p>
@@ -376,35 +447,40 @@ function MeetingsContent() {
                 </div>
               </div>
 
-              {viewMeeting.project && (
+              {(viewMeeting as any).projectName && (
                 <div>
                   <p className="text-xs text-muted-foreground">{isAr ? 'المشروع' : 'Project'}</p>
-                  <Badge variant="outline" className="border-border text-foreground/80 mt-1">{viewMeeting.project}</Badge>
+                  <Badge variant="outline" className="border-border text-foreground/80 mt-1">{(viewMeeting as any).projectName}</Badge>
                 </div>
               )}
 
               <div>
                 <p className="text-xs text-muted-foreground mb-2">{isAr ? 'الحضور' : 'Attendees'}</p>
                 <div className="flex flex-wrap gap-2">
-                  {viewMeeting.attendees.map((a: string, i: number) => (
+                  {parseAttendees(viewMeeting.attendees).map((a: string, i: number) => (
                     <Badge key={i} variant="outline" className="border-border text-foreground/80">
                       <Users className="w-3 h-3 me-1" />{a}
                     </Badge>
                   ))}
+                  {(!viewMeeting.attendees || parseAttendees(viewMeeting.attendees).length === 0) && (
+                    <p className="text-sm text-muted-foreground">{isAr ? 'لا يوجد حاضرين' : 'No attendees'}</p>
+                  )}
                 </div>
               </div>
 
-              <div>
-                <p className="text-xs text-muted-foreground mb-1">{isAr ? 'جدول الأعمال' : 'Agenda'}</p>
-                <div className="bg-muted p-3 rounded-lg text-sm text-foreground/80 space-y-1">
-                  {viewMeeting.agenda.split(' - ').map((item: string, i: number) => (
-                    <p key={i} className="flex items-start gap-2">
-                      <span className="text-blue-400 mt-0.5">•</span>
-                      {item}
-                    </p>
-                  ))}
+              {viewMeeting.agenda && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">{isAr ? 'جدول الأعمال' : 'Agenda'}</p>
+                  <div className="bg-muted p-3 rounded-lg text-sm text-foreground/80 space-y-1">
+                    {viewMeeting.agenda.split(' - ').map((item: string, i: number) => (
+                      <p key={i} className="flex items-start gap-2">
+                        <span className="text-blue-400 mt-0.5">•</span>
+                        {item}
+                      </p>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {viewMeeting.notes && (
                 <div>
@@ -418,8 +494,14 @@ function MeetingsContent() {
             <Button variant="outline" size="sm" onClick={() => setViewMeeting(null)} className="border-border text-foreground/80">
               {isAr ? 'إغلاق' : 'Close'}
             </Button>
-            {viewMeeting?.status !== 'completed' && (
-              <Button size="sm" onClick={() => setViewMeeting(null)} className="bg-green-600 hover:bg-green-700">
+            {viewMeeting && normalizeStatus(viewMeeting.status) !== 'completed' && (
+              <Button
+                size="sm"
+                disabled={updateMutation.isPending}
+                onClick={() => handleStatusChange(viewMeeting, 'completed')}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {updateMutation.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
                 <CheckCircle className="w-4 h-4 me-2" />
                 {isAr ? 'تم الانعقاد' : 'Mark Complete'}
               </Button>
@@ -429,7 +511,7 @@ function MeetingsContent() {
       </Dialog>
 
       {/* Create Dialog */}
-      <Dialog open={createDialog} onOpenChange={setCreateDialog}>
+      <Dialog open={createDialog} onOpenChange={(open) => { if (!open) resetForm(); setCreateDialog(open); }}>
         <DialogContent className="bg-card border-border text-foreground max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -440,42 +522,80 @@ function MeetingsContent() {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>{isAr ? 'عنوان الاجتماع' : 'Meeting Title'}</Label>
-              <Input placeholder={isAr ? 'مثال: اجتماع متابعة أسبوعي' : 'e.g. Weekly Follow-up'} className="bg-muted border-border" />
+              <Input
+                value={formTitle}
+                onChange={(e) => setFormTitle(e.target.value)}
+                placeholder={isAr ? 'مثال: اجتماع متابعة أسبوعي' : 'e.g. Weekly Follow-up'}
+                className="bg-muted border-border"
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>{isAr ? 'التاريخ' : 'Date'}</Label>
-                <Input type="date" className="bg-muted border-border" />
+                <Input type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)} className="bg-muted border-border" />
               </div>
               <div className="space-y-2">
                 <Label>{isAr ? 'الوقت' : 'Time'}</Label>
-                <Input type="time" className="bg-muted border-border" />
+                <Input type="time" value={formTime} onChange={(e) => setFormTime(e.target.value)} className="bg-muted border-border" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>{isAr ? 'المكان' : 'Location'}</Label>
-                <Input placeholder={isAr ? 'قاعة / Zoom / Teams' : 'Room / Zoom / Teams'} className="bg-muted border-border" />
+                <Input
+                  value={formLocation}
+                  onChange={(e) => setFormLocation(e.target.value)}
+                  placeholder={isAr ? 'قاعة / Zoom / Teams' : 'Room / Zoom / Teams'}
+                  className="bg-muted border-border"
+                />
               </div>
               <div className="space-y-2">
-                <Label>{isAr ? 'المدة (دقيقة)' : 'Duration (min)'}</Label>
-                <Input type="number" placeholder="60" className="bg-muted border-border" />
+                <Label>{isAr ? 'نوع الاجتماع' : 'Type'}</Label>
+                <Select value={formType} onValueChange={setFormType}>
+                  <SelectTrigger className="bg-muted border-border">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ONLINE">{isAr ? 'عن بُعد' : 'Online'}</SelectItem>
+                    <SelectItem value="ONSITE">{isAr ? 'حضوري' : 'On-site'}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label>{isAr ? 'المدة (دقيقة)' : 'Duration (min)'}</Label>
+              <Input type="number" value={formDuration} onChange={(e) => setFormDuration(e.target.value)} placeholder="60" className="bg-muted border-border" />
             </div>
             <div className="space-y-2">
               <Label>{isAr ? 'جدول الأعمال' : 'Agenda'}</Label>
-              <Textarea placeholder={isAr ? 'نقاط جدول الأعمال (كل نقطة في سطر)' : 'Agenda items (one per line)'} className="bg-muted border-border" rows={3} />
+              <Textarea
+                value={formAgenda}
+                onChange={(e) => setFormAgenda(e.target.value)}
+                placeholder={isAr ? 'نقاط جدول الأعمال (كل نقطة في سطر)' : 'Agenda items (one per line)'}
+                className="bg-muted border-border"
+                rows={3}
+              />
             </div>
             <div className="space-y-2">
               <Label>{isAr ? 'الحضور' : 'Attendees'}</Label>
-              <Input placeholder={isAr ? 'أسماء الحضور (مفصولة بفاصلة)' : 'Attendee names (comma separated)'} className="bg-muted border-border" />
+              <Input
+                value={formAttendees}
+                onChange={(e) => setFormAttendees(e.target.value)}
+                placeholder={isAr ? 'أسماء الحضور (مفصولة بفاصلة)' : 'Attendee names (comma separated)'}
+                className="bg-muted border-border"
+              />
             </div>
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setCreateDialog(false)} className="border-border text-foreground/80">
+            <Button variant="outline" onClick={() => { resetForm(); setCreateDialog(false); }} className="border-border text-foreground/80">
               {isAr ? 'إلغاء' : 'Cancel'}
             </Button>
-            <Button onClick={() => setCreateDialog(false)} className="bg-blue-600 hover:bg-blue-700">
+            <Button
+              disabled={createMutation.isPending}
+              onClick={handleCreate}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {createMutation.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
               {isAr ? 'إنشاء الاجتماع' : 'Create Meeting'}
             </Button>
           </DialogFooter>
@@ -493,24 +613,95 @@ function CorrespondenceContent() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [viewDialog, setViewDialog] = useState<any>(null);
+  const [viewDialog, setViewDialog] = useState<CorrespondenceRecord | null>(null);
   const [createDialog, setCreateDialog] = useState(false);
 
-  const filtered = MOCK_CORRESPONDENCE.filter((item) => {
-    const matchSearch = item.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.reference.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchType = filterType === 'all' || item.type === filterType;
-    const matchStatus = filterStatus === 'all' || item.status === filterStatus;
-    return matchSearch && matchType && matchStatus;
-  });
+  // ── Create form state ──
+  const [formProjectId, setFormProjectId] = useState('');
+  const [formType, setFormType] = useState('');
+  const [formReference, setFormReference] = useState('');
+  const [formSubject, setFormSubject] = useState('');
+  const [formSubmissionDate, setFormSubmissionDate] = useState('');
+  const [formNotes, setFormNotes] = useState('');
 
-  const stats = {
-    total: MOCK_CORRESPONDENCE.length,
-    pending: MOCK_CORRESPONDENCE.filter(i => i.status === 'pending').length,
-    inProgress: MOCK_CORRESPONDENCE.filter(i => i.status === 'in_progress').length,
-    approved: MOCK_CORRESPONDENCE.filter(i => i.status === 'approved').length,
-    rejected: MOCK_CORRESPONDENCE.filter(i => i.status === 'rejected').length,
+  // ── API hooks ──
+  const { data: records = [], isLoading } = useCorrespondence();
+  const createMutation = useCreateCorrespondence();
+  const { data: projectsData } = useProjects();
+  const projects = useMemo(() => (projectsData?.data as any[]) ?? [], [projectsData]);
+
+  // ── Client-side filtering ──
+  const filtered = useMemo(() => {
+    const lowerSearch = searchTerm.toLowerCase();
+    return records.filter((item) => {
+      const matchSearch =
+        (item.subject ?? '').toLowerCase().includes(lowerSearch) ||
+        (item.referenceNumber ?? '').toLowerCase().includes(lowerSearch);
+      const matchType = filterType === 'all' || item.correspondenceType === filterType;
+      const matchStatus = filterStatus === 'all' || item.status === filterStatus;
+      return matchSearch && matchType && matchStatus;
+    });
+  }, [records, searchTerm, filterType, filterStatus]);
+
+  // ── Stats ──
+  const stats = useMemo(() => ({
+    total: records.length,
+    pending: records.filter(i => i.status === 'pending').length,
+    underReview: records.filter(i => i.status === 'under_review').length,
+    approved: records.filter(i => i.status === 'approved').length,
+    rejected: records.filter(i => i.status === 'rejected').length,
+  }), [records]);
+
+  // ── Create handler ──
+  const handleCreate = () => {
+    if (!formProjectId || !formType) return;
+    createMutation.mutate({
+      projectId: formProjectId,
+      correspondenceType: formType as CorrespondenceType,
+      referenceNumber: formReference || undefined,
+      subject: formSubject || undefined,
+      submissionDate: formSubmissionDate || undefined,
+      notes: formNotes || undefined,
+    }, {
+      onSuccess: () => {
+        setCreateDialog(false);
+        setFormProjectId('');
+        setFormType('');
+        setFormReference('');
+        setFormSubject('');
+        setFormSubmissionDate('');
+        setFormNotes('');
+      },
+    });
   };
+
+  // ── Reset form when dialog opens ──
+  const handleOpenCreate = () => {
+    setFormProjectId('');
+    setFormType('');
+    setFormReference('');
+    setFormSubject('');
+    setFormSubmissionDate('');
+    setFormNotes('');
+    setCreateDialog(true);
+  };
+
+  // ── Format date for display ──
+  const formatDate = (dateStr: string | null | undefined) => {
+    if (!dateStr) return '—';
+    return new Date(dateStr).toLocaleDateString(isAr ? 'ar-AE' : 'en-US', {
+      year: 'numeric', month: 'short', day: 'numeric',
+    });
+  };
+
+  // ── Loading state ──
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-24" dir={isAr ? 'rtl' : 'ltr'}>
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6" dir={isAr ? 'rtl' : 'ltr'}>
@@ -525,7 +716,7 @@ function CorrespondenceContent() {
             {isAr ? 'تتبع المراسلات والتصاريح مع البلديات' : 'Track correspondence and permits with municipalities'}
           </p>
         </div>
-        <Button onClick={() => setCreateDialog(true)} className="bg-blue-600 hover:bg-blue-700">
+        <Button onClick={handleOpenCreate} className="bg-blue-600 hover:bg-blue-700">
           <Plus className="w-4 h-4 me-2" />
           {isAr ? 'مراسلة جديدة' : 'New Correspondence'}
         </Button>
@@ -535,8 +726,8 @@ function CorrespondenceContent() {
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {[
           { label: isAr ? 'الإجمالي' : 'Total', value: stats.total, color: 'text-foreground' },
-          { label: isAr ? 'قيد المراجعة' : 'Pending', value: stats.pending, color: 'text-amber-400' },
-          { label: isAr ? 'جاري التنفيذ' : 'In Progress', value: stats.inProgress, color: 'text-blue-400' },
+          { label: isAr ? 'قيد الانتظار' : 'Pending', value: stats.pending, color: 'text-amber-400' },
+          { label: isAr ? 'قيد المراجعة' : 'Under Review', value: stats.underReview, color: 'text-blue-400' },
           { label: isAr ? 'تمت الموافقة' : 'Approved', value: stats.approved, color: 'text-green-400' },
           { label: isAr ? 'مرفوض' : 'Rejected', value: stats.rejected, color: 'text-red-400' },
         ].map((stat) => (
@@ -566,7 +757,7 @@ function CorrespondenceContent() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{isAr ? 'كل الأنواع' : 'All Types'}</SelectItem>
-            {Object.entries(TYPE_MAP).map(([key, val]) => (
+            {Object.entries(CORR_TYPE_MAP).map(([key, val]) => (
               <SelectItem key={key} value={key}>{isAr ? val.ar : val.en}</SelectItem>
             ))}
           </SelectContent>
@@ -587,56 +778,55 @@ function CorrespondenceContent() {
       {/* Table */}
       <Card className="bg-card border-border overflow-x-auto">
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-border hover:bg-muted">
-                <TableHead className="text-muted-foreground">{isAr ? 'الرقم المرجعي' : 'Reference'}</TableHead>
-                <TableHead className="text-muted-foreground">{isAr ? 'الموضوع' : 'Subject'}</TableHead>
-                <TableHead className="text-muted-foreground">{isAr ? 'النوع' : 'Type'}</TableHead>
-                <TableHead className="text-muted-foreground">{isAr ? 'البلدية' : 'Municipality'}</TableHead>
-                <TableHead className="text-muted-foreground">{isAr ? 'التاريخ' : 'Date'}</TableHead>
-                <TableHead className="text-muted-foreground">{isAr ? 'الحالة' : 'Status'}</TableHead>
-                <TableHead className="text-muted-foreground text-end">{isAr ? 'عرض' : 'View'}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <table className="w-full">
+            <thead>
+              <tr className="border-border hover:bg-muted">
+                <th className="text-muted-foreground text-start p-3">{isAr ? 'الرقم المرجعي' : 'Reference'}</th>
+                <th className="text-muted-foreground text-start p-3">{isAr ? 'الموضوع' : 'Subject'}</th>
+                <th className="text-muted-foreground text-start p-3">{isAr ? 'النوع' : 'Type'}</th>
+                <th className="text-muted-foreground text-start p-3">{isAr ? 'المشروع' : 'Project'}</th>
+                <th className="text-muted-foreground text-start p-3">{isAr ? 'التاريخ' : 'Date'}</th>
+                <th className="text-muted-foreground text-start p-3">{isAr ? 'الحالة' : 'Status'}</th>
+                <th className="text-muted-foreground text-end p-3">{isAr ? 'عرض' : 'View'}</th>
+              </tr>
+            </thead>
+            <tbody>
               {filtered.map((item) => {
-                const statusInfo = CORR_STATUS_MAP[item.status];
-                const typeInfo = TYPE_MAP[item.type];
+                const statusInfo = getStatusInfo(item.status);
                 return (
-                  <TableRow
+                  <tr
                     key={item.id}
                     className="border-border hover:bg-muted/50 cursor-pointer"
                     onClick={() => setViewDialog(item)}
                   >
-                    <TableCell className="text-blue-400 font-mono text-sm">{item.reference}</TableCell>
-                    <TableCell className="text-foreground font-medium max-w-[250px] truncate">{item.subject}</TableCell>
-                    <TableCell><Badge variant="outline" className="border-border text-foreground/80">{isAr ? typeInfo.ar : typeInfo.en}</Badge></TableCell>
-                    <TableCell className="text-foreground/80 text-sm flex items-center gap-1"><Building className="w-3 h-3" />{item.municipality}</TableCell>
-                    <TableCell className="text-muted-foreground text-sm">{item.date}</TableCell>
-                    <TableCell>
+                    <td className="p-3 text-blue-400 font-mono text-sm">{item.referenceNumber || '—'}</td>
+                    <td className="p-3 text-foreground font-medium max-w-[250px] truncate">{item.subject || '—'}</td>
+                    <td className="p-3"><Badge variant="outline" className="border-border text-foreground/80">{getTypeLabel(item.correspondenceType, isAr)}</Badge></td>
+                    <td className="p-3 text-foreground/80 text-sm">{item.project?.name || '—'}</td>
+                    <td className="p-3 text-muted-foreground text-sm">{formatDate(item.submissionDate)}</td>
+                    <td className="p-3">
                       <Badge variant="outline" className={statusInfo.color}>
                         {isAr ? statusInfo.ar : statusInfo.en}
                       </Badge>
-                    </TableCell>
-                    <TableCell className="text-end">
+                    </td>
+                    <td className="p-3 text-end">
                       <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setViewDialog(item); }}>
                         <Eye className="w-4 h-4 text-muted-foreground" />
                       </Button>
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 );
               })}
               {filtered.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
+                <tr>
+                  <td colSpan={7} className="text-center py-12 text-muted-foreground">
                     <FileText className="w-10 h-10 mx-auto mb-3 opacity-40" />
                     {isAr ? 'لا توجد نتائج' : 'No results found'}
-                  </TableCell>
-                </TableRow>
+                  </td>
+                </tr>
               )}
-            </TableBody>
-          </Table>
+            </tbody>
+          </table>
         </CardContent>
       </Card>
 
@@ -646,7 +836,7 @@ function CorrespondenceContent() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileText className="w-5 h-5 text-amber-400" />
-              {viewDialog?.reference}
+              {viewDialog?.referenceNumber || (isAr ? 'مراسلة' : 'Correspondence')}
             </DialogTitle>
           </DialogHeader>
           {viewDialog && (
@@ -654,35 +844,43 @@ function CorrespondenceContent() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-muted-foreground">{isAr ? 'الموضوع' : 'Subject'}</Label>
-                  <p className="text-foreground">{viewDialog.subject}</p>
+                  <p className="text-foreground">{viewDialog.subject || '—'}</p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">{isAr ? 'النوع' : 'Type'}</Label>
-                  <p className="text-foreground">{isAr ? TYPE_MAP[viewDialog.type]?.ar : TYPE_MAP[viewDialog.type]?.en}</p>
+                  <p className="text-foreground">{getTypeLabel(viewDialog.correspondenceType, isAr)}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">{isAr ? 'البلدية' : 'Municipality'}</Label>
-                  <p className="text-foreground">{viewDialog.municipality}</p>
+                  <Label className="text-muted-foreground">{isAr ? 'المشروع' : 'Project'}</Label>
+                  <p className="text-foreground">{viewDialog.project?.name || '—'}</p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">{isAr ? 'الحالة' : 'Status'}</Label>
-                  <Badge variant="outline" className={CORR_STATUS_MAP[viewDialog.status]?.color}>
-                    {isAr ? CORR_STATUS_MAP[viewDialog.status]?.ar : CORR_STATUS_MAP[viewDialog.status]?.en}
+                  <Badge variant="outline" className={getStatusInfo(viewDialog.status).color}>
+                    {isAr ? getStatusInfo(viewDialog.status).ar : getStatusInfo(viewDialog.status).en}
                   </Badge>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">{isAr ? 'تاريخ التقديم' : 'Submit Date'}</Label>
-                  <p className="text-foreground">{viewDialog.date}</p>
+                  <Label className="text-muted-foreground">{isAr ? 'تاريخ التقديم' : 'Submission Date'}</Label>
+                  <p className="text-foreground">{formatDate(viewDialog.submissionDate)}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">{isAr ? 'تاريخ الاستحقاق' : 'Due Date'}</Label>
-                  <p className="text-foreground">{viewDialog.dueDate}</p>
+                  <Label className="text-muted-foreground">{isAr ? 'تاريخ الرد' : 'Response Date'}</Label>
+                  <p className="text-foreground">{formatDate(viewDialog.responseDate)}</p>
                 </div>
               </div>
-              <div>
-                <Label className="text-muted-foreground">{isAr ? 'ملاحظات' : 'Notes'}</Label>
-                <p className="text-foreground/80 bg-muted p-3 rounded-lg mt-1">{viewDialog.notes}</p>
-              </div>
+              {viewDialog.notes && (
+                <div>
+                  <Label className="text-muted-foreground">{isAr ? 'ملاحظات' : 'Notes'}</Label>
+                  <p className="text-foreground/80 bg-muted p-3 rounded-lg mt-1">{viewDialog.notes}</p>
+                </div>
+              )}
+              {viewDialog.responseNotes && (
+                <div>
+                  <Label className="text-muted-foreground">{isAr ? 'ملاحظات الرد' : 'Response Notes'}</Label>
+                  <p className="text-foreground/80 bg-muted p-3 rounded-lg mt-1">{viewDialog.responseNotes}</p>
+                </div>
+              )}
             </div>
           )}
           <DialogFooter>
@@ -704,41 +902,83 @@ function CorrespondenceContent() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>{isAr ? 'البلدية' : 'Municipality'}</Label>
-              <Input placeholder={isAr ? 'مثال: بلدية الشارقة' : 'e.g. Sharjah Municipality'} className="bg-muted border-border" />
+              <Label>{isAr ? 'المشروع *' : 'Project *'}</Label>
+              <Select value={formProjectId} onValueChange={setFormProjectId}>
+                <SelectTrigger className="bg-muted border-border">
+                  <SelectValue placeholder={isAr ? 'اختر المشروع...' : 'Select project...'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects.map((p: any) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
-              <Label>{isAr ? 'نوع المراسلة' : 'Type'}</Label>
-              <Select>
+              <Label>{isAr ? 'نوع المراسلة *' : 'Type *'}</Label>
+              <Select value={formType} onValueChange={setFormType}>
                 <SelectTrigger className="bg-muted border-border">
                   <SelectValue placeholder={isAr ? 'اختر النوع...' : 'Select type...'} />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(TYPE_MAP).map(([key, val]) => (
+                  {Object.entries(CORR_TYPE_MAP).map(([key, val]) => (
                     <SelectItem key={key} value={key}>{isAr ? val.ar : val.en}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>{isAr ? 'الموضوع' : 'Subject'}</Label>
-              <Input placeholder={isAr ? 'موضوع المراسلة' : 'Correspondence subject'} className="bg-muted border-border" />
+              <Label>{isAr ? 'الرقم المرجعي' : 'Reference Number'}</Label>
+              <Input
+                placeholder={isAr ? 'مثال: MC-2026-001' : 'e.g. MC-2026-001'}
+                className="bg-muted border-border"
+                value={formReference}
+                onChange={(e) => setFormReference(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
-              <Label>{isAr ? 'تاريخ الاستحقاق' : 'Due Date'}</Label>
-              <Input type="date" className="bg-muted border-border" />
+              <Label>{isAr ? 'الموضوع' : 'Subject'}</Label>
+              <Input
+                placeholder={isAr ? 'موضوع المراسلة' : 'Correspondence subject'}
+                className="bg-muted border-border"
+                value={formSubject}
+                onChange={(e) => setFormSubject(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{isAr ? 'تاريخ التقديم' : 'Submission Date'}</Label>
+              <Input
+                type="date"
+                className="bg-muted border-border"
+                value={formSubmissionDate}
+                onChange={(e) => setFormSubmissionDate(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label>{isAr ? 'ملاحظات' : 'Notes'}</Label>
-              <Textarea placeholder={isAr ? 'ملاحظات إضافية...' : 'Additional notes...'} className="bg-muted border-border" rows={3} />
+              <Textarea
+                placeholder={isAr ? 'ملاحظات إضافية...' : 'Additional notes...'}
+                className="bg-muted border-border"
+                rows={3}
+                value={formNotes}
+                onChange={(e) => setFormNotes(e.target.value)}
+              />
             </div>
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setCreateDialog(false)} className="border-border text-foreground/80">
               {isAr ? 'إلغاء' : 'Cancel'}
             </Button>
-            <Button onClick={() => setCreateDialog(false)} className="bg-blue-600 hover:bg-blue-700">
-              <Send className="w-4 h-4 me-2" />
+            <Button
+              onClick={handleCreate}
+              disabled={!formProjectId || !formType || createMutation.isPending}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {createMutation.isPending ? (
+                <Loader2 className="w-4 h-4 me-2 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4 me-2" />
+              )}
               {isAr ? 'إنشاء' : 'Create'}
             </Button>
           </DialogFooter>

@@ -6,7 +6,7 @@ import { useApp } from '@/context/app-context';
 import { useAuth } from '@/context/auth-context';
 import { useTranslation } from '@/lib/translations';
 import DOMPurify from 'dompurify';
-import { useAIChat } from '@/hooks/use-data';
+import { useAIChat } from '@/hooks/api';
 import { AVAILABLE_MODELS } from '@/lib/ai/model-config';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -222,6 +222,99 @@ interface ChatSession {
   updatedAt: Date;
 }
 
+// --- localStorage persistence helpers ---
+const STORAGE_KEYS = {
+  sessions: 'bp_ai_chat_sessions',
+  currentSession: 'bp_ai_chat_current_session',
+} as const;
+
+// Serialized shapes for JSON (Date → ISO string, no isLoading)
+interface SerializedMessage {
+  id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp: string;
+  model?: string;
+  tokens?: number;
+  skill?: string;
+  imageData?: string;
+  searchResults?: any[];
+}
+
+interface SerializedSession {
+  id: string;
+  title: string;
+  messages: SerializedMessage[];
+  model: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Strip isLoading and convert Date → ISO string for a single message */
+function serializeMessage(msg: ChatMessage): SerializedMessage {
+  const { isLoading: _isLoading, ...rest } = msg;
+  void _isLoading;
+  return {
+    ...rest,
+    timestamp: msg.timestamp instanceof Date ? msg.timestamp.toISOString() : new Date().toISOString(),
+  } as SerializedMessage;
+}
+
+/** Restore a SerializedMessage back to a ChatMessage (ISO → Date) */
+function deserializeMessage(raw: SerializedMessage): ChatMessage {
+  return {
+    ...raw,
+    timestamp: new Date(raw.timestamp),
+  };
+}
+
+function serializeSession(session: ChatSession): SerializedSession {
+  return {
+    ...session,
+    messages: session.messages.map(serializeMessage),
+    createdAt: session.createdAt instanceof Date ? session.createdAt.toISOString() : new Date().toISOString(),
+    updatedAt: session.updatedAt instanceof Date ? session.updatedAt.toISOString() : new Date().toISOString(),
+  };
+}
+
+function deserializeSession(raw: SerializedSession): ChatSession {
+  return {
+    ...raw,
+    messages: raw.messages.map(deserializeMessage),
+    createdAt: new Date(raw.createdAt),
+    updatedAt: new Date(raw.updatedAt),
+  };
+}
+
+/** Safe JSON parse with corrupted-data fallback */
+function safeJsonParse<T>(value: string | null, fallback: T): T {
+  if (!value) return fallback;
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+/** Safe write to localStorage, gracefully handles QuotaExceeded errors */
+function safeSetItem(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch (err) {
+    // localStorage full or unavailable — silently ignore
+    console.warn(`[BP Chat] Failed to write localStorage key "${key}":`, err);
+  }
+}
+
+/** Read from localStorage, returns null on error */
+function safeGetItem(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
 // Code Block Component with Syntax Highlighting
 function CodeBlock({ code, language }: { code: string; language?: string }) {
   const [copied, setCopied] = useState(false);
@@ -387,6 +480,8 @@ export function AIChatPage() {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isLoadedRef = useRef(false);
   
   // Auto scroll to bottom
   const scrollToBottom = useCallback(() => {
@@ -396,6 +491,87 @@ export function AIChatPage() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
+
+  // --- localStorage persistence ---
+
+  // Debounced helper: clear any pending timer, then set a new one
+  const debouncedSave = useCallback((fn: () => void, delay = 300) => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(fn, delay);
+  }, []);
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    const rawSessions = safeGetItem(STORAGE_KEYS.sessions);
+    const rawCurrentSession = safeGetItem(STORAGE_KEYS.currentSession);
+
+    const loadedSessions: ChatSession[] = safeJsonParse<SerializedSession[]>(rawSessions, []);
+    // Validate structure — filter out any corrupted entries
+    const validSessions = loadedSessions
+      .filter((s) => s && typeof s.id === 'string' && typeof s.title === 'string' && Array.isArray(s.messages))
+      .map(deserializeSession);
+
+    const loadedCurrentId = safeJsonParse<string | null>(rawCurrentSession, null);
+    // Only restore currentSessionId if the session actually exists
+    const validCurrentId = validSessions.some((s) => s.id === loadedCurrentId) ? loadedCurrentId : null;
+
+    setChatSessions(validSessions);
+    setCurrentSessionId(validCurrentId);
+
+    // If there is an active session, restore its messages
+    if (validCurrentId) {
+      const activeSession = validSessions.find((s) => s.id === validCurrentId);
+      if (activeSession) {
+        setMessages(activeSession.messages);
+      }
+    }
+
+    isLoadedRef.current = true;
+  }, []);
+
+  // Debounced save: persist chatSessions + currentSessionId whenever they change (after mount)
+  useEffect(() => {
+    if (!isLoadedRef.current) return;
+    debouncedSave(() => {
+      const serialized = chatSessions.map(serializeSession);
+      safeSetItem(STORAGE_KEYS.sessions, JSON.stringify(serialized));
+      safeSetItem(STORAGE_KEYS.currentSession, JSON.stringify(currentSessionId));
+    });
+  }, [chatSessions, currentSessionId, debouncedSave]);
+
+  // Debounced save: update current session's messages in the sessions list
+  useEffect(() => {
+    if (!isLoadedRef.current) return;
+    if (!currentSessionId) return;
+    // Only persist messages that are not loading
+    const persistableMessages = messages.filter((m) => !m.isLoading);
+    if (persistableMessages.length === 0 && messages.length > 0) return; // still loading
+    debouncedSave(() => {
+      setChatSessions((prev) => {
+        const idx = prev.findIndex((s) => s.id === currentSessionId);
+        if (idx === -1) return prev;
+        const updated = [...prev];
+        updated[idx] = {
+          ...updated[idx],
+          messages: persistableMessages,
+          updatedAt: new Date(),
+        };
+        // The setChatSessions effect above will persist to localStorage
+        return updated;
+      });
+    });
+  }, [messages, currentSessionId, debouncedSave]);
   
   // Get current model info
   const currentModel = AVAILABLE_MODELS.find(m => m.id === selectedModel) || AVAILABLE_MODELS[0];
@@ -577,15 +753,33 @@ export function AIChatPage() {
     setCurrentSessionId(null);
     setActiveSkill(null);
     setPendingContextType(undefined);
+    // Immediate persist: clear current session selection
+    safeSetItem(STORAGE_KEYS.currentSession, JSON.stringify(null));
   };
   
   // Handle new chat
   const handleNewChat = () => {
-    if (messages.length > 0) {
+    // Save current messages to existing session if one is active
+    if (currentSessionId && messages.length > 0) {
+      const persistableMessages = messages.filter((m) => !m.isLoading);
+      setChatSessions((prev) => {
+        const idx = prev.findIndex((s) => s.id === currentSessionId);
+        if (idx !== -1 && persistableMessages.length > 0) {
+          const updated = [...prev];
+          updated[idx] = { ...updated[idx], messages: persistableMessages, updatedAt: new Date() };
+          return updated;
+        }
+        return prev;
+      });
+    }
+
+    // Create a new session from current messages (if any)
+    const persistableMessages = messages.filter((m) => !m.isLoading);
+    if (persistableMessages.length > 0) {
       const session: ChatSession = {
         id: Date.now().toString(),
-        title: messages[0].content.slice(0, 30) + (messages[0].content.length > 30 ? '...' : ''),
-        messages: messages,
+        title: persistableMessages[0].content.slice(0, 30) + (persistableMessages[0].content.length > 30 ? '...' : ''),
+        messages: persistableMessages,
         model: selectedModel,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -705,6 +899,19 @@ export function AIChatPage() {
                     <button
                       key={session.id}
                       onClick={() => {
+                        // Save current messages to the active session before switching
+                        if (currentSessionId && messages.length > 0) {
+                          const persistableMsgs = messages.filter((m) => !m.isLoading);
+                          setChatSessions((prev) => {
+                            const idx = prev.findIndex((s) => s.id === currentSessionId);
+                            if (idx !== -1 && persistableMsgs.length > 0) {
+                              const updated = [...prev];
+                              updated[idx] = { ...updated[idx], messages: persistableMsgs, updatedAt: new Date() };
+                              return updated;
+                            }
+                            return prev;
+                          });
+                        }
                         setMessages(session.messages);
                         setCurrentSessionId(session.id);
                       }}
