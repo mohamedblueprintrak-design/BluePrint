@@ -365,9 +365,9 @@ export function TwoFactorSetup({ onStatusChange }: TwoFactorSetupProps) {
             <p className="text-sm text-muted-foreground">{texts.step1Desc}</p>
             <div className="flex justify-center p-4 bg-white rounded-lg">
               {/* QR Code placeholder - in production use actual QR library */}
-              <div className="w-48 h-48 bg-slate-100 flex items-center justify-center">
+              <div className="w-48 h-48 bg-muted flex items-center justify-center">
                 <div className="text-center">
-                  <QrCode className="w-32 h-32 text-slate-800 mx-auto" />
+                  <QrCode className="w-32 h-32 text-foreground mx-auto" />
                 </div>
               </div>
             </div>

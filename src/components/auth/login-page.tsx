@@ -120,7 +120,7 @@ export function LoginPage() {
         </div>
 
         {/* Demo Login Section - ABOVE the login card */}
-        <div className="mb-6 p-5 rounded-xl bg-gradient-to-br from-blue-500/10 via-indigo-500/10 to-cyan-500/10 border border-blue-500/30 shadow-lg shadow-blue-500/5">
+        <div className="mb-6 p-5 rounded-xl bg-gradient-to-br from-blue-500/10 via-violet-500/10 to-cyan-500/10 border border-blue-500/30 shadow-lg shadow-blue-500/5">
           <div className="text-center mb-4">
             <h3 className="text-lg font-bold text-foreground flex items-center justify-center gap-2">
               🚀 {language === 'ar' ? 'جرّب BluePrint - اختر دور للاستكشاف' : 'Try BluePrint - Pick a role to explore'}

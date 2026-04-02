@@ -899,7 +899,7 @@ export function DocumentsPage() {
           {filteredDocuments.map(renderDocumentCard)}
         </div>
       ) : (
-        <Card className="bg-card border-border">
+        <Card className="bg-card border-border overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="border-border hover:bg-muted">

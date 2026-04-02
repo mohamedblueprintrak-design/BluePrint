@@ -576,7 +576,7 @@ export function InventoryPage() {
               </Button>
             </div>
           ) : (
-            <Card className="bg-card border-border">
+            <Card className="bg-card border-border overflow-x-auto">
               <ScrollArea className="max-h-[600px]">
                 <Table>
                   <TableHeader>
@@ -691,7 +691,7 @@ export function InventoryPage() {
 
         {/* Stock Movements Tab */}
         <TabsContent value="movements">
-          <Card className="bg-card border-border">
+          <Card className="bg-card border-border overflow-x-auto">
             <CardHeader>
               <CardTitle className="text-foreground flex items-center gap-2">
                 <History className="w-5 h-5 text-blue-400" />

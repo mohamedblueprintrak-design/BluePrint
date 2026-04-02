@@ -1372,3 +1372,46 @@ Coordinated navigation changes across BluePrint: Add Tasks to sidebar, restore A
 - All 6 modified files pass ESLint with 0 new errors/warnings
 - Pre-existing lint issues in other files remain unchanged
 - No functionality broken; all changes are additive and backward-compatible
+
+---
+Task ID: 2
+Agent: general-purpose
+Task: Fix remaining hardcoded dark-mode classes for light mode compatibility
+
+Work Log:
+- Fixed two-factor-setup.tsx: bg-slate-100→bg-muted, text-slate-800→text-foreground
+- Fixed invoices-page.tsx: bg-slate-600→bg-border (2 instances), text-slate-100→text-muted-foreground
+- Fixed admin-page.tsx: bg-slate-500/20→bg-muted
+
+Stage Summary:
+- 5 hardcoded dark class replacements across 3 files
+
+---
+Task ID: 3
+Agent: general-purpose
+Task: Replace indigo colors with violet for visual consistency
+
+Work Log:
+- Fixed activities-page.tsx: bg-indigo-500→bg-violet-500 (HR category)
+- Fixed admin-page.tsx: bg-indigo-500→bg-violet-500 (draftsman role)
+- Fixed ai-chat-page.tsx: bg-indigo-500→bg-violet-500 (Meta AI provider)
+- Fixed auth/login-page.tsx: indigo-500/10→violet-500/10 (gradient)
+- Fixed verify-email/page.tsx: indigo-100→violet-100 (gradient)
+
+Stage Summary:
+- Replaced all indigo color references with violet across 5 files for brand consistency
+
+---
+Task ID: 1
+Agent: general-purpose
+Task: Add overflow-x-auto to 3 table components for mobile responsiveness
+
+Work Log:
+- Read and fixed documents-page.tsx (line 902): Added `overflow-x-auto` to `<Card className="bg-card border-border overflow-x-auto">` wrapping the documents list view table
+- Read and fixed transmittal-system.tsx (line 359): Added `overflow-x-auto` to `<Card className="bg-card border-border overflow-x-auto">` wrapping the transmittals table
+- Read and fixed inventory-page.tsx (line 579): Added `overflow-x-auto` to `<Card className="bg-card border-border overflow-x-auto">` wrapping the materials table
+- Read and fixed inventory-page.tsx (line 694): Added `overflow-x-auto` to `<Card className="bg-card border-border overflow-x-auto">` wrapping the stock movements table
+
+Stage Summary:
+- Added overflow-x-auto to all 3 files' table wrappers (4 Card elements total)
+- Tables will now scroll horizontally on mobile devices instead of overflowing

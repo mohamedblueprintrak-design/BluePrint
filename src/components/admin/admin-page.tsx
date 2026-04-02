@@ -113,7 +113,7 @@ export function AdminPage() {
     const roles: Record<string, { label: string; color: string }> = {
       admin: { label: 'مدير', color: 'bg-red-500' },
       engineer: { label: 'مهندس', color: 'bg-blue-500' },
-      draftsman: { label: 'راسم', color: 'bg-indigo-500' },
+      draftsman: { label: 'راسم', color: 'bg-violet-500' },
       accountant: { label: 'محاسب', color: 'bg-green-500' },
       hr: { label: 'موارد بشرية', color: 'bg-purple-500' },
       project_manager: { label: 'مدير مشروع', color: 'bg-cyan-500' },
@@ -457,7 +457,7 @@ export function AdminPage() {
                         </div>
                         <div className="flex items-center gap-4">
                           {getRoleBadge(u.role)}
-                          <Badge variant={u.isActive ? 'default' : 'secondary'} className={u.isActive ? 'bg-green-500/20 text-green-400' : 'bg-slate-500/20 text-muted-foreground'}>
+                          <Badge variant={u.isActive ? 'default' : 'secondary'} className={u.isActive ? 'bg-green-500/20 text-green-400' : 'bg-muted text-muted-foreground'}>
                             {u.isActive ? (language === 'ar' ? 'نشط' : 'Active') : (language === 'ar' ? 'غير نشط' : 'Inactive')}
                           </Badge>
                           {u.createdAt && (

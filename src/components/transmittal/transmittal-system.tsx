@@ -356,7 +356,7 @@ export function TransmittalSystem({
       </div>
 
       {/* Transmittals Table */}
-      <Card className="bg-card border-border">
+      <Card className="bg-card border-border overflow-x-auto">
         <CardContent className="p-0">
           <Table>
             <TableHeader>

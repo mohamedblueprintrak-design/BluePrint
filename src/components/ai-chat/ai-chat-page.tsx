@@ -140,7 +140,7 @@ const PROVIDER_COLORS: Record<string, string> = {
   anthropic: 'bg-orange-500',
   deepseek: 'bg-cyan-500',
   mistral: 'bg-purple-500',
-  meta: 'bg-indigo-500',
+  meta: 'bg-violet-500',
   xai: 'bg-red-500',
 };
 

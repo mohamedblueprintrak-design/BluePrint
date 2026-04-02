@@ -46,7 +46,7 @@ import { apiDelete } from '@/lib/api-client';
 
 // Invoice Status Configuration
 const INVOICE_STATUSES = [
-  { value: 'draft', label: 'مسودة', labelEn: 'Draft', color: 'bg-slate-500', textColor: 'text-slate-100' },
+  { value: 'draft', label: 'مسودة', labelEn: 'Draft', color: 'bg-slate-500', textColor: 'text-muted-foreground' },
   { value: 'sent', label: 'مُرسلة', labelEn: 'Sent', color: 'bg-blue-500', textColor: 'text-blue-100' },
   { value: 'partial', label: 'مدفوعة جزئياً', labelEn: 'Partial', color: 'bg-amber-500', textColor: 'text-amber-100' },
   { value: 'paid', label: 'مدفوعة', labelEn: 'Paid', color: 'bg-green-500', textColor: 'text-green-100' },
@@ -655,7 +655,7 @@ export function InvoicesPage() {
                         <span>-{formatCurrency(formData.discountAmount)}</span>
                       </div>
                     )}
-                    <Separator className="bg-slate-600" />
+                    <Separator className="bg-border" />
                     <div className="flex justify-between text-foreground font-bold text-lg">
                       <span>{t.grandTotal}</span>
                       <span className="text-cyan-400">{formatCurrency(calculations.grandTotal)}</span>
@@ -948,7 +948,7 @@ export function InvoicesPage() {
                     <span>-{formatCurrency(selectedInvoice.discountAmount)}</span>
                   </div>
                 )}
-                <Separator className="bg-slate-600" />
+                <Separator className="bg-border" />
                 <div className="flex justify-between text-foreground font-bold text-lg">
                   <span>{t.grandTotal}</span>
                   <span className="text-cyan-400">{formatCurrency(selectedInvoice.total)}</span>

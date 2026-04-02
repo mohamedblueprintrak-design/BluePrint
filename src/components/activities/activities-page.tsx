@@ -65,7 +65,7 @@ const ACTIVITY_TYPES = [
   { value: 'client', label: 'عميل', labelEn: 'Client', icon: Users, color: 'bg-purple-500' },
   { value: 'document', label: 'مستند', labelEn: 'Document', icon: FileText, color: 'bg-cyan-500' },
   { value: 'user', label: 'مستخدم', labelEn: 'User', icon: User, color: 'bg-pink-500' },
-  { value: 'hr', label: 'موارد بشرية', labelEn: 'HR', icon: User, color: 'bg-indigo-500' },
+  { value: 'hr', label: 'موارد بشرية', labelEn: 'HR', icon: User, color: 'bg-violet-500' },
   { value: 'supplier', label: 'مورد', labelEn: 'Supplier', icon: Package, color: 'bg-amber-500' },
   { value: 'contract', label: 'عقد', labelEn: 'Contract', icon: FileText, color: 'bg-teal-500' },
   { value: 'settings', label: 'إعدادات', labelEn: 'Settings', icon: Settings, color: 'bg-slate-500' },
