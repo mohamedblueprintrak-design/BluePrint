@@ -16,6 +16,8 @@ export function useAIChat() {
       history?: Array<{ role: string; content: string }>;
       skill?: string;
       skillParams?: Record<string, unknown>;
+      pageContext?: string;
+      contextType?: 'project' | 'mun' | 'financial' | 'overdue' | undefined;
     }) => {
       const response = await fetch('/api/ai-chat', {
         method: 'POST',

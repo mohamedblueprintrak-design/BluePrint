@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
 export default function RedirectPage() {
-  redirect('/dashboard/assets');
+  redirect('/dashboard/assets?tab=equipment');
   return null;
 }

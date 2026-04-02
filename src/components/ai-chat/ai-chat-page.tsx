@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 import { useApp } from '@/context/app-context';
 import { useAuth } from '@/context/auth-context';
 import { useTranslation } from '@/lib/translations';
@@ -365,7 +366,8 @@ function TypingIndicator() {
 
 // Main AI Chat Page Component
 export function AIChatPage() {
-  const { language, isRTL } = useApp();
+  const { language, isRTL, currentPage } = useApp();
+  const pathname = usePathname();
   const { } = useAuth(); // Auth context available for future use
   const { t, formatDateTime } = useTranslation(language);
   const aiChatMutation = useAIChat();
@@ -381,6 +383,7 @@ export function AIChatPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [activeSkill, setActiveSkill] = useState<string | null>(null);
+  const [pendingContextType, setPendingContextType] = useState<'project' | 'mun' | 'financial' | 'overdue' | undefined>(undefined);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -447,10 +450,17 @@ export function AIChatPage() {
         setMessages(prev => [...prev, assistantMessage]);
         setActiveSkill(null);
       } else {
-        // Regular chat
+        // Regular chat — include page context and optional context type
+        const pageContextStr = pathname || currentPage || 'ai-chat';
+        const contextToSend = pendingContextType;
+        // Clear pending context type after capturing it
+        setPendingContextType(undefined);
+
         const result = await aiChatMutation.mutateAsync({
           message: userMessage.content,
           model: selectedModel,
+          pageContext: pageContextStr,
+          contextType: contextToSend,
         });
         
         setMessages(prev => prev.filter(m => m.id !== loadingId));
@@ -566,6 +576,7 @@ export function AIChatPage() {
     setMessages([]);
     setCurrentSessionId(null);
     setActiveSkill(null);
+    setPendingContextType(undefined);
   };
   
   // Handle new chat
@@ -619,7 +630,18 @@ export function AIChatPage() {
         : 'Analyze the BOQ (Bill of Quantities) costs for the project. Identify items exceeding budget by more than 20% and suggest cost reduction measures. Provide a comparison between planned and actual costs.',
     };
     
-    setInput(prompts[promptId] || '');
+    // Map engineering quick prompts to their context type so the API loads relevant DB data
+    const contextTypeMap: Record<string, 'project' | 'mun' | 'financial' | 'overdue'> = {
+      municipality_notes: 'mun',
+      contractor_response: 'project',
+      sla_review: 'overdue',
+      progress_report: 'project',
+      boq_analysis: 'financial',
+    };
+
+    const promptText = prompts[promptId] || '';
+    setInput(promptText);
+    setPendingContextType(contextTypeMap[promptId]);
     inputRef.current?.focus();
   };
   

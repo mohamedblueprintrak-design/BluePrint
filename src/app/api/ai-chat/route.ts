@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import * as jose from 'jose';
 import ZAI from 'z-ai-web-dev-sdk';
 import { getJWTSecret } from '../utils/auth';
+import { db, isDatabaseAvailable } from '@/lib/db';
+import { getUserFromRequest } from '../utils/demo-config';
 
 // API Response types
 interface _CompletionChoice {
@@ -115,6 +117,173 @@ async function getUserFromToken(request: NextRequest) {
     };
   } catch {
     return null;
+  }
+}
+
+// ============================================================
+// Database Context Helpers
+// Provide concise organization data to the AI system prompt
+// ============================================================
+
+async function getProjectContext(orgId: string | undefined): Promise<string> {
+  if (!orgId || !isDatabaseAvailable()) return '';
+  try {
+    const projects = await db.project.findMany({
+      where: { organizationId: orgId, status: { in: ['PENDING', 'ACTIVE', 'ON_HOLD'] } },
+      select: {
+        name: true, projectNumber: true, status: true,
+        progressPercentage: true, budget: true,
+        expectedStartDate: true, expectedEndDate: true,
+        client: { select: { name: true } },
+      },
+      take: 15, orderBy: { updatedAt: 'desc' },
+    });
+    if (projects.length === 0) return '\nلا توجد مشاريع نشطة حالياً.';
+    let ctx = '\n=== المشاريع النشطة ===\n';
+    for (const p of projects) {
+      const startDate = p.expectedStartDate?.toISOString().split('T')[0] || 'غير محدد';
+      const endDate = p.expectedEndDate?.toISOString().split('T')[0] || 'غير محدد';
+      ctx += `• ${p.name} (${p.projectNumber}) | الحالة: ${p.status} | التقدم: ${p.progressPercentage}% | الميزانية: ${p.budget} | العميل: ${p.client?.name || 'N/A'} | البدء: ${startDate} | الانتهاء: ${endDate}\n`;
+    }
+    return ctx;
+  } catch {
+    return '';
+  }
+}
+
+async function getMunContext(orgId: string | undefined): Promise<string> {
+  if (!orgId || !isDatabaseAvailable()) return '';
+  try {
+    const munPhases = await db.workflowPhase.findMany({
+      where: {
+        project: { organizationId: orgId },
+        phaseType: { in: ['MUN_SUBMISSION', 'MUN_APPROVAL'] },
+      },
+      include: {
+        project: { select: { name: true, projectNumber: true } },
+        assignedTo: { select: { fullName: true } },
+        interactions: {
+          select: { interactionType: true, content: true, responseContent: true, createdAt: true },
+          orderBy: { createdAt: 'desc' }, take: 5,
+        },
+      },
+      orderBy: { updatedAt: 'desc' }, take: 10,
+    });
+    if (munPhases.length === 0) return '\nلا توجد بيانات متعلقة بالبلدية حالياً.';
+    let ctx = '\n=== ملاحظات البلدية (MUN Notes) ===\n';
+    for (const phase of munPhases) {
+      ctx += `• مشروع: ${phase.project.name} (${phase.project.projectNumber}) | المرحلة: ${phase.phaseType} | الحالة: ${phase.status} | المكلف: ${phase.assignedTo?.fullName || 'غير محدد'} | المرفوضات: ${phase.rejectionCount}`;
+      if (phase.notes) ctx += ` | ملاحظات: ${phase.notes}`;
+      if (phase.interactions.length > 0) {
+        ctx += '\n  التفاعلات:';
+        for (const inter of phase.interactions) {
+          ctx += `\n  - [${inter.interactionType}] ${inter.content}`;
+          if (inter.responseContent) ctx += ` → الرد: ${inter.responseContent}`;
+        }
+      }
+      ctx += '\n';
+    }
+    return ctx;
+  } catch {
+    return '';
+  }
+}
+
+async function getFinancialContext(orgId: string | undefined): Promise<string> {
+  if (!orgId || !isDatabaseAvailable()) return '';
+  try {
+    const [projects, invoices, boqItems] = await Promise.all([
+      db.project.findMany({
+        where: { organizationId: orgId, status: { not: 'CANCELLED' } },
+        select: { name: true, projectNumber: true, budget: true, status: true },
+        take: 10, orderBy: { updatedAt: 'desc' },
+      }),
+      db.invoice.findMany({
+        where: { organizationId: orgId, status: { in: ['SENT', 'OVERDUE', 'PARTIAL'] } },
+        select: { invoiceNumber: true, total: true, paidAmount: true, status: true, dueDate: true, client: { select: { name: true } } },
+        take: 10, orderBy: { dueDate: 'asc' },
+      }),
+      db.bOQItem.findMany({
+        where: { project: { organizationId: orgId } },
+        select: { project: { select: { name: true } }, itemNumber: true, description: true, unit: true, quantity: true, unitPrice: true, totalPrice: true, category: true },
+        take: 10, orderBy: { totalPrice: 'desc' },
+      }),
+    ]);
+    const totalBudget = projects.reduce((s, p) => s + (p.budget || 0), 0);
+    const outstandingInvoices = invoices.reduce((s, i) => s + ((i.total || 0) - (i.paidAmount || 0)), 0);
+    let ctx = '\n=== الملخص المالي ===\n';
+    ctx += `إجمالي ميزانية المشاريع: ${totalBudget.toLocaleString()}\n`;
+    ctx += `إجمالي الفواتير المستحقة: ${outstandingInvoices.toLocaleString()}\n`;
+    if (invoices.length > 0) {
+      ctx += '\nالفواتير المعلقة:\n';
+      for (const inv of invoices) {
+        ctx += `• فاتورة ${inv.invoiceNumber} | ${inv.client?.name || 'N/A'} | الإجمالي: ${inv.total} | المدفوع: ${inv.paidAmount} | الحالة: ${inv.status} | الاستحقاق: ${inv.dueDate?.toISOString().split('T')[0]}\n`;
+      }
+    }
+    if (boqItems.length > 0) {
+      ctx += '\nأعلى بنود BOQ:\n';
+      for (const boq of boqItems.slice(0, 8)) {
+        ctx += `• [${boq.itemNumber}] ${boq.description} | ${boq.quantity} ${boq.unit} × ${boq.unitPrice} = ${boq.totalPrice}\n`;
+      }
+    }
+    return ctx;
+  } catch {
+    return '';
+  }
+}
+
+async function getOverdueContext(orgId: string | undefined): Promise<string> {
+  if (!orgId || !isDatabaseAvailable()) return '';
+  try {
+    const now = new Date();
+    const overdueTasks = await db.task.findMany({
+      where: { project: { organizationId: orgId }, status: { not: 'DONE' }, dueDate: { lt: now } },
+      include: { project: { select: { name: true, projectNumber: true } } },
+      orderBy: { dueDate: 'asc' }, take: 15,
+    });
+    if (overdueTasks.length === 0) return '\nلا توجد مهام متأخرة حالياً.';
+    let ctx = '\n=== المهام المتأخرة ===\n';
+    ctx += `عدد المهام المتأخرة: ${overdueTasks.length}\n\n`;
+    for (const task of overdueTasks) {
+      const daysOverdue = Math.ceil((now.getTime() - (task.dueDate?.getTime() || 0)) / (1000 * 60 * 60 * 24));
+      ctx += `• [${task.priority}] "${task.title}" | المشروع: ${task.project?.name} | الحالة: ${task.status} | الاستحقاق: ${task.dueDate?.toISOString().split('T')[0]} (${daysOverdue} يوم متأخر)\n`;
+    }
+    return ctx;
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Gather a concise overview context for regular chat messages.
+ * This is kept short to avoid excessive token usage.
+ */
+async function getConciseOverviewContext(orgId: string | undefined): Promise<string> {
+  if (!orgId || !isDatabaseAvailable()) return '';
+  try {
+    const [projectCount, overdueCount, invoiceSummary] = await Promise.all([
+      db.project.groupBy({ by: ['status'], where: { organizationId: orgId }, _count: true }),
+      db.task.count({ where: { project: { organizationId: orgId }, status: { not: 'DONE' as const }, dueDate: { lt: new Date() } } }),
+      db.invoice.aggregate({ where: { organizationId: orgId, status: 'OVERDUE' as const }, _sum: { total: true } }),
+    ]);
+
+    const statusMap: Record<string, number> = {};
+    for (const g of projectCount) {
+      statusMap[g.status] = g._count;
+    }
+    const activeProjects = (statusMap['ACTIVE'] || 0) + (statusMap['PENDING'] || 0) + (statusMap['ON_HOLD'] || 0);
+    const completedProjects = statusMap['COMPLETED'] || 0;
+
+    let ctx = '\n\n--- ملخص سريع للمنظمة ---\n';
+    ctx += `المشاريع النشطة: ${activeProjects} | المكتملة: ${completedProjects}\n`;
+    ctx += `المهام المتأخرة: ${overdueCount}\n`;
+    if (invoiceSummary._sum.total) {
+      ctx += `الفواتير المتأخرة: ${invoiceSummary._sum.total.toLocaleString()}\n`;
+    }
+    ctx += '--- نهاية الملخص ---';
+    return ctx;
+  } catch {
+    return '';
   }
 }
 
@@ -318,7 +487,9 @@ export async function POST(request: NextRequest) {
       model = 'gemini-2.0-flash', 
       history = [],
       skill, // Optional skill parameter
-      skillParams // Parameters for the skill
+      skillParams, // Parameters for the skill
+      pageContext, // Current page context (e.g., 'dashboard', 'projects/PRJ-001')
+      contextType  // Specific context to load: 'project', 'mun', 'financial', 'overdue'
     } = body;
 
     // Handle specific skills
@@ -396,9 +567,64 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // ---- Database & Page Context ----
+    // Resolve organization ID from the authenticated user for DB context
+    let orgId: string | undefined;
+    try {
+      const fullUser = await getUserFromRequest(request);
+      orgId = fullUser?.organizationId;
+    } catch {
+      // DB lookup failed — continue without org context
+    }
+
+    // Build page context string
+    let pageContextStr = '';
+    if (pageContext) {
+      pageContextStr = `\n\nالمستخدم حالياً في صفحة: ${pageContext}`;
+      // Provide extra context for project-specific pages
+      const projectMatch = pageContext.match(/projects\/([^/]+)/);
+      if (projectMatch && orgId && isDatabaseAvailable()) {
+        try {
+          const proj = await db.project.findUnique({
+            where: { projectNumber: projectMatch[1], organizationId: orgId },
+            select: { name: true, status: true, progressPercentage: true },
+          });
+          if (proj) {
+            pageContextStr += `\nالمستخدم يعمل على مشروع: ${proj.name} | الحالة: ${proj.status} | التقدم: ${proj.progressPercentage}%`;
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    // Build database context based on requested type
+    let dbContext = '';
+    if (contextType === 'project') {
+      dbContext = await getProjectContext(orgId);
+    } else if (contextType === 'mun') {
+      dbContext = await getMunContext(orgId);
+    } else if (contextType === 'financial') {
+      dbContext = await getFinancialContext(orgId);
+    } else if (contextType === 'overdue') {
+      dbContext = await getOverdueContext(orgId);
+    } else {
+      // For regular messages, provide a concise overview (lightweight)
+      dbContext = await getConciseOverviewContext(orgId);
+    }
+
+    // Combine all context into the system prompt
+    let enhancedSystemPrompt = SYSTEM_PROMPT;
+    if (pageContextStr || dbContext) {
+      enhancedSystemPrompt += '\n\nالسياق الحالي للمنظمة:';
+      if (pageContextStr) enhancedSystemPrompt += pageContextStr;
+      if (dbContext) enhancedSystemPrompt += '\n' + dbContext;
+      enhancedSystemPrompt += '\n\nاستخدم هذه البيانات عند الإجابة على أسئلة المستخدم المتعلقة بالمشاريع والمالية والمهام. إذا سأل عن شيء غير موجود في السياق، أجب بشكل عام.';
+    }
+
     // Build messages array for the LLM
     const messages = [
-      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'system', content: enhancedSystemPrompt },
       ...history.map((msg: { role: string; content: string }) => ({
         role: msg.role === 'user' ? 'user' : 'assistant',
         content: msg.content

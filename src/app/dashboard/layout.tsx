@@ -8,6 +8,7 @@ import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { MobileBottomNav } from '@/components/mobile-bottom-nav';
+import { QuickActionsFab } from '@/components/quick-actions-fab';
 import { cn } from '@/lib/utils';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
@@ -99,6 +100,9 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
         
         {/* Mobile Bottom Navigation - hidden on desktop */}
         <MobileBottomNav />
+        
+        {/* Quick Actions FAB - mobile only */}
+        <QuickActionsFab />
       </div>
     </AuthGuard>
   );
