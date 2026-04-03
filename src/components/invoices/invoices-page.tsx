@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
-import { useInvoices, useCreateInvoice, useClients, useProjects } from '@/hooks/use-data';
+import { useInvoices, useCreateInvoice, useUpdateInvoiceStatus, useClients, useProjects } from '@/hooks/use-data';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -28,6 +29,22 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   Table,
   TableBody,
   TableCell,
@@ -37,9 +54,10 @@ import {
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   FileText, Plus, Search, Eye, Edit, Trash2, Download,
-  Clock, AlertCircle, CheckCircle, Calendar
+  Clock, AlertCircle, CheckCircle, Calendar, CheckCheck, X, Loader2
 } from 'lucide-react';
 import { downloadInvoicePDF } from '@/lib/pdf/invoice-pdf';
 import { apiDelete } from '@/lib/api-client';
@@ -79,11 +97,18 @@ export function InvoicesPage() {
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
 
+  // Bulk operations state
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedInvoiceIds, setSelectedInvoiceIds] = useState<Set<string>>(new Set());
+  const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
+  const [isBulkOperating, setIsBulkOperating] = useState(false);
+
   // Data hooks
   const { data: invoicesData, isLoading, isError, refetch } = useInvoices();
   const { data: clientsData } = useClients();
   const { data: projectsData } = useProjects();
   const createInvoice = useCreateInvoice();
+  const updateInvoiceStatus = useUpdateInvoiceStatus();
 
   const clients = clientsData?.data || [];
   const projects = projectsData?.data || [];
@@ -283,6 +308,90 @@ export function InvoicesPage() {
     setShowViewDialog(true);
   };
 
+  // Toggle invoice selection
+  const toggleInvoiceSelection = useCallback((invoiceId: string) => {
+    setSelectedInvoiceIds(prev => {
+      const next = new Set(prev);
+      if (next.has(invoiceId)) {
+        next.delete(invoiceId);
+      } else {
+        next.add(invoiceId);
+      }
+      return next;
+    });
+  }, []);
+
+  // Select / deselect all visible invoices
+  const toggleSelectAll = useCallback(() => {
+    if (selectedInvoiceIds.size === filteredInvoices.length) {
+      setSelectedInvoiceIds(new Set());
+    } else {
+      setSelectedInvoiceIds(new Set(filteredInvoices.map((inv: any) => inv.id)));
+    }
+  }, [filteredInvoices, selectedInvoiceIds.size]);
+
+  // Exit select mode
+  const exitSelectMode = useCallback(() => {
+    setSelectMode(false);
+    setSelectedInvoiceIds(new Set());
+  }, []);
+
+  // Bulk status update
+  const handleBulkStatusUpdate = async (newStatus: string) => {
+    if (selectedInvoiceIds.size === 0) return;
+    setIsBulkOperating(true);
+    let successCount = 0;
+    let failCount = 0;
+    for (const invoiceId of selectedInvoiceIds) {
+      try {
+        await updateInvoiceStatus.mutateAsync({ id: invoiceId, status: newStatus });
+        successCount++;
+      } catch {
+        failCount++;
+      }
+    }
+    setIsBulkOperating(false);
+    exitSelectMode();
+    const statusConfig = INVOICE_STATUSES.find(s => s.value === newStatus);
+    const label = statusConfig
+      ? (language === 'ar' ? statusConfig.label : statusConfig.labelEn)
+      : newStatus;
+    toast({
+      title: language === 'ar' ? 'تم تحديث الحالة' : 'Status Updated',
+      description: language === 'ar'
+        ? `تم تحديث ${successCount} فاتورة إلى "${label}"${failCount > 0 ? `، فشل ${failCount}` : ''}`
+        : `${successCount} invoices updated to "${label}"${failCount > 0 ? `, ${failCount} failed` : ''}`,
+      variant: failCount > 0 ? 'destructive' : 'default',
+    });
+  };
+
+  // Bulk delete
+  const handleBulkDelete = async () => {
+    if (selectedInvoiceIds.size === 0) return;
+    setIsBulkOperating(true);
+    let successCount = 0;
+    let failCount = 0;
+    for (const invoiceId of selectedInvoiceIds) {
+      try {
+        await apiDelete('/api/invoices', { id: invoiceId });
+        successCount++;
+      } catch {
+        failCount++;
+      }
+    }
+    setIsBulkOperating(false);
+    setShowBulkDeleteDialog(false);
+    exitSelectMode();
+    refetch();
+    toast({
+      title: t.successDelete,
+      description: language === 'ar'
+        ? `تم حذف ${successCount} فاتورة بنجاح${failCount > 0 ? `، فشل ${failCount}` : ''}`
+        : `${successCount} invoices deleted successfully${failCount > 0 ? `, ${failCount} failed` : ''}`,
+      variant: failCount > 0 ? 'destructive' : 'default',
+    });
+  };
+
   // Handle delete invoice
   const handleDeleteInvoice = async (id: string) => {
     if (!confirm(t.confirmDelete)) return;
@@ -426,7 +535,26 @@ export function InvoicesPage() {
           </div>
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
+          {/* Select Mode Toggle */}
+          <Button
+            variant={selectMode ? 'default' : 'outline'}
+            className={`${selectMode ? 'bg-blue-600 hover:bg-blue-700 text-foreground' : 'bg-muted border-border text-foreground/80 hover:bg-accent hover:text-foreground'}`}
+            onClick={() => {
+              if (selectMode) exitSelectMode();
+              else setSelectMode(true);
+            }}
+          >
+            {selectMode
+              ? <X className="w-4 h-4 me-2" />
+              : <CheckCheck className="w-4 h-4 me-2" />
+            }
+            {selectMode
+              ? (language === 'ar' ? 'إلغاء التحديد' : 'Cancel')
+              : (language === 'ar' ? 'تحديد' : 'Select')
+            }
+          </Button>
+
           <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
             <DialogTrigger asChild>
               <Button className="bg-blue-600 hover:bg-blue-700 text-foreground">
@@ -744,6 +872,15 @@ export function InvoicesPage() {
           <Table>
             <TableHeader>
               <TableRow className="border-border hover:bg-muted">
+                {selectMode && (
+                  <TableHead className="text-muted-foreground w-10">
+                    <Checkbox
+                      checked={selectedInvoiceIds.size === filteredInvoices.length && filteredInvoices.length > 0}
+                      onCheckedChange={toggleSelectAll}
+                      className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                    />
+                  </TableHead>
+                )}
                 <TableHead className="text-muted-foreground">{t.invoiceNumber}</TableHead>
                 <TableHead className="text-muted-foreground">{t.clientName}</TableHead>
                 <TableHead className="text-muted-foreground">{t.project}</TableHead>
@@ -757,7 +894,20 @@ export function InvoicesPage() {
             </TableHeader>
             <TableBody>
               {filteredInvoices.map((invoice: any) => (
-                <TableRow key={invoice.id} className="border-border hover:bg-muted">
+                <TableRow
+                  key={invoice.id}
+                  className={`border-border hover:bg-muted ${selectMode && selectedInvoiceIds.has(invoice.id) ? 'bg-blue-500/5' : ''}`}
+                  onClick={() => selectMode && toggleInvoiceSelection(invoice.id)}
+                >
+                  {selectMode && (
+                    <TableCell className="w-10">
+                      <Checkbox
+                        checked={selectedInvoiceIds.has(invoice.id)}
+                        onCheckedChange={() => toggleInvoiceSelection(invoice.id)}
+                        className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                      />
+                    </TableCell>
+                  )}
                   <TableCell className="font-medium text-foreground">
                     {invoice.invoiceNumber}
                   </TableCell>
@@ -847,6 +997,106 @@ export function InvoicesPage() {
           </Table>
         </Card>
       )}
+
+      {/* Floating Bulk Action Bar */}
+      <AnimatePresence>
+        {selectMode && selectedInvoiceIds.size > 0 && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
+          >
+            <div className="flex items-center gap-3 bg-card border border-border shadow-lg rounded-xl px-5 py-3">
+              <Badge variant="secondary" className="bg-blue-600 text-white px-3 py-1 text-sm">
+                {selectedInvoiceIds.size} {language === 'ar' ? 'فاتورة محددة' : 'invoices selected'}
+              </Badge>
+
+              <Separator orientation="vertical" className="h-6 bg-border" />
+
+              {/* Bulk Status Change */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" disabled={isBulkOperating} className="border-border text-foreground/80 hover:bg-accent">
+                    {isBulkOperating ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <CheckCircle className="w-4 h-4 me-2" />}
+                    {language === 'ar' ? 'تغيير الحالة' : 'Change Status'}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-card border-border" align="center">
+                  <DropdownMenuItem onClick={() => handleBulkStatusUpdate('paid')} className="text-green-400 focus:text-green-400 focus:bg-green-500/10">
+                    <CheckCircle className="w-4 h-4 me-2" />
+                    {language === 'ar' ? 'مدفوعة' : 'Mark as Paid'}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleBulkStatusUpdate('sent')} className="text-blue-400 focus:text-blue-400 focus:bg-blue-500/10">
+                    <FileText className="w-4 h-4 me-2" />
+                    {language === 'ar' ? 'معلقة' : 'Mark as Pending'}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleBulkStatusUpdate('overdue')} className="text-red-400 focus:text-red-400 focus:bg-red-500/10">
+                    <AlertCircle className="w-4 h-4 me-2" />
+                    {language === 'ar' ? 'متأخرة' : 'Mark as Overdue'}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleBulkStatusUpdate('cancelled')} className="text-gray-400 focus:text-gray-400 focus:bg-gray-500/10">
+                    <X className="w-4 h-4 me-2" />
+                    {language === 'ar' ? 'ملغاة' : 'Mark as Cancelled'}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Bulk Delete */}
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isBulkOperating}
+                className="border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                onClick={() => setShowBulkDeleteDialog(true)}
+              >
+                <Trash2 className="w-4 h-4 me-2" />
+                {language === 'ar' ? 'حذف المحدد' : 'Delete Selected'}
+              </Button>
+
+              <Separator orientation="vertical" className="h-6 bg-border" />
+
+              {/* Cancel Select Mode */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-foreground"
+                onClick={exitSelectMode}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <AlertDialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
+        <AlertDialogContent className="bg-card border-border text-foreground">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {language === 'ar' ? 'حذف الفواتير المحددة' : 'Delete Selected Invoices'}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              {language === 'ar'
+                ? `هل أنت متأكد من حذف ${selectedInvoiceIds.size} فاتورة؟ لا يمكن التراجع عن هذا الإجراء.`
+                : `Are you sure you want to delete ${selectedInvoiceIds.size} selected invoices? This action cannot be undone.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="text-muted-foreground">{t.cancel}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDelete}
+              disabled={isBulkOperating}
+              className="bg-red-600 hover:bg-red-700 text-foreground"
+            >
+              {isBulkOperating ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <Trash2 className="w-4 h-4 me-2" />}
+              {language === 'ar' ? 'حذف' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* View Invoice Dialog */}
       <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>

@@ -101,7 +101,7 @@ const emptyForm = {
 
 export function SiteVisitReportsPage() {
   const { language } = useApp();
-  const { t: _t, formatDate } = useTranslation(language);
+  const { formatDate } = useTranslation(language);
   const { toast } = useToast();
   const { data: projectsData } = useProjects();
   const isRTL = language === 'ar';

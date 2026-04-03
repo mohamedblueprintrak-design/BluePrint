@@ -474,7 +474,7 @@ const CATEGORY_CONFIG = {
 };
 
 export function KnowledgePage() {
-  const { language, isRTL: _isRTL } = useApp();
+  const { language } = useApp();
   const { t } = useTranslation(language);
   const { toast } = useToast();
   

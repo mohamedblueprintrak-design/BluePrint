@@ -1,6 +1,5 @@
 'use client';
 
-import { useAuth } from '@/context/auth-context';
 import { useApp } from '@/context/app-context';
 import { useTranslation } from '@/lib/translations';
 import { Button } from '@/components/ui/button';
@@ -42,9 +41,8 @@ interface HeaderProps {
 }
 
 export function Header({ title, actions }: HeaderProps) {
-  const { user: _user } = useAuth();
   const { 
-    theme: _theme, setTheme, language, isDark, isRTL,
+    setTheme, language, isDark, isRTL,
     currency, setCurrency, currentPage, 
     setCommandPaletteOpen,
     openQuickAddDialog

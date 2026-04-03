@@ -170,7 +170,6 @@ const QUICK_ACTIONS: Record<string, Array<{
 
 export function FloatingAIButton({ 
   context, 
-  entityId: _entityId, 
   entityType = 'project',
   position = 'bottom-right',
   onResponse

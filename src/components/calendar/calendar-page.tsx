@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
 import {
   Calendar as CalendarIcon,
   ChevronRight,
@@ -62,9 +61,7 @@ export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [_selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [viewMode, setViewMode] = useState<'month' | 'list'>('month');
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { toast: _toast } = useToast();
-
+  
   // Fetch events
   useEffect(() => {
     fetchEvents();

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useApp } from '@/context/app-context';
 import { useAuth } from '@/context/auth-context';
 import { useTranslation } from '@/lib/translations';
@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -30,14 +31,31 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   CheckSquare, Plus, Search, Trash2,
   Eye, Calendar, Clock, User, Tag, GripVertical, AlertCircle,
   CheckCircle2, Circle, Loader2, EyeClosed as ReviewIcon,
   Wand2, Link2, Shield, Star, Lock, ChevronRight,
-  ListChecks
+  ListChecks, CheckCheck, X
 } from 'lucide-react';
 import type { Task } from '@/types';
 
@@ -169,6 +187,12 @@ export function TasksPage() {
   const [subtasks, setSubtasks] = useState<SubtaskItem[]>([]);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [isLoadingSubtasks, setIsLoadingSubtasks] = useState(false);
+
+  // Bulk operations state
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
+  const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
+  const [isBulkOperating, setIsBulkOperating] = useState(false);
   
   // Hooks
   const { data: tasksData, isLoading, refetch } = useTasks();
@@ -387,6 +411,96 @@ export function TasksPage() {
     }
   };
   
+  // Toggle task selection
+  const toggleTaskSelection = useCallback((taskId: string) => {
+    setSelectedTaskIds(prev => {
+      const next = new Set(prev);
+      if (next.has(taskId)) {
+        next.delete(taskId);
+      } else {
+        next.add(taskId);
+      }
+      return next;
+    });
+  }, []);
+
+  // Select / deselect all visible tasks
+  const toggleSelectAll = useCallback(() => {
+    if (selectedTaskIds.size === filteredTasks.length) {
+      setSelectedTaskIds(new Set());
+    } else {
+      setSelectedTaskIds(new Set(filteredTasks.map(t => t.id)));
+    }
+  }, [filteredTasks, selectedTaskIds.size]);
+
+  // Exit select mode
+  const exitSelectMode = useCallback(() => {
+    setSelectMode(false);
+    setSelectedTaskIds(new Set());
+  }, []);
+
+  // Bulk status update
+  const handleBulkStatusUpdate = async (newStatus: string) => {
+    if (selectedTaskIds.size === 0) return;
+    setIsBulkOperating(true);
+    let successCount = 0;
+    let failCount = 0;
+    for (const taskId of selectedTaskIds) {
+      try {
+        await updateTask.mutateAsync({
+          id: taskId,
+          status: newStatus as 'todo' | 'in_progress' | 'review' | 'done',
+          progress: newStatus === 'done' ? 100 : undefined,
+          completedAt: newStatus === 'done' ? new Date() : undefined,
+        });
+        successCount++;
+      } catch {
+        failCount++;
+      }
+    }
+    setIsBulkOperating(false);
+    exitSelectMode();
+    refetch();
+    const statusLabel = TASK_STATUSES.find(s => s.value === newStatus);
+    const label = statusLabel
+      ? (language === 'ar' ? statusLabel.label : statusLabel.labelEn)
+      : newStatus;
+    toast({
+      title: language === 'ar' ? 'تم تحديث الحالة' : 'Status Updated',
+      description: language === 'ar'
+        ? `تم تحديث ${successCount} مهمة إلى "${label}"${failCount > 0 ? `، فشل ${failCount}` : ''}`
+        : `${successCount} tasks updated to "${label}"${failCount > 0 ? `, ${failCount} failed` : ''}`,
+      variant: failCount > 0 ? 'destructive' : 'default',
+    });
+  };
+
+  // Bulk delete
+  const handleBulkDelete = async () => {
+    if (selectedTaskIds.size === 0) return;
+    setIsBulkOperating(true);
+    let successCount = 0;
+    let failCount = 0;
+    for (const taskId of selectedTaskIds) {
+      try {
+        await deleteTask.mutateAsync(taskId);
+        successCount++;
+      } catch {
+        failCount++;
+      }
+    }
+    setIsBulkOperating(false);
+    setShowBulkDeleteDialog(false);
+    exitSelectMode();
+    refetch();
+    toast({
+      title: t.successDelete,
+      description: language === 'ar'
+        ? `تم حذف ${successCount} مهمة بنجاح${failCount > 0 ? `، فشل ${failCount}` : ''}`
+        : `${successCount} tasks deleted successfully${failCount > 0 ? `, ${failCount} failed` : ''}`,
+      variant: failCount > 0 ? 'destructive' : 'default',
+    });
+  };
+
   // Handle delete task
   const handleDeleteTask = async (id: string) => {
     if (!confirm(t.confirmDelete)) return;
@@ -588,7 +702,7 @@ export function TasksPage() {
     return { deps, depTasks, completedCount: completedDeps.length, total: deps.length, allMet };
   };
   
-  // Render task card (with 1A, 1D enhancements)
+  // Render task card (with 1A, 1D enhancements, and select mode)
   const renderTaskCard = (task: Task) => {
     const priorityConfig = getPriorityConfig(task.priority);
     const projectName = getProjectName(task.projectId);
@@ -611,19 +725,45 @@ export function TasksPage() {
     // 1D: Dependency info
     const depInfo = getDependencyInfo(taskAny);
     
+    const isSelected = selectMode && selectedTaskIds.has(task.id);
+
     return (
       <Card 
         key={task.id}
-        className="bg-muted border-border hover:border-border transition-all cursor-pointer group"
+        className={`bg-muted border-border hover:border-border transition-all cursor-pointer group ${isSelected ? 'ring-2 ring-blue-500/60 border-blue-500/40' : ''}`}
         onClick={() => {
+          if (selectMode) {
+            toggleTaskSelection(task.id);
+            return;
+          }
           setSelectedTask(task);
           setShowTaskDetail(true);
         }}
       >
         <CardContent className="p-4 space-y-3">
-          {/* Header with priority, mandatory indicator, and drag handle */}
+          {/* Header with select checkbox, priority, mandatory indicator, and drag handle */}
           <div className="flex items-start gap-2">
-            <GripVertical className="w-4 h-4 text-muted-foreground mt-1 cursor-grab opacity-0 group-hover:opacity-100 transition-opacity" role="button" aria-label="Drag to reorder" />
+            <AnimatePresence>
+              {selectMode && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.15 }}
+                  className="flex items-center pt-0.5 shrink-0"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Checkbox
+                    checked={isSelected}
+                    onCheckedChange={() => toggleTaskSelection(task.id)}
+                    className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+            {!selectMode && (
+              <GripVertical className="w-4 h-4 text-muted-foreground mt-1 cursor-grab opacity-0 group-hover:opacity-100 transition-opacity" role="button" aria-label="Drag to reorder" />
+            )}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <div className={`w-2 h-2 rounded-full ${priorityConfig.dotColor}`} />
@@ -970,6 +1110,25 @@ export function TasksPage() {
         
         {/* Action Buttons */}
         <div className="flex gap-2">
+          {/* Select Mode Toggle */}
+          <Button
+            variant={selectMode ? 'default' : 'outline'}
+            className={`${selectMode ? 'bg-blue-600 hover:bg-blue-700 text-foreground' : 'bg-muted border-border text-foreground/80 hover:bg-accent hover:text-foreground'}`}
+            onClick={() => {
+              if (selectMode) exitSelectMode();
+              else setSelectMode(true);
+            }}
+          >
+            {selectMode
+              ? <X className="w-4 h-4 me-2" />
+              : <CheckCheck className="w-4 h-4 me-2" />
+            }
+            {selectMode
+              ? (language === 'ar' ? 'إلغاء التحديد' : 'Cancel')
+              : (language === 'ar' ? 'تحديد' : 'Select')
+            }
+          </Button>
+
           {/* 1B: Auto-Create Tasks Button */}
           <Dialog open={showAutoCreateDialog} onOpenChange={setShowAutoCreateDialog}>
             <DialogTrigger asChild>
@@ -1215,6 +1374,127 @@ export function TasksPage() {
         </div>
       </div>
       
+      {/* Floating Bulk Action Bar */}
+      <AnimatePresence>
+        {selectMode && selectedTaskIds.size > 0 && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
+          >
+            <div className="flex items-center gap-3 bg-card border border-border shadow-lg rounded-xl px-5 py-3">
+              <Badge variant="secondary" className="bg-blue-600 text-white px-3 py-1 text-sm">
+                {selectedTaskIds.size} {language === 'ar' ? 'مهمة محددة' : 'tasks selected'}
+              </Badge>
+
+              <Separator orientation="vertical" className="h-6 bg-border" />
+
+              {/* Bulk Status Change */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" disabled={isBulkOperating} className="border-border text-foreground/80 hover:bg-accent">
+                    {isBulkOperating ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 me-2" />}
+                    {language === 'ar' ? 'تغيير الحالة' : 'Change Status'}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-card border-border" align="center">
+                  <DropdownMenuItem onClick={() => handleBulkStatusUpdate('done')} className="text-green-400 focus:text-green-400 focus:bg-green-500/10">
+                    <CheckCircle2 className="w-4 h-4 me-2" />
+                    {language === 'ar' ? 'مكتمل' : 'Mark Complete'}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleBulkStatusUpdate('in_progress')} className="text-blue-400 focus:text-blue-400 focus:bg-blue-500/10">
+                    <Loader2 className="w-4 h-4 me-2" />
+                    {language === 'ar' ? 'قيد التنفيذ' : 'Mark In Progress'}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleBulkStatusUpdate('todo')} className="text-gray-400 focus:text-gray-400 focus:bg-gray-500/10">
+                    <Circle className="w-4 h-4 me-2" />
+                    {language === 'ar' ? 'قيد الانتظار' : 'Mark Pending'}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleBulkStatusUpdate('review')} className="text-purple-400 focus:text-purple-400 focus:bg-purple-500/10">
+                    <ReviewIcon className="w-4 h-4 me-2" />
+                    {language === 'ar' ? 'مراجعة' : 'Mark Review'}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Bulk Delete */}
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isBulkOperating}
+                className="border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                onClick={() => setShowBulkDeleteDialog(true)}
+              >
+                <Trash2 className="w-4 h-4 me-2" />
+                {language === 'ar' ? 'حذف المحدد' : 'Delete Selected'}
+              </Button>
+
+              <Separator orientation="vertical" className="h-6 bg-border" />
+
+              {/* Cancel Select Mode */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-foreground"
+                onClick={exitSelectMode}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <AlertDialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
+        <AlertDialogContent className="bg-card border-border text-foreground">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {language === 'ar' ? 'حذف المهام المحددة' : 'Delete Selected Tasks'}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              {language === 'ar'
+                ? `هل أنت متأكد من حذف ${selectedTaskIds.size} مهام؟ لا يمكن التراجع عن هذا الإجراء.`
+                : `Are you sure you want to delete ${selectedTaskIds.size} selected tasks? This action cannot be undone.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="text-muted-foreground">{t.cancel}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDelete}
+              disabled={isBulkOperating}
+              className="bg-red-600 hover:bg-red-700 text-foreground"
+            >
+              {isBulkOperating ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <Trash2 className="w-4 h-4 me-2" />}
+              {language === 'ar' ? 'حذف' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Select All bar (in kanban header area) */}
+      {selectMode && !isLoading && (
+        <div className="flex items-center justify-between bg-card border border-border rounded-lg px-4 py-2">
+          <div className="flex items-center gap-3">
+            <Checkbox
+              checked={selectedTaskIds.size === filteredTasks.length && filteredTasks.length > 0}
+              onCheckedChange={toggleSelectAll}
+              className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+            />
+            <span className="text-sm text-muted-foreground">
+              {selectedTaskIds.size === filteredTasks.length
+                ? (language === 'ar' ? 'إلغاء تحديد الكل' : 'Deselect All')
+                : (language === 'ar' ? `تحديد الكل (${filteredTasks.length})` : `Select All (${filteredTasks.length})`)}
+            </span>
+          </div>
+          <Badge variant="secondary" className="bg-blue-600 text-white">
+            {selectedTaskIds.size} / {filteredTasks.length}
+          </Badge>
+        </div>
+      )}
+
       {/* Kanban Board */}
       {isLoading ? (
         <div className="flex items-center justify-center py-12">

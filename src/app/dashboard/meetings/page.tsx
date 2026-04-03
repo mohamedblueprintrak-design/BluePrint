@@ -29,6 +29,7 @@ import {
   useCorrespondence, useCreateCorrespondence,
   type Meeting, type CorrespondenceRecord, type CorrespondenceType,
 } from '@/hooks/api';
+import type { Project } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import {
   Calendar, Plus, Clock, MapPin, Users, Video,
@@ -155,7 +156,7 @@ function MeetingsContent() {
       type: (m.type || 'online').toLowerCase() as 'onsite' | 'online',
       status: normalizeStatus(m.status),
       attendees: parseAttendees(m.attendees),
-      project: (m as any).projectName || '',
+      project: m.projectName || '',
       agenda: m.agenda || '',
       notes: m.notes || '',
     }));
@@ -365,7 +366,7 @@ function MeetingsContent() {
                 <Card
                   key={meeting.id}
                   className="bg-card border-border hover:border-border transition-all cursor-pointer"
-                  onClick={() => setViewMeeting(meetingsData?.data?.find((m: any) => m.id === meeting.id) || null)}
+                  onClick={() => setViewMeeting(meetingsData?.data?.find((m) => m.id === meeting.id) || null)}
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start gap-4">
@@ -447,10 +448,10 @@ function MeetingsContent() {
                 </div>
               </div>
 
-              {(viewMeeting as any).projectName && (
+              {viewMeeting?.projectName && (
                 <div>
                   <p className="text-xs text-muted-foreground">{isAr ? 'المشروع' : 'Project'}</p>
-                  <Badge variant="outline" className="border-border text-foreground/80 mt-1">{(viewMeeting as any).projectName}</Badge>
+                  <Badge variant="outline" className="border-border text-foreground/80 mt-1">{viewMeeting.projectName}</Badge>
                 </div>
               )}
 
@@ -628,7 +629,7 @@ function CorrespondenceContent() {
   const { data: records = [], isLoading } = useCorrespondence();
   const createMutation = useCreateCorrespondence();
   const { data: projectsData } = useProjects();
-  const projects = useMemo(() => (projectsData?.data as any[]) ?? [], [projectsData]);
+  const projects = useMemo(() => (projectsData?.data ?? []) as Project[], [projectsData]);
 
   // ── Client-side filtering ──
   const filtered = useMemo(() => {
@@ -908,7 +909,7 @@ function CorrespondenceContent() {
                   <SelectValue placeholder={isAr ? 'اختر المشروع...' : 'Select project...'} />
                 </SelectTrigger>
                 <SelectContent>
-                  {projects.map((p: any) => (
+                  {projects.map((p) => (
                     <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                   ))}
                 </SelectContent>

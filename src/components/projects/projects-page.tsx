@@ -55,7 +55,7 @@ const PROJECT_STATUSES = [
 
 export function ProjectsPage() {
   const router = useRouter();
-  const { language, setCurrentPage: _setCurrentPage } = useApp();
+  const { language } = useApp();
   const { t, formatCurrency, formatDate } = useTranslation(language);
   const { toast } = useToast();
   
