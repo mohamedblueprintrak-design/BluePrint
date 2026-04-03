@@ -37,7 +37,7 @@ import {
     X, ChevronDown, ChevronUp,
     Compass, Handshake,
   UserCog, Building2, HardHat,
-  ListTodo, Shield, Activity
+  ListTodo, Shield
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -279,7 +279,6 @@ function SidebarContent({
   // ─── Administration (ADMIN only) ───
   const adminItems: SidebarItem[] = [
     { id: 'adminPanel', label: language === 'ar' ? 'لوحة الإدارة' : 'Admin Panel', icon: Shield, href: '/dashboard/admin', visibleRoles: [UserRole.ADMIN] },
-    { id: 'activities', label: language === 'ar' ? 'النشاطات' : 'Activities', icon: Activity, href: '/dashboard/admin?tab=activities', visibleRoles: [UserRole.ADMIN] },
   ];
 
   // ─── System (bottom) ───
