@@ -70,6 +70,11 @@ temp/
 
 # Uploads - user uploaded files
 uploads/
+upload/
+
+# Agent work files
+agent-ctx/
+worklog.md
 
 # Security - prevent committing sensitive data
 *.key
